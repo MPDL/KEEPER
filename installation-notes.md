@@ -19,6 +19,7 @@
 
 > With direct mode, you're operating without large swathes of git-annex's carefully constructed safety net, which ensures that past versions of files are preserved and can be accessed. With direct mode, any file can be edited directly, or deleted at any time, and there's no guarantee that the old version is backed up somewhere else.
 
+**NOTE**: [mpdl-techwatch](https://techwatch.mpdl.mpg.de/git-annex/)
 
 # [ownCloud](https://owncloud.org/)
 * server installed: 8.1.3

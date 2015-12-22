@@ -2,7 +2,7 @@
 
 hosted @ https://drg-srv1-ref (i.e. https://10.20.5.7) 
 
-**NOTE**: `git clone git@drg-srv1-ref:vlad/gitlab-lfs-test.git` does not work due to special settigs for access to the git-lfs storage via https, thus lfs repo should be created and set up step by step.
+**NOTE**: `git clone git@drg-srv1-ref:vlad/gitlab-lfs-test.git` does not work due to special settings for access to the git-lfs storage via https, thus lfs repo should be created and set up step by step.
 
 ``````
 git init
