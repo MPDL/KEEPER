@@ -14,7 +14,7 @@ password: D_4tXWzb
 start-stop: service apache2 start/stop
 
 
-## GitLabEE: http://10.20.5.7
+## GitLabCE 8.2: http://10.20.5.7
 user: root
 password: oviN-TMDubRzz6PC
 
