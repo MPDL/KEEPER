@@ -6,26 +6,31 @@ user: saquet+sudo
 
 ## OwnCloud: http://10.20.5.7:81/owncloud
 user: admin
+
 password: dRgOwnCl
 
 user: vlad
+
 password: D_4tXWzb
 
 start-stop: service apache2 start/stop
 
-
-## GitLabEE: http://10.20.5.7
+## GitLabCE 8.2: https://10.20.5.7 or https://drg-srv1-ref
 user: root
+
 password: oviN-TMDubRzz6PC
 
 user: vlad
+
 password: -PRHop5X
 
 start-stop: gitlab-ctl start/stop
 
 ## plain git-annex central bare repository
 URL: ssh://share@10.20.5.7/data/annex.git
+
 user: share
+
 password: share 
 
 
@@ -35,6 +40,7 @@ password: share
 IP: 10.20.5.11 
 
 user: user1
+
 password: dRgTeSt_0
 
 ## installed:
@@ -53,7 +59,6 @@ no password
 * git bash
 * git-annex 
 * gitlab git-anex repo, clone of http://vlad@drg-srv1-ref/vlad/annex-faces-images.git: (in git-bash) /c/Users/drg-test08/gitlab-annex/annex-faces-images
-
 
 
 # shares with content
