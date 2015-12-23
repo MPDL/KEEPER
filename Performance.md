@@ -198,3 +198,15 @@
 
 * **Task**: `git push bare2 master` to the remote ~/git-plain/faces-images/bare2/
 * **Time**: 58s / 1m11s
+
+# big-project repo 26G
+tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(36M) is under plain git
+
+* **Task**: `time git add .` 
+* **Time**: 204,07s user 55,24s system 37% cpu 11:33,21 total
+ 
+* **Task**: `time git commit -am 'initial commit git and git-lfs files'` 
+* **Time**: 227,70s user 71,20s system 78% cpu 6:20,41 total
+
+* **Task**: `git lfs push origin master` 
+* **Time**: 496,18s!!!!!! user 56,33s system 22% cpu 40:30,94 total

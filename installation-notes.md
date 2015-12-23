@@ -107,5 +107,7 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 
 ## installation from [OVA](https://www.perforce.com/node/9065), preferable?
 
-
+# [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
+* install packages `helix-swarm, helix-swarm-triggers, helix-swarm-optional`
+* run script `$sudo /opt/perforce/swarm/sbin/configure-swarm.sh -i`
 

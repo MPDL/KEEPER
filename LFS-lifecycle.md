@@ -58,6 +58,13 @@ git commit -am 'some LFS file has been changed'
 ``````
 older version of the file is available, can be checked out with `git checkout [ref]` 
 
+## push lfs files to remote repo
+``````
+git lfs push origin master (input credentials for remote repo user manually)
+TODO: test files > 16G!!!! is it possible????
+``````
+
+
 
 ## check LFS environment:
 ``````
