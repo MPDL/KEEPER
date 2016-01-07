@@ -54,9 +54,7 @@
     check /etc/gitlab/gitlab.rb (e.g. remove git-annex support)
   # gitlab-ctl reconfigure
   # gitlab-ctl start
-
 ```
-
 
 # [git-lfs](https://git-lfs.github.com/)
 support of the feature is promised for GitHub enterprise 2.4 and current GitHub.com, see e.g. https://help.github.com/articles/collaboration-with-git-large-file-storage/ and announced for GitLab from version 8.2,  see https://about.gitlab.com/2015/11/23/announcing-git-lfs-support-in-gitlab/
@@ -110,4 +108,3 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 # [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
 * install packages `helix-swarm, helix-swarm-triggers, helix-swarm-optional`
 * run script `$sudo /opt/perforce/swarm/sbin/configure-swarm.sh -i`
-
