@@ -22,7 +22,10 @@
 **NOTE**: [mpdl-techwatch](https://techwatch.mpdl.mpg.de/git-annex/)
 
 # [ownCloud](https://owncloud.org/)
-* server installed: 8.1.3
+
+* DRG server: http://10.20.5.7:81/owncloud/
+
+* installed version: 8.1.3
 
 ## problems
 * ubuntu clients 1.5 & 1.7 from apt-get cannot authenticate!!! (see (https://forum.owncloud.org/viewtopic.php?t=29187&p=91290) and (https://doc.owncloud.org/server/8.1/admin_manual/release_notes.html#changes-in-8-1)
@@ -34,6 +37,10 @@
 
 
 # [GitLab](https://gitlab.com)
+
+* DRG server: https://10.20.5.7
+
+* installed version: CE 8.2.1
 
 ## installation
 * out-of-box for Ubuntu server, e.g. https://about.gitlab.com/downloads-ee/ 
@@ -95,6 +102,10 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 
 # [GitSwarm](https://www.perforce.com/downloads/helix-gitswarm)
 
+* DRG server: http://10.20.5.8
+
+* installed version: 2015.4/a2b7761
+
 ## installation
 * install [server](https://www.perforce.com/perforce/r15.4/manuals/gitswarm/install/README.html) 
   * **NOTE**: control server with `p4dctl` 
@@ -106,6 +117,11 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 ## installation from [OVA](https://www.perforce.com/node/9065), preferable?
 
 # [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
+
+* DRG server: http://10.20.5.8:81
+
+* installed version: SWARM/2015.3/1257057 (2015/10/30)
+
 * install packages `helix-swarm, helix-swarm-triggers, helix-swarm-optional`
 * run script `$sudo /opt/perforce/swarm/sbin/configure-swarm.sh -i`
 * **NOTE**: Web error 500, see here http://answers.perforce.com/articles/KB/3696, solution:
