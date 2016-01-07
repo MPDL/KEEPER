@@ -108,3 +108,20 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 # [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
 * install packages `helix-swarm, helix-swarm-triggers, helix-swarm-optional`
 * run script `$sudo /opt/perforce/swarm/sbin/configure-swarm.sh -i`
+* **NOTE**: Web error 500, see here http://answers.perforce.com/articles/KB/3696, solution:
+ * create group `p4 group never-expired`
+ * set `Timeout: unlimited`
+ * set `Users: root`
+ * `p4 login root`
+ * `p4 tickets`, copy ticket for root  
+ * edit `/opt/perforce/swarm/data/config.php`:
+```
+...
+'p4' => array(
+        'port' => 'ssl:localhost:1666',
+        'user' => 'root',
+        'password' => '!!!paste_ticket!!!',
+    ),
+...
+```
+ * restart apache2
