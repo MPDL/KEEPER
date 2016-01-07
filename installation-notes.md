@@ -113,8 +113,7 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
  * install packages `helix-cli` and `helix-p4d`: https://www.perforce.com/perforce-packages/helix-versioning-engine
 * helix visual client (`p4v`) can be downloaded from https://www.perforce.com/downloads/helix `P4V: VISUAL CLIENT` and used as described in https://www.perforce.com/documentation/tenminute-test-drive-linuxunix
 * acces server via env variables, see `P4PORT` and `P4CHARSET` [variable settings](http://www.perforce.com/perforce/doc.current/manuals/cmdref/P4CHARSET.html) 
-
-## installation from [OVA](https://www.perforce.com/node/9065), preferable?
+* **NOTE**: installation from [OVA](https://www.perforce.com/node/9065), preferable?
 
 # [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
 
