@@ -22,7 +22,10 @@
 **NOTE**: [mpdl-techwatch](https://techwatch.mpdl.mpg.de/git-annex/)
 
 # [ownCloud](https://owncloud.org/)
-* server installed: 8.1.3
+
+* DRG server: http://10.20.5.7:81/owncloud/
+
+* installed version: 8.1.3
 
 ## problems
 * ubuntu clients 1.5 & 1.7 from apt-get cannot authenticate!!! (see (https://forum.owncloud.org/viewtopic.php?t=29187&p=91290) and (https://doc.owncloud.org/server/8.1/admin_manual/release_notes.html#changes-in-8-1)
@@ -34,6 +37,10 @@
 
 
 # [GitLab](https://gitlab.com)
+
+* DRG server: https://10.20.5.7
+
+* installed version: CE 8.2.1
 
 ## installation
 * out-of-box for Ubuntu server, e.g. https://about.gitlab.com/downloads-ee/ 
@@ -54,9 +61,7 @@
     check /etc/gitlab/gitlab.rb (e.g. remove git-annex support)
   # gitlab-ctl reconfigure
   # gitlab-ctl start
-
 ```
-
 
 # [git-lfs](https://git-lfs.github.com/)
 support of the feature is promised for GitHub enterprise 2.4 and current GitHub.com, see e.g. https://help.github.com/articles/collaboration-with-git-large-file-storage/ and announced for GitLab from version 8.2,  see https://about.gitlab.com/2015/11/23/announcing-git-lfs-support-in-gitlab/
@@ -97,6 +102,10 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
 
 # [GitSwarm](https://www.perforce.com/downloads/helix-gitswarm)
 
+* DRG server: http://10.20.5.8
+
+* installed version: 2015.4/a2b7761
+
 ## installation
 * install [server](https://www.perforce.com/perforce/r15.4/manuals/gitswarm/install/README.html) 
   * **NOTE**: control server with `p4dctl` 
@@ -104,10 +113,30 @@ support of the feature is promised for GitHub enterprise 2.4 and current GitHub.
  * install packages `helix-cli` and `helix-p4d`: https://www.perforce.com/perforce-packages/helix-versioning-engine
 * helix visual client (`p4v`) can be downloaded from https://www.perforce.com/downloads/helix `P4V: VISUAL CLIENT` and used as described in https://www.perforce.com/documentation/tenminute-test-drive-linuxunix
 * acces server via env variables, see `P4PORT` and `P4CHARSET` [variable settings](http://www.perforce.com/perforce/doc.current/manuals/cmdref/P4CHARSET.html) 
-
-## installation from [OVA](https://www.perforce.com/node/9065), preferable?
+* **NOTE**: installation from [OVA](https://www.perforce.com/node/9065), preferable?
 
 # [Helix Swarm](https://www.perforce.com/perforce/doc.current/manuals/swarm/setup.packages.html#setup.packages.install)
+
+* DRG server: http://10.20.5.8:81
+
+* installed version: SWARM/2015.3/1257057 (2015/10/30)
+
 * install packages `helix-swarm, helix-swarm-triggers, helix-swarm-optional`
 * run script `$sudo /opt/perforce/swarm/sbin/configure-swarm.sh -i`
-
+* **NOTE**: Web error 500, see here http://answers.perforce.com/articles/KB/3696, solution:
+ * create group `p4 group never-expired`
+ * set `Timeout: unlimited`
+ * set `Users: root`
+ * `p4 login root`
+ * `p4 tickets`, copy ticket for root  
+ * edit `/opt/perforce/swarm/data/config.php`:
+```
+...
+'p4' => array(
+        'port' => 'ssl:localhost:1666',
+        'user' => 'root',
+        'password' => '!!!paste_ticket!!!',
+    ),
+...
+```
+ * restart apache2
