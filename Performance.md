@@ -213,7 +213,7 @@ tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(
 
 ## Direct comparison of file-sharing sevices @ DRG
 
-### tested file: 2G uncrompressable random file  
+### tested file: 2G incompressible random file
 > dd if=/dev/urandom of=huge2GB.img bs=1048576 count=2000
 
 * **Task**: upload by synchronisation
