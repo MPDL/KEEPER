@@ -213,7 +213,7 @@ tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(
 
 ## Direct comparison of file-sharing sevices @ DRG
 
-### tested file: 2G incompressible random file
+### test file: 2G incompressible random file
 > dd if=/dev/urandom of=huge2GB.img bs=1048576 count=2000
 
 * **Task**: upload by synchronisation
@@ -222,3 +222,10 @@ tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(
  * pydio http://10.20.5.7:81/pydio: 3m35s
  * ownCloud http://10.20.5.7:81/owncloud: 5m10s
 
+### test diectory: imeji Foto_images repo (3,3GB): 6164 JPGs in 3 folders
+
+* **Task**: upload by synchronisation
+* **Time**: 
+ * seafile http://10.20.5.7:8000/: 6m23s
+ * pydio http://10.20.5.7:81/pydio: 
+ * ownCloud http://10.20.5.7:81/owncloud: 
