@@ -227,5 +227,5 @@ tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(
 * **Task**: upload by synchronisation
 * **Time**: 
  * seafile http://10.20.5.7:8000/: 6m23s
- * pydio http://10.20.5.7:81/pydio: 
+ * pydio http://10.20.5.7:81/pydio: **Note**: cannot test, client crashes linux!!! Tested both `pydio-agent` and `pydio-ui`
  * ownCloud http://10.20.5.7:81/owncloud: 
