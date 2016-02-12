@@ -62,7 +62,7 @@
   # gitlab-ctl reconfigure
   # gitlab-ctl start
 ```
-* SSL should be switched since `git-lfs` server works only under http. See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md for `nginx` and http://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl for generation of tmp certificate.  
+* SSL should be switched on since `git-lfs` server works only under https. See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md for `nginx` SSL settigs and http://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl for generation of tmp certificate.
 
 
 # [git-lfs](https://git-lfs.github.com/)
