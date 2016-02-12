@@ -62,6 +62,8 @@
   # gitlab-ctl reconfigure
   # gitlab-ctl start
 ```
+* SSL should be switched since `git-lfs` server works only under http. See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md for `nginx` and http://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl for generation of tmp certificate.  
+
 
 # [git-lfs](https://git-lfs.github.com/)
 support of the feature is promised for GitHub enterprise 2.4 and current GitHub.com, see e.g. https://help.github.com/articles/collaboration-with-git-large-file-storage/ and announced for GitLab from version 8.2,  see https://about.gitlab.com/2015/11/23/announcing-git-lfs-support-in-gitlab/
