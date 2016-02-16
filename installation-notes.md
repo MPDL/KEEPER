@@ -35,6 +35,13 @@
 
 * **TODO**: email settings for sharing per email 
 
+# [Pydio] (https://pydio.com/)
+
+* GWDG server: http://vm101.mpdl.mpg.de/pydio/
+* DRG server: http://10.20.5.7:81/pydio/
+
+## installation: https://www.howtoforge.com/install-pydio-6-on-ubuntu-14.10-utopic-unicorn 
+
 
 # [GitLab](https://gitlab.com)
 
