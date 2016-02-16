@@ -47,9 +47,8 @@ https://www.howtoforge.com/install-pydio-6-on-ubuntu-14.10-utopic-unicorn
 
 # [GitLab](https://gitlab.com)
 
-* DRG server: https://10.20.5.7
-
-* installed version: CE 8.2.1
+* DRG server(CE 8.2.1): https://10.20.5.7
+* GWDG server (CE 8.4.4): https://vm101.mpdl.mpg.de/
 
 ## installation
 * out-of-box for Ubuntu server, e.g. https://about.gitlab.com/downloads-ee/ 
