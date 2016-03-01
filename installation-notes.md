@@ -35,12 +35,20 @@
 
 * **TODO**: email settings for sharing per email 
 
+# [Pydio] (https://pydio.com/)
+
+* GWDG server: http://vm101.mpdl.mpg.de/pydio/
+* DRG server: http://10.20.5.7:81/pydio/
+
+## installation 
+https://www.howtoforge.com/install-pydio-6-on-ubuntu-14.10-utopic-unicorn 
+
+
 
 # [GitLab](https://gitlab.com)
 
-* DRG server: https://10.20.5.7
-
-* installed version: CE 8.2.1
+* DRG server(CE 8.2.1): https://10.20.5.7
+* GWDG server (CE 8.4.4): https://vm101.mpdl.mpg.de/
 
 ## installation
 * out-of-box for Ubuntu server, e.g. https://about.gitlab.com/downloads-ee/ 
@@ -62,6 +70,8 @@
   # gitlab-ctl reconfigure
   # gitlab-ctl start
 ```
+* SSL should be switched on since `git-lfs` server works only under https. See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md for `nginx` SSL settigs and http://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl for generation of tmp certificate.
+
 
 # [git-lfs](https://git-lfs.github.com/)
 support of the feature is promised for GitHub enterprise 2.4 and current GitHub.com, see e.g. https://help.github.com/articles/collaboration-with-git-large-file-storage/ and announced for GitLab from version 8.2,  see https://about.gitlab.com/2015/11/23/announcing-git-lfs-support-in-gitlab/

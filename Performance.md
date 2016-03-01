@@ -199,7 +199,7 @@
 * **Task**: `git push bare2 master` to the remote ~/git-plain/faces-images/bare2/
 * **Time**: 58s / 1m11s
 
-# big-project repo 26G
+## big-project repo 26G
 tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(36M) is under plain git
 
 * **Task**: `time git add .` 
@@ -210,3 +210,22 @@ tif/*.tif (25G) and pdf/*.pdf (497M) under git-lfs, xml/**/*.xml(33M) and doc/*(
 
 * **Task**: `git lfs push origin master` 
 * **Time**: 496,18s!!!!!! user 56,33s system 22% cpu 40:30,94 total
+
+## Direct comparison of file-sharing sevices @ DRG
+
+### test file: 2G incompressible random file
+> dd if=/dev/urandom of=huge2GB.img bs=1048576 count=2000
+
+* **Task**: upload by synchronisation
+* **Time**: 
+ * seafile http://10.20.5.7:8000/: 3m17s  
+ * pydio http://10.20.5.7:81/pydio: 3m35s
+ * ownCloud http://10.20.5.7:81/owncloud: 5m10s
+
+### test diectory: imeji Foto_images repo (3,3GB): 6164 JPGs in 3 folders
+
+* **Task**: upload by synchronisation
+* **Time**: 
+ * seafile http://10.20.5.7:8000/: 6m23s
+ * pydio http://10.20.5.7:81/pydio: **Note**: cannot test, client crashes linux!!! Tested both `pydio-agent` and `pydio-ui`
+ * ownCloud http://10.20.5.7:81/owncloud: 1h55m04s !!!!
