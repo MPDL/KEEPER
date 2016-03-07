@@ -71,6 +71,10 @@ https://www.howtoforge.com/install-pydio-6-on-ubuntu-14.10-utopic-unicorn
   # gitlab-ctl start
 ```
 * SSL should be switched on since `git-lfs` server works only under https. See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md for `nginx` SSL settigs and http://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl for generation of tmp certificate.
+* ip access settings
+ * update `location {... allow IP; deny all; ...}` clause in `embedded/cookbooks/gitlab/templates/default/nginx-gitlab-http.conf.erb`  
+ * `gitlab-ctl reconfigure`
+
 
 
 # [git-lfs](https://git-lfs.github.com/)
