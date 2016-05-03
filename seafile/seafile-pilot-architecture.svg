@@ -1895,7 +1895,7 @@
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
      inkscape:cy="765.81413"
-     inkscape:cx="600.01026"
+     inkscape:cx="326.68364"
      inkscape:zoom="0.94392561"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -2087,8 +2087,8 @@
                        id="flowPara5200">• elasticsearch</flowPara><flowPara
                        id="flowPara5202">• email notifications</flowPara><flowPara
                        id="flowPara5204">• office documents converts service</flowPara><flowPara
-                       id="flowPara5206"></flowPara><flowPara
-                       id="flowPara5208"></flowPara></flowRoot>                </g>
+                       id="flowPara5206" /><flowPara
+                       id="flowPara5208" /></flowRoot>                </g>
                 <rect
                    ry="0.38083446"
                    y="843.03046"
@@ -2373,7 +2373,7 @@
            id="flowPara5190">• sharing</flowPara><flowPara
            id="flowPara5192">• permissions</flowPara><flowPara
            id="flowPara5194">• users/groups </flowPara><flowPara
-           id="flowPara5196"></flowPara></flowRoot>      <rect
+           id="flowPara5196" /></flowRoot>      <rect
          ry="0.4392671"
          y="687.1037"
          x="406.80984"
@@ -2810,51 +2810,54 @@
        d="M 699.21113,735.66432 607.02183,661.2063"
        style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#cccccc;stroke-width:6.00000095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker15742);marker-end:url(#marker16220)" />
     <g
-       id="g5177"
-       transform="translate(8.4752441,-27.544544)">
-      <text
-         sodipodi:linespacing="94.999999%"
-         id="text5153"
-         y="422.31607"
-         x="102.90299"
-         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:40.66616058px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0e920e;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         xml:space="preserve"><tspan
-           y="422.31607"
+       id="g8184">
+      <g
+         transform="translate(8.4752441,-27.544544)"
+         id="g5177">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:40.66616058px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0e920e;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
            x="102.90299"
-           id="tspan5155"
-           sodipodi:role="line"></tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:25px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         x="125.01187"
-         y="458.4487"
-         id="text5167"
-         sodipodi:linespacing="94.999999%"><tspan
-           sodipodi:role="line"
-           id="tspan5169"
-           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           x="127.78531"
-           y="458.4487">web, </tspan><tspan
-           id="tspan5171"
-           sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           y="422.31607"
+           id="text5153"
+           sodipodi:linespacing="94.999999%"><tspan
+             sodipodi:role="line"
+             id="tspan5155"
+             x="102.90299"
+             y="422.31607"></tspan></text>
+        <text
+           sodipodi:linespacing="94.999999%"
+           id="text5167"
+           y="458.4487"
            x="125.01187"
-           y="477.4487">native clients,</tspan><tspan
-           sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           x="125.01187"
-           y="496.4487"
-           id="tspan5186">mobile clients,</tspan><tspan
-           id="tspan5175"
-           sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           x="125.01187"
-           y="515.44867">cli</tspan><tspan
-           id="tspan5173"
-           sodipodi:role="line"
-           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           x="125.01187"
-           y="534.44867" /></text>
+           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:25px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           xml:space="preserve"><tspan
+             y="458.4487"
+             x="127.78531"
+             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             id="tspan5169"
+             sodipodi:role="line">web, </tspan><tspan
+             y="477.4487"
+             x="125.01187"
+             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             sodipodi:role="line"
+             id="tspan5171">native clients,</tspan><tspan
+             id="tspan5186"
+             y="496.4487"
+             x="125.01187"
+             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             sodipodi:role="line">mobile clients,</tspan><tspan
+             y="515.44867"
+             x="125.01187"
+             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             sodipodi:role="line"
+             id="tspan5175">cli</tspan><tspan
+             y="534.44867"
+             x="125.01187"
+             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:20px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#b3b3b3;fill-opacity:1;stroke:#ee8833;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             sodipodi:role="line"
+             id="tspan5173" /></text>
+      </g>
     </g>
   </g>
 </svg>
