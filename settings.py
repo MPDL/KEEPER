@@ -4,8 +4,6 @@
 import sys
 import os
 import re
-import random
-import string
 
 from seaserv import FILE_SERVER_ROOT, FILE_SERVER_PORT, SERVICE_URL
 
@@ -98,7 +96,8 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'n*v0=jz-1rz@(4gx^tf%6^e7c&um@2)g-l=3_)t@19a69n1nv6'
+# SEE LOCAL SERVER!!!!
+#SECRET_KEY = ''
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -117,11 +116,12 @@ MIDDLEWARE_CLASSES = (
     'seahub.auth.middleware.AuthenticationMiddleware',
     'seahub.base.middleware.BaseMiddleware',
     'seahub.base.middleware.InfobarMiddleware',
-    'seahub.password_session.middleware.CheckPasswordHash'
+    'seahub.password_session.middleware.CheckPasswordHash',
 )
 
 SITE_ROOT_URLCONF = 'seahub.urls'
-ROOT_URLCONF = 'djblets.util.rooturl'
+#ROOT_URLCONF = 'djblets.util.rooturl'
+ROOT_URLCONF = 'seahub.utils.rooturl'
 SITE_ROOT = '/'
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -138,7 +138,7 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
-LANGUAGES = (   
+LANGUAGES = (
     ('de', gettext_noop(u'Deutsch')),
     ('en', gettext_noop('English')),
 )
@@ -152,7 +152,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
-    'djblets.util.context_processors.siteRoot',
+    # 'djblets.util.context_processors.siteRoot',
     'django.core.context_processors.request',
     'django.contrib.messages.context_processors.messages',
     'seahub.base.context_processors.base',
@@ -170,11 +170,12 @@ INSTALLED_APPS = (
     'statici18n',
     'constance',
     'constance.backends.database',
-
+    'post_office',
     'seahub.api2',
     'seahub.avatar',
     'seahub.base',
     'seahub.contacts',
+    'seahub.institutions',
     'seahub.wiki',
     'seahub.group',
     'seahub.message',
@@ -195,12 +196,15 @@ AUTHENTICATION_BACKENDS = (
 )
 
 LOGIN_REDIRECT_URL = '/profile/'
+LOGIN_URL = SITE_ROOT + 'accounts/login'
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
 # allow seafile amdin view user's repo
 ENABLE_SYS_ADMIN_VIEW_REPO = False
 
+#allow search from LDAP directly during auto-completion (not only search imported users)
+ENABLE_SEARCH_FROM_LDAP_DIRECTLY = False
 # show traffic on the UI
 SHOW_TRAFFIC = True
 
@@ -237,11 +241,19 @@ USER_PASSWORD_STRENGTH_LEVEL = 3
 # when True, check password strength level, STRONG(or above) is allowed
 USER_STRONG_PASSWORD_REQUIRED = False
 
+# Force user to change password when admin add/reset a user.
+FORCE_PASSWORD_CHANGE = True
 # Using server side crypto by default, otherwise, let user choose crypto method.
 FORCE_SERVER_CRYPTO = True
 
 # Enable or disable repo history setting
 ENABLE_REPO_HISTORY_SETTING = True
+
+# Enable or disable org repo creation by user
+ENABLE_USER_CREATE_ORG_REPO = True
+
+DISABLE_SYNC_WITH_ANY_FOLDER = False
+
 
 # File preview
 FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
@@ -263,7 +275,8 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 80, 290)
+#AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 80, 290)
+AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -323,8 +336,11 @@ REQUIRE_DETAIL_ON_REGISTRATION = False
 
 # Account initial password, for password resetting.
 # INIT_PASSWD can either be a string, or a function (function has to be set without the brackets)
+# def genpassword():
+#    return ''.join([random.choice(string.digits + string.letters) for i in range(0, 10)])
 def genpassword():
-    return ''.join([random.choice(string.digits + string.letters) for i in range(0, 10)])
+    from django.utils.crypto import get_random_string
+    return get_random_string(10)
 
 INIT_PASSWD = genpassword
 
@@ -370,14 +386,14 @@ LOGGING = {
      },
     'handlers': {
         'default': {
-            'level':'WARN',
+            'level':'INFO',
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB
             'formatter':'standard',
         },
         'request_handler': {
-                'level':'WARN',
+                'level':'INFO',
                 'class':'logging.handlers.RotatingFileHandler',
                 'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
                 'maxBytes': 1024*1024*10, # 10 MB
@@ -392,12 +408,12 @@ LOGGING = {
     'loggers': {
         '': {
             'handlers': ['default'],
-            'level': 'WARN',
+            'level': 'INFO',
             'propagate': True
         },
         'django.request': {
             'handlers': ['request_handler', 'mail_admins'],
-            'level': 'WARN',
+            'level': 'INFO',
             'propagate': False
         },
     }
@@ -413,7 +429,7 @@ SESSION_COOKIE_AGE = 24 * 60 * 60
 # Days of remembered login info (deafult: 7 days)
 LOGIN_REMEMBER_DAYS = 7
 
-SEAFILE_VERSION = '5.0.0'
+SEAFILE_VERSION = '5.1.0'
 
 # Compress static files(css, js)
 COMPRESS_URL = MEDIA_URL
@@ -498,7 +514,7 @@ get_events_conf_file()
 # Settings for Extra App #
 ##########################
 
-ENABLE_PUBFILE = False
+# ENABLE_PUBFILE = False
 
 ENABLE_SUB_LIBRARY = True
 
@@ -586,23 +602,26 @@ if 'win32' in sys.platform:
 
 # Put here after loading other settings files if `SITE_ROOT` is modified in
 # other settings files.
-LOGIN_URL = SITE_ROOT + 'accounts/login'
+# LOGIN_URL = SITE_ROOT + 'accounts/login'
 
 INNER_FILE_SERVER_ROOT = 'http://127.0.0.1:' + FILE_SERVER_PORT
 
 CONSTANCE_CONFIG = {
     'SERVICE_URL': (SERVICE_URL,''),
     'FILE_SERVER_ROOT': (FILE_SERVER_ROOT,''),
-    'DISABLE_SYNC_WITH_ANY_FOLDER': (False,''),
+#   'DISABLE_SYNC_WITH_ANY_FOLDER': (False,''),
+    'DISABLE_SYNC_WITH_ANY_FOLDER': (DISABLE_SYNC_WITH_ANY_FOLDER,''),
 
     'ENABLE_SIGNUP': (ENABLE_SIGNUP,''),
     'ACTIVATE_AFTER_REGISTRATION': (ACTIVATE_AFTER_REGISTRATION,''),
     'REGISTRATION_SEND_MAIL': (REGISTRATION_SEND_MAIL ,''),
     'LOGIN_REMEMBER_DAYS': (LOGIN_REMEMBER_DAYS,''),
+    'ENABLE_USER_CREATE_ORG_REPO': (ENABLE_USER_CREATE_ORG_REPO, ''),
 
     'ENABLE_ENCRYPTED_LIBRARY': (ENABLE_ENCRYPTED_LIBRARY,''),
     'REPO_PASSWORD_MIN_LENGTH': (REPO_PASSWORD_MIN_LENGTH,''),
     'ENABLE_REPO_HISTORY_SETTING': (ENABLE_REPO_HISTORY_SETTING,''),
+    'FORCE_PASSWORD_CHANGE': (FORCE_PASSWORD_CHANGE, ''),
 
     'USER_STRONG_PASSWORD_REQUIRED': (USER_STRONG_PASSWORD_REQUIRED,''),
     'USER_PASSWORD_MIN_LENGTH': (USER_PASSWORD_MIN_LENGTH,''),
@@ -611,4 +630,5 @@ CONSTANCE_CONFIG = {
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH,''),
 }
 
-SEAFILE_VERSION = "5.0.3"
+SEAFILE_VERSION = "5.1.2"
+
