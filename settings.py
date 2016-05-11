@@ -353,7 +353,7 @@ SITE_NAME = 'KEEPER'
 # Path to the Logo Imagefile (relative to the media path)
 LOGO_PATH = 'custom/KeeperLogo.png'
 # logo size. the unit is 'px'
-LOGO_WIDTH = 160
+LOGO_WIDTH = 140
 LOGO_HEIGHT = 40
 
 # css to modify the seafile css (e.g. css/my_site.css)
