@@ -148,7 +148,8 @@ case "$1" in
         deploy_directories "seafile-server-latest"
     ;;
 
-    deploy-file)
+    deploy)
+        [ -z "$2" ] && ($0 || exit 1 )
         deploy_file $2
     ;;
 
@@ -170,7 +171,7 @@ case "$1" in
 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-file|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy <file-name>|restore|clean-all|compile-i18n}"
         exit 1
      ;;
 esac
