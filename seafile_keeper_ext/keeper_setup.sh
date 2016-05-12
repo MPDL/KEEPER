@@ -53,9 +53,9 @@ function create_custom_link () {
 
 
 # Files of directories to be created
-function create_directories () {
+function create_and_deploy_directories () {
     for i in "$@"; do
-        echo "Install directory $i"
+        echo "Install directory <$i>"
         local DEST_DIR=$SEAFILE_DIR/$i
         if [ -d "$DEST_DIR" ]; then
            echo "$DEST_DIR already exists, skipping!"
@@ -76,13 +76,12 @@ function create_directories () {
 # Files of directories to be overridden
 function deploy_directories  () {
     for i in "$@"; do
-        echo "Deploy directory $i"
+        echo "Deploy directory <$i>"
         local DEST_DIR=$SEAFILE_DIR/$i
         if [ ! -d "$DEST_DIR" ]; then
             err_and_exit "Directory does not exist: $DEST_DIR"
         else
-#            SOURCE_DIR=$EXT_DIR/$i
-            local SOURCE_FILES=( $(find $i -type f) )
+            local SOURCE_FILES=( $(find -H $i -type f) )
             for f in "${SOURCE_FILES[@]}"; do
                 deploy_file $f
            done
@@ -124,12 +123,12 @@ function backup_file () {
 # Restore backup files
 function restore_directories () {
     for i in "$@"; do
-        echo "Restore directory $i"
+        echo "Restore directory <$i>"
         local DEST_DIR=$SEAFILE_DIR/$i
         if [ ! -d "$DEST_DIR" ]; then
             err_and_exit "Directory does not exist: $DEST_DIR"
         else
-            local SOURCE_FILES=( $(find $DEST_DIR -type f -name "*${BACKUP_POSTFIX}") )
+            local SOURCE_FILES=( $(find -H $DEST_DIR -type f -name "*${BACKUP_POSTFIX}") )
             for f in "${SOURCE_FILES[@]}"; do
                 local DEST_FILE=${f%${BACKUP_POSTFIX}}
                 echo "Restore $f"
@@ -144,7 +143,7 @@ function restore_directories () {
 
 case "$1" in
     deploy-all)
-        create_directories "scripts" "seahub-data"
+        create_and_deploy_directories "scripts" "seahub-data"
         create_custom_link
         deploy_directories "seafile-server-latest"
     ;;
@@ -164,8 +163,8 @@ case "$1" in
     ;;
 
     compile-i18n)
-        pushd $SEAFILE_LATEST_DIR/seahub/media 
-        sh ./i18n.sh
+        pushd $SEAFILE_LATEST_DIR/seahub
+        bash ./i18n.sh compile-all
         popd
     ;;
 
