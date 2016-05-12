@@ -1998,7 +1998,7 @@ msgstr "Wir hoffen, dass Sie mit unserem Service zufrieden sind! "
 #: seahub/templates/email_base.html:13
 #, python-format
 msgid "The %(site_name)s team"
-msgstr "Mit freundlichen Grüßen</ br>\nIhr KEEPER Team</ br>\n"
+msgstr "Mit freundlichen Grüßen</ br>\nIhr %(site_name)s-Team</ br>"
 
 #: seahub/group/templates/group/group_manage.html:16
 #: seahub/templates/sysadmin/sys_user_admin_ldap_imported.html:19
