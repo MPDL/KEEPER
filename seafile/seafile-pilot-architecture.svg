@@ -1938,7 +1938,7 @@
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
      inkscape:cy="536.30742"
-     inkscape:cx="482.4847"
+     inkscape:cx="723.97066"
      inkscape:zoom="0.9309826"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -2007,7 +2007,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
         <cc:license
            rdf:resource="" />
       </cc:Work>
@@ -2057,15 +2057,15 @@
        transform="matrix(0,-1.0017342,0.9982688,0,0,0)"
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:10.90354729px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1;stroke:#2a8d84;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       x="-353.58972"
+       x="-498.34674"
        y="1175.1576"
        id="text34586"
        sodipodi:linespacing="94.999999%"><tspan
          sodipodi:role="line"
          id="tspan34588"
          style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:25px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1;stroke:#2a8d84;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         x="-353.58972"
-         y="1175.1576">storage    backend</tspan></text>
+         x="-498.34674"
+         y="1175.1576">storage backend</tspan></text>
     <path
        inkscape:connector-curvature="0"
        id="path55062"
