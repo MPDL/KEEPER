@@ -15,6 +15,8 @@ function err_and_exit () {
     exit 1;
 }
 
+# Create link to custom directory for seafile customization, 
+# see http://manual.seafile.com/config/seahub_customization.html
 function create_custom_link () {
     if [ -L "$CUSTOM_LINK" ]; then
         echo "Link $CUSTOM_LINK already exists, skipping!"
@@ -30,27 +32,12 @@ function create_custom_link () {
     fi
 }
 
+# Remove link to custom directory 
 function remove_custom_link () {
     if [ -L "$CUSTOM_LINK" ]; then
         rm -v $CUSTOM_LINK
     fi
 }
-
-function create_custom_link () {
-    if [ -L "$CUSTOM_LINK" ]; then
-        echo "Link $CUSTOM_LINK already exists, skipping!"
-    else
-        if [ ! -d $CUSTOM_DIR ]; then
-            err_and_exit "$CUSTOM_DIR does not exist"
-        else 
-            ln -sv $CUSTOM_DIR $CUSTOM_LINK 
-            if [ $? -ne 0  ]; then
-                err_and_exit "Cannot create link to $CUSTOM_DIR"
-            fi
-        fi
-    fi
-}
-
 
 # Files of directories to be created
 function create_and_deploy_directories () {
@@ -73,7 +60,7 @@ function create_and_deploy_directories () {
     done
 }
 
-# Files of directories to be overridden
+# Deploy directories
 function deploy_directories  () {
     for i in "$@"; do
         echo "Deploy directory <$i>"
@@ -89,12 +76,12 @@ function deploy_directories  () {
     done
 }
 
+# Deploy single file
 function deploy_file () {
     if [ ! -f "$1" ]; then
         err_and_exit "File does not exist: $1"
     fi
     local DEST_FILE=$SEAFILE_DIR/$1
-    #if backup does not exist make it
     backup_file $DEST_FILE
     cp -av $1 $DEST_FILE 
     if [ $? -ne 0  ]; then
@@ -103,11 +90,14 @@ function deploy_file () {
 }
 
 
+
+# Backup file 
 function backup_file () {
     if [ ! -f "$1"  ]; then
         err_and_exit "File does not exist: $1"
     fi
     local DEST_FILE=${1}${BACKUP_POSTFIX}
+    #if file already exists, do not backup it
     if [ -f "$DEST_FILE" ]; then
         echo "Backup already exists: $DEST_FILE, skipping!"
     else
