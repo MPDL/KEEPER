@@ -15,6 +15,13 @@ function err_and_exit () {
     exit 1;
 }
 
+function check_consistency () {
+	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
+        err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, aborting!"
+	fi
+}
+
+
 # Create link to custom directory for seafile customization, 
 # see http://manual.seafile.com/config/seahub_customization.html
 function create_custom_link () {
@@ -130,6 +137,8 @@ function restore_directories () {
        fi
     done
 }
+
+check_consistency
 
 case "$1" in
     deploy-all)
