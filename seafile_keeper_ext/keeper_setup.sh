@@ -7,6 +7,8 @@ CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
+MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
+
 
 function err_and_exit () {
     if [ "$1" ]; then
@@ -44,6 +46,18 @@ function remove_custom_link () {
     if [ -L "$CUSTOM_LINK" ]; then
         rm -v $CUSTOM_LINK
     fi
+}
+
+# Check file merging
+function check_merging () {
+    if [ ! -f "$1" ]; then
+        err_and_exit "File does not exist: $1"
+    fi
+	local FIRST_LINE=$(head -n 1 $1)
+	if [ "$FIRST_LINE" = "$MERGE_MANUALLY_STRING" ]; then
+		echo " WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!"
+	fi
+	
 }
 
 # Files of directories to be created
@@ -94,7 +108,9 @@ function deploy_file () {
     if [ $? -ne 0  ]; then
         err_and_exit "Cannot copy $1 to $DEST_FILE"
     fi
+	check_merging $DEST_FILE
 }
+
 
 
 

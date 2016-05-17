@@ -1,3 +1,4 @@
+# !!!MERGE MANUALLY!!!
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
 
@@ -96,8 +97,8 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-# SEE LOCAL SERVER!!!!
-#SECRET_KEY = ''
+# !!!MERGE!!!
+SECRET_KEY = ''
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -138,6 +139,7 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
+# !!!MERGE!!!
 LANGUAGES = (
     ('de', gettext_noop(u'Deutsch')),
     ('en', gettext_noop('English')),
@@ -229,6 +231,9 @@ REPO_PASSWORD_MIN_LENGTH = 8
 # mininum length for the password of a share link
 SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 
+# enable or disable share link audit
+ENABLE_SHARE_LINK_AUDIT = False
+
 # mininum length for user's password
 USER_PASSWORD_MIN_LENGTH = 6
 
@@ -275,7 +280,6 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-#AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 80, 290)
 AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
@@ -336,8 +340,6 @@ REQUIRE_DETAIL_ON_REGISTRATION = False
 
 # Account initial password, for password resetting.
 # INIT_PASSWD can either be a string, or a function (function has to be set without the brackets)
-# def genpassword():
-#    return ''.join([random.choice(string.digits + string.letters) for i in range(0, 10)])
 def genpassword():
     from django.utils.crypto import get_random_string
     return get_random_string(10)
@@ -345,18 +347,24 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
+# !!!MERGE!!!
 SITE_TITLE = 'KEEPER'
 
 # Base name used in email sending
+# !!!MERGE!!!
 SITE_NAME = 'KEEPER'
 
 # Path to the Logo Imagefile (relative to the media path)
+# !!!MERGE!!!
 LOGO_PATH = 'custom/KeeperLogo.png'
 # logo size. the unit is 'px'
+# !!!MERGE!!!
 LOGO_WIDTH = 140
+# !!!MERGE!!!
 LOGO_HEIGHT = 40
 
 # css to modify the seafile css (e.g. css/my_site.css)
+# !!!MERGE!!!
 BRANDING_CSS = 'custom/keeper.css'
 
 # Using Django to server static file. Set to `False` if deployed behide a web
@@ -422,6 +430,7 @@ LOGGING = {
 #Login Attempt
 LOGIN_ATTEMPT_LIMIT = 3
 LOGIN_ATTEMPT_TIMEOUT = 15 * 60 # in seconds (default: 15 minutes)
+FREEZE_USER_ON_LOGIN_FAILED = False # deactivate user account when login attempts exceed limit
 
 # Age of cookie, in seconds (default: 1 day).
 SESSION_COOKIE_AGE = 24 * 60 * 60
@@ -609,13 +618,14 @@ INNER_FILE_SERVER_ROOT = 'http://127.0.0.1:' + FILE_SERVER_PORT
 CONSTANCE_CONFIG = {
     'SERVICE_URL': (SERVICE_URL,''),
     'FILE_SERVER_ROOT': (FILE_SERVER_ROOT,''),
-#   'DISABLE_SYNC_WITH_ANY_FOLDER': (False,''),
     'DISABLE_SYNC_WITH_ANY_FOLDER': (DISABLE_SYNC_WITH_ANY_FOLDER,''),
 
     'ENABLE_SIGNUP': (ENABLE_SIGNUP,''),
     'ACTIVATE_AFTER_REGISTRATION': (ACTIVATE_AFTER_REGISTRATION,''),
     'REGISTRATION_SEND_MAIL': (REGISTRATION_SEND_MAIL ,''),
     'LOGIN_REMEMBER_DAYS': (LOGIN_REMEMBER_DAYS,''),
+    'LOGIN_ATTEMPT_LIMIT': (LOGIN_ATTEMPT_LIMIT, ''),
+    'FREEZE_USER_ON_LOGIN_FAILED': (FREEZE_USER_ON_LOGIN_FAILED, ''),
     'ENABLE_USER_CREATE_ORG_REPO': (ENABLE_USER_CREATE_ORG_REPO, ''),
 
     'ENABLE_ENCRYPTED_LIBRARY': (ENABLE_ENCRYPTED_LIBRARY,''),
@@ -630,5 +640,6 @@ CONSTANCE_CONFIG = {
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH,''),
 }
 
-SEAFILE_VERSION = "5.1.2"
+# !!!MERGE!!!
+SEAFILE_VERSION = ""
 
