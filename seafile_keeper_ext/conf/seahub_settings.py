@@ -37,8 +37,8 @@ SHOW_TRAFFIC = True
 # through Libraries page in System Admin. Default is False.
 ENABLE_SYS_ADMIN_VIEW_REPO = True
 
-#DESKTOP_CUSTOM_LOGO = 'custom/mpdl-logo@24H.png'
-DESKTOP_CUSTOM_BRAND = 'Seafile @ MPDL'
+DESKTOP_CUSTOM_LOGO = 'custom/keeper_client_logo.png'
+DESKTOP_CUSTOM_BRAND = 'KEEPER'
 
 # MPDL EMAIL settings
 EMAIL_USE_TLS = True
