@@ -37,13 +37,13 @@ SHOW_TRAFFIC = True
 # through Libraries page in System Admin. Default is False.
 ENABLE_SYS_ADMIN_VIEW_REPO = True
 
-DESKTOP_CUSTOM_LOGO = 'custom/keeper_client_logo.png'
+DESKTOP_CUSTOM_LOGO = 'custom/keeper-client-logo.png'
 DESKTOP_CUSTOM_BRAND = 'KEEPER'
 
 # MPDL EMAIL settings
 EMAIL_USE_TLS = True
 EMAIL_HOST = '__EMAIL_HOST__'        # smpt server
-EMAIL_HOST_USER = '__EMAIl_HOST_USER__'    # username and domain
+EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
 EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 EMAIL_PORT = '__EMAIL_PORT__'
 ###### DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

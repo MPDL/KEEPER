@@ -7,6 +7,8 @@ CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
+PROPERTIES_FILE=keeper-prod.properties
+
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
 
 
@@ -97,6 +99,13 @@ function deploy_directories  () {
     done
 }
 
+function deploy_conf () {
+    if [ ! -f "$PROPERTIES_FILE" ]; then
+        err_and_exit "Cannot find properties file $PROPERTIES_FILE for the instance"
+    fi
+	deploy_file "conf/seahub_settings.py" "-p" "$PROPERTIES_FILE"
+}
+
 # Deploy single file
 function deploy_file () {
     if [ ! -f "$1" ]; then
@@ -104,14 +113,34 @@ function deploy_file () {
     fi
     local DEST_FILE=$SEAFILE_DIR/$1
     backup_file $DEST_FILE
-    cp -av $1 $DEST_FILE 
-    if [ $? -ne 0  ]; then
-        err_and_exit "Cannot copy $1 to $DEST_FILE"
-    fi
+
+	# expand properties
+	if [ "$2" = "-p" ] && [ -f "$3" ]; then
+		expand_properties_and_deploy_file $1 $3 $DEST_FILE
+	else	
+		cp -av $1 $DEST_FILE 
+		if [ $? -ne 0  ]; then
+			err_and_exit "Cannot copy $1 to $DEST_FILE"
+		fi
+	fi
 	check_merging $DEST_FILE
 }
 
-
+function expand_properties_and_deploy_file () {
+	local IN=$1
+	local OUT=$3
+	local PROPS_FILE=$2
+	local RESULT=`cat -v $PROPS_FILE | awk -F= '{print "s/" $1 "/" $2 "/g"}' | sed -f - $IN`
+	if [ -z "$RESULT" ]; then 
+		err_and_exit "Cannot expand properties $PROPS_FILE for $IN"
+	fi
+	echo "$RESULT" >$OUT
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot deploy expanded file $IN to $OUT"
+	else 
+		echo " FIle $IN expanded with $PROPS_FILE and copied to $OUT"	
+	fi
+}
 
 
 # Backup file 
@@ -161,11 +190,12 @@ case "$1" in
         create_and_deploy_directories "scripts" "seahub-data"
         create_custom_link
         deploy_directories "seafile-server-latest"
+        deploy_conf  
     ;;
 
     deploy)
         [ -z "$2" ] && ($0 || exit 1 )
-        deploy_file $2
+        deploy_file $2 $3 $4
     ;;
 
     restore)
@@ -186,7 +216,7 @@ case "$1" in
 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy <file-name>|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
         exit 1
      ;;
 esac
