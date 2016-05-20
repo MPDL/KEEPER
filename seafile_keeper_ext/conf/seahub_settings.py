@@ -47,12 +47,11 @@ EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
 EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 EMAIL_PORT = '__EMAIL_PORT__'
 ###### DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-DEFAULT_FROM_EMAIL = 'keeper@mpdl.mpg.de'
-SERVER_EMAIL = 'keeper@mpdl.mpg.de'
+DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
+SERVER_EMAIL = '__SERVER_EMAIL__'
 
 # Whether to send email when a system admin adding a new member. Default is `True`.
 SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = False
 
 # Whether to send email when a system admin resetting a user's password. Default is `True`.
 SEND_EMAIL_ON_RESETTING_USER_PASSWD = False
-

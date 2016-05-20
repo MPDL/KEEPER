@@ -9,6 +9,7 @@ BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
 PROPERTIES_FILE=keeper-prod.properties
 
+# The string should be put on top of files which should be merged manually
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
 
 
@@ -33,14 +34,17 @@ function create_custom_link () {
         echo "Link $CUSTOM_LINK already exists, skipping!"
     else
         if [ ! -d $CUSTOM_DIR ]; then
-            err_and_exit "$CUSTOM_DIR does not exist"
-        else 
-            ln -sv $CUSTOM_DIR $CUSTOM_LINK 
+			echo "$CUSTOM_DIR does not exist, creating"
+			mkdir -p "$CUSTOM_DIR"
             if [ $? -ne 0  ]; then
-                err_and_exit "Cannot create link to $CUSTOM_DIR"
+                err_and_exit "Cannot create CUSTOM_DIR"
             fi
-        fi
-    fi
+		fi	
+		ln -sv $CUSTOM_DIR $CUSTOM_LINK 
+		if [ $? -ne 0  ]; then
+			err_and_exit "Cannot create link to $CUSTOM_DIR"
+		fi
+	fi
 }
 
 # Remove link to custom directory 
@@ -55,9 +59,8 @@ function check_merging () {
     if [ ! -f "$1" ]; then
         err_and_exit "File does not exist: $1"
     fi
-	local FIRST_LINE=$(head -n 1 $1)
-	if [ "$FIRST_LINE" = "$MERGE_MANUALLY_STRING" ]; then
-		echo " WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!"
+	if [ "$(head -n 1 $1)" = "$MERGE_MANUALLY_STRING" ]; then
+		echo -e "$(tput setaf 1)WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!$(tput sgr0), e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX}" 
 	fi
 	
 }
@@ -99,11 +102,14 @@ function deploy_directories  () {
     done
 }
 
+# Deploy conf/directory
 function deploy_conf () {
     if [ ! -f "$PROPERTIES_FILE" ]; then
         err_and_exit "Cannot find properties file $PROPERTIES_FILE for the instance"
     fi
-	deploy_file "conf/seahub_settings.py" "-p" "$PROPERTIES_FILE"
+	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf; do 
+		deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
+    done
 }
 
 # Deploy single file
@@ -130,7 +136,8 @@ function expand_properties_and_deploy_file () {
 	local IN=$1
 	local OUT=$3
 	local PROPS_FILE=$2
-	local RESULT=`cat -v $PROPS_FILE | awk -F= '{print "s/" $1 "/" $2 "/g"}' | sed -f - $IN`
+	# remove commented propeties ------🡓
+	local RESULT=`cat -v $PROPS_FILE | sed -e 's/#.*$//' | awk -F= '{print "s/" $1 "/" $2 "/g"}' | sed -f - $IN`
 	if [ -z "$RESULT" ]; then 
 		err_and_exit "Cannot expand properties $PROPS_FILE for $IN"
 	fi
@@ -138,7 +145,7 @@ function expand_properties_and_deploy_file () {
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot deploy expanded file $IN to $OUT"
 	else 
-		echo " FIle $IN expanded with $PROPS_FILE and copied to $OUT"	
+		echo " File $IN expanded with $PROPS_FILE and copied to $OUT"	
 	fi
 }
 
@@ -191,7 +198,12 @@ case "$1" in
         create_custom_link
         deploy_directories "seafile-server-latest"
         deploy_conf  
+		$0 compile-i18n
     ;;
+
+    deploy-conf)
+        deploy_conf  
+	;;
 
     deploy)
         [ -z "$2" ] && ($0 || exit 1 )
@@ -216,7 +228,7 @@ case "$1" in
 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
         exit 1
      ;;
 esac
