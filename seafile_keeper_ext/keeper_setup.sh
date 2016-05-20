@@ -199,7 +199,8 @@ case "$1" in
         create_and_deploy_directories "scripts" "seahub-data"
         create_custom_link
         deploy_directories "seafile-server-latest"
-        deploy_conf  
+        deploy_conf 
+	    #TODO: create_server_script_links 	
 		$0 compile-i18n
     ;;
 
