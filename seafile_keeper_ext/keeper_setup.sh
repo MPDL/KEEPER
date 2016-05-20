@@ -21,6 +21,7 @@ function err_and_exit () {
 }
 
 function check_consistency () {
+	# check link SEAFILE_LATEST_DIR existence
 	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
         err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, aborting!"
 	fi
@@ -102,7 +103,7 @@ function deploy_directories  () {
     done
 }
 
-# Deploy conf/directory
+# Deploy conf/ directory
 function deploy_conf () {
     if [ ! -f "$PROPERTIES_FILE" ]; then
         err_and_exit "Cannot find properties file $PROPERTIES_FILE for the instance"
@@ -132,6 +133,7 @@ function deploy_file () {
 	check_merging $DEST_FILE
 }
 
+# Expand properties and deploy file
 function expand_properties_and_deploy_file () {
 	local IN=$1
 	local OUT=$3
