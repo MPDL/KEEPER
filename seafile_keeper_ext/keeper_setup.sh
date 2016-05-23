@@ -12,6 +12,10 @@ PROPERTIES_FILE=keeper-prod.properties
 # The string should be put on top of files which should be merged manually
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
 
+MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
+HTTP_CONF_ROOT_DIR=/etc/nginx
+HTML_DEFAULT_DIR=/usr/share/nginx/html
+MAINTENANCE_HTML=keeper_maintenance.html
 
 function err_and_exit () {
     if [ "$1" ]; then
@@ -113,6 +117,19 @@ function deploy_conf () {
     done
 }
 
+# Deploy HTTP confs and maintenance stuff 
+deploy_http_conf () {
+	# deploy http maintenance conf 
+	cp -av $EXT_DIR/http/$MAINTENANCE_HTTP_CONF $HTTP_CONF_ROOT_DIR/sites-available
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot copy HTTP maintenance conf"
+	fi
+	cp -av $EXT_DIR/http/$MAINTENANCE_HTML $HTML_DEFAULT_DIR
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot copy HTTP maintenance html"
+	fi
+}
+
 # Deploy single file
 function deploy_file () {
     if [ ! -f "$1" ]; then
@@ -202,6 +219,7 @@ case "$1" in
         deploy_conf 
 	    #TODO: create_server_script_links 	
 		$0 compile-i18n
+		deploy_http_conf
     ;;
 
     deploy-conf)

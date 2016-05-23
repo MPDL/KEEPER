@@ -8,6 +8,11 @@ EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
 PROPERTIES_FILE=${EXT_DIR}/keeper-prod.properties
 BACKUP_DIR=/keeper/backup/databases
 
+# DEPENDENCY: ifor usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
+HTTP_CONF=keeper.conf
+MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
+HTTP_CONF_ROOT_DIR=/etc/nginx
+
 function err_and_exit () {
 if [ "$1" ]; then
 	echo "$(tput setaf 2)Error: ${1}$(tput sgr0)"
@@ -18,6 +23,33 @@ exit 1;
 function echo_green () {
 	echo -e "$(tput setaf 2)${1}$(tput sgr0)"
 }
+
+# switch HTTP configurations between default and maintenance
+function switch_http_server_default_and_maintenance_confs () {
+	local TO_DIS="$MAINTENANCE_HTTP_CONF"
+	local TO_EN="$HTTP_CONF" 
+	
+	if [ -L "$HTTP_CONF_ROOT_DIR/sites-enabled/$TO_EN" ]; then
+		TO_DIS="$HTTP_CONF"
+		TO_EN="$MAINTENANCE_HTTP_CONF"
+	fi	
+
+	/bin/bash /usr/local/bin/nginx_dissite $TO_DIS
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot disable HTTP config $TO_DIS"
+	fi
+	
+	/bin/bash /usr/local/bin/nginx_ensite $TO_EN
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot enable HTTP config $TO_EN"
+	fi
+
+	service nginx reload
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot reload HTTP $TO_EN"
+	fi
+}
+
 
 if [ ! -d "$BACKUP_DIR"  ]; then
 	err_and_exit "Cannot find backup directory: $BACKUP_DIR"
@@ -31,6 +63,10 @@ source $PROPERTIES_FILE
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
+
+
+# switch to keeper maintenance HTTP conf
+switch_http_server_default_and_maintenance_confs
 
 pushd $SEAFILE_DIR/scripts
 
@@ -63,6 +99,9 @@ fi
 echo_green "OK"
 
 popd
+
+# switch back to keeper HTTP conf
+switch_http_server_default_and_maintenance_confs
 
 echo_green "Backup is successful!"
 
