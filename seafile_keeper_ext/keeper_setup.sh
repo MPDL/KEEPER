@@ -19,7 +19,7 @@ MAINTENANCE_HTML=keeper_maintenance.html
 
 function err_and_exit () {
     if [ "$1" ]; then
-        echo "Error: $1"
+        echo -e "$(tput setaf 1)Error: ${1}$(tput sgr0)"
     fi
     exit 1;
 }
@@ -29,6 +29,15 @@ function check_consistency () {
 	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
         err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, aborting!"
 	fi
+}
+
+function check_file () {
+    if [ ! -f "$1" ]; then
+		if [ -n "$2" ]; then
+			err_and_exit "$2"
+		fi
+        err_and_exit "Cannot find file $1"
+    fi
 }
 
 
@@ -61,9 +70,7 @@ function remove_custom_link () {
 
 # Check file merging
 function check_merging () {
-    if [ ! -f "$1" ]; then
-        err_and_exit "File does not exist: $1"
-    fi
+	check_file "$1"
 	if [ "$(head -n 1 $1)" = "$MERGE_MANUALLY_STRING" ]; then
 		echo -e "$(tput setaf 1)WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!$(tput sgr0), e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX}" 
 	fi
@@ -109,32 +116,41 @@ function deploy_directories  () {
 
 # Deploy conf/ directory
 function deploy_conf () {
-    if [ ! -f "$PROPERTIES_FILE" ]; then
-        err_and_exit "Cannot find properties file $PROPERTIES_FILE for the instance"
-    fi
+	check_file "$PROPERTIES_FILE" "Cannot find properties file $PROPERTIES_FILE for the instance"
 	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf; do 
 		deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
     done
 }
 
+
 # Deploy HTTP confs and maintenance stuff 
 deploy_http_conf () {
 	# deploy http maintenance conf 
-	cp -av $EXT_DIR/http/$MAINTENANCE_HTTP_CONF $HTTP_CONF_ROOT_DIR/sites-available
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot copy HTTP maintenance conf"
+	
+	local F="$HTTP_CONF_ROOT_DIR/sites-available/$MAINTENANCE_HTTP_CONF" 
+	if [ -f "$F" ]; then
+        echo "Config already exists: $F, skipping!"
+	else  
+		cp -av $EXT_DIR/http/$MAINTENANCE_HTTP_CONF $HTTP_CONF_ROOT_DIR/sites-available
+		if [ $? -ne 0  ]; then
+			err_and_exit "Cannot copy HTTP maintenance conf"
+		fi
 	fi
-	cp -av $EXT_DIR/http/$MAINTENANCE_HTML $HTML_DEFAULT_DIR
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot copy HTTP maintenance html"
+	F="$HTML_DEFAULT_DIR/$MAINTENANCE_HTML"
+	if [ -f "$F" ]; then
+        echo "Html already exists: $F, skipping!"
+	else  
+		cp -av $EXT_DIR/http/$MAINTENANCE_HTML $HTML_DEFAULT_DIR
+		if [ $? -ne 0  ]; then
+			err_and_exit "Cannot copy HTTP maintenance html"
+		fi
 	fi
+	# TODO: deploy HTTP(S) keeper.conf
 }
 
 # Deploy single file
 function deploy_file () {
-    if [ ! -f "$1" ]; then
-        err_and_exit "File does not exist: $1"
-    fi
+	check_file "$1"
     local DEST_FILE=$SEAFILE_DIR/$1
     backup_file $DEST_FILE
 
@@ -171,9 +187,7 @@ function expand_properties_and_deploy_file () {
 
 # Backup file 
 function backup_file () {
-    if [ ! -f "$1"  ]; then
-        err_and_exit "File does not exist: $1"
-    fi
+	check_file "$1"
     local DEST_FILE=${1}${BACKUP_POSTFIX}
     #if file already exists, do not backup it
     if [ -f "$DEST_FILE" ]; then
