@@ -356,7 +356,7 @@ SITE_NAME = 'KEEPER'
 
 # Path to the Logo Imagefile (relative to the media path)
 # !!!MERGE!!!
-LOGO_PATH = 'custom/KeeperLogo.png'
+LOGO_PATH = 'custom/KeeperLogo.svg'
 # logo size. the unit is 'px'
 # !!!MERGE!!!
 LOGO_WIDTH = 140
