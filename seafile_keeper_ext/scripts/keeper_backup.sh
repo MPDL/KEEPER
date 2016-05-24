@@ -14,11 +14,20 @@ MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
 function err_and_exit () {
-if [ "$1" ]; then
-	echo "$(tput setaf 2)Error: ${1}$(tput sgr0)"
-fi
-exit 1;
+	if [ "$1" ]; then
+		echo "$(tput setaf 1)Error: ${1}$(tput sgr0)"
+	fi
+	exit 1;
 }
+function check_file () {
+    if [ ! -f "$1" ]; then
+		if [ -n "$2" ]; then
+			err_and_exit "$2"
+		fi
+        err_and_exit "Cannot find file $1"
+    fi
+}
+
 
 function echo_green () {
 	echo -e "$(tput setaf 2)${1}$(tput sgr0)"
@@ -51,19 +60,30 @@ function switch_http_server_default_and_maintenance_confs () {
 }
 
 
+# check keeper environment
 if [ ! -d "$BACKUP_DIR"  ]; then
 	err_and_exit "Cannot find backup directory: $BACKUP_DIR"
 fi
 
-if [ ! -f "$PROPERTIES_FILE"  ]; then
-	err_and_exit "Cannot find KEEPER properties file $PROPERTIES_FILE"
+if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
+	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
+
+check_file "$PROPERTIES_FILE"
+
+
 
 source $PROPERTIES_FILE
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
 
+# check seafile object storage integrity
+pushd $SEAFILE_LATEST_DIR
+/bin/bash ./seaf-fsck.sh
+if [ $? -ne 0  ]; then
+	err_and_exit "Object storage integrity test has failed"
+fi
 
 # switch to keeper maintenance HTTP conf
 switch_http_server_default_and_maintenance_confs
@@ -98,6 +118,7 @@ if [ $? -ne 0  ]; then
 fi
 echo_green "OK"
 
+popd
 popd
 
 # switch back to keeper HTTP conf
