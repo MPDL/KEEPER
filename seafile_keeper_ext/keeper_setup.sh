@@ -27,7 +27,7 @@ function err_and_exit () {
 function check_consistency () {
 	# check link SEAFILE_LATEST_DIR existence
 	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
-        err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, aborting!"
+        err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, exiting!"
 	fi
 }
 
