@@ -8,8 +8,8 @@ EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
 PROPERTIES_FILE=${EXT_DIR}/keeper-prod.properties
 BACKUP_DIR=/keeper/backup/databases
 
-# DEPENDENCY: ifor usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
-HTTP_CONF=keeper.conf
+# DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
+HTTP_CONF=keeper-https.conf
 MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
@@ -71,8 +71,6 @@ fi
 
 check_file "$PROPERTIES_FILE"
 
-
-
 source $PROPERTIES_FILE
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
@@ -95,7 +93,10 @@ sh ./seafile-server.sh stop
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot stop seafile"
 fi
+
 echo_green "OK"
+
+
 
 echo -e "Backup seafile database...\n"
 for i in ccnet seafile seahub; do
