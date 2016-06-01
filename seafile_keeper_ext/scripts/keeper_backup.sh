@@ -100,6 +100,7 @@ echo_green "OK"
 
 echo -e "Backup seafile database...\n"
 for i in ccnet seafile seahub; do
+# TODO: gzip sql	
 	mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db > ${BACKUP_DIR}/${i}-db.sql.`date +"%Y-%m-%d-%H-%M-%S"`
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot dumb DB ${i}-db"
