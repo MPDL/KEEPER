@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#set -x
 # Set seafile root directory
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
@@ -7,7 +7,7 @@ CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
-PROPERTIES_FILE=keeper-prod.properties
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
 
 # The string should be put on top of files which should be merged manually
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
@@ -150,9 +150,21 @@ deploy_http_conf () {
 
 # Deploy single file
 function deploy_file () {
+	
+
 	check_file "$1"
+	# file exists 
     local DEST_FILE=$SEAFILE_DIR/$1
-    backup_file $DEST_FILE
+    if [ ! -f "$DEST_FILE" ]; then
+ 	    read -p "Deploy file $1 into $DEST_FILE (y/n)?" choice
+	    case "$choice" in 
+		    y|Y ) echo "yes";;
+		    n|N ) return;;
+		    * ) echo "invalid";return;;
+	    esac
+    else
+	    backup_file $DEST_FILE
+    fi	    
 
 	# expand properties
 	if [ "$2" = "-p" ] && [ -f "$3" ]; then
@@ -188,13 +200,13 @@ function expand_properties_and_deploy_file () {
 # Backup file 
 function backup_file () {
 	check_file "$1"
-    local DEST_FILE=${1}${BACKUP_POSTFIX}
+    local BACKUP_FILE=${1}${BACKUP_POSTFIX}
     #if file already exists, do not backup it
-    if [ -f "$DEST_FILE" ]; then
-        echo "Backup already exists: $DEST_FILE, skipping!"
+    if [ -f "$BACKUP_FILE" ]; then
+        echo "Backup already exists: $BACKUP_FILE, skipping!"
     else
         echo "Backup $1"
-        mv -v $1 $DEST_FILE
+        mv -v $1 $BACKUP_FILE
         if [ $? -ne 0  ]; then
             err_and_exit "Cannot backup $1"
         fi

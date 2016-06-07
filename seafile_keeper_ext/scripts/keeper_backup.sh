@@ -1,12 +1,12 @@
 #!/bin/bash
-#set -x
+set -x
 # Set seafile root directory
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
-PROPERTIES_FILE=${EXT_DIR}/keeper-prod.properties
-BACKUP_DIR=/keeper/backup/databases
+PROPERTIES_FILE=${EXT_DIR}/keeper-qa.properties
+BACKUP_DIR=/keeper/test@lta02/backup/databases
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
@@ -15,7 +15,7 @@ GPFS_DEVICE="gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
-HTTP_CONF=keeper-https.conf
+HTTP_CONF=keeper.conf
 MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
@@ -56,12 +56,12 @@ function switch_http_server_default_and_maintenance_confs () {
 		TO_EN="$MAINTENANCE_HTTP_CONF"
 	fi	
 
-	/bin/bash /usr/local/bin/nginx_dissite $TO_DIS
+	nginx_dissite $TO_DIS
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot disable HTTP config $TO_DIS"
 	fi
 	
-	/bin/bash /usr/local/bin/nginx_ensite $TO_EN
+	nginx_ensite $TO_EN
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot enable HTTP config $TO_EN"
 	fi
@@ -131,13 +131,13 @@ function asynchronous_backup () {
 	echo_green "OK"
 
 	# 3. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
-	echo "Start remote backup..."
+    echo "Start remote backup..."
 	# TODO: generate log on remote !!!!
-    ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT &"
-    if [ $? -ne 0 ]; then
-	    up_err_and_exit "Could not start remote backup" 
-    fi 
-	echo_green "OK"
+    #ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT &"
+    #if [ $? -ne 0 ]; then
+#	    up_err_and_exit "Could not start remote backup" 
+#    fi 
+#	echo_green "OK"
 
     echo -e "Asynchronous backup is OK\n"
 		
@@ -161,7 +161,21 @@ if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
 
-#check_object_storage_integrity
+if [ ! $(type -P "nginx_ensite") ]; then
+	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
+fi
+
+if [ ! $(type -P "mmcrsnapshot") ]; then
+	err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
+fi
+#TODO: check GPFS mount, probably preciser method! 
+RESULT=$(mount -t gpfs)
+if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then
+	# Old snapshot still exists, something is wrong
+	err_and_exit "Cannot find mounted gpfs: $RESULT" 
+fi
+
+check_object_storage_integrity
 
 shutdown_seafile
 
@@ -175,7 +189,6 @@ for i in ccnet seafile seahub; do
 	fi
 done
 echo_green "Database backup is OK"
-
 
 #rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${BACKUP_DIR}
 #echo_green "Seafile object storage backup is OK"
