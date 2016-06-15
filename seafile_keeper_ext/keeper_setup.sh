@@ -32,7 +32,7 @@ function check_file () {
 }
 
 # To be defined for each KEEPER instance separately!
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
 check_file "$PROPERTIES_FILE"
 source "${PROPERTIES_FILE}"
 if [ $? -ne 0  ]; then
