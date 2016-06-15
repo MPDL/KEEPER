@@ -5,7 +5,6 @@ SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
-BACKUP_DIR=/keeper/seafile-fileset/db-backup
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
@@ -17,12 +16,13 @@ GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
 # PROPERTIES_FILE to be defined for each KEEPER instance separately!
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
 check_file "$PROPERTIES_FILE"
 source "${PROPERTIES_FILE}"
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
+BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
 function err_and_exit () {
 	if [ "$1" ]; then
