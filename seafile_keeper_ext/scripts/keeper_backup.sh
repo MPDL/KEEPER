@@ -5,20 +5,24 @@ SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
-BACKUP_DIR=/keeper/test-fileset/db-backup
+BACKUP_DIR=/keeper/seafile-fileset/db-backup
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
 TODAY=`date '+%Y%m%d'`
 GPFS_DEVICE="gpfs_keeper"
-GPFS_FILESET="test-fileset"
-GPFS_SNAPSHOT="mmbackupSnap-test${TODAY}"
+GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
-HTTP_CONF=keeper.conf
-MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
 HTTP_CONF_ROOT_DIR=/etc/nginx
+
+# PROPERTIES_FILE to be defined for each KEEPER instance separately!
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
+check_file "$PROPERTIES_FILE"
+source "${PROPERTIES_FILE}"
+if [ $? -ne 0  ]; then
+	err_and_exit "Cannot intitialize variables"
+fi
 
 function err_and_exit () {
 	if [ "$1" ]; then
@@ -49,12 +53,12 @@ function echo_green () {
 
 # switch HTTP configurations between default and maintenance
 function switch_http_server_default_and_maintenance_confs () {
-	local TO_DIS="$MAINTENANCE_HTTP_CONF"
-	local TO_EN="$HTTP_CONF" 
+	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
+	local TO_EN="${__HTTP_CONF__}" 
 	
-	if [ -L "$HTTP_CONF_ROOT_DIR/sites-enabled/$TO_EN" ]; then
-		TO_DIS="$HTTP_CONF"
-		TO_EN="$MAINTENANCE_HTTP_CONF"
+	if [ -L "${__HTTP_CONF__}_ROOT_DIR/sites-enabled/$TO_EN" ]; then
+		TO_DIS="${__HTTP_CONF__}"
+		TO_EN="${__MAINTENANCE_HTTP_CONF__}"
 	fi	
 
 	nginx_dissite $TO_DIS
@@ -117,10 +121,10 @@ function asynchronous_backup () {
 	
     # 1. Create filesystem snapshot
 	echo "Create snapshot..."
-    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j $GPFS_FILESET
+    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
-	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT for fileset $GPFS_FILESET" 
+	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT for fileset ${__GPFS_FILESET__}" 
     fi 
 	echo_green "OK"
 
@@ -148,12 +152,7 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
-check_file "$PROPERTIES_FILE"
 
-source $PROPERTIES_FILE
-if [ $? -ne 0  ]; then
-	err_and_exit "Cannot intitialize variables"
-fi
 
 if [ ! $(type -P "nginx_ensite") ]; then
 	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
@@ -172,16 +171,18 @@ fi
 
 # Check for old GPFS snapshot
 # If there is one, the last backup didn't finish -> something is wrong
-RESULT=$(mmlssnapshot $GPFS_DEVICE -j $GPFS_FILESET)
+RESULT=$(mmlssnapshot $GPFS_DEVICE -j ${__GPFS_FILESET__})
 if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     # The way to find at least one snapshot for the fileset. This is not implemented directly in mmlssnapshot, 
     # see https://www.ibm.com/support/knowledgecenter/STXKQY_4.2.0/com.ibm.spectrum.scale.v4r2.adm.doc/bl1adm_mmlssnapshot.htm
     RESULT=$(echo -e "$RESULT" | grep -vwE "^(Snapshots|Directory)" | rev | grep -Eo '^\s*[^ ]+' | rev) 
-    if [[ "$RESULT" =~ "$GPFS_FILESET" ]]; then
+    if [[ "$RESULT" =~ "${__GPFS_FILESET__}" ]]; then
         # Old snapshot still exists, something is wrong
         err_and_exit "Old snapshots still exist" 
     fi
 fi
+
+exit 1
 
 check_object_storage_integrity
 

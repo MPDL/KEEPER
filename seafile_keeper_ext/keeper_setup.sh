@@ -7,12 +7,10 @@ CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
 
 # The string should be put on top of files which should be merged manually
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
 
-MAINTENANCE_HTTP_CONF=keeper_maintenance.conf
 HTTP_CONF_ROOT_DIR=/etc/nginx
 HTML_DEFAULT_DIR=/usr/share/nginx/html
 MAINTENANCE_HTML=keeper_maintenance.html
@@ -24,13 +22,6 @@ function err_and_exit () {
     exit 1;
 }
 
-function check_consistency () {
-	# check link SEAFILE_LATEST_DIR existence
-	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
-        err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, exiting!"
-	fi
-}
-
 function check_file () {
     if [ ! -f "$1" ]; then
 		if [ -n "$2" ]; then
@@ -38,6 +29,21 @@ function check_file () {
 		fi
         err_and_exit "Cannot find file $1"
     fi
+}
+
+# To be defined for each KEEPER instance separately!
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
+check_file "$PROPERTIES_FILE"
+source "${PROPERTIES_FILE}"
+if [ $? -ne 0  ]; then
+	err_and_exit "Cannot intitialize variables"
+fi
+
+function check_consistency () {
+	# check link SEAFILE_LATEST_DIR existence
+	if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
+        err_and_exit "Link $SEAFILE_LATEST_DIR does not exist, exiting!"
+	fi
 }
 
 
@@ -127,34 +133,34 @@ function deploy_conf () {
 deploy_http_conf () {
 	# deploy http maintenance conf 
 	
-	local F="$HTTP_CONF_ROOT_DIR/sites-available/$MAINTENANCE_HTTP_CONF" 
-	if [ -f "$F" ]; then
-        echo "Config already exists: $F, skipping!"
-	else  
-		cp -av $EXT_DIR/http/$MAINTENANCE_HTTP_CONF $HTTP_CONF_ROOT_DIR/sites-available
-		if [ $? -ne 0  ]; then
-			err_and_exit "Cannot copy HTTP maintenance conf"
+    for F in ${__MAINTENANCE_HTTP_CONF__} ${__HTTP_CONF__} ; do
+		local DEST_FILE="$HTTP_CONF_ROOT_DIR/sites-available/$F" 
+		if [ -f "$DEST_FILE" ]; then
+			echo "Config already exists: $DEST_FILE, skipping!"
+		else  
+			expand_properties_and_deploy_file "${EXT_DIR}/http/$F" "$PROPERTIES_FILE" "$DEST_FILE"
 		fi
-	fi
-	F="$HTML_DEFAULT_DIR/$MAINTENANCE_HTML"
-	if [ -f "$F" ]; then
-        echo "Html already exists: $F, skipping!"
+	done 
+
+	DEST_FILE="$HTML_DEFAULT_DIR/$MAINTENANCE_HTML"
+	if [ -f "$DEST_FILE" ]; then
+        echo "Html already exists: $DEST_FILE, skipping!"
 	else  
-		cp -av $EXT_DIR/http/$MAINTENANCE_HTML $HTML_DEFAULT_DIR
-		if [ $? -ne 0  ]; then
-			err_and_exit "Cannot copy HTTP maintenance html"
-		fi
+		deploy_file "$EXT_DIR/http/$MAINTENANCE_HTML" "$DEST_FILE"
 	fi
-	# TODO: deploy HTTP(S) keeper.conf
 }
 
 # Deploy single file
 function deploy_file () {
 	
-
+	# at least one paramater and should be a path to file
 	check_file "$1"
-	# file exists 
-    local DEST_FILE=$SEAFILE_DIR/$1
+	# default destination is seafile dirs
+	local DEST_FILE="$SEAFILE_DIR/$1"
+	# if second parameter defined and is not -p, it is an absolute path
+	if [ -n "$2" ] && [ "$2" != "-p" ]; then
+		DEST_FILE=$2
+	fi	
     if [ ! -f "$DEST_FILE" ]; then
  	    read -p "Deploy file $1 into $DEST_FILE (y/n)?" choice
 	    case "$choice" in 
@@ -252,6 +258,10 @@ case "$1" in
         deploy_conf  
 	;;
 
+    deploy-http-conf)
+        deploy_http_conf 
+	;;
+
     deploy)
         [ -z "$2" ] && ($0 || exit 1 )
         deploy_file $2 $3 $4
@@ -275,7 +285,7 @@ case "$1" in
 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
         exit 1
      ;;
 esac
