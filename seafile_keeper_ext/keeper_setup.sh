@@ -31,13 +31,17 @@ function check_file () {
     fi
 }
 
-# To be defined for each KEEPER instance separately!
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
-check_file "$PROPERTIES_FILE"
+### GET INSTANCE PROPERTIES FILE
+# KEEPER instance properties file should be located in SEAFILE_DIR!!!
+FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
+( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
+[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
+PROPERTIES_FILE="${FILES[0]}"
 source "${PROPERTIES_FILE}"
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
+### END
 
 function check_consistency () {
 	# check link SEAFILE_LATEST_DIR existence
