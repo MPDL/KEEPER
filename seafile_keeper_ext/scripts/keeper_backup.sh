@@ -10,19 +10,19 @@ PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
 TODAY=`date '+%Y%m%d'`
 GPFS_DEVICE="gpfs_keeper"
-GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
+GPFS_SNAPSHOT="mmbackupSnapi_vlad${TODAY}"
 
 # DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
 # PROPERTIES_FILE to be defined for each KEEPER instance separately!
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
+PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
 check_file "$PROPERTIES_FILE"
 source "${PROPERTIES_FILE}"
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
-BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
+DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
 function err_and_exit () {
 	if [ "$1" ]; then
@@ -114,6 +114,23 @@ function check_object_storage_integrity () {
 	popd
 }
 
+function backup_databases () {
+
+	echo -e "Backup seafile databases...\n"
+
+	# clean up old databases
+	if [ "$(ls -A $DB_BACKUP_DIR)" ]; then
+		echo "Clean ${DB_BACKUP_DIR}..."
+		rm -v ${DB_BACKUP_DIR}/*
+		[ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
+	fi
+	for i in ccnet seafile seahub; do
+		mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/`date +"%Y-%m-%d"`.${i}-db.sql.gz
+		[ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
+	done
+	echo_green "Databases backup is OK"
+
+}
 
 function asynchronous_backup () {
 	
@@ -130,12 +147,11 @@ function asynchronous_backup () {
 
 	# 2. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
     echo "Start remote backup..."
-	# TODO: generate log on remote !!!!
-    #ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT &"
-    #if [ $? -ne 0 ]; then
-#	    up_err_and_exit "Could not start remote backup" 
-#    fi 
-#	echo_green "OK"
+    ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT > /var/log/mmbackup/do_mmbackupi_vlad.\`date '+%u-%A'\`.log 2>&1" &
+	if [ $? -ne 0 ]; then
+	    up_err_and_exit "Could not start remote backup" 
+    fi 
+	echo_green "OK"
 
     echo -e "Asynchronous backup is OK\n"
 		
@@ -144,14 +160,13 @@ function asynchronous_backup () {
 ##### START
 
 ###### CHECK 
-if [ ! -d "$BACKUP_DIR"  ]; then
-	err_and_exit "Cannot find backup directory: $BACKUP_DIR"
+if [ ! -d "$DB_BACKUP_DIR"  ]; then
+	err_and_exit "Cannot find backup directory: $DB_BACKUP_DIR"
 fi
 
 if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
-
 
 
 if [ ! $(type -P "nginx_ensite") ]; then
@@ -182,25 +197,15 @@ if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     fi
 fi
 
-exit 1
-
-check_object_storage_integrity
+#check_object_storage_integrity
 
 ##### END CHECK
 
 shutdown_seafile
 
-echo -e "Backup seafile database...\n"
-for i in ccnet seafile seahub; do
-#	mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db > ${BACKUP_DIR}/${i}-db.sql.`date +"%Y-%m-%d-%H-%M-%S"`
-	mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${BACKUP_DIR}/`date +"%Y-%m-%d"`.${i}-db.sql.gz
-	if [ $? -ne 0  ]; then
-		up_err_and_exit "Cannot dump ${i}-db"
-	fi
-done
-echo_green "Database backup is OK"
+backup_databases
 
-#rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${BACKUP_DIR}
+#rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${DB_BACKUP_DIR}
 #echo_green "Seafile object storage backup is OK"
 
 asynchronous_backup
