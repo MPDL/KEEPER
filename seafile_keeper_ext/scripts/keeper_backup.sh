@@ -67,13 +67,6 @@ if [ $? -ne 0  ]; then
 fi
 ### END
 
-# PROPERTIES_FILE to be defined for each KEEPER instance separately!
-#PROPERTIES_FILE=${SEAFILE_DIR}/keeper-qa.properties
-#check_file "$PROPERTIES_FILE"
-#source "${PROPERTIES_FILE}"
-#if [ $? -ne 0  ]; then
-#	err_and_exit "Cannot intitialize variables"
-#fi
 DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
 
@@ -175,13 +168,11 @@ function asynchronous_backup () {
 	# 2. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
     echo "Start remote backup..."
 	# TODO: generate log on remote !!!!
-    REMOTE_LOG="/var/log/mmbackup/keeper_qa_backup.`date +%u-%A`.log"
-    #ssh lta03-mpdl 'nohup /bin/bash -c "( ( /opt/tivoli/tsm/client/ba/bin/do_mmbackup_keeper_qa $GPFS_SNAPSHOT ) & )"'
-    ssh lta03-mpdl "nohup /opt/tivoli/tsm/client/ba/bin/do_mmbackup_keeper_qa $GPFS_SNAPSHOT </dev/null >$REMOTE_LOG 2>&1 &"
-    #if [ $? -ne 0 ]; then
-#	    up_err_and_exit "Could not start remote backup" 
-#    fi 
-#	echo_green "OK"
+    ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
+    if [ $? -ne 0 ]; then
+	    up_err_and_exit "Could not start remote backup" 
+    fi 
+	echo_green "OK"
 
     echo -e "Asynchronous backup is OK\n"
 		
@@ -198,7 +189,7 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
-RESULT=$(type "nginx_ensite_" 2>/dev/null)
+RESULT=$(type "nginx_ensite" 2>/dev/null)
 if [ $? -ne 0 ] ; then
 	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
 fi
