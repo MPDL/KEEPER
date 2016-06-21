@@ -10,7 +10,7 @@ PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
 TODAY=`date '+%Y%m%d'`
 GPFS_DEVICE="gpfs_keeper"
-GPFS_SNAPSHOT="mmbackupSnapi_vlad${TODAY}"
+GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
 HTTP_CONF_ROOT_DIR=/etc/nginx
@@ -56,7 +56,7 @@ function switch_http_server_default_and_maintenance_confs () {
 	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
 	local TO_EN="${__HTTP_CONF__}" 
 	
-	if [ -L "${__HTTP_CONF__}_ROOT_DIR/sites-enabled/$TO_EN" ]; then
+	if [ -L "$HTTP_CONF_ROOT_DIR/sites-enabled/$TO_EN" ]; then
 		TO_DIS="${__HTTP_CONF__}"
 		TO_EN="${__MAINTENANCE_HTTP_CONF__}"
 	fi	
@@ -83,7 +83,7 @@ function shutdown_seafile () {
 
 	pushd $SEAFILE_DIR/scripts
 	echo -e "Shutdown seafile..."
-	sh ./seafile-server.sh stop
+	./seafile-server.sh stop
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot stop seafile"
 	fi
@@ -94,7 +94,7 @@ function shutdown_seafile () {
 function startup_seafile () {
 	pushd $SEAFILE_DIR/scripts
 	echo -e "Startup seafile...\n"
-	sh ./seafile-server.sh start
+	./seafile-server.sh start
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot start seafile"
 	fi
@@ -107,7 +107,7 @@ function startup_seafile () {
 # check seafile object storage integrity
 function check_object_storage_integrity () {
 	pushd $SEAFILE_LATEST_DIR
-	/bin/bash ./seaf-fsck.sh
+	./seaf-fsck.sh
 	if [ $? -ne 0  ]; then
 		err_and_exit "Object storage integrity test has failed"
 	fi
@@ -138,7 +138,9 @@ function asynchronous_backup () {
 	
     # 1. Create filesystem snapshot
 	echo "Create snapshot..."
-    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
+#    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
+	# TODO: no filesets for the moment!!!
+    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
 	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT for fileset ${__GPFS_FILESET__}" 
@@ -147,7 +149,7 @@ function asynchronous_backup () {
 
 	# 2. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
     echo "Start remote backup..."
-    ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT > /var/log/mmbackup/do_mmbackupi_vlad.\`date '+%u-%A'\`.log 2>&1" &
+    ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT > /var/log/mmbackup/do_mmbackup_vlad.\`date '+%u-%A'\`.log 2>&1" &
 	if [ $? -ne 0 ]; then
 	    up_err_and_exit "Could not start remote backup" 
     fi 
@@ -169,7 +171,7 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 fi
 
 
-if [ ! $(type -P "nginx_ensite") ]; then
+if [ ! $(type "nginx_ensite") ]; then
 	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
 fi
 
