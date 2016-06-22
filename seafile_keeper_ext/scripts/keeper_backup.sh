@@ -15,22 +15,36 @@ GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 # DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
 HTTP_CONF_ROOT_DIR=/etc/nginx
 
-# PROPERTIES_FILE to be defined for each KEEPER instance separately!
-PROPERTIES_FILE=${SEAFILE_DIR}/keeper-prod.properties
-check_file "$PROPERTIES_FILE"
-source "${PROPERTIES_FILE}"
-if [ $? -ne 0  ]; then
-	err_and_exit "Cannot intitialize variables"
-fi
-DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
+function echo_green () {
+    if [ "$(tput colors 2>/dev/null)" ]; then 
+        echo -e "$(tput setaf 2)${1}$(tput sgr0)"
+    else
+        echo -e "${1}"
+    fi
+}
+
+function echo_red () {
+    if [ "$(tput colors 2>/dev/null)" ]; then 
+        echo -e "$(tput setaf 1)${1}$(tput sgr0)"
+    else
+        echo -e "${1}"
+    fi
+}
 
 function err_and_exit () {
 	if [ "$1" ]; then
-		echo "$(tput setaf 1)Error: ${1}$(tput sgr0)"
+        echo_red "Error: $1"
 		# TODO: send notification 
 	fi
 	exit 1;
 }
+
+function up_err_and_exit () {
+	startup_seafile
+	err_and_exit "$1"
+}
+
+
 
 function check_file () {
     if [ ! -f "$1" ]; then
@@ -41,22 +55,27 @@ function check_file () {
     fi
 }
 
-function up_err_and_exit () {
-	startup_seafile
-	err_and_exit "$1"
-}
+### GET INSTANCE PROPERTIES FILE
+# KEEPER instance properties file should be located in SEAFILE_DIR!!!
+FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
+( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
+[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
+PROPERTIES_FILE="${FILES[0]}"
+source "${PROPERTIES_FILE}"
+if [ $? -ne 0  ]; then
+	err_and_exit "Cannot intitialize variables"
+fi
+### END
 
+DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
-function echo_green () {
-	echo -e "$(tput setaf 2)${1}$(tput sgr0)"
-}
 
 # switch HTTP configurations between default and maintenance
 function switch_http_server_default_and_maintenance_confs () {
 	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
 	local TO_EN="${__HTTP_CONF__}" 
 	
-	if [ -L "$HTTP_CONF_ROOT_DIR/sites-enabled/$TO_EN" ]; then
+	if [ -L "${HTTP_CONF_ROOT_DIR}/sites-enabled/$TO_EN" ]; then
 		TO_DIS="${__HTTP_CONF__}"
 		TO_EN="${__MAINTENANCE_HTTP_CONF__}"
 	fi	
@@ -81,54 +100,55 @@ function shutdown_seafile () {
 
 	switch_http_server_default_and_maintenance_confs
 
-	pushd $SEAFILE_DIR/scripts
-	echo -e "Shutdown seafile..."
-	./seafile-server.sh stop
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot stop seafile"
-	fi
-	echo_green "OK"
-	popd
+    pushd $SEAFILE_DIR/scripts
+    echo -e "Shutdown seafile..."
+    ./seafile-server.sh stop
+    if [ $? -ne 0  ]; then
+        err_and_exit "Cannot stop seafile"
+    fi
+    echo_green "OK"
+    popd
 }
 
 function startup_seafile () {
-	pushd $SEAFILE_DIR/scripts
-	echo -e "Startup seafile...\n"
-	./seafile-server.sh start
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot start seafile"
-	fi
-	echo_green "OK"
-	popd
+    pushd $SEAFILE_DIR/scripts
+    echo -e "Startup seafile...\n"
+    ./seafile-server.sh start
+    if [ $? -ne 0  ]; then
+        err_and_exit "Cannot start seafile"
+    fi
+    echo_green "OK"
+    popd
 
 	switch_http_server_default_and_maintenance_confs
 }
 
 # check seafile object storage integrity
 function check_object_storage_integrity () {
-	pushd $SEAFILE_LATEST_DIR
-	./seaf-fsck.sh
-	if [ $? -ne 0  ]; then
-		err_and_exit "Object storage integrity test has failed"
-	fi
-	popd
+    pushd $SEAFILE_LATEST_DIR
+    ./seaf-fsck.sh
+    if [ $? -ne 0  ]; then
+        err_and_exit "Object storage integrity test has failed"
+    fi
+    popd
 }
 
 function backup_databases () {
 
-	echo -e "Backup seafile databases...\n"
+    echo -e "Backup seafile databases...\n"
 
-	# clean up old databases
-	if [ "$(ls -A $DB_BACKUP_DIR)" ]; then
-		echo "Clean ${DB_BACKUP_DIR}..."
-		rm -v ${DB_BACKUP_DIR}/*
-		[ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
-	fi
-	for i in ccnet seafile seahub; do
-		mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/`date +"%Y-%m-%d"`.${i}-db.sql.gz
-		[ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
-	done
-	echo_green "Databases backup is OK"
+    # clean up old databases
+    if [ "$(ls -A $DB_BACKUP_DIR)" ]; then
+        echo "Clean ${DB_BACKUP_DIR}..."
+        rm -v ${DB_BACKUP_DIR}/*
+        [ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
+    fi
+    local TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
+    for i in ccnet seafile seahub; do
+        mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
+        [ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
+    done
+    echo_green "Databases backup is OK"
 
 }
 
@@ -138,9 +158,7 @@ function asynchronous_backup () {
 	
     # 1. Create filesystem snapshot
 	echo "Create snapshot..."
-#    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
-	# TODO: no filesets for the moment!!!
-    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT
+    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
 	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT for fileset ${__GPFS_FILESET__}" 
@@ -149,8 +167,9 @@ function asynchronous_backup () {
 
 	# 2. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
     echo "Start remote backup..."
-    ssh lta03-mpdl "/bin/bash /opt/tivoli/tsm/client/ba/bin/do_mmbackup_vlad $GPFS_SNAPSHOT > /var/log/mmbackup/do_mmbackup_vlad.\`date '+%u-%A'\`.log 2>&1" &
-	if [ $? -ne 0 ]; then
+	# TODO: generate log on remote !!!!
+    ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
+    if [ $? -ne 0 ]; then
 	    up_err_and_exit "Could not start remote backup" 
     fi 
 	echo_green "OK"
@@ -163,20 +182,20 @@ function asynchronous_backup () {
 
 ###### CHECK 
 if [ ! -d "$DB_BACKUP_DIR"  ]; then
-	err_and_exit "Cannot find backup directory: $DB_BACKUP_DIR"
+    err_and_exit "Cannot find backup directory: $DB_BACKUP_DIR"
 fi
 
 if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
-
-if [ ! $(type "nginx_ensite") ]; then
+RESULT=$(type "nginx_ensite" 2>/dev/null)
+if [ $? -ne 0 ] ; then
 	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
 fi
 
 ###### GPFS stuff
-if [ ! $(type -P "mmcrsnapshot") ]; then
+if [ ! $(type "mmcrsnapshot") ]; then
 	err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
 fi
 #TODO: check GPFS mount, probably more precise method! 
@@ -199,7 +218,7 @@ if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     fi
 fi
 
-#check_object_storage_integrity
+check_object_storage_integrity
 
 ##### END CHECK
 
@@ -207,7 +226,7 @@ shutdown_seafile
 
 backup_databases
 
-#rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${DB_BACKUP_DIR}
+#rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${BACKUP_DIR}
 #echo_green "Seafile object storage backup is OK"
 
 asynchronous_backup
