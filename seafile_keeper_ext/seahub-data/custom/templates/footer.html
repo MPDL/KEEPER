@@ -2,35 +2,42 @@
 <div id="footer" class="ovhd">
   <div class="items fleft">
 	<div class="item">
-      <h4>A service by</h4>	   
-			<img src="/media/custom/mpdl.png" alt="Max Planck Digital Library" height="30" width="105"/>
+      <h4>What you need to know</h4>	   		
       <ul>
         <li><a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">{% trans "About" %} Keeper</a></li>
-		<li><a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Principles</a></li>
+		<li><a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></li>
 		<li><a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Service</a></li>
-		<li><a href="{{SITE_ROOT}}help/" target="_blank">{% trans "Help" %}</a></li>
-		<li><a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a></li>
-		<li><a href="mailto:keeper@mpdl.mpg.de">Keeper Support</a></li>
       </ul>
     </div>
+
+	
     <div class="item">
-      <h4>{% trans "Client" %}</h4>
-      <ul>
-        <li><a href="{% url 'download_client' %}">Download the Keeper client for Windows, Linux and Mac</a></li>
-      </ul>
-    </div>
+		<h4>Desktop Client</h4>
+		<ul>
+			<li><a href="{% url 'download_client' %}">Download the Keeper client for Windows, Linux and Mac</a></li>
+			<li>&nbsp;</li>
+			<li>&nbsp;</li>
+		</ul>
+	</div>	
+   <div class="item">
+			<h4>The software behind Keeper</h4>
+			<img src="/media/custom/seafile-logo.png" alt="Max Planck Digital Library" height="35" width="40"/>	   
+			<ul>
+				<p>© 2016 {% trans "Seafile" %} </p>
+				<li><a href="https://seafile.com/{% if LANGUAGE_CODE != 'zh-cn' %}en/{% endif %}home/" target="_blank">{% trans "About" %} Seafile</a></li>	
+			</ul>
+		</div>
   </div>
   <div class="other-info fright">
 	<div class="item">
-		<h4>Software</h4>
-		<ul>
-			<p>© 2016 {% trans "Seafile" %} </p>
-			<li><a href="https://seafile.com/{% if LANGUAGE_CODE != 'zh-cn' %}en/{% endif %}home/" target="_blank">{% trans "About" %} Seafile</a></li>	
-		</ul>
-	</div>
-		<div class="item">	   
-			<img src="/media/custom/seafile-logo.png" alt="Max Planck Digital Library" height="45" width="50"/>	   
-		</div>
-   </div>
+      <h4>A service by</h4>	   
+	  <img src="/media/custom/mpdl.png" alt="Max Planck Digital Library" height="30" width="105"/>
+      <ul>
+		<li><a href="{{SITE_ROOT}}help/" target="_blank">{% trans "Help" %}</a></li>		
+		<li><a href="mailto:keeper@mpdl.mpg.de">Keeper Support</a></li>
+		<li><a href="https://keeper.mpdl.mpg.de/f/7121a8a69d/" target="_blank">Impressum</a></li>
+      </ul>
+    </div>
+  
 </div>
 
