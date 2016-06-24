@@ -87,29 +87,8 @@ function check_merging () {
 	
 }
 
-# Files of directories to be created
-function create_and_deploy_directories () {
-    for i in "$@"; do
-        echo "Install directory <$i>"
-        local DEST_DIR=$SEAFILE_DIR/$i
-        if [ -d "$DEST_DIR" ]; then
-           echo "$DEST_DIR already exists, skipping!"
-        else
-            mkdir $DEST_DIR
-            if [ $? -ne 0  ]; then
-                err_and_exit "Cannot create dir: $DEST_DIR"
-            fi
-            local SOURCE_DIR=$EXT_DIR/$i
-            cp -arv $SOURCE_DIR/* $DEST_DIR
-            if [ $? -ne 0  ]; then
-                err_and_exit "Cannot copy files from $SOURCE_DIR to $DEST_DIR"
-            fi
-        fi
-    done
-}
-
 # Deploy directories
-function deploy_directories  () {
+function deploy_directories () {
     for i in "$@"; do
         echo "Deploy directory <$i>"
         local DEST_DIR=$SEAFILE_DIR/$i
@@ -121,6 +100,23 @@ function deploy_directories  () {
                 deploy_file $f
            done
        fi
+    done
+}
+
+# Files of directories to be created
+function create_and_deploy_directories () {
+    for i in "$@"; do
+        local DEST_DIR=$SEAFILE_DIR/$i
+        if [ -d "$DEST_DIR" ]; then
+           echo "$DEST_DIR already exists, skipping!"
+        else
+            echo "Create directory <$i>"
+            mkdir $DEST_DIR
+            if [ $? -ne 0  ]; then
+                err_and_exit "Cannot create dir: $DEST_DIR"
+            fi
+        fi    
+        deploy_directories "$i"
     done
 }
 
@@ -194,7 +190,7 @@ function expand_properties_and_deploy_file () {
 	local OUT=$3
 	local PROPS_FILE=$2
 	# remove commented propeties ------🡓
-	local RESULT=`cat -v $PROPS_FILE | sed -e 's/#.*$//' | awk -F= '{print "s/" $1 "/" $2 "/g"}' | sed -f - $IN`
+	local RESULT=`cat -v $PROPS_FILE | sed -e 's/#.*$//' | awk -F= '{print "s#" $1 "#" $2 "#g"}' | sed -f - $IN`
 	if [ -z "$RESULT" ]; then 
 		err_and_exit "Cannot expand properties $PROPS_FILE for $IN"
 	fi
@@ -271,6 +267,11 @@ case "$1" in
         deploy_file $2 $3 $4
     ;;
 
+    deploy-dir)
+        [ -z "$2" ] && ($0 || exit 1 )
+        deploy_directories "${@:2}"
+    ;;
+
     restore)
         restore_directories "seafile-server-latest"
         remove_custom_link
@@ -289,7 +290,7 @@ case "$1" in
 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n}"
         exit 1
      ;;
 esac
