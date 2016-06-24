@@ -10,7 +10,7 @@
 # Description:       starts Seafile Server
 ### END INIT INFO
 
-#set -x
+set -x
 
 # Change the value of "user" to linux user name who runs seafile
 user=root
@@ -45,7 +45,7 @@ echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${sea
 echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 
 case "$1" in
-        start)
+        start|restart)
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 if [ $fastcgi = true ];
                 then
@@ -53,16 +53,17 @@ case "$1" in
                 else
                         sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 fi
+                service nginx ${1}
         ;;
-        restart)
-                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                if [ $fastcgi = true ];
-                then
-                        sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi ${fastcgi_port} >> ${seahub_init_log}
-                else
-                        sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-                fi
-        ;;
+#        restart)
+#                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+#                if [ $fastcgi = true ];
+#                then
+#                        sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi ${fastcgi_port} >> ${seahub_init_log}
+#                else
+#                        sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+#                fi
+#        ;;
         stop)
                 sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
