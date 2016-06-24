@@ -20,7 +20,7 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     }
 }
-FILE_SERVER_ROOT = 'https://keeper.mpdl.mpg.de/seafhttp'
+FILE_SERVER_ROOT = '__FILE_SERVER_ROOT__'
 
 # Enalbe or disalbe registration on web. Default is `False`.
 # ENABLE_SIGNUP = True
@@ -62,3 +62,5 @@ MULTI_INSTITUTION = True
 EXTRA_MIDDLEWARE_CLASSES = (
     'seahub.institutions.middleware.InstitutionMiddleware',
 )
+
+ENABLE_SETTINGS_VIA_WEB = False
