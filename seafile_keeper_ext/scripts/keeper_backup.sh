@@ -4,7 +4,6 @@ set -x
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
-EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
@@ -13,7 +12,7 @@ GPFS_DEVICE="gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # INJECT ENV
-source "${EXT_DIR}/scripts/inject_keeper_env.sh"
+source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
 	echo "Cannot run inject_keeper_env.sh"
     exit 1
@@ -22,7 +21,7 @@ fi
 DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
 function shutdown_seafile () {
-    pushd ${EXT_DIR}/scripts
+    pushd ${SEAFILE_DIR}/scripts
     
     echo -e "Swicht keeper to maintenance mode...\n"
     ./seafile-server.sh switch-maintenance-mode
@@ -42,7 +41,7 @@ function shutdown_seafile () {
 }
 
 function startup_seafile () {
-    pushd ${EXT_DIR}/scripts
+    pushd ${SEAFILE_DIR}/scripts
 
     echo -e "Startup seafile...\n"
     ./seafile-server.sh start
