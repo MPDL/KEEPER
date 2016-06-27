@@ -4,7 +4,6 @@ set -x
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
-EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
@@ -12,115 +11,53 @@ TODAY=`date '+%Y%m%d'`
 GPFS_DEVICE="gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
-# DEPENDENCY: for usage of nginx_dissite/nginx_ensite, install https://github.com/perusio/nginx_ensite
-HTTP_CONF_ROOT_DIR=/etc/nginx
-
-function echo_green () {
-    if [ "$(tput colors 2>/dev/null)" ]; then 
-        echo -e "$(tput setaf 2)${1}$(tput sgr0)"
-    else
-        echo -e "${1}"
-    fi
-}
-
-function echo_red () {
-    if [ "$(tput colors 2>/dev/null)" ]; then 
-        echo -e "$(tput setaf 1)${1}$(tput sgr0)"
-    else
-        echo -e "${1}"
-    fi
-}
-
-function err_and_exit () {
-	if [ "$1" ]; then
-        echo_red "Error: $1"
-		# TODO: send notification 
-	fi
-	exit 1;
-}
-
-function up_err_and_exit () {
-	startup_seafile
-	err_and_exit "$1"
-}
-
-
-
-function check_file () {
-    if [ ! -f "$1" ]; then
-		if [ -n "$2" ]; then
-			err_and_exit "$2"
-		fi
-        err_and_exit "Cannot find file $1"
-    fi
-}
-
-### GET INSTANCE PROPERTIES FILE
-# KEEPER instance properties file should be located in SEAFILE_DIR!!!
-FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
-( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
-[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
-PROPERTIES_FILE="${FILES[0]}"
-source "${PROPERTIES_FILE}"
+# INJECT ENV
+source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
-	err_and_exit "Cannot intitialize variables"
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
 fi
-### END
 
 DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
-
-# switch HTTP configurations between default and maintenance
-function switch_http_server_default_and_maintenance_confs () {
-	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
-	local TO_EN="${__HTTP_CONF__}" 
-	
-	if [ -L "${HTTP_CONF_ROOT_DIR}/sites-enabled/$TO_EN" ]; then
-		TO_DIS="${__HTTP_CONF__}"
-		TO_EN="${__MAINTENANCE_HTTP_CONF__}"
-	fi	
-
-	nginx_dissite $TO_DIS
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot disable HTTP config $TO_DIS"
-	fi
-	
-	nginx_ensite $TO_EN
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot enable HTTP config $TO_EN"
-	fi
-
-	service nginx reload
-	if [ $? -ne 0  ]; then
-		err_and_exit "Cannot reload HTTP $TO_EN"
-	fi
-}
-
 function shutdown_seafile () {
-
-	switch_http_server_default_and_maintenance_confs
-
-    pushd $SEAFILE_DIR/scripts
-    echo -e "Shutdown seafile..."
+    pushd ${SEAFILE_DIR}/scripts
+    
+    echo -e "Swicht keeper to maintenance mode...\n"
+    ./seafile-server.sh switch-maintenance-mode
+    if [ $? -ne 0  ]; then
+        err_and_exit "Cannot switch keeper to maintenance mode"
+    fi
+    echo_green "OK"
+    
+    echo -e "Shutdown seafile...\n"
     ./seafile-server.sh stop
     if [ $? -ne 0  ]; then
         err_and_exit "Cannot stop seafile"
     fi
     echo_green "OK"
+    
     popd
 }
 
 function startup_seafile () {
-    pushd $SEAFILE_DIR/scripts
+    pushd ${SEAFILE_DIR}/scripts
+
     echo -e "Startup seafile...\n"
     ./seafile-server.sh start
     if [ $? -ne 0  ]; then
         err_and_exit "Cannot start seafile"
     fi
     echo_green "OK"
-    popd
+    
+    echo -e "Swicht keeper to normal mode...\n"
+    ./seafile-server.sh switch-maintenance-mode
+    if [ $? -ne 0  ]; then
+        err_and_exit "Cannot switch keeper to normal mode"
+    fi
+    echo_green "OK"
 
-	switch_http_server_default_and_maintenance_confs
+    popd
 }
 
 # check seafile object storage integrity
@@ -189,10 +126,11 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
-RESULT=$(type "nginx_ensite" 2>/dev/null)
-if [ $? -ne 0 ] ; then
-	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
-fi
+
+#RESULT=$(type "nginx_ensite" 2>/dev/null)
+#if [ $? -ne 0 ] ; then
+#	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
+#fi
 
 ###### GPFS stuff
 if [ ! $(type "mmcrsnapshot") ]; then
