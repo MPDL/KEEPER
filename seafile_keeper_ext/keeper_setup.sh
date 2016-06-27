@@ -1,10 +1,11 @@
 #!/bin/bash
-#set -x
+set -x
 # Set seafile root directory
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
+AVATARS_LINK=${SEAFILE_LATEST_DIR}/seahub/media/avatars
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
 
@@ -15,33 +16,12 @@ HTTP_CONF_ROOT_DIR=/etc/nginx
 HTML_DEFAULT_DIR=/usr/share/nginx/html
 MAINTENANCE_HTML=keeper_maintenance.html
 
-function err_and_exit () {
-    if [ "$1" ]; then
-        echo -e "$(tput setaf 1)Error: ${1}$(tput sgr0)"
-    fi
-    exit 1;
-}
-
-function check_file () {
-    if [ ! -f "$1" ]; then
-		if [ -n "$2" ]; then
-			err_and_exit "$2"
-		fi
-        err_and_exit "Cannot find file $1"
-    fi
-}
-
-### GET INSTANCE PROPERTIES FILE
-# KEEPER instance properties file should be located in SEAFILE_DIR!!!
-FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
-( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
-[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
-PROPERTIES_FILE="${FILES[0]}"
-source "${PROPERTIES_FILE}"
+# INJECT ENV
+source "${EXT_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
-	err_and_exit "Cannot intitialize variables"
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
 fi
-### END
 
 function check_consistency () {
 	# check link SEAFILE_LATEST_DIR existence
@@ -71,6 +51,29 @@ function create_custom_link () {
 	fi
 }
 
+# Deploy avatars storage
+# See http://manual.seafile.com/faq.html:
+# Q: Avatar pictures vanished after upgrading the server, what can I do? 
+
+function migrate_avatars () {
+    # check default installation
+    local D=${SEAFILE_LATEST_DIR}/seahub/media/avatars
+    if [ -d "$D" ]; then
+        #if $D is directory, i.e. installation keeper from scratch 
+        #1) crate dir backup
+        mv -v $D ${D}${BACKUP_POSTFIX}
+        if [ $? -ne 0  ]; then
+            err_and_exit "Cannot backup $D"
+        fi
+        #2) create link to CUSTOM avatar link
+        ln -s $D $AVATARS_LINK 
+        if [ $? -ne 0  ]; then
+            err_and_exit "Cannot create $AVATARS_LINK"
+        fi
+    fi
+}
+
+
 # Remove link to custom directory 
 function remove_custom_link () {
     if [ -L "$CUSTOM_LINK" ]; then
@@ -82,9 +85,8 @@ function remove_custom_link () {
 function check_merging () {
 	check_file "$1"
 	if [ "$(head -n 1 $1)" = "$MERGE_MANUALLY_STRING" ]; then
-		echo -e "$(tput setaf 1)WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!$(tput sgr0), e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX}" 
+		echo_red "WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!, e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX}" 
 	fi
-	
 }
 
 # Deploy directories
@@ -245,7 +247,7 @@ check_consistency
 
 case "$1" in
     deploy-all)
-        create_and_deploy_directories "scripts" "seahub-data"
+        create_and_deploy_directories "seahub-data"
         create_custom_link
         deploy_directories "seafile-server-latest"
         deploy_conf 
@@ -279,7 +281,7 @@ case "$1" in
 
     clean-all)
         $0 restore
-        rm -rfv $SEAFILE_DIR/scripts $SEAFILE_DIR/seahub-data
+        rm -rfv $SEAFILE_DIR/seahub-data
     ;;
 
     compile-i18n)
