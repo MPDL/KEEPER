@@ -28,8 +28,7 @@ fastcgi=true
 # Set the port of fastcgi, default is 8000. Change it if you need different.
 fastcgi_port=8001
 
-EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
-source "${EXT_DIR}/scripts/inject_keeper_env.sh"
+source "${seafile_dir}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
 	echo "Cannot run inject_keeper_env.sh"
     exit 1

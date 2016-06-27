@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 # Set seafile root directory
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
@@ -11,10 +11,6 @@ EXT_DIR=$(dirname $(readlink -f $0))
 
 # The string should be put on top of files which should be merged manually
 MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
-
-HTTP_CONF_ROOT_DIR=/etc/nginx
-HTML_DEFAULT_DIR=/usr/share/nginx/html
-MAINTENANCE_HTML=keeper_maintenance.html
 
 # INJECT ENV
 source "${EXT_DIR}/scripts/inject_keeper_env.sh"
@@ -51,8 +47,8 @@ function create_custom_link () {
 	fi
 }
 
-# Deploy avatars storage
-# See http://manual.seafile.com/faq.html:
+# 
+# /migrate avatars storage See http://manual.seafile.com/faq.html:
 # Q: Avatar pictures vanished after upgrading the server, what can I do? 
 
 function migrate_avatars () {
@@ -60,7 +56,7 @@ function migrate_avatars () {
     local D=${SEAFILE_LATEST_DIR}/seahub/media/avatars
     if [ -d "$D" ]; then
         #if $D is directory, i.e. installation keeper from scratch 
-        #1) crate dir backup
+        #1) create dir backup
         mv -v $D ${D}${BACKUP_POSTFIX}
         if [ $? -ne 0  ]; then
             err_and_exit "Cannot backup $D"
@@ -136,7 +132,7 @@ deploy_http_conf () {
 	# deploy http maintenance conf 
 	
     for F in ${__MAINTENANCE_HTTP_CONF__} ${__HTTP_CONF__} ; do
-		local DEST_FILE="$HTTP_CONF_ROOT_DIR/sites-available/$F" 
+		local DEST_FILE="${__HTTP_CONF_ROOT_DIR__}/sites-available/$F" 
 		if [ -f "$DEST_FILE" ]; then
 			echo "Config already exists: $DEST_FILE, skipping!"
 		else  
@@ -144,11 +140,11 @@ deploy_http_conf () {
 		fi
 	done 
 
-	DEST_FILE="$HTML_DEFAULT_DIR/$MAINTENANCE_HTML"
+	DEST_FILE="${__HTML_DEFAULT_DIR__}/${__MAINTENANCE_HTML__}"
 	if [ -f "$DEST_FILE" ]; then
         echo "Html already exists: $DEST_FILE, skipping!"
 	else  
-		deploy_file "$EXT_DIR/http/$MAINTENANCE_HTML" "$DEST_FILE"
+		deploy_file "$EXT_DIR/http/${__MAINTENANCE_HTML__}" "$DEST_FILE"
 	fi
 }
 
@@ -247,13 +243,14 @@ check_consistency
 
 case "$1" in
     deploy-all)
-        create_and_deploy_directories "seahub-data"
+        create_and_deploy_directories "scripts" "seahub-data"
         create_custom_link
         deploy_directories "seafile-server-latest"
         deploy_conf 
 	    #TODO: create_server_script_links 	
 		$0 compile-i18n
 		deploy_http_conf
+        migrate_avatars
     ;;
 
     deploy-conf)
