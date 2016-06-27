@@ -28,7 +28,48 @@ fastcgi=true
 # Set the port of fastcgi, default is 8000. Change it if you need different.
 fastcgi_port=8001
 
-function check_component_running() {
+EXT_DIR=$(dirname $(dirname $(readlink -f $0)))
+source "${EXT_DIR}/scripts/inject_keeper_env.sh"
+if [ $? -ne 0  ]; then
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
+fi
+
+
+function check_en_dis_nginx () {
+    RESULT=$(type "nginx_ensite" 2>/dev/null)
+    if [ $? -ne 0 ] ; then
+        err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
+    fi
+}
+
+# switch HTTP configurations between default and maintenance
+function switch_maintenance_mode () {
+	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
+	local TO_EN="${__HTTP_CONF__}" 
+	
+	if [ -L "${__HTTP_CONF_ROOT_DIR__}/sites-enabled/$TO_EN" ]; then
+		TO_DIS="${__HTTP_CONF__}"
+		TO_EN="${__MAINTENANCE_HTTP_CONF__}"
+	fi	
+
+	nginx_dissite $TO_DIS
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot disable HTTP config $TO_DIS"
+	fi
+	
+	nginx_ensite $TO_EN
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot enable HTTP config $TO_EN"
+	fi
+
+	service nginx reload
+	if [ $? -ne 0  ]; then
+		err_and_exit "Cannot reload HTTP $TO_EN"
+	fi
+}
+
+ function check_component_running() {
     name=$1
     cmd=$2
     if pid=$(pgrep -f "$cmd" 2>/dev/null); then
@@ -55,18 +96,13 @@ case "$1" in
                 fi
                 service nginx ${1}
         ;;
-#        restart)
-#                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-#                if [ $fastcgi = true ];
-#                then
-#                        sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi ${fastcgi_port} >> ${seahub_init_log}
-#                else
-#                        sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-#                fi
-#        ;;
         stop)
                 sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+        ;;
+        switch-maintenance-mode)
+                check_en_dis_nginx
+                switch_maintenance_mode
         ;;
         status)
 			RC=0
@@ -86,7 +122,7 @@ case "$1" in
 			exit $RC
         ;;
         *)
-                echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status}"
+                echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|switch-maintenance-mode}"
                 exit 1
         ;;
 esac
