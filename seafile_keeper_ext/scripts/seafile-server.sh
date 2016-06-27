@@ -10,7 +10,7 @@
 # Description:       starts Seafile Server
 ### END INIT INFO
 
-set -x
+#set -x
 
 # Change the value of "user" to linux user name who runs seafile
 user=root
@@ -78,6 +78,16 @@ function switch_maintenance_mode () {
     fi
 }
 
+function check_seahub_running () {
+    if $(pgrep -f "/seahub/manage.py" 2>/dev/null 1>&2 || pgrep -f "seahub.wsgi:application" 2>/dev/null 1>&2); then
+        echo "[seahub] is running"
+    else
+        echo "[seahub] is not runnig"
+    fi
+}
+
+
+
 #
 # Write a polite log message with date and time
 #
@@ -111,6 +121,7 @@ case "$1" in
 				echo "Seafile controller is not running."
 				RC=1	
 			fi
+            check_seahub_running
 			check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}"
 			check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}"
 			# TODO: check fileserver process: probably it is an old stuff, seaf-server makes the job
