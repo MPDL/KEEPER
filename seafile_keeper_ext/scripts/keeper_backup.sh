@@ -92,9 +92,21 @@ function backup_databases () {
 function asynchronous_backup () {
 	
     echo -e "Start asynchronous backup...\n"
-	
-    # 1. Create filesystem snapshot
-	echo "Create snapshot..."
+
+	# 1. Backup GPFS-Config
+    echo "Save GPFS backup config..."
+    GPFS_BACKUP_CONF="/keeper/${__GPFS_FILESET__}/gpfs.config"
+    # remove old one if exists
+    [[ -e $GPFS_BACKUP_CONF ]] && rm -v $GPFS_BACKUP_CONF
+    # save current
+    mmbackupconfig $GPFS_DEVICE -o $GPFS_BACKUP_CONF  
+    if [ $? -ne 0 ]; then
+	    up_err_and_exit "Could not save GPFS backup config" 
+    fi 
+	echo_green "OK"
+
+    # 2. Create filesystem snapshot
+    echo "Create snapshot..."
     mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
@@ -102,7 +114,7 @@ function asynchronous_backup () {
     fi 
 	echo_green "OK"
 
-	# 2. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
+	# 3. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
     echo "Start remote backup..."
 	# TODO: generate log on remote !!!!
     ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
@@ -126,16 +138,11 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
-
-#RESULT=$(type "nginx_ensite" 2>/dev/null)
-#if [ $? -ne 0 ] ; then
-#	err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
-#fi
-
 ###### GPFS stuff
 if [ ! $(type "mmcrsnapshot") ]; then
 	err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
 fi
+
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
 if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then

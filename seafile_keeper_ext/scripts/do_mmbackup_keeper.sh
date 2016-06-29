@@ -49,7 +49,7 @@ function fileset_backup () {
     # Full backup the first time:
 #    mmbackup $LINK --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 -L 6 -m 8 -S $SNAPSHOT 
 
-    if [ "$WEEKDAY" = 8 ]
+    if [ "$WEEKDAY" = 7 ]
     then
       # Rebuild the shadow database on Sundays
       mmbackup $LINK --scope inodespace --noquote -s /var/tmp -v -q -t incremental -B 1000 -L 6 -m 8 -a 1 -S $SNAPSHOT
