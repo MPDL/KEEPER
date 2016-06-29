@@ -66,6 +66,7 @@ function migrate_avatars () {
         if [ $? -ne 0  ]; then
             err_and_exit "Cannot create $AVATARS_LINK"
         fi
+		#TODO: check||create link to avatar in gpfs_keeper fileset
     fi
 }
 
