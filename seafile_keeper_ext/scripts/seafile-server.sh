@@ -128,6 +128,7 @@ case "$1" in
             #			check_component_running "fileserver" "fileserver.*-c ${default_ccnet_conf_dir}"
 			check_component_running "seafdav" "wsgidav.server.run_server"
 			check_component_running "seafevents" "seafevents.main"
+			check_component_running "memcached" "memcached"
 			check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"
 			echo "Status is OK"
 			exit $RC
