@@ -20,7 +20,7 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     }
 }
-FILE_SERVER_ROOT = 'https://keeper.mpdl.mpg.de/seafhttp'
+FILE_SERVER_ROOT = '__FILE_SERVER_ROOT__'
 
 # Enalbe or disalbe registration on web. Default is `False`.
 # ENABLE_SIGNUP = True
@@ -51,10 +51,10 @@ DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
 SERVER_EMAIL = '__SERVER_EMAIL__'
 
 # Whether to send email when a system admin adding a new member. Default is `True`.
-SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = False
+SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = True
 
 # Whether to send email when a system admin resetting a user's password. Default is `True`.
-SEND_EMAIL_ON_RESETTING_USER_PASSWD = False
+SEND_EMAIL_ON_RESETTING_USER_PASSWD = True
 
 # Multiple Organization/Institution User Management, see http://manual.seafile.com/deploy_pro/multi_institutions.html
 MULTI_INSTITUTION = True
@@ -62,3 +62,5 @@ MULTI_INSTITUTION = True
 EXTRA_MIDDLEWARE_CLASSES = (
     'seahub.institutions.middleware.InstitutionMiddleware',
 )
+
+ENABLE_SETTINGS_VIA_WEB = False
