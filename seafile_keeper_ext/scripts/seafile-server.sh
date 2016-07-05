@@ -72,17 +72,20 @@ function switch_maintenance_mode () {
     name=$1
     cmd=$2
     if pid=$(pgrep -f "$cmd" 2>/dev/null); then
-        echo "[$name] is running, pid $pid"
-	else
-        echo "[$name] is not running"
+        echo "[$name] is running, pid: ${pid//$'\n'/, }"
+    else
+        echo_red "[$name] is not running"
+        [[ $3 == "CRITICAL" ]] && RC=1
     fi
 }
 
 function check_seahub_running () {
-    if $(pgrep -f "/seahub/manage.py" 2>/dev/null 1>&2 || pgrep -f "seahub.wsgi:application" 2>/dev/null 1>&2); then
-        echo "[seahub] is running"
+    # if pid=$(pgrep -f "/seahub/manage.py" 2>/dev/null 1>&2 || pgrep -f "seahub.wsgi:application" 2>/dev/null 1>&2); then
+    if pid=$(pgrep -f "/seahub/manage.py" 2>/dev/null || pgrep -f "seahub.wsgi:application" 2>/dev/null); then
+        echo "[seahub] is running, pid: ${pid//$'\n'/, }"
     else
-        echo "[seahub] is not runnig"
+        echo_red "[seahub] is not runnig"
+        [[ $1 == "CRITICAL" ]] && RC=1
     fi
 }
 
@@ -96,46 +99,43 @@ echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seah
 
 case "$1" in
         start|restart)
-                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                if [ $fastcgi = true ];
-                then
-                        sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi ${fastcgi_port} >> ${seahub_init_log}
-                else
-                        sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-                fi
-                service nginx ${1}
+            sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+            if [ $fastcgi = true ];
+            then
+                    sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi ${fastcgi_port} >> ${seahub_init_log}
+            else
+                    sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+            fi
+            service nginx ${1}
         ;;
         stop)
-                sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+            sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+            sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
         ;;
         switch-maintenance-mode)
-                check_en_dis_nginx
-                switch_maintenance_mode
+            check_en_dis_nginx
+            switch_maintenance_mode
         ;;
         status)
-			RC=0
-			if pid=$(pgrep -f "seafile-controller -c ${default_ccnet_conf_dir}" 2>/dev/null); then
-				echo "Seafile controller is running, pid $pid"
-			else
-				echo "Seafile controller is not running."
-				RC=1	
-			fi
-            check_seahub_running
-			check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}"
-			check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}"
-			# TODO: check fileserver process: probably it is an old stuff, seaf-server makes the job
-            #			check_component_running "fileserver" "fileserver.*-c ${default_ccnet_conf_dir}"
-			check_component_running "seafdav" "wsgidav.server.run_server"
-			check_component_running "seafevents" "seafevents.main"
-			check_component_running "memcached" "memcached"
-			check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"
-			echo "Status is OK"
-			exit $RC
+            RC=0
+            check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
+            check_seahub_running "CRITICAL"
+            check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
+            check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
+            # TODO: check fileserver process: probably it is an old stuff, seaf-server makes the job
+        #			check_component_running "fileserver" "fileserver.*-c ${default_ccnet_conf_dir}"
+    #		check_component_running "seafdav" "wsgidav.server.run_server"
+            check_component_running "seafevents" "seafevents.main" "CRITICAL"
+
+            check_component_running "memcached" "memcached" "CRITICAL"
+            check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"  "CRITICAL"
+            check_component_running "office/pdf preview" "soffice.bin.*StarOffice.ComponentContext"  "CRITICAL"
+            [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
+            exit $RC
         ;;
         *)
-                echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|switch-maintenance-mode}"
-                exit 1
+            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|switch-maintenance-mode}"
+            exit 1
         ;;
 esac
 
