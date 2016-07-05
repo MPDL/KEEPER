@@ -35,7 +35,7 @@ SHOW_TRAFFIC = True
 
 # Allow administrator to view user's file in UNENCRYPTED libraries
 # through Libraries page in System Admin. Default is False.
-ENABLE_SYS_ADMIN_VIEW_REPO = True
+ENABLE_SYS_ADMIN_VIEW_REPO = False
 
 DESKTOP_CUSTOM_LOGO = 'custom/keeper-client-logo.png'
 DESKTOP_CUSTOM_BRAND = 'KEEPER'
