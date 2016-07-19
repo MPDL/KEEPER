@@ -189,7 +189,7 @@ function expand_properties_and_deploy_file () {
 	local OUT=$3
 	local PROPS_FILE=$2
 	# remove commented propeties ------🡓
-	local RESULT=`cat -v $PROPS_FILE | sed -e 's/#.*$//' | awk -F= '{print "s#" $1 "#" $2 "#g"}' | sed -f - $IN`
+	local RESULT=`cat -v $PROPS_FILE | sed -e 's/#.*$//' -e '/^$/d' | awk -F= '{print "s#" $1 "#" $2 "#g"}' | sed -f - $IN`
 	if [ -z "$RESULT" ]; then 
 		err_and_exit "Cannot expand properties $PROPS_FILE for $IN"
 	fi
