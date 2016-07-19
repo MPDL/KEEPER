@@ -334,7 +334,7 @@ FILE_LOCK_EXPIRATION_DAYS = 0
 ACTIVATE_AFTER_REGISTRATION = True
 # Whether or not send activation Email to user when registration complete.
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
-REGISTRATION_SEND_MAIL = False
+REGISTRATION_SEND_MAIL = True
 
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
