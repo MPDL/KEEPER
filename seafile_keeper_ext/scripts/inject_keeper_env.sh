@@ -26,6 +26,13 @@ function err_and_exit () {
 	exit 1;
 }
 
+function warn () {
+	if [ "$1" ]; then
+        echo_red "Warning: $1"
+		# TODO: send notification 
+	fi
+}
+
 function up_err_and_exit () {
 	startup_seafile
 	err_and_exit "$1"
@@ -40,6 +47,10 @@ function check_file () {
 		fi
         err_and_exit "Cannot find file $1"
     fi
+}
+
+function timestamp () {
+    echo $(date +'%s')
 }
 
 ### INJECT KEEPER PROPERTIES
