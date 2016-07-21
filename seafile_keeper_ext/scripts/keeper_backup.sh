@@ -167,7 +167,9 @@ if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     fi
 fi
 
-check_object_storage_integrity
+if ${__ENABLE_SEAF_FSCK__}; then
+    check_object_storage_integrity
+fi
 
 ##### END CHECK
 
