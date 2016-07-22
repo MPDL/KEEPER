@@ -20,6 +20,7 @@ fi
 
 DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
 
+
 function shutdown_seafile () {
     pushd ${SEAFILE_DIR}/scripts
     
@@ -128,6 +129,8 @@ function asynchronous_backup () {
 }
 
 ##### START
+echo_green "Backup started at $(date)"
+START=$(timestamp)
 
 ###### CHECK 
 if [ ! -d "$DB_BACKUP_DIR"  ]; then
@@ -151,19 +154,22 @@ if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then
 fi
 
 # Check for old GPFS snapshot
-# If there is one, the last backup didn't finish -> something is wrong
-RESULT=$(mmlssnapshot $GPFS_DEVICE -j ${__GPFS_FILESET__})
+# If there is one, the last backup didn't finish -> something is wrong: ONLY WARNING!
+RESULT=$(mmlssnapshot $GPFS_DEVICE -j ${__GPFS_FILESET__}) 
 if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     # The way to find at least one snapshot for the fileset. This is not implemented directly in mmlssnapshot, 
     # see https://www.ibm.com/support/knowledgecenter/STXKQY_4.2.0/com.ibm.spectrum.scale.v4r2.adm.doc/bl1adm_mmlssnapshot.htm
     RESULT=$(echo -e "$RESULT" | grep -vwE "^(Snapshots|Directory)" | rev | grep -Eo '^\s*[^ ]+' | rev) 
     if [[ "$RESULT" =~ "${__GPFS_FILESET__}" ]]; then
         # Old snapshot still exists, something is wrong
-        err_and_exit "Old snapshots still exist" 
+        #err_and_exit "Old snapshots still exist" 
+        warn "Old snapshots still exist! Please clean them up!"
     fi
 fi
 
-check_object_storage_integrity
+if ${__ENABLE_SEAF_FSCK__}; then
+    check_object_storage_integrity
+fi
 
 ##### END CHECK
 
@@ -178,7 +184,11 @@ asynchronous_backup
 
 startup_seafile
 
+echo_green "Backup ended at $(date)"
+echo_green "Elapsed time in seconds: $(($(timestamp) - $START))"
+
 echo_green "Backup is successful!"
 
 exit 0
+
 

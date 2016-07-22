@@ -20,7 +20,7 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     }
 }
-FILE_SERVER_ROOT = '__FILE_SERVER_ROOT__'
+FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 
 # Enalbe or disalbe registration on web. Default is `False`.
 # ENABLE_SIGNUP = True
