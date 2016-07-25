@@ -63,12 +63,14 @@ function startup_seafile () {
 
 # check seafile object storage integrity
 function check_object_storage_integrity () {
-    pushd $SEAFILE_LATEST_DIR
-    ./seaf-fsck.sh
-    if [ $? -ne 0  ]; then
-        err_and_exit "Object storage integrity test has failed"
+    if [ $(date +'%u')  -eq "${__DAY_TO_CHECK_INTEGRITY__}" ]; then
+        pushd $SEAFILE_LATEST_DIR
+        ./seaf-fsck.sh
+        if [ $? -ne 0  ]; then
+            err_and_exit "Object storage integrity test has failed"
+        fi
+        popd
     fi
-    popd
 }
 
 function backup_databases () {
@@ -142,14 +144,13 @@ if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 fi
 
 ###### GPFS stuff
-if [ ! $(type "mmcrsnapshot") ]; then
+if [[ $(type mmcrsnapshot) =~ "not found" ]]; then
 	err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
 fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
 if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then
-	# Old snapshot still exists, something is wrong
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
@@ -167,9 +168,9 @@ if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
     fi
 fi
 
-if ${__ENABLE_SEAF_FSCK__}; then
-    check_object_storage_integrity
-fi
+check_object_storage_integrity
+
+exit 1
 
 ##### END CHECK
 
