@@ -170,8 +170,6 @@ fi
 
 check_object_storage_integrity
 
-exit 1
-
 ##### END CHECK
 
 shutdown_seafile
