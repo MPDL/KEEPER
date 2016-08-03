@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fontFamilies>
 	<fontFamily name="AgencyFBFontExtension">
-		<normal><![CDATA[src/main/resources/fonts/AgencyFBFontExtension/AGENCYR.TTF]]></normal>
-		<bold><![CDATA[src/main/resources/fonts/AgencyFBFontExtension/AGENCYB.TTF]]></bold>
-		<pdfEncoding><![CDATA[Identity-H]]></pdfEncoding>
-		<pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+		<normal>fonts/AgencyFBFontExtension/AGENCYB.TTF</normal>
+		<bold>fonts/AgencyFBFontExtension/AGENCYB.TTF</bold>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
 		<exportFonts/>
 	</fontFamily>
 </fontFamilies>

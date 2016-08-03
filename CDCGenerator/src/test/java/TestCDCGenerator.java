@@ -11,23 +11,26 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestCDCGenerator {
 
-    public static final String PATH_TO_CDC_PDF = "src/main/resources/CDC.pdf";
+    public static final String PATH_TO_CDC_PDF = "target/CDC.pdf";
 
     @Test
     public void testCDCGenerator() throws Exception {
         MainApp.main(new String[]{
                 "-i", "1",
-                "-aa", "\"Vlad Makarenko\"",
-                "-c", "\"makarenko@mpdl.mpg.de",
-                "-d", "\"The very first archived Project\"",
+                "-aa", "\"Author1, Author2\"",
+                "-c", "\"keeper@mpdl.mpg.de",
+                "-d", "\"Description of the archived project\"",
                 "-t", "\"Library Title\"",
                 "-u", "\"https://keeper.mpdl.mpg.de/mylibrary\"",
-                "-o", PATH_TO_CDC_PDF,
                 "-h"
+//                PATH_TO_CDC_PDF,
+//                "Argument2"
         });
         File f = new File(PATH_TO_CDC_PDF);
         assertTrue("Cannot find generated pdf at " + f.getAbsolutePath(), f.exists());
 
     }
+
+
 
 }
