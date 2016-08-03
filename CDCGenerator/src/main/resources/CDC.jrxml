@@ -13,7 +13,7 @@
 		<band height="555" splitType="Stretch">
 			<image>
 				<reportElement x="323" y="325" width="155" height="143" forecolor="#000000" uuid="8f21e8e3-4f92-4cce-b3ab-3a3ff831c5d9"/>
-				<imageExpression><![CDATA["src/main/resources/CDC-Images/minerva-1_20%.gif"]]></imageExpression>
+				<imageExpression><![CDATA["CDC-Images/minerva-1_20%.gif"]]></imageExpression>
 			</image>
 			<rectangle>
 				<reportElement mode="Transparent" x="0" y="0" width="802" height="555" uuid="ea4e7bd8-3f35-4612-87fe-b91b6e42d5ae"/>
@@ -39,7 +39,7 @@
 				<text><![CDATA[CARED DATA CERTIFICATE]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="338" y="156" width="125" height="24" uuid="18aa1501-bb1c-43a8-b296-d022ede4b624"/>
+				<reportElement x="338" y="156" width="300" height="24" uuid="18aa1501-bb1c-43a8-b296-d022ede4b624"/>
 				<textElement>
 					<font fontName="AgencyFBFontExtension" size="16" pdfFontName="" pdfEncoding=""/>
 				</textElement>
@@ -51,7 +51,7 @@
 			</textField>
 			<image>
 				<reportElement x="382" y="16" width="38" height="84" uuid="e1a81f6d-668e-4301-bdfe-ff0554cc29c5"/>
-				<imageExpression><![CDATA["src/main/resources/CDC-Images/Keeper-Cared-Data-Certificate-Logo.png"]]></imageExpression>
+				<imageExpression><![CDATA["CDC-Images/Keeper-Cared-Data-Certificate-Logo.png"]]></imageExpression>
 			</image>
 			<textField>
 				<reportElement x="675" y="37" width="80" height="21" uuid="203452aa-b52a-47fc-921a-326f0c419420"/>
@@ -115,11 +115,11 @@ The Max Planck Digital Library provides the KEEPER Service to ensure good scient
 			</staticText>
 			<image>
 				<reportElement x="49" y="123" width="100" height="33" uuid="9ed9e999-0c07-4824-a4b3-faaf55e2a852"/>
-				<imageExpression><![CDATA["src/main/resources/CDC-Images/mpdl.png"]]></imageExpression>
+				<imageExpression><![CDATA["CDC-Images/mpdl.png"]]></imageExpression>
 			</image>
 			<image>
 				<reportElement x="628" y="120" width="122" height="37" uuid="8622d172-34ec-4080-8060-b4c1514daf66"/>
-				<imageExpression><![CDATA["src/main/resources/CDC-Images/KeeperLogo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA["CDC-Images/KeeperLogo.jpg"]]></imageExpression>
 			</image>
 		</band>
 	</columnHeader>

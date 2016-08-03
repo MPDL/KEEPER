@@ -110,19 +110,36 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>de.mpg.mpdl.keeper.CDCGenerator.MainApp</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
+                        <id>build-app</id>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>de.mpg.mpdl.keeper.CDCGenerator.MainApp</mainClass>
+                                </manifest>
+                            </archive>
+
+                            <descriptors>
+                                <descriptor>src/assembly/my-jar-with-dependencies.xml</descriptor>
+                            </descriptors>
+                            <finalName>CDCGenerator</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>build-fonts-ext</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/fonts-ext.xml</descriptor>
+                            </descriptors>
+                            <finalName>fonts-ext</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
