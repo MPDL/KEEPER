@@ -28,6 +28,8 @@ export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
 
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.6/site-packages:${INSTALLPATH}/seafile/lib64/python2.6/site-packages:${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPATH}/seafile/lib64/python2.7/site-packages:$PYTHONPATH
+#Vlad: TODO: check security
+export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
 
 function usage () {
     echo "Usage: `basename $0`"
