@@ -22,8 +22,8 @@ public class TestCDCGenerator {
                 "-d", "\"Description of the archived project\"",
                 "-t", "\"Library Title\"",
                 "-u", "\"https://keeper.mpdl.mpg.de/mylibrary\"",
-                "-h"
-//                PATH_TO_CDC_PDF,
+                "-h",
+                PATH_TO_CDC_PDF
 //                "Argument2"
         });
         File f = new File(PATH_TO_CDC_PDF);
