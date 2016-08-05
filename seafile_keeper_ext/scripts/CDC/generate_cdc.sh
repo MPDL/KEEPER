@@ -1,9 +1,15 @@
 #!/bin/bash
-
 SEAFILE_DIR=/opt/seafile
 INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
 default_ccnet_conf_dir=${SEAFILE_DIR}/ccnet
 central_config_dir=${SEAFILE_DIR}/conf
+
+# INJECT ENV
+source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
+if [ $? -ne 0  ]; then
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
+fi
 
 #get path of seafile.conf
 function read_seafile_data_dir () {
@@ -40,4 +46,16 @@ if [ $# != 0 ]; then
     usage
 fi
 
+echo_green "CDC generator started at $(date)"
+START=$(timestamp)
+
+EXEC_DIR=$(dirname $(readlink -f $0))
+
+pushd $EXEC_DIR
 python generate_cdc.py
+popd
+
+echo_green "CDC generator ended at $(date)"
+echo_green "Elapsed time in seconds: $(($(timestamp) - $START))"
+
+
