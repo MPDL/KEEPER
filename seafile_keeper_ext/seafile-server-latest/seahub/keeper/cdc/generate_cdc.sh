@@ -37,6 +37,8 @@ export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPA
 #Vlad: TODO: check security
 export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
 
+export PYTHONIOENCODING=utf-8
+
 function usage () {
     echo "Usage: `basename $0`"
     echo "exit."

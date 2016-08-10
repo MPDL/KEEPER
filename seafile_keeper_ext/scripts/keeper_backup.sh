@@ -84,7 +84,7 @@ function backup_databases () {
         [ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
     fi
     local TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
-    for i in ccnet seafile seahub; do
+    for i in ccnet seafile seahub keeper; do
         mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
         [ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
     done
