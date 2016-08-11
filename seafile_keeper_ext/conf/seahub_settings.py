@@ -1,7 +1,7 @@
 SECRET_KEY = "__SECRET_KEY__"
 
 DATABASES = {
-    'defaul': {
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'seahub-db',
         'USER': '__DB_USER__',
@@ -68,23 +68,20 @@ ENABLE_SETTINGS_VIA_WEB = True
 # KEEPER specific settings
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 ARCHIVE_METADATA_TEMPLATE = 'archive_metadata_template.md'
+KEEPER_DEFAUIL_LIBRARY = 'Keeper Default Library'
 
 import logging
 
 def repo_created_callback(sender, **kwargs):
     try:
-        import os
-        from seaserv import seafile_api
-        import keeper.cdc.cdc_manager
+        from keeper.default_library_manager import copy_keeper_default_library
     except ImportError:
         return 
     creator = kwargs['creator']
     repo_id = kwargs['repo_id']
     repo_name = kwargs['repo_name']
-    logging.info("Add %s to the repo %s..." % (ARCHIVE_METADATA_TARGET, repo_id))
     try:
-        seafile_api.post_file(repo_id, os.path.dirname(os.path.abspath(keeper.cdc.cdc_manager.__file__)) + '/' + ARCHIVE_METADATA_TEMPLATE, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL)
-        logging.info("Sucessfully added")
+        copy_keeper_default_library(repo_id)
     except:
         pass
 
