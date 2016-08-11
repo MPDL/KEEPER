@@ -1,6 +1,13 @@
 import os
+import sys
 
 import logging
+
+#set logger for batch script run
+caller = sys._getframe(1).f_globals
+if caller['__file__'] == 'batch_generate_cdc.py':
+    logging.basicConfig(level=logging.INFO)
+
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
 
@@ -222,7 +229,6 @@ def generate_certificate(repo):
             #TODO: Send seafile notification
     except Exception as err:
         logging.info(str(err))
-        print str(err)
     finally: 
         db.close()
         if 'tmp_path' in vars() and os.path.exists(tmp_path):
