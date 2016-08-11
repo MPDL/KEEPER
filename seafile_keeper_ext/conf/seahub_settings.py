@@ -1,7 +1,7 @@
 SECRET_KEY = "__SECRET_KEY__"
 
 DATABASES = {
-    'default': {
+    'defaul': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'seahub-db',
         'USER': '__DB_USER__',
