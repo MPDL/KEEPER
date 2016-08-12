@@ -93,7 +93,8 @@ def file_modified_callback(sender, **kwargs):
     repo = kwargs['repo']
     filename = kwargs['filename']
     parent_dir = kwargs['parent_dir']
-    if filename == ARCHIVE_METADATA_TARGET and parent_dir == "/":
+    #if filename == ARCHIVE_METADATA_TARGET and parent_dir == "/":
+    if parent_dir == "/":
         try:
             logging.info("Changed %s, certifying repo: %s ..." % (filename, repo.id))
             generate_certificate(repo)
