@@ -3,12 +3,6 @@ import sys
 
 import logging
 
-#set logger for batch script run
-caller = sys._getframe(1).f_globals
-if caller['__file__'] == 'batch_generate_cdc.py':
-    logging.basicConfig(level=logging.INFO)
-
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
 
 from seaserv import seafile_api
@@ -18,6 +12,8 @@ from seahub.share.models import FileShare
 from seahub.profile.models import Profile
 from seafobj import commit_mgr, fs_mgr
 from subprocess import check_call
+
+from keeper.default_library_manager import get_keeper_default_library
 
 import mistune
 
@@ -43,6 +39,9 @@ CDC_EMAIL_SUBJECT = 'KEEPER Cared Data Certificate'
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 DEBUG = False
+
+if DEBUG:
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 HEADER_STEP = 2
 cdc_headers =  ['Title', 'Authors', 'Year', 'Publisher', 'Genre', 'Description', 'Comments']
@@ -161,6 +160,30 @@ def send_email (to, msg_ctx):
 
     logging.info("Sucessfully sent")
 
+def has_at_least_one_creative_dirent(dir):
+
+    #ARCHIVE_METADATA_TARGET should be in    
+    check_set = set([ARCHIVE_METADATA_TARGET])
+
+    #+KEEPER_DEFAULT_LIBRARY stuff
+    kdl = get_keeper_default_library()
+    if kdl:
+        dirents = [d.obj_name for d in kdl['dirents']]
+        if dirents:
+            check_set.update(dirents)
+   
+    #get dir files
+    files = dir.get_files_list()
+    if files:
+        files = [f for f in files if f.name not in check_set]
+    
+    #get dir dirs 
+    dirs = dir.get_subdirs_list()
+    if dirs:
+        dirs = [d for d in dirs if d.name not in check_set]
+
+    return (len(files) + len(dirs)) > 0 
+
 
 def generate_certificate(repo):
     """ Generate Cared Data Certificate according to markdown file """
@@ -183,6 +206,12 @@ def generate_certificate(repo):
     if not file:
         return False
 
+    #check wether there is at least one creative dirent
+    if not has_at_least_one_creative_dirent(dir):
+        return False
+    logging.info('Repo has creative dirents')
+    
+
     try:
         db = MySQLdb.connect(host=DATABASES['default']['HOST'],
                  user=DATABASES['default']['USER'],
@@ -197,7 +226,8 @@ def generate_certificate(repo):
         logging.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
         cdc_dict = parse_markdown(file.get_content())
         if validate(cdc_dict):
-            cdc_id = register_cdc_in_db(db, cur, repo.id, owner) 
+
+            cdc_id = register_cdc_in_db(db, cur, repo.id, owner)
 
             logging.info("Generate CDC PDF...")
             cdc_pdf = CDC_PDF_PREFIX + cdc_id + ".pdf"
@@ -235,3 +265,12 @@ def generate_certificate(repo):
             os.remove(tmp_path)
 
     return True
+
+
+#test 
+if DEBUG:
+    repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+    print has_at_least_one_creative_dirent(dir)
