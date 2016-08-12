@@ -17,13 +17,16 @@ export DSM_LOG
 MMBACKUP_PROGRESS_CONTENT=0x07
 export MMBACKUP_PROGRESS_CONTENT
 
-DEBUGmmbackup=0x07
-export DEBUGmmbackup
+### Very verbose backup
+#DEBUGmmbackup=0x07
+#export DEBUGmmbackup
 
 WEEKDAY=`date '+%u'`
 
 FILESET="seafile-fileset"
 LINK="/keeper/${FILESET}"
+
+GPFS_DEVICE="/dev/gpfs_keeper"
 
 #### THE SCRIPT SHOULD BE CALLED WITH SNAPSHOT NAME AS PARAMETER
 if [ -z "$1" ]
@@ -42,7 +45,7 @@ function fileset_backup () {
   local SNAPSHOT=$3
 
 #### SNAPSHOT SHOULD BE ALREADY CREATED
-  mmlssnapshot gpfs_keeper -j $FILESET | grep $SNAPSHOT
+  mmlssnapshot $GPFS_DEVICE -j $FILESET | grep $SNAPSHOT
   if [ $? = 0 ]
   then
 
@@ -58,7 +61,7 @@ function fileset_backup () {
       mmbackup $LINK --scope inodespace --noquote -s /var/tmp -v -t incremental -B 1000 -L 6 -m 8 -a 1 -S $SNAPSHOT 
     fi
 
-    mmdelsnapshot gpfs_keeper $SNAPSHOT -j $FILESET
+    mmdelsnapshot $GPFS_DEVICE $SNAPSHOT -j $FILESET
     
   else
     echo "Cannot find snapshot $SNAPSHOT for filesystem 'gpfs_keeper', fileset $FILESET"
