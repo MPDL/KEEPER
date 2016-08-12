@@ -8,7 +8,7 @@ BACKUP_POSTFIX="_orig"
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
 TODAY=`date '+%Y%m%d'`
-GPFS_DEVICE="gpfs_keeper"
+GPFS_DEVICE="/dev/gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # INJECT ENV
@@ -150,7 +150,7 @@ fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
-if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then
+if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
