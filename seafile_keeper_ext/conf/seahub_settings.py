@@ -63,4 +63,40 @@ EXTRA_MIDDLEWARE_CLASSES = (
     'seahub.institutions.middleware.InstitutionMiddleware',
 )
 
-ENABLE_SETTINGS_VIA_WEB = False
+ENABLE_SETTINGS_VIA_WEB = True
+
+# KEEPER specific settings
+ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
+ARCHIVE_METADATA_TEMPLATE = 'archive_metadata_template.md'
+KEEPER_DEFAUIL_LIBRARY = 'Keeper Default Library'
+
+import logging
+
+def repo_created_callback(sender, **kwargs):
+    try:
+        from keeper.default_library_manager import copy_keeper_default_library
+    except ImportError:
+        return 
+    creator = kwargs['creator']
+    repo_id = kwargs['repo_id']
+    repo_name = kwargs['repo_name']
+    try:
+        copy_keeper_default_library(repo_id)
+    except:
+        pass
+
+def file_modified_callback(sender, **kwargs):
+    try:
+        from keeper.cdc.cdc_manager import generate_certificate
+    except ImportError:
+        return 
+    repo = kwargs['repo']
+    filename = kwargs['filename']
+    parent_dir = kwargs['parent_dir']
+    #if filename == ARCHIVE_METADATA_TARGET and parent_dir == "/":
+    if parent_dir == "/":
+        try:
+            logging.info("Changed %s, certifying repo: %s ..." % (filename, repo.id))
+            generate_certificate(repo)
+        except:
+            pass

@@ -8,7 +8,7 @@ BACKUP_POSTFIX="_orig"
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
 TODAY=`date '+%Y%m%d'`
-GPFS_DEVICE="gpfs_keeper"
+GPFS_DEVICE="/dev/gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 
 # INJECT ENV
@@ -84,7 +84,7 @@ function backup_databases () {
         [ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
     fi
     local TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
-    for i in ccnet seafile seahub; do
+    for i in ccnet seafile seahub keeper; do
         mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
         [ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
     done
@@ -150,7 +150,7 @@ fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
-if [[ ! "$RESULT" =~ "/dev/gpfs_keeper on /keeper type gpfs" ]]; then
+if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
