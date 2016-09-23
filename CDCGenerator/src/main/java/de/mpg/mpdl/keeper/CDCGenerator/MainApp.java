@@ -6,6 +6,7 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.util.JRSaver;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,6 +19,8 @@ import org.apache.commons.cli.ParseException;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.sf.jasperreports.engine.JasperCompileManager.compileReport;
 
 public class MainApp {
 /*
@@ -114,9 +117,9 @@ public class MainApp {
         try {
             JasperReport jasperReport;
 
-           /* jasperReport = compileReport(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JRXML));
-            JRSaver.saveObject(jasperReport, "src/main/resources/" + DEFAULT_CDC_JASPER);
-            Thread.sleep(2000);*/
+            jasperReport = compileReport(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JRXML));
+                    JRSaver.saveObject(jasperReport, "src/main/resources/" + DEFAULT_CDC_JASPER);
+                    //Thread.sleep(5000);
 
             jasperReport = (JasperReport) JRLoader.loadObject(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JASPER));
 

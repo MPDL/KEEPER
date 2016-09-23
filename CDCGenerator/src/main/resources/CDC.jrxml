@@ -30,7 +30,7 @@
 		</band>
 	</background>
 	<title>
-		<band height="204" splitType="Stretch">
+		<band height="200" splitType="Stretch">
 			<staticText>
 				<reportElement x="206" y="101" width="390" height="59" forecolor="#31859C" uuid="b6f497eb-ab7b-4c3e-93c4-5deeda6c3c53"/>
 				<textElement markup="styled">
@@ -39,7 +39,7 @@
 				<text><![CDATA[CARED DATA CERTIFICATE]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="338" y="156" width="300" height="24" uuid="18aa1501-bb1c-43a8-b296-d022ede4b624"/>
+				<reportElement x="338" y="156" width="300" height="22" uuid="18aa1501-bb1c-43a8-b296-d022ede4b624"/>
 				<textElement>
 					<font fontName="AgencyFBFontExtension" size="16" pdfFontName="" pdfEncoding=""/>
 				</textElement>
@@ -50,7 +50,7 @@
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<image>
-				<reportElement x="382" y="16" width="38" height="84" uuid="e1a81f6d-668e-4301-bdfe-ff0554cc29c5"/>
+				<reportElement x="382" y="0" width="38" height="84" uuid="e1a81f6d-668e-4301-bdfe-ff0554cc29c5"/>
 				<imageExpression><![CDATA["CDC-Images/Keeper-Cared-Data-Certificate-Logo.png"]]></imageExpression>
 			</image>
 			<textField>
@@ -64,24 +64,30 @@
 		</band>
 	</title>
 	<pageHeader>
-		<band height="130" splitType="Stretch">
+		<band height="140" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<textField>
-				<reportElement x="205" y="25" width="390" height="35" uuid="20c1a6ea-9a25-4cbe-a191-eabe57e7d318"/>
+				<reportElement x="205" y="40" width="390" height="35" uuid="20c1a6ea-9a25-4cbe-a191-eabe57e7d318">
+					<property name="net.sf.jasperreports.text.truncate.suffix" value="..."/>
+				</reportElement>
 				<textElement textAlignment="Center">
 					<font size="12"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{AUTHORS_AND_AFFILIATIONS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="50" y="60" width="700" height="68" uuid="f8061a5f-29b9-4d24-ac13-8a7ff98ad416"/>
+				<reportElement x="50" y="72" width="700" height="68" uuid="f8061a5f-29b9-4d24-ac13-8a7ff98ad416">
+					<property name="net.sf.jasperreports.text.truncate.suffix" value="..."/>
+				</reportElement>
 				<textElement textAlignment="Center">
 					<font size="12" isItalic="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{DESCRIPTION}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="50" y="5" width="700" height="30" uuid="9a0e9520-31bc-4ab3-9825-19d085a90399"/>
+				<reportElement x="50" y="0" width="700" height="30" uuid="9a0e9520-31bc-4ab3-9825-19d085a90399">
+					<property name="net.sf.jasperreports.text.truncate.suffix" value="..."/>
+				</reportElement>
 				<textElement textAlignment="Center">
 					<font size="12" isBold="true"/>
 				</textElement>
@@ -90,7 +96,7 @@
 		</band>
 	</pageHeader>
 	<columnHeader>
-		<band height="221" splitType="Stretch">
+		<band height="200" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<textField>
 				<reportElement x="205" y="1" width="390" height="17" uuid="39d2dfdb-426f-4b95-96aa-4210aa7fc3fc"/>
@@ -107,18 +113,18 @@
 				<textElement textAlignment="Center">
 					<font fontName="AgencyFBFontExtension" size="12" isItalic="true" pdfFontName="" pdfEncoding=""/>
 				</textElement>
-				<text><![CDATA[Max Planck Digital Library herewith certifies that the data of this research project is archived 
+				<text><![CDATA[Max Planck Digital Library herewith certifies that the data of this research project is archived
 [  long term compliant  ]
 and according to the rules for data storage of the Max Planck Society
-The Max Planck Digital Library provides the KEEPER Service to ensure good scientific practice for Max Planck Researchers and their associates. 
+The Max Planck Digital Library provides the KEEPER Service to ensure good scientific practice for Max Planck Researchers and their associates.
 ]]></text>
 			</staticText>
 			<image>
-				<reportElement x="49" y="123" width="100" height="33" uuid="9ed9e999-0c07-4824-a4b3-faaf55e2a852"/>
+				<reportElement x="49" y="145" width="100" height="33" uuid="9ed9e999-0c07-4824-a4b3-faaf55e2a852"/>
 				<imageExpression><![CDATA["CDC-Images/mpdl.png"]]></imageExpression>
 			</image>
 			<image>
-				<reportElement x="628" y="120" width="122" height="37" uuid="8622d172-34ec-4080-8060-b4c1514daf66"/>
+				<reportElement x="628" y="140" width="122" height="37" uuid="8622d172-34ec-4080-8060-b4c1514daf66"/>
 				<imageExpression><![CDATA["CDC-Images/KeeperLogo.jpg"]]></imageExpression>
 			</image>
 		</band>
