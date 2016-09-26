@@ -43,6 +43,7 @@ public class MainApp {
         DESCRIPTION("d", "description", "Project/Library Description", true),
         CONTACT("c", "contact", "Contact email", true),
         URL("u", "url", "Link to the Project/Library location", true),
+        GENERATE_JR("g", "generate-jr", "Generate JasperReport from JRXML", false),
         HELP("h", "help", "Help", false);
 
         private final String opt;
@@ -83,7 +84,7 @@ public class MainApp {
                     .longOpt(p.getLongOpt())
                     .hasArg(p.hasArgs)
                     .desc(p.getDescription())
-                    .required(p != OPTS.HELP)
+                    .required(p != OPTS.HELP && p != OPTS.GENERATE_JR)
                     .build());
 
         //parse command line
@@ -117,11 +118,14 @@ public class MainApp {
         try {
             JasperReport jasperReport;
 
-            jasperReport = compileReport(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JRXML));
-                    JRSaver.saveObject(jasperReport, "src/main/resources/" + DEFAULT_CDC_JASPER);
-                    //Thread.sleep(5000);
+            if (cl.hasOption(OPTS.GENERATE_JR.getOpt())) {
+                jasperReport = compileReport(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JRXML));
+                JRSaver.saveObject(jasperReport, "src/main/resources/" + DEFAULT_CDC_JASPER);
+            } else {
+                jasperReport = (JasperReport) JRLoader.loadObject(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JASPER));
+            }
 
-            jasperReport = (JasperReport) JRLoader.loadObject(MainApp.class.getResourceAsStream("/" + DEFAULT_CDC_JASPER));
+
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(
                     jasperReport,

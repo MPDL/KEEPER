@@ -101,7 +101,7 @@
 			<textField>
 				<reportElement x="205" y="1" width="390" height="17" uuid="39d2dfdb-426f-4b95-96aa-4210aa7fc3fc"/>
 				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA[$P{CONTACT}]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Contact: " + $P{CONTACT}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="205" y="15" width="390" height="17" uuid="704cf617-75d1-49b2-a5de-49d410188090"/>
