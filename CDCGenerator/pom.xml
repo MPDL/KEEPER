@@ -119,11 +119,11 @@
                                     <mainClass>de.mpg.mpdl.keeper.CDCGenerator.MainApp</mainClass>
                                 </manifest>
                             </archive>
-
                             <descriptors>
                                 <descriptor>src/assembly/my-jar-with-dependencies.xml</descriptor>
                             </descriptors>
                             <finalName>CDCGenerator</finalName>
+                            <outputDirectory>../seafile_keeper_ext/seafile-server-latest/seahub/keeper/cdc</outputDirectory>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                         <phase>package</phase>
@@ -138,6 +138,7 @@
                                 <descriptor>src/assembly/fonts-ext.xml</descriptor>
                             </descriptors>
                             <finalName>fonts-ext</finalName>
+                            <outputDirectory>../seafile_keeper_ext/seafile-server-latest/seahub/keeper/cdc</outputDirectory>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                         <phase>package</phase>
