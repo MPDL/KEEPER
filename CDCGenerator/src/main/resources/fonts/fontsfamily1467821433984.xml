@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <fontFamilies>
 	<fontFamily name="AgencyFBFontExtension">
-		<normal>fonts/AgencyFBFontExtension/AGENCYB.TTF</normal>
+		<normal>fonts/AgencyFBFontExtension/AGENCYR.TTF</normal>
 		<bold>fonts/AgencyFBFontExtension/AGENCYB.TTF</bold>
 		<pdfEncoding>Identity-H</pdfEncoding>
 		<pdfEmbedded>true</pdfEmbedded>
