@@ -30,7 +30,7 @@
 		</band>
 	</background>
 	<title>
-		<band height="200" splitType="Stretch">
+		<band height="190" splitType="Stretch">
 			<staticText>
 				<reportElement x="206" y="101" width="390" height="59" forecolor="#31859C" uuid="b6f497eb-ab7b-4c3e-93c4-5deeda6c3c53"/>
 				<textElement markup="styled">
@@ -41,12 +41,15 @@
 			<staticText>
 				<reportElement x="338" y="156" width="300" height="22" uuid="18aa1501-bb1c-43a8-b296-d022ede4b624"/>
 				<textElement>
-					<font fontName="AgencyFBFontExtension" size="16" pdfFontName="" pdfEncoding=""/>
+					<font fontName="AgencyFBFontExtension" size="16" isBold="false" pdfFontName="" pdfEncoding=""/>
 				</textElement>
 				<text><![CDATA[for the research project]]></text>
 			</staticText>
 			<textField pattern="MMMMM dd, yyyy">
 				<reportElement x="50" y="37" width="100" height="30" uuid="b13349d8-15b1-4900-a0ff-15bd6acfda1f"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<image>
@@ -55,10 +58,16 @@
 			</image>
 			<textField>
 				<reportElement x="675" y="37" width="80" height="21" uuid="203452aa-b52a-47fc-921a-326f0c419420"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$P{ID}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="662" y="37" width="18" height="20" uuid="7f95a24a-59f1-4c23-b800-534419a37f1d"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
 				<text><![CDATA[No]]></text>
 			</staticText>
 		</band>
@@ -85,18 +94,18 @@
 				<textFieldExpression><![CDATA[$P{DESCRIPTION}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="50" y="0" width="700" height="30" uuid="9a0e9520-31bc-4ab3-9825-19d085a90399">
+				<reportElement x="50" y="0" width="700" height="34" uuid="9a0e9520-31bc-4ab3-9825-19d085a90399">
 					<property name="net.sf.jasperreports.text.truncate.suffix" value="..."/>
 				</reportElement>
 				<textElement textAlignment="Center">
-					<font size="12" isBold="true"/>
+					<font size="14" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{TITLE}]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
-		<band height="200" splitType="Stretch">
+		<band height="220" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<textField>
 				<reportElement x="205" y="1" width="390" height="17" uuid="39d2dfdb-426f-4b95-96aa-4210aa7fc3fc"/>
