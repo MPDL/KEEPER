@@ -1,6 +1,9 @@
 import os
 import sys
 
+import datetime
+import re
+
 import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
@@ -23,6 +26,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
+
 
 import MySQLdb
 
@@ -107,7 +111,23 @@ def validate (cdc_dict):
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     #2. check content"
-    # TODO:
+    """Year checking"""
+    format = "%Y"
+    try:
+        d = datetime.datetime.strptime(cdc_dict['Year'], format)
+    except Exception as err:
+        logging.info("Wrong year: " + cdc_dict['Year'])
+        valid = False
+    """Authors/Affiliations checking"""
+    # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
+    # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
+    # ...
+    pattern = re.compile("^\s*\w+,(\s+[\w.]+)+(;\s*\S+\s*)+")
+    for line in cdc_dict['Authors'].splitlines():
+        if not re.match(pattern, line):
+            logging.info('Wrong Author/Affiliation string: ' + line) 
+            valid = False
+
     logging.info('valid' if valid else 'not valid') 
     return valid;
 
