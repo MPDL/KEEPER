@@ -68,7 +68,7 @@ ENABLE_SETTINGS_VIA_WEB = True
 # KEEPER specific settings
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 ARCHIVE_METADATA_TEMPLATE = 'archive_metadata_template.md'
-KEEPER_DEFAUIL_LIBRARY = 'Keeper Default Library'
+KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 
 import logging
 
