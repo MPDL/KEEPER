@@ -205,11 +205,24 @@ def has_at_least_one_creative_dirent(dir):
     return (len(files) + len(dirs)) > 0 
 
 
-def generate_certificate(commit):
+def generate_certificate_by_repo(repo):
+    """ Generate Cared Data Certificate by repo """
+    
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+
+    return generate_certificate(repo, commit)    
+
+def generate_certificate_by_commit(commit):
+    """ Generate Cared Data Certificate by commit """
+    
+    return generate_certificate(get_repo(commit.repo_id), commit)    
+
+
+
+def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
-
-    repo = get_repo(commit.repo_id)
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -219,8 +232,6 @@ def generate_certificate(commit):
     if repo.rep_desc == TEMPLATE_DESC:
         return False
    
-#    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-#   commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
 
     # certificate already exists in root

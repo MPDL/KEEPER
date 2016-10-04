@@ -10,7 +10,7 @@ from seaserv import get_related_users_by_repo, get_org_id_by_repo_id, \
 from .db import save_user_events, save_org_user_events, save_file_audit_event, \
         save_file_update_event, save_perm_audit_event
 
-from keeper.cdc.cdc_manager import generate_certificate
+from keeper.cdc.cdc_manager import generate_certificate_by_commit
 
 def RepoUpdateEventHandler(session, msg):
     elements = msg.body.split('\t')
@@ -62,7 +62,7 @@ def FileUpdateEventHandler(session, msg):
 
     #KEEPER:
     logging.info("FILE UPDATE EVENT: %s, start generate_certificate", commit.desc)
-    generate_certificate(commit) 
+    generate_certificate_by_commit(commit) 
 
     save_file_update_event(session, time, commit.creator_name, org_id, \
                            repo_id, commit_id, commit.desc)

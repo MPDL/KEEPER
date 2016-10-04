@@ -2,7 +2,7 @@
 
 from seaserv import seafile_api
 
-from keeper.cdc.cdc_manager import generate_certificate
+from keeper.cdc.cdc_manager import generate_certificate_by_repo
 
 MAX_INT = 2147483647
 
@@ -17,7 +17,7 @@ cdc_gen_amount = 0
 for repo in repos_all:
 
     try:
-        if generate_certificate(repo):
+        if generate_certificate_by_repo(repo):
             cdc_gen_amount += 1
     except Exception as err:
         print err
