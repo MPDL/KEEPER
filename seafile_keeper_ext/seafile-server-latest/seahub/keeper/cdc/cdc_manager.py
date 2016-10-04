@@ -8,7 +8,7 @@ import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
 
-from seaserv import seafile_api
+from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
@@ -205,8 +205,11 @@ def has_at_least_one_creative_dirent(dir):
     return (len(files) + len(dirs)) > 0 
 
 
-def generate_certificate(repo):
+def generate_certificate(commit):
     """ Generate Cared Data Certificate according to markdown file """
+
+
+    repo = get_repo(commit.repo_id)
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -215,11 +218,18 @@ def generate_certificate(repo):
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
         return False
-    
-    # get latest version of the ARCHIVE_METADATA_TARGET
-    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+   
+#    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+#   commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+
+    # certificate already exists in root
+    file_names = [f.name for f in dir.get_files_list()]
+    if any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
+        return False
+
+
+    # get latest version of the ARCHIVE_METADATA_TARGET
     file = dir.lookup(ARCHIVE_METADATA_TARGET)
     
     #exit if no metadata file exists

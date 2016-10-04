@@ -84,19 +84,3 @@ def repo_created_callback(sender, **kwargs):
         copy_keeper_default_library(repo_id)
     except:
         pass
-
-def file_modified_callback(sender, **kwargs):
-    try:
-        from keeper.cdc.cdc_manager import generate_certificate
-    except ImportError:
-        return 
-    repo = kwargs['repo']
-    filename = kwargs['filename']
-    parent_dir = kwargs['parent_dir']
-    #if filename == ARCHIVE_METADATA_TARGET and parent_dir == "/":
-    if parent_dir == "/":
-        try:
-            logging.info("Changed %s, certifying repo: %s ..." % (filename, repo.id))
-            generate_certificate(repo)
-        except:
-            pass
