@@ -1,11 +1,14 @@
 import os
 import sys
 
+import datetime
+import re
+
 import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
 
-from seaserv import seafile_api
+from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
@@ -23,6 +26,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
+
 
 import MySQLdb
 
@@ -107,7 +111,23 @@ def validate (cdc_dict):
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     #2. check content"
-    # TODO:
+    """Year checking"""
+    format = "%Y"
+    try:
+        d = datetime.datetime.strptime(cdc_dict['Year'], format)
+    except Exception as err:
+        logging.info("Wrong year: " + cdc_dict['Year'])
+        valid = False
+    """Authors/Affiliations checking"""
+    # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
+    # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
+    # ...
+    pattern = re.compile("^\s*\w+,(\s+[\w.]+)+(;\s*\S+\s*)+")
+    for line in cdc_dict['Authors'].splitlines():
+        if not re.match(pattern, line):
+            logging.info('Wrong Author/Affiliation string: ' + line) 
+            valid = False
+
     logging.info('valid' if valid else 'not valid') 
     return valid;
 
@@ -185,8 +205,24 @@ def has_at_least_one_creative_dirent(dir):
     return (len(files) + len(dirs)) > 0 
 
 
-def generate_certificate(repo):
+def generate_certificate_by_repo(repo):
+    """ Generate Cared Data Certificate by repo """
+    
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+
+    return generate_certificate(repo, commit)    
+
+def generate_certificate_by_commit(commit):
+    """ Generate Cared Data Certificate by commit """
+    
+    return generate_certificate(get_repo(commit.repo_id), commit)    
+
+
+
+def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
+
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -195,11 +231,16 @@ def generate_certificate(repo):
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
         return False
-    
-    # get latest version of the ARCHIVE_METADATA_TARGET
-    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+   
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+
+    # certificate already exists in root
+    file_names = [f.name for f in dir.get_files_list()]
+    if any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
+        return False
+
+
+    # get latest version of the ARCHIVE_METADATA_TARGET
     file = dir.lookup(ARCHIVE_METADATA_TARGET)
     
     #exit if no metadata file exists
