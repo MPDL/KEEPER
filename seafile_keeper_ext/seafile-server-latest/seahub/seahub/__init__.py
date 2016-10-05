@@ -6,9 +6,8 @@ repo_deleted.connect(repo_deleted_cb)
 
 # user defined callback func
 try:
-    from seahub_settings import repo_created_callback, file_modified_callback
+    from seahub_settings import repo_created_callback
     repo_created.connect(repo_created_callback)
-    file_modified.connect(file_modified_callback)
 except ImportError:
     pass
 
