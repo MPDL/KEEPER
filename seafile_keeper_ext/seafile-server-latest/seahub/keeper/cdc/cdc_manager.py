@@ -48,8 +48,8 @@ if DEBUG:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 HEADER_STEP = 2
-cdc_headers =  ['Title', 'Authors', 'Year', 'Publisher', 'Genre', 'Description', 'Comments']
-cdc_headers_mandatory =  ['Title', 'Authors', 'Year', 'Description']
+cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Comments']
+cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description']
 err_list = []
 
 class TokenTreeRenderer(mistune.Renderer):
@@ -118,12 +118,12 @@ def validate (cdc_dict):
     except Exception as err:
         logging.info("Wrong year: " + cdc_dict['Year'])
         valid = False
-    """Authors/Affiliations checking"""
+    """Author/Affiliations checking"""
     # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
     # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
     # ...
     pattern = re.compile("^\s*\w+,(\s+[\w.]+)+(;\s*\S+\s*)+")
-    for line in cdc_dict['Authors'].splitlines():
+    for line in cdc_dict['Author'].splitlines():
         if not re.match(pattern, line):
             logging.info('Wrong Author/Affiliation string: ' + line) 
             valid = False
@@ -132,11 +132,16 @@ def validate (cdc_dict):
     return valid;
 
 def get_repo_share_url (repo_id, owner):
-    """Repo should be shared to be certified?"""
+    """Should be repo to be certified?"""
     share = FileShare.objects.get_dir_link_by_path(owner, repo_id, "/")
     if not share:
         raise Exception('Cannot get share URL: repo is not shared')
     return SERVICE_URL + '/' + share.s_type + '/' + share.token;
+
+def get_repo_pivate_url (repo_id):
+    """Get private repo url"""
+    return SERVICE_URL + '/#my-libs/lib/' + repo_id;
+
 
 def register_cdc_in_db(db, cur, repo_id, owner):
     logging.info("""Register CDC in keeper-db""")
@@ -280,7 +285,7 @@ def generate_certificate(repo, commit):
             args = [ "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS, 
                     "-i", "\"" + cdc_id + "\"", 
                     "-t", "\"" + cdc_dict['Title']  + "\"", 
-                    "-aa", "\"" + cdc_dict['Authors']  + "\"", 
+                    "-aa", "\"" + cdc_dict['Author']  + "\"", 
                     "-d", "\"" + cdc_dict['Description']  + "\"", 
                     "-c", "\"" + owner  + "\"", 
                     "-u", "\"" + repo_share_url  + "\"",
@@ -295,7 +300,7 @@ def generate_certificate(repo, commit):
 
             if not DEBUG:
                 nick = Profile.objects.get_profile_by_user(owner).nickname
-                send_email(owner, {'USER_NAME': nick if nick else owner, 'PROJECT_NAME':repo.name})
+                send_email(owner, {'USER_NAME': nick if nick else owner, 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
             
             #TODO: Send seafile notification
     except Exception as err:
