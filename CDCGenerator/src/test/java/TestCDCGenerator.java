@@ -12,12 +12,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestCDCGenerator {
 
-    public static final String PATH_TO_CDC_PDF = "target/CDC.pdf";
-    public static final String PATH_TO_CDC_LONG_META_PDF = "target/CDC_long_meta.pdf";
 
     @Ignore
     @Test
     public void testCDCGenerator() throws Exception {
+        String fn = "target/CDC.pdf";
         MainApp.main(new String[]{
                 "-i", "1",
                 "-aa", "\"Author1, Author2, Author3\"",
@@ -27,10 +26,10 @@ public class TestCDCGenerator {
                 "-u", "\"https://keeper.mpdl.mpg.de/mylibrary\"",
                 "-g",
                 "-h",
-                PATH_TO_CDC_PDF
+                fn
 //                "Argument2"
         });
-        File f = new File(PATH_TO_CDC_PDF);
+        File f = new File(fn);
         assertTrue("Cannot find generated pdf at " + f.getAbsolutePath(), f.exists());
 
     }
@@ -38,6 +37,7 @@ public class TestCDCGenerator {
 //    @Ignore
     @Test
     public void testCDCGenerator_Long_Meta() throws Exception {
+        String fn = "target/CDC_long_meta.pdf";
         MainApp.main(new String[]{
                 "-i", "1",
                 "-aa", "\"Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2, Author1, Author2\"",
@@ -47,10 +47,10 @@ public class TestCDCGenerator {
                 "-u", "\"https://keeper.mpdl.mpg.de/mylibrary\"",
                 "-g",
                 "-h",
-                PATH_TO_CDC_LONG_META_PDF
+                fn
 //                "Argument2"
         });
-        File f = new File(PATH_TO_CDC_PDF);
+        File f = new File(fn);
         assertTrue("Cannot find generated pdf at " + f.getAbsolutePath(), f.exists());
 
     }
