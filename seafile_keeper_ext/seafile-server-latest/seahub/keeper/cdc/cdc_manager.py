@@ -20,13 +20,8 @@ from keeper.default_library_manager import get_keeper_default_library
 
 import mistune
 
-from string import Template
-
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
-
+from django.core.mail import EmailMessage
+from django.template import Context, loader
 
 import MySQLdb
 
@@ -160,29 +155,16 @@ def register_cdc_in_db(db, cur, repo_id, owner):
 
 def send_email (to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
+    
     try:
-        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-        server.starttls()
-        server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
-
-        f = open(MODULE_PATH + '/' + CDC_EMAIL_TEMPLATE)
-        tmpl = Template(f.read())   
-        
-        msg = MIMEMultipart()
-        msg.attach(MIMEText(tmpl.substitute(msg_ctx), 'html'))
-        msg['Subject'] = CDC_EMAIL_SUBJECT
-#        msg['Cc'] = SERVER_EMAIL
-        f = open(MODULE_PATH + '/' + CDC_LOGO, 'rb').read()
-        logo = MIMEImage(f, name=CDC_LOGO)
-        msg.attach(logo)
-        try:
-            server.sendmail(SERVER_EMAIL, [to, SERVER_EMAIL], msg.as_string())
-        finally:    
-            server.quit()
-
+        t = loader.get_template(CDC_EMAIL_TEMPLATE)
+        msg = EmailMessage(CDC_EMAIL_SUBJECT, t.render(Context(msg_ctx)), SERVER_EMAIL, [to, SERVER_EMAIL] )
+        msg.content_subtype = "html"
+        msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
+        msg.send()
     except Exception as err:
         raise Exception('Cannot send email: ' + str(err))
-
+    
     logging.info("Sucessfully sent")
 
 def has_at_least_one_creative_dirent(dir):
@@ -315,8 +297,10 @@ def generate_certificate(repo, commit):
 
 #test 
 if DEBUG:
+    """    
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
     print has_at_least_one_creative_dirent(dir)
+    """
