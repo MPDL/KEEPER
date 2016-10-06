@@ -61,7 +61,7 @@ def FileUpdateEventHandler(session, msg):
     time = datetime.datetime.utcfromtimestamp(msg.ctime)
 
     #KEEPER:
-    logging.info("FILE UPDATE EVENT: %s, start generate_certificate", commit.desc)
+    #logging.info("FILE UPDATE EVENT: %s, start generate_certificate", commit.desc)
     generate_certificate_by_commit(commit) 
 
     save_file_update_event(session, time, commit.creator_name, org_id, \
