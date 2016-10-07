@@ -143,13 +143,13 @@ def register_cdc_in_db(db, cur, repo_id, owner):
     try:
         cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
         db.commit()
+        cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
+        cdc_id = str(cur.fetchone()[1])
     except Exception as err:
         db.rollback()
         if not DEBUG:
             raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
 
-    cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-    cdc_id = str(cur.fetchone()[1])
     logging.info("Sucessfully registered, cdc_id: " + cdc_id)
     return cdc_id 
 
@@ -281,9 +281,13 @@ def generate_certificate(repo, commit):
             logging.info("Sucessfully added")
 
             if not DEBUG:
-                nick = Profile.objects.get_profile_by_user(owner).nickname
-                send_email(owner, {'USER_NAME': nick if nick else owner, 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
-            
+                user_name = owner
+                p = Profile.objects.get_profile_by_user(owner)
+                if p is not None:
+                    if p.nickname and p.nickname.strip():
+                        user_name = p.nickname
+                send_email(owner, {'USER_NAME': user_name, 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
+                
             #TODO: Send seafile notification
     except Exception as err:
         logging.info(str(err))
