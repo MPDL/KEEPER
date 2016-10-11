@@ -9,7 +9,7 @@ import logging
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
 
 from seaserv import seafile_api, get_repo
-from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
+from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
 from seahub.profile.models import Profile
@@ -37,7 +37,7 @@ CDC_EMAIL_SUBJECT = 'KEEPER Cared Data Certificate'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = False
+DEBUG = False 
 
 if DEBUG:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -92,6 +92,16 @@ def parse_markdown (md):
                     stack.pop()
     return cdc;
 
+
+def is_certified_by_repo_id (repo_id):
+    guess = False
+    db = get_db(KEEPER_DB_NAME)
+    try:
+        guess = is_certified(db, db.cursor(), repo_id)
+    finally:
+        db.close()
+    return guess 
+
 def is_certified (db, cur, repo_id):
     """Check whether the repo is already certified"""
     if DEBUG:
@@ -117,7 +127,7 @@ def validate (cdc_dict):
     # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
     # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
     # ...
-    pattern = re.compile("^\s*\w+,(\s+[\w.]+)+(;\s*\S+\s*)+")
+    pattern = re.compile("^\s*\w+,(\s*[\w.]+)+(;\s*\S+\s*)+")
     for line in cdc_dict['Author'].splitlines():
         if not re.match(pattern, line):
             logging.info('Wrong Author/Affiliation string: ' + line) 
@@ -137,6 +147,13 @@ def get_repo_pivate_url (repo_id):
     """Get private repo url"""
     return SERVICE_URL + '/#my-libs/lib/' + repo_id;
 
+def get_db(db_name):
+    """Get DB connection"""
+    return MySQLdb.connect(host=DATABASES['default']['HOST'],
+         user=DATABASES['default']['USER'],
+         passwd=DATABASES['default']['PASSWORD'],
+         db=db_name)
+ 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
     logging.info("""Register CDC in keeper-db""")
@@ -152,6 +169,26 @@ def register_cdc_in_db(db, cur, repo_id, owner):
 
     logging.info("Sucessfully registered, cdc_id: " + cdc_id)
     return cdc_id 
+
+def get_user_name(user):
+    logging.info("""Get user name""")
+    # default name is user id
+    name = user
+    try:
+        db = get_db(DATABASES['default']['NAME'])
+        cur = db.cursor()
+        cur.execute("SELECT nickname FROM profile_profile WHERE user='" + name + "'")
+        row = cur.fetchone()
+        if row is not None and row[0]:
+            # nick is name if nick available
+            name = str(row[0])
+    except Exception as err:
+        logging.info('Cannot get name from db: ' + ": ".join(str(i) for i in err))
+    finally:   
+        db.close()
+    logging.info("user name: " + name)
+    return name 
+
 
 def send_email (to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
@@ -206,10 +243,8 @@ def generate_certificate_by_commit(commit):
     return generate_certificate(get_repo(commit.repo_id), commit)    
 
 
-
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
-
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -241,10 +276,8 @@ def generate_certificate(repo, commit):
     
 
     try:
-        db = MySQLdb.connect(host=DATABASES['default']['HOST'],
-                 user=DATABASES['default']['USER'],
-                 passwd=DATABASES['default']['PASSWORD'],
-                 db="keeper-db")
+        db = get_db(KEEPER_DB_NAME)
+
         cur = db.cursor()
         
         if is_certified(db, cur, repo.id):
@@ -279,19 +312,14 @@ def generate_certificate(repo, commit):
             logging.info("Add " + cdc_pdf + " to the repo...")
             seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
             logging.info("Sucessfully added")
-
             if not DEBUG:
-                user_name = owner
-                p = Profile.objects.get_profile_by_user(owner)
-                if p is not None:
-                    if p.nickname and p.nickname.strip():
-                        user_name = p.nickname
-                send_email(owner, {'USER_NAME': user_name, 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
-                
-            #TODO: Send seafile notification
+                send_email(owner, {'USER_NAME': get_user_name(owner), 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
+     
+                        #TODO: Send seafile notification
     except Exception as err:
         logging.info(str(err))
-    finally: 
+    finally:
+       # other final stuff
         db.close()
         if 'tmp_path' in vars() and os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -301,6 +329,7 @@ def generate_certificate(repo, commit):
 
 #test 
 if DEBUG:
+    print get_user_name('vlamak868@gmail.com')
     """    
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
