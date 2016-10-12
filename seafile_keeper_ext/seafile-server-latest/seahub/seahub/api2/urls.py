@@ -1,0 +1,133 @@
+from django.conf.urls import patterns, url, include
+
+from .views import *
+from .views_misc import ServerInfoView
+from .views_auth import LogoutDeviceView, ClientLoginTokenView
+from .endpoints.dir_shared_items import DirSharedItemsEndpoint
+from .endpoints.account import Account
+from .endpoints.shared_upload_links import SharedUploadLinksView
+from .endpoints.be_shared_repo import BeSharedReposView
+from .endpoints.search_user import SearchUser
+from .endpoints.group_discussions import GroupDiscussions
+from .endpoints.group_discussion import GroupDiscussion
+from .endpoints.send_share_link_email import SendShareLinkView
+from .endpoints.send_upload_link_email import SendUploadLinkView
+
+from .views_keeper import CatalogView
+
+urlpatterns = patterns('',
+    url(r'^ping/$', Ping.as_view()),
+    url(r'^auth/ping/$', AuthPing.as_view()),
+    url(r'^auth-token/', ObtainAuthToken.as_view()),
+    url(r'^server-info/$', ServerInfoView.as_view()),
+    url(r'^logout-device/$', LogoutDeviceView.as_view()),
+    url(r'^client-login/$', ClientLoginTokenView.as_view()),
+
+    # RESTful API
+    url(r'^accounts/$', Accounts.as_view(), name="accounts"),
+    url(r'^accounts/(?P<email>\S+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/$', Account.as_view(), name="api2-account"),
+    url(r'^account/info/$', AccountInfo.as_view()),
+    url(r'^regdevice/$', RegDevice.as_view(), name="regdevice"),
+    url(r'^search/$', Search.as_view(), name='api_search'),
+    url(r'^search-user/$', SearchUser.as_view(), name='search-user'),
+    url(r'^repos/$', Repos.as_view(), name="api2-repos"),
+    url(r'^repos/public/$', PubRepos.as_view(), name="api2-pub-repos"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/$', Repo.as_view(), name="api2-repo"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/history/$', RepoHistory.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/user-folder-perm/$', RepoUserFolderPerm.as_view(), name="api2-repo-user-folder-perm"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/group-folder-perm/$', RepoGroupFolderPerm.as_view(), name="api2-repo-group-folder-perm"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/history-limit/$', RepoHistoryLimit.as_view(), name="api2-repo-history-limit"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-info/$', DownloadRepo.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/owner/$', RepoOwner.as_view(), name="api2-repo-owner"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/public/$', RepoPublic.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-shared-links/$', RepoDownloadSharedLinks.as_view(), name="api2-repo-download-shared-links"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-shared-links/(?P<token>[a-f0-9]{10})/$', RepoDownloadSharedLink.as_view(), name="api2-repo-download-shared-link"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-shared-links/$', RepoUploadSharedLinks.as_view(), name="api2-repo-upload-shared-links"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-shared-links/(?P<token>[a-f0-9]{10})/$', RepoUploadSharedLink.as_view(), name="api2-repo-upload-shared-link"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-link/$', UploadLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/update-link/$', UpdateLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-blks-link/$', UploadBlksLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/update-blks-link/$', UpdateBlksLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/owa-file/$', OwaFileView.as_view(), name='api2-owa-file-view'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/$', FileView.as_view(), name='FileView'),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/files/(?P<file_id>[0-9a-f]{40})/blks/(?P<block_id>[0-9a-f]{40})/download-link/$', FileBlockDownloadLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/detail/$', FileDetailView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/history/$', FileHistory.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/revision/$', FileRevision.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/revert/$', FileRevert.as_view(), name='api2-file-revert'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/shared-link/$', FileSharedLinkView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/$', DirView.as_view(), name='DirView'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/sub_repo/$', DirSubRepoView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/shared_items/$', DirSharedItemsEndpoint.as_view(), name="api2-dir-shared-items"),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/download/$', DirDownloadView.as_view(), name='api2-dir-download'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/revert/$', DirRevert.as_view(), name='api2-dir-revert'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/thumbnail/$', ThumbnailView.as_view(), name='api2-thumbnail'),
+    url(r'^starredfiles/', StarredFileView.as_view(), name='starredfiles'),
+    url(r'^devices/', DevicesView.as_view(), name='api2-devices'),
+    url(r'^shared-repos/$', SharedRepos.as_view(), name='sharedrepos'),
+    url(r'^shared-repos/(?P<repo_id>[-0-9-a-f]{36})/$', SharedRepo.as_view(), name='sharedrepo'),
+    url(r'^beshared-repos/$', BeShared.as_view(), name='beshared'),
+    url(r'^beshared-repos/(?P<repo_id>[-0-9-a-f]{36})/$', BeSharedReposView.as_view(), name='beshared-repos'),
+    url(r'^default-repo/$', DefaultRepoView.as_view(), name='api2-defaultrepo'),
+    url(r'^send-share-link/$', SendShareLinkView.as_view(), name='api2-send-share-link'),
+    url(r'^send-upload-link/$', SendUploadLinkView.as_view(), name='api2-send-upload-link'),
+    url(r'^shared-links/$', SharedLinksView.as_view()),
+    url(r'^shared-upload-links/$', SharedUploadLinksView.as_view()),
+    url(r'^virtual-repos/$', VirtualRepos.as_view()),
+    url(r'^repo-tokens/$', RepoTokensView.as_view(), name='api2-repo-tokens'),
+
+    url(r'^organization/$', OrganizationView.as_view()),
+
+    url(r'^f/(?P<token>[a-f0-9]{10})/$', SharedFileView.as_view()),
+    url(r'^f/(?P<token>[a-f0-9]{10})/detail/$', SharedFileDetailView.as_view()),
+    url(r'^d/(?P<token>[a-f0-9]{10})/dir/$', SharedDirView.as_view()),
+
+    url(r'^groupandcontacts/$', GroupAndContacts.as_view()),
+    url(r'^events/$', EventsView.as_view()),
+    url(r'^repo_history_changes/(?P<repo_id>[-0-9a-f]{36})/$', RepoHistoryChange.as_view()),
+    url(r'^unseen_messages/$', UnseenMessagesCountView.as_view()),
+
+    url(r'^avatars/user/(?P<user>\S+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/resized/(?P<size>[0-9]+)/$', UserAvatarView.as_view()),
+    url(r'^avatars/group/(?P<group_id>\d+)/resized/(?P<size>[0-9]+)/$', GroupAvatarView.as_view()),
+
+    url(r'^groups/$', Groups.as_view()),
+    url(r'^groups/(?P<group_id>\d+)/$', Groups.as_view()),
+    url(r'^groups/(?P<group_id>\d+)/members/$', GroupMembers.as_view()),
+    url(r'^groups/(?P<group_id>\d+)/repos/$', GroupRepos.as_view(), name="api2-grouprepos"),
+    url(r'^groups/(?P<group_id>\d+)/repos/(?P<repo_id>[-0-9a-f]{36})/$', GroupRepo.as_view(), name="api2-grouprepo"),
+    url(r'^groups/(?P<group_id>\d+)/discussions/$', GroupDiscussions.as_view(), name="api2-group-discussions"),
+    url(r'^groups/(?P<group_id>\d+)/discussions/(?P<discuss_id>\d+)/$', GroupDiscussion.as_view(), name="api2-group-discussion"),
+
+    url(r'^html/events/$', EventsHtml.as_view()),
+    url(r'^html/more_events/$', AjaxEvents.as_view(), name="more_events"),
+    url(r'^html/repo_history_changes/(?P<repo_id>[-0-9a-f]{36})/$', RepoHistoryChangeHtml.as_view(), name='api_repo_history_changes'),
+
+    # Deprecated
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view()),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view()),
+
+    # KEEPER
+    url(r'^catalog/$', CatalogView.as_view()),
+
+)
+
+# serve office converter static files
+from seahub.utils import HAS_OFFICE_CONVERTER
+if HAS_OFFICE_CONVERTER:
+    from seahub.utils import OFFICE_HTML_DIR
+    urlpatterns += patterns('',
+        url(r'^office-convert/static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': OFFICE_HTML_DIR}, name='api_office_convert_static'),
+    )
+    urlpatterns += patterns('',
+        url(r'^office-convert/status/$', OfficeConvertQueryStatus.as_view()),
+    )
+    urlpatterns += patterns('',
+        url(r'^office-convert/generate/repos/(?P<repo_id>[-0-9-a-f]{36})/$', OfficeGenerateView.as_view()),
+    )
+
+from seahub import settings
+if getattr(settings, 'ENABLE_OFFICE_WEB_APP', False):
+    urlpatterns += patterns('',
+        (r'^wopi/', include('seahub_extra.wopi.urls')),
+    )
