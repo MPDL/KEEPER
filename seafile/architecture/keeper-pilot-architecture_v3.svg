@@ -3794,9 +3794,15 @@
      showgrid="false"
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
+<<<<<<< HEAD
      inkscape:cy="445.22398"
      inkscape:cx="414.53768"
      inkscape:zoom="1.1154638"
+=======
+     inkscape:cy="464.93771"
+     inkscape:cx="477.49937"
+     inkscape:zoom="0.788752"
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -3864,7 +3870,11 @@
        orientation="1,0"
        id="guide6480" />
     <sodipodi:guide
+<<<<<<< HEAD
        position="131.85387,380.34769"
+=======
+       position="110.30083,313.12918"
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
        orientation="1,0"
        id="guide12644" />
   </sodipodi:namedview>
@@ -4938,13 +4948,21 @@
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0" />
     <path
+<<<<<<< HEAD
        style="fill:#cccccc;fill-opacity:1;fill-rule:evenodd;stroke:#cccccc;stroke-width:6.00000095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker6279-2);marker-end:url(#marker6283-4)"
+=======
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#cccccc;stroke-width:6.00000095;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker6279-2);marker-end:url(#marker6283-4)"
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
        d="M 707.57612,857.83782 177.08473,856.98248"
        id="path6277"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0" />
     <g
+<<<<<<< HEAD
        transform="translate(38.277005,-78.331994)"
+=======
+       transform="translate(31.034861,-78.331994)"
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:36.62794876px;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#0e920e;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="text6324">
       <path
@@ -4956,14 +4974,20 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot6328"
+<<<<<<< HEAD
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
        transform="translate(-1143.9564,731.20846)"><flowRegion
+=======
+       style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#808080;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="translate(-1151.1996,731.20846)"><flowRegion
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
          id="flowRegion6330"><rect
            id="rect6332"
            width="232.64166"
            height="88.270309"
            x="1205.167"
            y="144.39008"
+<<<<<<< HEAD
            style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#b3b3b3;fill-opacity:1;" /></flowRegion><flowPara
          id="flowPara6346"
          style="fill:#b3b3b3;fill-opacity:1;">institutional admins</flowPara></flowRoot>    <text
@@ -4981,4 +5005,9 @@
          x="-832.67462"
          y="1071.1637">storage   backend</tspan></text>
   </g>
+=======
+           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#808080;fill-opacity:1" /></flowRegion><flowPara
+         id="flowPara6346"
+         style="fill:#808080">institutional admins</flowPara></flowRoot>  </g>
+>>>>>>> 3b227c3c6ed8c194fd699d80c53a2000b9f45a01
 </svg>
