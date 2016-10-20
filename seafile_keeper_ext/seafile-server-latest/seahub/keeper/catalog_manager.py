@@ -21,24 +21,31 @@ def trim_by_len(str, max_len, suffix="..."):
         str = unicode(str, "utf-8")
     return str 
 
+def strip_uni(str):
+    if str:
+        str = unicode(str.strip(), "utf-8")
+    return str 
+
+
 
 def get_catalog():
 
     catalog = []
 
     repos_all = seafile_api.get_repo_list(0, MAX_INT)
+    #repos_all = [seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')]
 
     for repo in repos_all:
 
         try:
             proj = {}
             proj["id"] = repo.id
-            proj["lib_name"] = repo.name
+            proj["name"] = repo.name
             email = get_repo_owner(repo.id)
-            proj["email"] = email
+            proj["owner"] = email
             user_name = get_user_name(email)
             if user_name != email:
-                proj["user_name"] = user_name 
+                proj["owner_name"] = user_name 
             proj["in_progress"] = True
 
             commits = get_commits(repo.id, 0, 1)
@@ -51,27 +58,31 @@ def get_catalog():
                     # Author
                     a = md.get("Author")
                     if a:
-                        a = a.strip()
-                        a_list = a.split('\n')
-                        if len(a_list) > 5:
-                            a_list = a_list[:5]
-                            a_list.append("...")
-                        a = "\n".join(a_list)    
+                        a_list = strip_uni(a.strip()).split('\n')
+                        authors = []
+                        for _ in a_list:
+                            author = {}
+                            aa = _.split(';')
+                            author['name'] = aa[0]
+                            if len(aa) > 1 and aa[1].strip():
+                                author['affs'] = [x.strip() for x in aa[1].split('|')]
+                                author['affs'] = [x for x in author['affs'] if x ]
+                            authors.append(author)
                         if a:
-                            proj["author"] = unicode(a, "utf-8")
+                            proj["authors"] = authors
 
                     # Description
-                    d = trim_by_len(md.get("Description"), 200)
+                    d = strip_uni(md.get("Description"))
                     if d:
                         proj["description"] = d
 
                     # Comments
-                    c = trim_by_len(md.get("Comments"), 100)
+                    c = strip_uni(md.get("Comments"))
                     if c:
                         proj["comments"] = c
 
                     #Title
-                    t = trim_by_len(md.get("Title"), 200)
+                    t = strip_uni(md.get("Title"))
                     if t:
                         proj["title"] = t
                         del proj["in_progress"]
