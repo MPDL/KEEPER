@@ -4061,7 +4061,7 @@
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
      inkscape:cy="545.78181"
-     inkscape:cx="655.26542"
+     inkscape:cx="633.07847"
      inkscape:zoom="0.788752"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -4147,7 +4147,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
         <cc:license
            rdf:resource="" />
       </cc:Work>
@@ -4893,7 +4893,7 @@
            width="232.64166"
            id="rect5066" /></flowRegion><flowPara
          id="flowPara5068"
-         style="fill:#000000"> 4 cores, 32GB, 1 SATA</flowPara><flowPara
+         style="fill:#000000"> 4 cores, 32GB, disks</flowPara><flowPara
          id="flowPara5072">• OS</flowPara><flowPara
          id="flowPara15268">• seafile software</flowPara><flowPara
          id="flowPara15270">• memcached</flowPara><flowPara
@@ -5565,31 +5565,14 @@
            inkscape:connector-type="polyline" />
       </g>
     </g>
-    <g
-       id="g28976">
-      <flowRoot
-         transform="matrix(0,-1.1622818,1.1622818,0,1277.3914,2191.8811)"
-         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         id="flowRoot7263"
-         xml:space="preserve"><flowRegion
-           id="flowRegion7265"><rect
-             style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1"
-             y="144.39008"
-             x="1205.167"
-             height="309.68607"
-             width="349.17624"
-             id="rect7267" /></flowRegion><flowPara
-           id="flowPara7269">GPFS Native Raid</flowPara><flowPara
-           style="fill:#cccccc;fill-opacity:1"
-           id="flowPara7271" /></flowRoot>      <rect
-         ry="1.7878677"
-         y="506.02469"
-         x="1102.5483"
-         height="420.29059"
-         width="338.32477"
-         id="rect54185"
-         style="opacity:1;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#8ec044;stroke-width:1.99999917;stroke-miterlimit:0;stroke-dasharray:4.00000005, 4.00000005;stroke-dashoffset:0;stroke-opacity:1" />
-    </g>
+    <rect
+       style="opacity:1;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#8ec044;stroke-width:1.99999917;stroke-miterlimit:0;stroke-dasharray:4.00000005, 4.00000005;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect54185"
+       width="338.32477"
+       height="420.29059"
+       x="1102.5483"
+       y="506.02469"
+       ry="1.7878677" />
     <path
        id="path54223"
        d="m 1167.4149,675.34261 -1.4867,77.02046"
@@ -5647,5 +5630,18 @@
          inkscape:connector-curvature="0"
          style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:medium;line-height:94.99999881%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#8ec044;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
-  </g>
+    <flowRoot
+       transform="matrix(0,-1.1622818,1.1622818,0,1283.881,2178.1847)"
+       style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="flowRoot7263"
+       xml:space="preserve"><flowRegion
+         id="flowRegion7265"><rect
+           style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1"
+           y="136.75443"
+           x="1079.7241"
+           height="24.98534"
+           width="359.53882"
+           id="rect7267" /></flowRegion><flowPara
+         style="text-align:center;text-anchor:middle;fill:#cccccc;fill-opacity:1"
+         id="flowPara7271">Netapp RAID6</flowPara></flowRoot>  </g>
 </svg>

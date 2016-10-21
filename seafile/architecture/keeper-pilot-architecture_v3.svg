@@ -3854,16 +3854,18 @@
      showgrid="false"
      inkscape:current-layer="layer1"
      inkscape:document-units="px"
-     inkscape:cy="480.10002"
-     inkscape:cx="973.49914"
-     inkscape:zoom="0.78875202"
+     inkscape:cy="526.1811"
+     inkscape:cx="744.09449"
+     inkscape:zoom="0.80865694"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
      bordercolor="#666666"
      pagecolor="#ffffff"
      id="base"
-     inkscape:snap-global="false">
+     inkscape:snap-global="false"
+     inkscape:snap-grids="true"
+     inkscape:snap-bbox="false">
     <sodipodi:guide
        position="709.02121,84.465297"
        orientation="0,1"
@@ -3941,7 +3943,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
         <cc:license
            rdf:resource="" />
       </cc:Work>
@@ -4272,7 +4274,7 @@
                width="232.64166"
                id="rect5066" /></flowRegion><flowPara
              id="flowPara5068"
-             style="fill:#000000"> 4 cores, 32GB, 1 SATA</flowPara><flowPara
+             style="fill:#000000"> 4 cores, 32GB, disks</flowPara><flowPara
              id="flowPara5072">• OS</flowPara><flowPara
              id="flowPara15268">• seafile software</flowPara><flowPara
              id="flowPara15270">• memcached</flowPara><flowPara
@@ -4999,14 +5001,13 @@
          xml:space="preserve"><flowRegion
            id="flowRegion7265"><rect
              style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:15px;line-height:120.00000477%;font-family:'Century Schoolbook L';-inkscape-font-specification:'Century Schoolbook L, Medium';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#cccccc;fill-opacity:1"
-             y="144.39008"
-             x="1205.167"
-             height="309.68607"
-             width="349.17624"
+             y="143.29927"
+             x="1087.3597"
+             height="23.894524"
+             width="362.8114"
              id="rect7267" /></flowRegion><flowPara
-           id="flowPara7269">GPFS Native Raid</flowPara><flowPara
-           style="fill:#cccccc;fill-opacity:1"
-           id="flowPara7271" /></flowRoot>      <rect
+           style="text-align:center;text-anchor:middle;fill:#cccccc;fill-opacity:1"
+           id="flowPara7271">Netapp RAID6</flowPara></flowRoot>      <rect
          ry="1.7878677"
          y="506.02469"
          x="1102.5483"
