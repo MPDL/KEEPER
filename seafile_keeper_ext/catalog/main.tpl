@@ -132,7 +132,7 @@
 					{/dataset}
 					{dataset_certified}
 						<div class="item-block">
-							<img src="certified.png" />
+							<img src="./static/certified.png" />
 							<h3>%title%</h3>
 							<p>%smalltext%</p>
 							<p>%author%</p>
