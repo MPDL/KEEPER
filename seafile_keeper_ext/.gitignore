@@ -1,2 +1,5 @@
 *.properties
 *.swp
+*.pyc
+*.*_orig
+tags
