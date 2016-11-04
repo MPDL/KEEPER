@@ -23,7 +23,7 @@ import StringIO
 install_path = '/opt/seafile/KEEPER/seafile_keeper_ext/catalog/'
 
 # all alloews ips or ip prefixes can be added here, empty string for all
-allowed_ip_prefixes = ['172.16.1','10.10.','192.168.1.10','192.129.1.102']
+allowed_ip_prefixes = ['','172.16.1','10.10.','192.168.1.10','192.129.1.102']
 
 # absolute url of json file with data of all projects
 json_data_url = 'https://qa-keeper.mpdl.mpg.de/api2/catalog/'
