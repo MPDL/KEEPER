@@ -5,12 +5,13 @@ SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
-AVATARS_LINK=${SEAFILE_LATEST_DIR}/seahub/media/avatars
+#AVATARS_LINK=${SEAFILE_LATEST_DIR}/seahub/media/avatars
+AVATARS_LINK=${SEAFILE_DIR}/seahub-data/avatars
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
 
 # The string should be put on top of files which should be merged manually
-MERGE_MANUALLY_STRING="# !!!MERGE MANUALLY!!!"
+MERGE_MANUALLY_STRING="!!!MERGE MANUALLY!!!"
 
 # INJECT ENV
 source "${EXT_DIR}/scripts/inject_keeper_env.sh"
@@ -62,9 +63,9 @@ function migrate_avatars () {
             err_and_exit "Cannot backup $D"
         fi
         #2) create link to CUSTOM avatar link
-        ln -s $D $AVATARS_LINK 
+        ln -s $AVATARS_LINK $D 
         if [ $? -ne 0  ]; then
-            err_and_exit "Cannot create $AVATARS_LINK"
+            err_and_exit "Cannot create: ln -s $AVATARS_LINK $D"
         fi
 		#TODO: check||create link to avatar in gpfs_keeper fileset
     fi
@@ -81,8 +82,10 @@ function remove_custom_link () {
 # Check file merging
 function check_merging () {
 	check_file "$1"
-	if [ "$(head -n 1 $1)" = "$MERGE_MANUALLY_STRING" ]; then
-		echo_red "WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!, e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX}" 
+    local DEST_FILE="$2"
+	#if [ "$(head -n 1 $1)" = "$MERGE_MANUALLY_STRING" ]; then
+	if [[ "$(head -n 1 $1)" =~ .*$MERGE_MANUALLY_STRING.* ]]; then
+		echo_red "WARNING: File $DEST_FILE should be merged with ${DEST_FILE}${BACKUP_POSTFIX} manually!!!, e.g.\nvimdiff -R ${DEST_FILE} -c ':se noreadonly' ${DEST_FILE}${BACKUP_POSTFIX} && cp -v ${DEST_FILE} $1" 
 	fi
 }
 
@@ -122,7 +125,7 @@ function create_and_deploy_directories () {
 # Deploy conf/ directory
 function deploy_conf () {
 	check_file "$PROPERTIES_FILE" "Cannot find properties file $PROPERTIES_FILE for the instance"
-	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf; do 
+	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf seafile.conf; do 
 		deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
     done
 }
@@ -167,9 +170,21 @@ function deploy_file () {
 		    n|N ) return;;
 		    * ) echo "invalid";return;;
 	    esac
+        
+        # create path if not exists
+        CHK_DIR=$(dirname $DEST_FILE)
+        if [ ! -d "$CHK_DIR" ]; then
+            mkdir -pv $CHK_DIR
+            if [ $? -ne 0  ]; then
+                err_and_exit "Cannot create dir: $CHK_DIR"
+            fi
+        fi
+
     else
 	    backup_file $DEST_FILE
     fi	    
+
+
 
 	# expand properties
 	if [ "$2" = "-p" ] && [ -f "$3" ]; then
@@ -180,7 +195,7 @@ function deploy_file () {
 			err_and_exit "Cannot copy $1 to $DEST_FILE"
 		fi
 	fi
-	check_merging $DEST_FILE
+	check_merging $1 $DEST_FILE
 }
 
 # Expand properties and deploy file
