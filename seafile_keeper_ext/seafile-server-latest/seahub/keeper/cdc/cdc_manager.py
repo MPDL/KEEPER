@@ -6,7 +6,7 @@ import re
 
 import logging
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings") 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
 from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
@@ -14,7 +14,7 @@ from seahub.share.models import FileShare
 
 from seahub.profile.models import Profile
 from seafobj import commit_mgr, fs_mgr
-from subprocess import check_call
+from subprocess import check_output, STDOUT, CalledProcessError
 
 from keeper.default_library_manager import get_keeper_default_library
 
@@ -25,6 +25,8 @@ from django.template import Context, loader
 
 import MySQLdb
 
+import tempfile
+
 MAX_INT = 2147483647
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 
@@ -33,11 +35,14 @@ CDC_GENERATOR_JARS =  ('CDCGenerator.jar', 'fonts-ext.jar')
 CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
-CDC_EMAIL_SUBJECT = 'KEEPER Cared Data Certificate'
+#CDC_EMAIL_SUBJECT = 'KEEPER Cared Data Certificate'
+CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = False 
+UPDATE = False
+
+DEBUG = False
 
 if DEBUG:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -61,27 +66,27 @@ class TokenTreeRenderer(mistune.Renderer):
             return object.__getattribute__(self, name)
 
         def fake_method(*args, **kwargs):
-            #return [(name, args, kwargs)]
+            # return [(name, args, kwargs)]
             return [name, args]
         return fake_method
 
 md_processor = mistune.Markdown(renderer=TokenTreeRenderer())
 
 def parse_markdown (md):
-    """parse markdown string"""  
+    """parse markdown string"""
     cdc = {}
     stack = []
     parsed = md_processor.render(md)
 
     for i in range(0, len(parsed)-1, 2):
         str = parsed[i]
-        h = parsed[i+1]  
+        h = parsed[i+1]
         if str == 'header':
             if h[2] in cdc_headers and h[1] == HEADER_STEP:
                 stack.append(h[2])
         elif str == 'paragraph':
             if len(stack) > 0:
-                txt_list = [] 
+                txt_list = []
                 for i1 in range(0, len(h[0])-1, 2):
                     if h[0][i1] == 'text':
                         txt_list.append(h[0][i1+1][0])
@@ -92,6 +97,17 @@ def parse_markdown (md):
                     stack.pop()
     return cdc;
 
+def get_cdc_id_by_repo(cur, repo_id):
+    """Get cdc_id by repo_id. Return None if nothing found"""
+    try:
+        cur.execute("SELECT cdc_id FROM cdc_repos WHERE repo_id='" + repo_id + "'")
+        rs = cur.fetchone()
+        cdc_id = str(rs[0]) if rs is not None else None
+    except Exception as err:
+        if not DEBUG:
+            raise Exception('Cannot get_cdc_id_by_repo: ' + ": ".join(str(i) for i in err))
+        cdc_id = None
+    return cdc_id
 
 def is_certified_by_repo_id (repo_id):
     guess = False
@@ -100,14 +116,13 @@ def is_certified_by_repo_id (repo_id):
         guess = is_certified(db, db.cursor(), repo_id)
     finally:
         db.close()
-    return guess 
+    return guess
 
 def is_certified (db, cur, repo_id):
     """Check whether the repo is already certified"""
-    if DEBUG:
-        return False
-    cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-    return len(cur.fetchall()) > 0;
+    # cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
+    # return len(cur.fetchall()) > 0;
+    return get_cdc_id_by_repo(cur, repo_id) is not None
 
 def validate (cdc_dict):
     logging.info("""Validate the CDC mandatory fields and content...""")
@@ -127,13 +142,13 @@ def validate (cdc_dict):
     # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
     # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
     # ...
-    pattern = re.compile("^\s*\w+,(\s*[\w.]+)+(;\s*\S+\s*)+")
+    pattern = re.compile("^\s*\w+,(\s*[\w.]+)+(;\s*\S+\s*)*")
     for line in cdc_dict['Author'].splitlines():
         if not re.match(pattern, line):
-            logging.info('Wrong Author/Affiliation string: ' + line) 
+            logging.info('Wrong Author/Affiliation string: ' + line)
             valid = False
 
-    logging.info('valid' if valid else 'not valid') 
+    logging.info('valid' if valid else 'not valid')
     return valid;
 
 def get_repo_share_url (repo_id, owner):
@@ -147,28 +162,40 @@ def get_repo_pivate_url (repo_id):
     """Get private repo url"""
     return SERVICE_URL + '/#my-libs/lib/' + repo_id;
 
+def get_file_pivate_url (repo_id, file_name):
+    """Get file private url"""
+    return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name;
+
 def get_db(db_name):
     """Get DB connection"""
     return MySQLdb.connect(host=DATABASES['default']['HOST'],
          user=DATABASES['default']['USER'],
          passwd=DATABASES['default']['PASSWORD'],
          db=db_name)
- 
+
 
 def register_cdc_in_db(db, cur, repo_id, owner):
+    global UPDATE
     logging.info("""Register CDC in keeper-db""")
     try:
-        cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
-        db.commit()
-        cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-        cdc_id = str(cur.fetchone()[1])
+        cdc_id = get_cdc_id_by_repo(cur, repo_id)
+        if cdc_id is not None:
+            # UPDATE
+            cur.execute("UPDATE cdc_repos SET modified=CURRENT_TIMESTAMP WHERE repo_id='" + repo_id + "'")
+            db.commit()
+            UPDATE = True
+            logging.info("Sucessfully updated, cdc_id: " + cdc_id)
+        else:
+            # CREATE
+            cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
+            db.commit()
+            cdc_id = get_cdc_id_by_repo(cur, repo_id)
+            logging.info("Sucessfully created, cdc_id: " + cdc_id)
     except Exception as err:
         db.rollback()
         if not DEBUG:
             raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
-
-    logging.info("Sucessfully registered, cdc_id: " + cdc_id)
-    return cdc_id 
+    return cdc_id
 
 def get_user_name(user):
     logging.info("""Get user name""")
@@ -184,29 +211,29 @@ def get_user_name(user):
             name = str(row[0])
     except Exception as err:
         logging.info('Cannot get name from db: ' + ": ".join(str(i) for i in err))
-    finally:   
+    finally:
         db.close()
     logging.info("user name: " + name)
-    return name 
+    return name
 
 
 def send_email (to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
-    
+
     try:
         t = loader.get_template(CDC_EMAIL_TEMPLATE)
-        msg = EmailMessage(CDC_EMAIL_SUBJECT, t.render(Context(msg_ctx)), SERVER_EMAIL, [to, SERVER_EMAIL] )
+        msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(Context(msg_ctx)), SERVER_EMAIL, [to, SERVER_EMAIL] )
         msg.content_subtype = "html"
         msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
         msg.send()
     except Exception as err:
         raise Exception('Cannot send email: ' + str(err))
-    
+
     logging.info("Sucessfully sent")
 
 def has_at_least_one_creative_dirent(dir):
 
-    #ARCHIVE_METADATA_TARGET should be in    
+    #ARCHIVE_METADATA_TARGET should be in
     check_set = set([ARCHIVE_METADATA_TARGET])
 
     #+KEEPER_DEFAULT_LIBRARY stuff
@@ -215,36 +242,37 @@ def has_at_least_one_creative_dirent(dir):
         dirents = [d.obj_name for d in kdl['dirents']]
         if dirents:
             check_set.update(dirents)
-   
+
     #get dir files
     files = dir.get_files_list()
     if files:
         files = [f for f in files if f.name not in check_set]
-    
-    #get dir dirs 
+
+    #get dir dirs
     dirs = dir.get_subdirs_list()
     if dirs:
         dirs = [d for d in dirs if d.name not in check_set]
 
-    return (len(files) + len(dirs)) > 0 
+    return (len(files) + len(dirs)) > 0
 
 
 def generate_certificate_by_repo(repo):
     """ Generate Cared Data Certificate by repo """
-    
+
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
 
-    return generate_certificate(repo, commit)    
+    return generate_certificate(repo, commit)
 
 def generate_certificate_by_commit(commit):
     """ Generate Cared Data Certificate by commit """
-    
-    return generate_certificate(get_repo(commit.repo_id), commit)    
+
+    return generate_certificate(get_repo(commit.repo_id), commit)
 
 
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
+    global UPDATE
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -253,35 +281,37 @@ def generate_certificate(repo, commit):
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
         return False
-   
-    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
-
-    # certificate already exists in root
-    file_names = [f.name for f in dir.get_files_list()]
-    if any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
-        return False
-
-
-    # get latest version of the ARCHIVE_METADATA_TARGET
-    file = dir.lookup(ARCHIVE_METADATA_TARGET)
-    
-    #exit if no metadata file exists
-    if not file:
-        return False
-
-    #check wether there is at least one creative dirent
-    if not has_at_least_one_creative_dirent(dir):
-        return False
-    logging.info('Repo has creative dirents')
-    
 
     try:
-        db = get_db(KEEPER_DB_NAME)
 
+        db = get_db(KEEPER_DB_NAME)
         cur = db.cursor()
-        
-        if is_certified(db, cur, repo.id):
+
+        # if already certified and MD has not been changed then exit
+        pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
+        if is_certified(db, cur, repo.id) and not re.match(pattern, commit.desc):
             return False
+
+
+        dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+
+        # certificate already exists in root
+        # file_names = [f.name for f in dir.get_files_list()]
+        # if any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
+            # return False
+
+
+        # get latest version of the ARCHIVE_METADATA_TARGET
+        file = dir.lookup(ARCHIVE_METADATA_TARGET)
+
+        #exit if no metadata file exists
+        if not file:
+            return False
+
+        #check whether there is at least one creative dirent
+        if not has_at_least_one_creative_dirent(dir):
+            return False
+        logging.info('Repo has creative dirents')
 
         owner = seafile_api.get_repo_owner(repo.id)
         logging.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
@@ -291,31 +321,44 @@ def generate_certificate(repo, commit):
             cdc_id = register_cdc_in_db(db, cur, repo.id, owner)
 
             logging.info("Generate CDC PDF...")
-            cdc_pdf = CDC_PDF_PREFIX + cdc_id + ".pdf"
+            cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
             # TODO: specify which url should be in CDC
             # as tmp decision: SERVICE_URL
             # repo_share_url = get_repo_share_url(repo.id, owner)
-            repo_share_url = SERVICE_URL 
+            repo_share_url = SERVICE_URL
             jars = ":".join(map(lambda e : MODULE_PATH + '/' + e, CDC_GENERATOR_JARS))
-            args = [ "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS, 
-                    "-i", "\"" + cdc_id + "\"", 
-                    "-t", "\"" + cdc_dict['Title']  + "\"", 
-                    "-aa", "\"" + cdc_dict['Author']  + "\"", 
-                    "-d", "\"" + cdc_dict['Description']  + "\"", 
-                    "-c", "\"" + owner  + "\"", 
+            tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
+            args = [ "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
+                    "-i", "\"" + cdc_id + "\"",
+                    "-t", "\"" + cdc_dict['Title']  + "\"",
+                    "-aa", "\"" + cdc_dict['Author']  + "\"",
+                    "-d", "\"" + cdc_dict['Description']  + "\"",
+                    "-c", "\"" + owner  + "\"",
                     "-u", "\"" + repo_share_url  + "\"",
-                    cdc_pdf ]
-            check_call(args)
-            tmp_path = os.path.abspath(cdc_pdf)
-            logging.info("PDF sucessfully generated") 
+                    tmp_path ]
+            #check_call(args)
+            try:
+                result = check_output(args, stderr=STDOUT)
+                logging.info("called: %s, result: %s" % (" ".join(args), result))
+            except CalledProcessError, e:
+                logging.info("Exception by %s, called: %s", (e.output, " ".join(args)))
+                raise e
+
+            logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
 
             logging.info("Add " + cdc_pdf + " to the repo...")
-            seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
-            logging.info("Sucessfully added")
-            if not DEBUG:
-                send_email(owner, {'USER_NAME': get_user_name(owner), 'PROJECT_NAME':repo.name, 'PROJECT_URL':get_repo_pivate_url(repo.id) })
-     
-                        #TODO: Send seafile notification
+            if UPDATE:
+                seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
+                logging.info("Sucessfully updated")
+            else:
+                seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
+                logging.info("Sucessfully added")
+                if not DEBUG:
+                    send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
+                        'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
+                        'AUTHOR_LIST': cdc_dict['Author'], 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
+
+
     except Exception as err:
         logging.info(str(err))
     finally:
@@ -327,13 +370,23 @@ def generate_certificate(repo, commit):
     return True
 
 
-#test 
+#test
 if DEBUG:
+    """
     print get_user_name('vlamak868@gmail.com')
-    """    
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
     print has_at_least_one_creative_dirent(dir)
     """
+    """
+    repo = seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')
+    generate_certificate_by_repo(repo)
+    pattern = re.compile(r'Modified\s+\"' + CDC_PDF_PREFIX +  r'\d+\.pdf\"$')
+    print re.match(pattern, r'Modified "cared-data-certificate_2004.pdf"')
+    """
+    """
+    send_email('vlamak868@gmail.com', {'USER_NAME': '__USER_NAME__', 'PROJECT_NAME':'repo.name', 'PROJECT_TITLE': '___project__title___', 'PROJECT_URL':'_PROJECT_URL_', 'AUTHOR_LIST':'__AUTHOR_LIST__', 'CDC_PDF_URL': '_CDC_PDF_URL_', 'CDC_ID': '__CDC_id__' })
+    """
+
