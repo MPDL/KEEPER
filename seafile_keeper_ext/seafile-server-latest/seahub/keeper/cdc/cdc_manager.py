@@ -1,6 +1,7 @@
 import os
 import sys
 
+import time
 import datetime
 import re
 
@@ -12,7 +13,6 @@ from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
-from seahub.profile.models import Profile
 from seafobj import commit_mgr, fs_mgr
 from subprocess import check_output, STDOUT, CalledProcessError
 
@@ -42,7 +42,7 @@ MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 UPDATE = False
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -104,8 +104,8 @@ def get_cdc_id_by_repo(cur, repo_id):
         rs = cur.fetchone()
         cdc_id = str(rs[0]) if rs is not None else None
     except Exception as err:
-        if not DEBUG:
-            raise Exception('Cannot get_cdc_id_by_repo: ' + ": ".join(str(i) for i in err))
+        # if not DEBUG:
+        raise Exception('Cannot get_cdc_id_by_repo: ' + ": ".join(str(i) for i in err))
         cdc_id = None
     return cdc_id
 
@@ -149,22 +149,22 @@ def validate (cdc_dict):
             valid = False
 
     logging.info('valid' if valid else 'not valid')
-    return valid;
+    return valid
 
 def get_repo_share_url (repo_id, owner):
     """Should be repo to be certified?"""
     share = FileShare.objects.get_dir_link_by_path(owner, repo_id, "/")
     if not share:
         raise Exception('Cannot get share URL: repo is not shared')
-    return SERVICE_URL + '/' + share.s_type + '/' + share.token;
+    return SERVICE_URL + '/' + share.s_type + '/' + share.token
 
 def get_repo_pivate_url (repo_id):
     """Get private repo url"""
-    return SERVICE_URL + '/#my-libs/lib/' + repo_id;
+    return SERVICE_URL + '/#my-libs/lib/' + repo_id
 
 def get_file_pivate_url (repo_id, file_name):
     """Get file private url"""
-    return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name;
+    return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name
 
 def get_db(db_name):
     """Get DB connection"""
@@ -193,8 +193,8 @@ def register_cdc_in_db(db, cur, repo_id, owner):
             logging.info("Sucessfully created, cdc_id: " + cdc_id)
     except Exception as err:
         db.rollback()
-        if not DEBUG:
-            raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
+        # if not DEBUG:
+        raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
     return cdc_id
 
 def get_user_name(user):
@@ -336,7 +336,6 @@ def generate_certificate(repo, commit):
                     "-c", "\"" + owner  + "\"",
                     "-u", "\"" + repo_share_url  + "\"",
                     tmp_path ]
-            #check_call(args)
             try:
                 result = check_output(args, stderr=STDOUT)
                 logging.info("called: %s, result: %s" % (" ".join(args), result))
@@ -344,7 +343,19 @@ def generate_certificate(repo, commit):
                 logging.info("Exception by %s, called: %s", (e.output, " ".join(args)))
                 raise e
 
-            logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
+            #wait until file is available
+            ATTEMPTS = 10
+            i = 1
+            while i <= ATTEMPTS and not os.path.exists(tmp_path):
+                time.sleep(1)
+                i += 1
+
+            if os.path.isfile(tmp_path):
+                logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
+            else:
+                logging.info("Cannot find generated generated CDC PDF, tmp_path=%s" % tmp_path)
+                return False
+
 
             logging.info("Add " + cdc_pdf + " to the repo...")
             if UPDATE:
@@ -352,11 +363,11 @@ def generate_certificate(repo, commit):
                 logging.info("Sucessfully updated")
             else:
                 seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
-                logging.info("Sucessfully added")
-                if not DEBUG:
-                    send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
-                        'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
-                        'AUTHOR_LIST': cdc_dict['Author'], 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
+                logging.info("Sucessfully created")
+                # if not DEBUG:
+                send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
+                    'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
+                    'AUTHOR_LIST': cdc_dict['Author'], 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
 
 
     except Exception as err:
@@ -389,4 +400,3 @@ if DEBUG:
     """
     send_email('vlamak868@gmail.com', {'USER_NAME': '__USER_NAME__', 'PROJECT_NAME':'repo.name', 'PROJECT_TITLE': '___project__title___', 'PROJECT_URL':'_PROJECT_URL_', 'AUTHOR_LIST':'__AUTHOR_LIST__', 'CDC_PDF_URL': '_CDC_PDF_URL_', 'CDC_ID': '__CDC_id__' })
     """
-
