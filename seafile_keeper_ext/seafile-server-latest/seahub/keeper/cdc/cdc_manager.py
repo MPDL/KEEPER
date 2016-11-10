@@ -27,7 +27,6 @@ import MySQLdb
 
 import tempfile
 
-MAX_INT = 2147483647
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 
 CDC_GENERATOR_MAIN_CLASS = "de.mpg.mpdl.keeper.CDCGenerator.MainApp"
@@ -35,7 +34,6 @@ CDC_GENERATOR_JARS =  ('CDCGenerator.jar', 'fonts-ext.jar')
 CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
-#CDC_EMAIL_SUBJECT = 'KEEPER Cared Data Certificate'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -44,8 +42,8 @@ UPDATE = False
 
 DEBUG = True
 
-if DEBUG:
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# if DEBUG:
+    # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 HEADER_STEP = 2
 cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Comments']
@@ -109,7 +107,7 @@ def get_cdc_id_by_repo(cur, repo_id):
         cdc_id = None
     return cdc_id
 
-def is_certified_by_repo_id (repo_id):
+def is_certified_by_repo_id(repo_id):
     guess = False
     db = get_db(KEEPER_DB_NAME)
     try:
@@ -118,24 +116,25 @@ def is_certified_by_repo_id (repo_id):
         db.close()
     return guess
 
-def is_certified (db, cur, repo_id):
+def is_certified(db, cur, repo_id):
     """Check whether the repo is already certified"""
     # cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
     # return len(cur.fetchall()) > 0;
     return get_cdc_id_by_repo(cur, repo_id) is not None
 
-def validate (cdc_dict):
+
+def validate(cdc_dict):
     logging.info("""Validate the CDC mandatory fields and content...""")
     # 1. check mandatory fields
     s1 = set(cdc_dict.keys())
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
-    #2. check content"
+    # 2. check content"
     """Year checking"""
     format = "%Y"
     try:
-        d = datetime.datetime.strptime(cdc_dict['Year'], format)
-    except Exception as err:
+        datetime.datetime.strptime(cdc_dict['Year'], format)
+    except Exception:
         logging.info("Wrong year: " + cdc_dict['Year'])
         valid = False
     """Author/Affiliations checking"""
@@ -151,18 +150,18 @@ def validate (cdc_dict):
     logging.info('valid' if valid else 'not valid')
     return valid
 
-def get_repo_share_url (repo_id, owner):
+def get_repo_share_url(repo_id, owner):
     """Should be repo to be certified?"""
     share = FileShare.objects.get_dir_link_by_path(owner, repo_id, "/")
     if not share:
         raise Exception('Cannot get share URL: repo is not shared')
     return SERVICE_URL + '/' + share.s_type + '/' + share.token
 
-def get_repo_pivate_url (repo_id):
+def get_repo_pivate_url(repo_id):
     """Get private repo url"""
     return SERVICE_URL + '/#my-libs/lib/' + repo_id
 
-def get_file_pivate_url (repo_id, file_name):
+def get_file_pivate_url(repo_id, file_name):
     """Get file private url"""
     return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name
 
@@ -197,6 +196,12 @@ def register_cdc_in_db(db, cur, repo_id, owner):
         raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
     return cdc_id
 
+def rollback_register(db, cur, cdc_id):
+    cur.execute("DELETE FROM cdc_repos WHERE cdc_id='" + cdc_id + "'")
+    db.commit()
+    logging.info("Sucessfully rollback register of cdc_id: " + cdc_id)
+
+
 def get_user_name(user):
     logging.info("""Get user name""")
     # default name is user id
@@ -210,7 +215,7 @@ def get_user_name(user):
             # nick is name if nick available
             name = str(row[0])
     except Exception as err:
-        logging.info('Cannot get name from db: ' + ": ".join(str(i) for i in err))
+        logging.error('Cannot get name from db: ' + ": ".join(str(i) for i in err))
     finally:
         db.close()
     logging.info("user name: " + name)
@@ -338,24 +343,27 @@ def generate_certificate(repo, commit):
                     tmp_path ]
             try:
                 result = check_output(args, stderr=STDOUT)
+                time.sleep(5)
                 logging.info("called: %s, result: %s" % (" ".join(args), result))
             except CalledProcessError, e:
-                logging.info("Exception by %s, called: %s", (e.output, " ".join(args)))
+                logging.error("Exception by %s, called: %s", (e.output, " ".join(args)))
                 raise e
 
             #wait until file is available
             ATTEMPTS = 10
             i = 1
             while i <= ATTEMPTS and not os.path.exists(tmp_path):
+                logging.info("Ping %s, attempt %s" % (tmp_path, i))
                 time.sleep(1)
                 i += 1
 
             if os.path.isfile(tmp_path):
                 logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
             else:
-                logging.info("Cannot find generated generated CDC PDF, tmp_path=%s" % tmp_path)
+                logging.error("Cannot find generated CDC PDF, tmp_path=%s" % tmp_path)
+                if not UPDATE:
+                    rollback_register(db, cur, cdc_id)
                 return False
-
 
             logging.info("Add " + cdc_pdf + " to the repo...")
             if UPDATE:
@@ -371,18 +379,19 @@ def generate_certificate(repo, commit):
 
 
     except Exception as err:
-        logging.info(str(err))
+        logging.error(str(err))
     finally:
        # other final stuff
         db.close()
-        if 'tmp_path' in vars() and os.path.exists(tmp_path):
-            os.remove(tmp_path)
+        if not DEBUG:
+            if 'tmp_path' in vars() and os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     return True
 
 
 #test
-if DEBUG:
+# if DEBUG:
     """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
