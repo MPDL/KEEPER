@@ -79,10 +79,8 @@
                     
                 </a>
                 
-
-                
                  
-                <div class="fright" id="lang">
+                <!--<div class="fright" id="lang">
                     <a href="#" id="lang-context" data-lang="en">English <span class="icon-caret-down"></span></a>
                     <ul id="lang-context-selector" class="hide">
                         
@@ -92,7 +90,7 @@
                         
                     </ul>
                 </div>
-                
+                -->
                 
             </div>
         </div>
