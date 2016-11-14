@@ -1,7 +1,7 @@
 import os
-import sys
+import traceback
 
-import time
+# import time
 import datetime
 import re
 
@@ -10,11 +10,11 @@ import logging
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
 from seaserv import seafile_api, get_repo
-from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, EMAIL_PORT, ARCHIVE_METADATA_TARGET
+from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
 from seafobj import commit_mgr, fs_mgr
-from subprocess import check_output, STDOUT, CalledProcessError
+from subprocess import STDOUT, call
 
 from keeper.default_library_manager import get_keeper_default_library
 
@@ -35,10 +35,9 @@ CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
+CDC_GENERATOR_LOG = '/var/log/nginx/keeper.cdc.log'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-UPDATE = False
 
 DEBUG = True
 
@@ -135,16 +134,16 @@ def validate(cdc_dict):
     try:
         datetime.datetime.strptime(cdc_dict['Year'], format)
     except Exception:
-        logging.info("Wrong year: " + cdc_dict['Year'])
+        logging.error("Wrong year: " + cdc_dict['Year'])
         valid = False
     """Author/Affiliations checking"""
     # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
     # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
     # ...
-    pattern = re.compile("^\s*\w+,(\s*[\w.]+)+(;\s*\S+\s*)*")
+    pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
     for line in cdc_dict['Author'].splitlines():
-        if not re.match(pattern, line):
-            logging.info('Wrong Author/Affiliation string: ' + line)
+        if not re.match(pattern, line.decode('utf-8')):
+            logging.error('Wrong Author/Affiliation string: ' + line)
             valid = False
 
     logging.info('valid' if valid else 'not valid')
@@ -174,7 +173,7 @@ def get_db(db_name):
 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
-    global UPDATE
+    UPDATE = False
     logging.info("""Register CDC in keeper-db""")
     try:
         cdc_id = get_cdc_id_by_repo(cur, repo_id)
@@ -189,12 +188,13 @@ def register_cdc_in_db(db, cur, repo_id, owner):
             cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
             db.commit()
             cdc_id = get_cdc_id_by_repo(cur, repo_id)
+            UPDATE = False
             logging.info("Sucessfully created, cdc_id: " + cdc_id)
     except Exception as err:
         db.rollback()
         # if not DEBUG:
         raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
-    return cdc_id
+    return cdc_id, UPDATE
 
 def rollback_register(db, cur, cdc_id):
     cur.execute("DELETE FROM cdc_repos WHERE cdc_id='" + cdc_id + "'")
@@ -222,7 +222,7 @@ def get_user_name(user):
     return name
 
 
-def send_email (to, msg_ctx):
+def send_email(to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
 
     try:
@@ -274,10 +274,15 @@ def generate_certificate_by_commit(commit):
 
     return generate_certificate(get_repo(commit.repo_id), commit)
 
+def get_authors_for_email(authors):
+    """ Get only name, first name of author, cut affiliations """
+    auths = [a.split(';')[0] for a in authors.splitlines()]
+    return "; ".join(auths)
 
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
-    global UPDATE
+
+    UPDATE = False
 
     #exit if repo encrypted
     if repo.encrypted:
@@ -323,44 +328,36 @@ def generate_certificate(repo, commit):
         cdc_dict = parse_markdown(file.get_content())
         if validate(cdc_dict):
 
-            cdc_id = register_cdc_in_db(db, cur, repo.id, owner)
+            cdc_id, UPDATE = register_cdc_in_db(db, cur, repo.id, owner)
 
             logging.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
-            # TODO: specify which url should be in CDC
-            # as tmp decision: SERVICE_URL
-            # repo_share_url = get_repo_share_url(repo.id, owner)
-            repo_share_url = SERVICE_URL
             jars = ":".join(map(lambda e : MODULE_PATH + '/' + e, CDC_GENERATOR_JARS))
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
-            args = [ "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
+            args = [ "date;",
+                    "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
                     "-i", "\"" + cdc_id + "\"",
                     "-t", "\"" + cdc_dict['Title']  + "\"",
-                    "-aa", "\"" + cdc_dict['Author']  + "\"",
+                    "-aa", "\"" + cdc_dict['Author'] + "\"",
                     "-d", "\"" + cdc_dict['Description']  + "\"",
                     "-c", "\"" + owner  + "\"",
-                    "-u", "\"" + repo_share_url  + "\"",
-                    tmp_path ]
+                    "-u", "\"" + SERVICE_URL  + "\"",
+                    tmp_path,
+                    "1>&2;",
+                    ]
             try:
-                result = check_output(args, stderr=STDOUT)
-                time.sleep(5)
-                logging.info("called: %s, result: %s" % (" ".join(args), result))
-            except CalledProcessError, e:
-                logging.error("Exception by %s, called: %s", (e.output, " ".join(args)))
-                raise e
-
-            #wait until file is available
-            ATTEMPTS = 10
-            i = 1
-            while i <= ATTEMPTS and not os.path.exists(tmp_path):
-                logging.info("Ping %s, attempt %s" % (tmp_path, i))
-                time.sleep(1)
-                i += 1
+                with open(CDC_GENERATOR_LOG, 'a+') as cdc_log:
+                    call_str = " ".join([s.decode('utf-8') for s in args])
+                    logging.info(call_str)
+                    call(call_str, stdout=cdc_log, stderr=STDOUT, shell=True)
+                    cdc_log.close()
+            except Exception:
+                logging.error(traceback.format_exc())
 
             if os.path.isfile(tmp_path):
                 logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
             else:
-                logging.error("Cannot find generated CDC PDF, tmp_path=%s" % tmp_path)
+                logging.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
                 if not UPDATE:
                     rollback_register(db, cur, cdc_id)
                 return False
@@ -375,11 +372,11 @@ def generate_certificate(repo, commit):
                 # if not DEBUG:
                 send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
                     'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
-                    'AUTHOR_LIST': cdc_dict['Author'], 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
+                    'AUTHOR_LIST': get_authors_for_email(cdc_dict['Author']), 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
 
 
     except Exception as err:
-        logging.error(str(err))
+        logging.error(traceback.format_exc())
     finally:
        # other final stuff
         db.close()
