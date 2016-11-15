@@ -18,7 +18,7 @@ os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "/opt/seafile/conf")
 os.environ.setdefault("SEAFES_DIR", "/opt/seafile/seafile-server-latest/pro/python/seafes")
 
 
-from keeper.catalog_manager import is_in_mpg_ip_range
+from keeper.catalog.catalog_manager import is_in_mpg_ip_range
 
 #########################
 #                       #
@@ -27,7 +27,7 @@ from keeper.catalog_manager import is_in_mpg_ip_range
 #########################
 
 # local install path of this script and files
-install_path = '/opt/seafile/KEEPER/seafile_keeper_ext/catalog/'
+install_path = '/opt/seafile/seafile-server-latest/seahub/keeper/catalog/'
 
 # all alloews ips or ip prefixes can be added here, empty string for all
 allowed_ip_prefixes = []
@@ -77,7 +77,8 @@ def application(env, start_response):
 
 
 		# default text if IP not allowed
-		errmsg = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
+                AAA = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
+		errmsg = AAA
 
 
 		# test for valid IP

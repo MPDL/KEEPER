@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from seahub.api2.utils import json_response
 from seahub import settings
 
-from keeper.catalog_manager import get_catalog 
+from keeper.catalog.catalog_manager import get_catalog
 
 from seahub import settings
 

@@ -149,6 +149,17 @@ deploy_http_conf () {
 	fi
 }
 
+# create dir for file if not exists
+function create_dir_for_file () {
+    DEST_DIR=$(dirname $1)
+    if [ ! -d "$DEST_DIR" ]; then
+        mkdir -p $DEST_DIR
+        if [ $? -ne 0  ]; then
+            err_and_exit "Cannot create dir $DEST_DIR"
+        fi
+    fi
+}
+
 # Deploy single file
 function deploy_file () {
 	
@@ -174,8 +185,9 @@ function deploy_file () {
 	# expand properties
 	if [ "$2" = "-p" ] && [ -f "$3" ]; then
 		expand_properties_and_deploy_file $1 $3 $DEST_FILE
-	else	
-		cp -av $1 $DEST_FILE 
+	else
+        create_dir_for_file $DEST_FILE
+        cp -av $1 $DEST_FILE 
 		if [ $? -ne 0  ]; then
 			err_and_exit "Cannot copy $1 to $DEST_FILE"
 		fi
@@ -193,7 +205,8 @@ function expand_properties_and_deploy_file () {
 	if [ -z "$RESULT" ]; then 
 		err_and_exit "Cannot expand properties $PROPS_FILE for $IN"
 	fi
-	echo "$RESULT" >$OUT
+    create_dir_for_file $OUT
+    echo "$RESULT" >$OUT
 	if [ $? -ne 0  ]; then
 		err_and_exit "Cannot deploy expanded file $IN to $OUT"
 	else 
