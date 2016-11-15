@@ -92,7 +92,7 @@ def parse_markdown (md):
                     cdc[stack.pop()] = val
                 else:
                     stack.pop()
-    return cdc;
+    return cdc
 
 def get_cdc_id_by_repo(cur, repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
@@ -100,9 +100,10 @@ def get_cdc_id_by_repo(cur, repo_id):
         cur.execute("SELECT cdc_id FROM cdc_repos WHERE repo_id='" + repo_id + "'")
         rs = cur.fetchone()
         cdc_id = str(rs[0]) if rs is not None else None
-    except Exception as err:
+    except Exception:
         # if not DEBUG:
-        raise Exception('Cannot get_cdc_id_by_repo: ' + ": ".join(str(i) for i in err))
+        logging.error('Cannot get_cdc_id_by_repo: ' + repo_id)
+        logging.error(traceback.format_exc())
         cdc_id = None
     return cdc_id
 
@@ -131,20 +132,29 @@ def validate(cdc_dict):
     # 2. check content"
     """Year checking"""
     format = "%Y"
-    try:
-        datetime.datetime.strptime(cdc_dict['Year'], format)
-    except Exception:
-        logging.error("Wrong year: " + cdc_dict['Year'])
+    if cdc_dict.get('Year'):
+        try:
+            datetime.datetime.strptime(cdc_dict.get('Year'), format)
+        except Exception:
+            logging.error("Wrong year: " + cdc_dict.get('Year'))
+            valid = False
+    else:
+        logging.info('Year is empty')
         valid = False
+
     """Author/Affiliations checking"""
     # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
     # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
     # ...
-    pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
-    for line in cdc_dict['Author'].splitlines():
-        if not re.match(pattern, line.decode('utf-8')):
-            logging.error('Wrong Author/Affiliation string: ' + line)
-            valid = False
+    if cdc_dict.get('Author'):
+        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
+        for line in cdc_dict['Author'].splitlines():
+            if not re.match(pattern, line.decode('utf-8')):
+                logging.error('Wrong Author/Affiliation string: ' + line)
+                valid = False
+    else:
+        logging.info('Authors are empty')
+        valid = False
 
     logging.info('valid' if valid else 'not valid')
     return valid
@@ -193,7 +203,8 @@ def register_cdc_in_db(db, cur, repo_id, owner):
     except Exception as err:
         db.rollback()
         # if not DEBUG:
-        raise Exception('Cannot register in DB: ' + ": ".join(str(i) for i in err))
+        logging.error("Cannot register in DB for repo: %s, owner: %" % (repo_id, owner))
+        raise err
     return cdc_id, UPDATE
 
 def rollback_register(db, cur, cdc_id):
@@ -232,28 +243,29 @@ def send_email(to, msg_ctx):
         msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
         msg.send()
     except Exception as err:
-        raise Exception('Cannot send email: ' + str(err))
+        logging.error('Cannot send email')
+        raise err
 
     logging.info("Sucessfully sent")
 
 def has_at_least_one_creative_dirent(dir):
 
-    #ARCHIVE_METADATA_TARGET should be in
+    # ARCHIVE_METADATA_TARGET should be in
     check_set = set([ARCHIVE_METADATA_TARGET])
 
-    #+KEEPER_DEFAULT_LIBRARY stuff
+    # +KEEPER_DEFAULT_LIBRARY stuff
     kdl = get_keeper_default_library()
     if kdl:
         dirents = [d.obj_name for d in kdl['dirents']]
         if dirents:
             check_set.update(dirents)
 
-    #get dir files
+    # get dir files
     files = dir.get_files_list()
     if files:
         files = [f for f in files if f.name not in check_set]
 
-    #get dir dirs
+    # get dir dirs
     dirs = dir.get_subdirs_list()
     if dirs:
         dirs = [d for d in dirs if d.name not in check_set]
@@ -284,7 +296,7 @@ def generate_certificate(repo, commit):
 
     UPDATE = False
 
-    #exit if repo encrypted
+    # exit if repo encrypted
     if repo.encrypted:
         return False
 
@@ -318,7 +330,7 @@ def generate_certificate(repo, commit):
         if not file:
             return False
 
-        #check whether there is at least one creative dirent
+        # check whether there is at least one creative dirent
         if not has_at_least_one_creative_dirent(dir):
             return False
         logging.info('Repo has creative dirents')
@@ -351,8 +363,9 @@ def generate_certificate(repo, commit):
                     logging.info(call_str)
                     call(call_str, stdout=cdc_log, stderr=STDOUT, shell=True)
                     cdc_log.close()
-            except Exception:
-                logging.error(traceback.format_exc())
+            except Exception as err:
+                logging.error('Cannot call command')
+                raise err
 
             if os.path.isfile(tmp_path):
                 logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
@@ -387,7 +400,7 @@ def generate_certificate(repo, commit):
     return True
 
 
-#test
+# test
 # if DEBUG:
     """
     print get_user_name('vlamak868@gmail.com')
