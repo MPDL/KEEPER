@@ -89,8 +89,6 @@ function check_seahub_running () {
     fi
 }
 
-
-
 #
 # Write a polite log message with date and time
 #
@@ -106,11 +104,13 @@ case "$1" in
             else
                     sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             fi
+            sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
             service nginx ${1}
         ;;
         stop)
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+            sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
         ;;
         switch-maintenance-mode)
             check_en_dis_nginx
@@ -130,6 +130,7 @@ case "$1" in
             check_component_running "memcached" "memcached" "CRITICAL"
             check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"  "CRITICAL"
             check_component_running "office/pdf preview" "soffice.bin.*StarOffice.ComponentContext"  "CRITICAL"
+            check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC
         ;;
