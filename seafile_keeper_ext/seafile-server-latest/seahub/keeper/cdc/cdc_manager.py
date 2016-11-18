@@ -39,7 +39,7 @@ CDC_GENERATOR_LOG = '/var/log/nginx/keeper.cdc.log'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-DEBUG = True
+DEBUG = False
 
 # if DEBUG:
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -93,6 +93,18 @@ def parse_markdown (md):
                 else:
                     stack.pop()
     return cdc
+
+def quote_argument(arg):
+    """
+    Quotes argument for shell call with subprocess
+    """
+    return '"%s"' % (
+        arg
+        .replace('\\', '\\\\')
+        .replace('"', '\\"')
+        .replace('$', '\\$')
+        .replace('`', '\\`')
+    )
 
 def get_cdc_id_by_repo(cur, repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
@@ -348,12 +360,12 @@ def generate_certificate(repo, commit):
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
             args = [ "date;",
                     "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
-                    "-i", "\"" + cdc_id + "\"",
-                    "-t", "\"" + cdc_dict['Title']  + "\"",
-                    "-aa", "\"" + cdc_dict['Author'] + "\"",
-                    "-d", "\"" + cdc_dict['Description']  + "\"",
-                    "-c", "\"" + owner  + "\"",
-                    "-u", "\"" + SERVICE_URL  + "\"",
+                    "-i", quote_argument(cdc_id),
+                    "-t", quote_argument(cdc_dict['Title']),
+                    "-aa", quote_argument(cdc_dict['Author']),
+                    "-d", quote_argument(cdc_dict['Description']),
+                    "-c", quote_argument(owner),
+                    "-u", quote_argument(SERVICE_URL),
                     tmp_path,
                     "1>&2;",
                     ]
@@ -402,6 +414,7 @@ def generate_certificate(repo, commit):
 
 # test
 # if DEBUG:
+    # print quote_argument(r'Hallo "\\`In`\\"')
     """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
