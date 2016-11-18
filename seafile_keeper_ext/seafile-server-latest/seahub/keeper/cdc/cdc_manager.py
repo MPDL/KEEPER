@@ -85,9 +85,9 @@ def parse_markdown (md):
             if len(stack) > 0:
                 txt_list = []
                 for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] == 'text':
+                    if h[0][i1] in ['text', 'autolink']:
                         txt_list.append(h[0][i1+1][0])
-                val = '\n'.join(txt_list).strip()
+                val = ''.join(txt_list).strip()
                 if val:
                     cdc[stack.pop()] = val
                 else:
@@ -413,7 +413,14 @@ def generate_certificate(repo, commit):
 
 
 # test
-# if DEBUG:
+if DEBUG:
+    md = """## Description
+Please enter the "description of your research" project Link https://qa-keeper.mpdl.mpg.de/lib/a4905f5c-166d-45da-b41b-be51f8b0966e/file/archive-metadata.md endOfLink
+lkjlkj
+kjlkj
+"""
+    print parse_markdown(md)
+
     # print quote_argument(r'Hallo "\\`In`\\"')
     """
     print get_user_name('vlamak868@gmail.com')
