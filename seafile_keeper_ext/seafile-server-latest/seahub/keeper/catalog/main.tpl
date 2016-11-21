@@ -73,9 +73,9 @@
         <div id="header">
             <div id="header-inner">
                 
-                <a href="https://keeper.mpdl.mpg.de/" id="logo" class="fleft">
+                <a href="/" id="logo" class="fleft">
                     
-                    <img src="https://keeper.mpdl.mpg.de/media/custom/KeeperLogo.svg" title="Seafile" alt="logo" width="140" height="40" />
+                    <img src="/media/custom/KeeperLogo.svg" title="Catalog" alt="logo" width="140" height="40" />
                     
                 </a>
                 
