@@ -1,3 +1,6 @@
 *.properties
 *.swp
 .ropeproject
+*.pyc
+tags
+*.*_orig
