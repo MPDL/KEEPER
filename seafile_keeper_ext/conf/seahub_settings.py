@@ -70,18 +70,3 @@ ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 ARCHIVE_METADATA_TEMPLATE = 'archive_metadata_template.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
-
-import logging
-
-def repo_created_callback(sender, **kwargs):
-    try:
-        from keeper.default_library_manager import copy_keeper_default_library
-    except ImportError:
-        return 
-    creator = kwargs['creator']
-    repo_id = kwargs['repo_id']
-    repo_name = kwargs['repo_name']
-    try:
-        copy_keeper_default_library(repo_id)
-    except:
-        pass
