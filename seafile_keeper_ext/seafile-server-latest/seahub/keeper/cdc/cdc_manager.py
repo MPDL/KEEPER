@@ -49,6 +49,13 @@ cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Comments']
 cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description']
 err_list = []
 
+from enum import Enum
+class EVENT(Enum):
+    db_create = 1
+    db_update = 2
+    pdf_delete = 3
+
+
 class TokenTreeRenderer(mistune.Renderer):
     # options is required
     options = {}
@@ -94,7 +101,7 @@ def parse_markdown (md):
                     stack.pop()
     return cdc
 
-def quote_argument(arg):
+def quote_arg(arg):
     """
     Quotes argument for shell call with subprocess
     """
@@ -130,8 +137,6 @@ def is_certified_by_repo_id(repo_id):
 
 def is_certified(db, cur, repo_id):
     """Check whether the repo is already certified"""
-    # cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-    # return len(cur.fetchall()) > 0;
     return get_cdc_id_by_repo(cur, repo_id) is not None
 
 
@@ -195,7 +200,11 @@ def get_db(db_name):
 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
-    UPDATE = False
+    """
+    Register in DB a new certificate or update modified field if already created
+    Returns certificate id and EVENT: db_create
+    """
+    event = EVENT.db_create
     logging.info("""Register CDC in keeper-db""")
     try:
         cdc_id = get_cdc_id_by_repo(cur, repo_id)
@@ -203,21 +212,21 @@ def register_cdc_in_db(db, cur, repo_id, owner):
             # UPDATE
             cur.execute("UPDATE cdc_repos SET modified=CURRENT_TIMESTAMP WHERE repo_id='" + repo_id + "'")
             db.commit()
-            UPDATE = True
+            event = EVENT.db_update
             logging.info("Sucessfully updated, cdc_id: " + cdc_id)
         else:
             # CREATE
             cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
             db.commit()
             cdc_id = get_cdc_id_by_repo(cur, repo_id)
-            UPDATE = False
+            event = EVENT.db_create
             logging.info("Sucessfully created, cdc_id: " + cdc_id)
     except Exception as err:
         db.rollback()
         # if not DEBUG:
         logging.error("Cannot register in DB for repo: %s, owner: %" % (repo_id, owner))
         raise err
-    return cdc_id, UPDATE
+    return cdc_id, event
 
 def rollback_register(db, cur, cdc_id):
     cur.execute("DELETE FROM cdc_repos WHERE cdc_id='" + cdc_id + "'")
@@ -306,7 +315,7 @@ def get_authors_for_email(authors):
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
-    UPDATE = False
+    event = None
 
     # exit if repo encrypted
     if repo.encrypted:
@@ -321,10 +330,17 @@ def generate_certificate(repo, commit):
         db = get_db(KEEPER_DB_NAME)
         cur = db.cursor()
 
-        # if already certified and MD has not been changed then exit
-        pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
-        if is_certified(db, cur, repo.id) and not re.match(pattern, commit.desc):
-            return False
+        cdc_id = get_cdc_id_by_repo(cur, repo.id)
+        if cdc_id is not None:
+            pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
+            if re.match(pattern, commit.desc):
+                # if cdc pdf is deleted, add pdf again!
+                event = EVENT.pdf_delete
+            else:
+                pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
+                if not re.match(pattern, commit.desc):
+                    # if already certified and MD has not been changed then exit
+                    return False
 
 
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
@@ -352,7 +368,11 @@ def generate_certificate(repo, commit):
         cdc_dict = parse_markdown(file.get_content())
         if validate(cdc_dict):
 
-            cdc_id, UPDATE = register_cdc_in_db(db, cur, repo.id, owner)
+            if event == EVENT.pdf_delete:
+                # only modified update
+                cdc_id = register_cdc_in_db(db, cur, repo.id, owner)[0]
+            else:
+                cdc_id, event = register_cdc_in_db(db, cur, repo.id, owner)
 
             logging.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
@@ -360,12 +380,12 @@ def generate_certificate(repo, commit):
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
             args = [ "date;",
                     "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
-                    "-i", quote_argument(cdc_id),
-                    "-t", quote_argument(cdc_dict['Title']),
-                    "-aa", quote_argument(cdc_dict['Author']),
-                    "-d", quote_argument(cdc_dict['Description']),
-                    "-c", quote_argument(owner),
-                    "-u", quote_argument(SERVICE_URL),
+                    "-i", quote_arg(cdc_id),
+                    "-t", quote_arg(cdc_dict['Title']),
+                    "-aa", quote_arg(cdc_dict['Author']),
+                    "-d", quote_arg(cdc_dict['Description']),
+                    "-c", quote_arg(owner),
+                    "-u", quote_arg(SERVICE_URL),
                     tmp_path,
                     "1>&2;",
                     ]
@@ -383,12 +403,12 @@ def generate_certificate(repo, commit):
                 logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
             else:
                 logging.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
-                if not UPDATE:
+                if event == EVENT.db_create:
                     rollback_register(db, cur, cdc_id)
                 return False
 
             logging.info("Add " + cdc_pdf + " to the repo...")
-            if UPDATE:
+            if event == EVENT.db_update:
                 seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
                 logging.info("Sucessfully updated")
             else:
@@ -414,14 +434,8 @@ def generate_certificate(repo, commit):
 
 # test
 if DEBUG:
-    md = """## Description
-Please enter the "description of your research" project Link https://qa-keeper.mpdl.mpg.de/lib/a4905f5c-166d-45da-b41b-be51f8b0966e/file/archive-metadata.md endOfLink
-lkjlkj
-kjlkj
-"""
-    # print parse_markdown(md)
-
-    # print quote_argument(r'Hallo "\\`In`\\"')
+    event = EVENT.db_update
+    print event
     """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
