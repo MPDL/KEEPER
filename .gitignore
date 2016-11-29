@@ -4,3 +4,4 @@ feh_*
 CDCGenerator/.idea/
 CDCGenerator/target/
 CDCGenerator/CDCGenerator.iml
+*.pyc

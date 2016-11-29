@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import traceback
 
@@ -235,7 +237,7 @@ def rollback_register(db, cur, cdc_id):
 
 
 def get_user_name(user):
-    logging.info("""Get user name""")
+    """Get user name"""
     # default name is user id
     name = user
     try:
@@ -250,7 +252,6 @@ def get_user_name(user):
         logging.error('Cannot get name from db: ' + ": ".join(str(i) for i in err))
     finally:
         db.close()
-    logging.info("user name: " + name)
     return name
 
 
@@ -311,6 +312,9 @@ def get_authors_for_email(authors):
     """ Get only name, first name of author, cut affiliations """
     auths = [a.split(';')[0] for a in authors.splitlines()]
     return "; ".join(auths)
+
+def print_OK():
+    print "In cdc_manager"
 
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
