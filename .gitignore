@@ -5,3 +5,4 @@ CDCGenerator/.idea/
 CDCGenerator/target/
 CDCGenerator/CDCGenerator.iml
 *.pyc
+.cache/
