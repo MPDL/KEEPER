@@ -47,8 +47,8 @@ DEBUG = False
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 HEADER_STEP = 2
-cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Comments']
-cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description']
+cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'DOI', 'Comments']
+cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description', 'Institute']
 err_list = []
 
 from enum import Enum
@@ -141,6 +141,54 @@ def is_certified(db, cur, repo_id):
     """Check whether the repo is already certified"""
     return get_cdc_id_by_repo(cur, repo_id) is not None
 
+def validate_author(txt):
+    """Author/Affiliations checking, format:
+    Lastname1, Firstname1; Affiliation11, Affiliation12, ...
+    Lastname2, Firstname2; Affiliation21, Affiliation22, ..
+    ...
+    """
+    valid = True
+    if txt:
+        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
+        for line in txt.splitlines():
+            if not re.match(pattern, line.decode('utf-8')):
+                logging.error('Wrong Author/Affiliation string: ' + line)
+                valid = False
+    else:
+        logging.info('Authors are empty')
+        valid = False
+    return valid
+
+def validate_institute(txt):
+    """Institute checking, format:
+    Name; Department; Director(or PI)forschungsgruppenleiter
+    """
+    valid = True
+    if txt:
+        pattern = re.compile("^\s*[\w-]+\s*;\s*[\w-]+\s*;\s*[\w-]+,(\s*[\w.-]+)+\s*$", re.UNICODE)
+        if not re.match(pattern, txt.decode('utf-8')):
+            logging.error('Wrong Institution string: ' + txt)
+            valid = False
+    else:
+        logging.info('Institutie is empty')
+        valid = False
+    return valid
+
+def validate_year(txt):
+    """Year checking"""
+    valid = True
+    format = "%Y"
+    if txt:
+        try:
+            datetime.datetime.strptime(txt, format)
+        except Exception:
+            logging.error("Wrong year: " + txt)
+            valid = False
+    else:
+        logging.info('Year is empty')
+        valid = False
+    return valid
+
 
 def validate(cdc_dict):
     logging.info("""Validate the CDC mandatory fields and content...""")
@@ -149,31 +197,10 @@ def validate(cdc_dict):
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     # 2. check content"
-    """Year checking"""
-    format = "%Y"
-    if cdc_dict.get('Year'):
-        try:
-            datetime.datetime.strptime(cdc_dict.get('Year'), format)
-        except Exception:
-            logging.error("Wrong year: " + cdc_dict.get('Year'))
-            valid = False
-    else:
-        logging.info('Year is empty')
-        valid = False
 
-    """Author/Affiliations checking"""
-    # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
-    # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
-    # ...
-    if cdc_dict.get('Author'):
-        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
-        for line in cdc_dict['Author'].splitlines():
-            if not re.match(pattern, line.decode('utf-8')):
-                logging.error('Wrong Author/Affiliation string: ' + line)
-                valid = False
-    else:
-        logging.info('Authors are empty')
-        valid = False
+    valid = validate_year(cdc_dict.get('Year')) and valid
+    valid = validate_author(cdc_dict.get('Author')) and valid
+    valid = validate_institute(cdc_dict.get('Institute')) and valid
 
     logging.info('valid' if valid else 'not valid')
     return valid
