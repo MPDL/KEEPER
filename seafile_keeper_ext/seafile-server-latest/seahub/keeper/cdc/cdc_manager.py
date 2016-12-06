@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import traceback
 
@@ -45,9 +47,16 @@ DEBUG = False
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 HEADER_STEP = 2
-cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Comments']
-cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description']
+cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'DOI', 'Comments']
+cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description', 'Institute']
 err_list = []
+
+from enum import Enum
+class EVENT(Enum):
+    db_create = 1
+    db_update = 2
+    pdf_delete = 3
+
 
 class TokenTreeRenderer(mistune.Renderer):
     # options is required
@@ -85,14 +94,26 @@ def parse_markdown (md):
             if len(stack) > 0:
                 txt_list = []
                 for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] == 'text':
+                    if h[0][i1] in ['text', 'autolink']:
                         txt_list.append(h[0][i1+1][0])
-                val = '\n'.join(txt_list).strip()
+                val = ''.join(txt_list).strip()
                 if val:
                     cdc[stack.pop()] = val
                 else:
                     stack.pop()
     return cdc
+
+def quote_arg(arg):
+    """
+    Quotes argument for shell call with subprocess
+    """
+    return '"%s"' % (
+        arg
+        .replace('\\', '\\\\')
+        .replace('"', '\\"')
+        .replace('$', '\\$')
+        .replace('`', '\\`')
+    )
 
 def get_cdc_id_by_repo(cur, repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
@@ -118,9 +139,55 @@ def is_certified_by_repo_id(repo_id):
 
 def is_certified(db, cur, repo_id):
     """Check whether the repo is already certified"""
-    # cur.execute("SELECT * FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-    # return len(cur.fetchall()) > 0;
     return get_cdc_id_by_repo(cur, repo_id) is not None
+
+def validate_author(txt):
+    """Author/Affiliations checking, format:
+    Lastname1, Firstname1; Affiliation11, Affiliation12, ...
+    Lastname2, Firstname2; Affiliation21, Affiliation22, ..
+    ...
+    """
+    valid = True
+    if txt:
+        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
+        for line in txt.splitlines():
+            if not re.match(pattern, line.decode('utf-8')):
+                logging.error('Wrong Author/Affiliation string: ' + line)
+                valid = False
+    else:
+        logging.info('Authors are empty')
+        valid = False
+    return valid
+
+def validate_institute(txt):
+    """Institute checking, format:
+    Name; Department; Director(or PI)forschungsgruppenleiter
+    """
+    valid = True
+    if txt:
+        pattern = re.compile("^\s*[\w-]+\s*;\s*[\w-]+\s*;\s*[\w-]+,(\s*[\w.-]+)+\s*$", re.UNICODE)
+        if not re.match(pattern, txt.decode('utf-8')):
+            logging.error('Wrong Institution string: ' + txt)
+            valid = False
+    else:
+        logging.info('Institutie is empty')
+        valid = False
+    return valid
+
+def validate_year(txt):
+    """Year checking"""
+    valid = True
+    format = "%Y"
+    if txt:
+        try:
+            datetime.datetime.strptime(txt, format)
+        except Exception:
+            logging.error("Wrong year: " + txt)
+            valid = False
+    else:
+        logging.info('Year is empty')
+        valid = False
+    return valid
 
 
 def validate(cdc_dict):
@@ -130,31 +197,10 @@ def validate(cdc_dict):
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     # 2. check content"
-    """Year checking"""
-    format = "%Y"
-    if cdc_dict.get('Year'):
-        try:
-            datetime.datetime.strptime(cdc_dict.get('Year'), format)
-        except Exception:
-            logging.error("Wrong year: " + cdc_dict.get('Year'))
-            valid = False
-    else:
-        logging.info('Year is empty')
-        valid = False
 
-    """Author/Affiliations checking"""
-    # Lastname1, Firstname1; Affiliation11, Affiliation12, ...
-    # Lastname2, Firstname2; Affiliation21, Affiliation22, ..
-    # ...
-    if cdc_dict.get('Author'):
-        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
-        for line in cdc_dict['Author'].splitlines():
-            if not re.match(pattern, line.decode('utf-8')):
-                logging.error('Wrong Author/Affiliation string: ' + line)
-                valid = False
-    else:
-        logging.info('Authors are empty')
-        valid = False
+    valid = validate_year(cdc_dict.get('Year')) and valid
+    valid = validate_author(cdc_dict.get('Author')) and valid
+    valid = validate_institute(cdc_dict.get('Institute')) and valid
 
     logging.info('valid' if valid else 'not valid')
     return valid
@@ -183,7 +229,11 @@ def get_db(db_name):
 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
-    UPDATE = False
+    """
+    Register in DB a new certificate or update modified field if already created
+    Returns certificate id and EVENT: db_create
+    """
+    event = EVENT.db_create
     logging.info("""Register CDC in keeper-db""")
     try:
         cdc_id = get_cdc_id_by_repo(cur, repo_id)
@@ -191,21 +241,21 @@ def register_cdc_in_db(db, cur, repo_id, owner):
             # UPDATE
             cur.execute("UPDATE cdc_repos SET modified=CURRENT_TIMESTAMP WHERE repo_id='" + repo_id + "'")
             db.commit()
-            UPDATE = True
+            event = EVENT.db_update
             logging.info("Sucessfully updated, cdc_id: " + cdc_id)
         else:
             # CREATE
             cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
             db.commit()
             cdc_id = get_cdc_id_by_repo(cur, repo_id)
-            UPDATE = False
+            event = EVENT.db_create
             logging.info("Sucessfully created, cdc_id: " + cdc_id)
     except Exception as err:
         db.rollback()
         # if not DEBUG:
         logging.error("Cannot register in DB for repo: %s, owner: %" % (repo_id, owner))
         raise err
-    return cdc_id, UPDATE
+    return cdc_id, event
 
 def rollback_register(db, cur, cdc_id):
     cur.execute("DELETE FROM cdc_repos WHERE cdc_id='" + cdc_id + "'")
@@ -214,7 +264,7 @@ def rollback_register(db, cur, cdc_id):
 
 
 def get_user_name(user):
-    logging.info("""Get user name""")
+    """Get user name"""
     # default name is user id
     name = user
     try:
@@ -229,7 +279,6 @@ def get_user_name(user):
         logging.error('Cannot get name from db: ' + ": ".join(str(i) for i in err))
     finally:
         db.close()
-    logging.info("user name: " + name)
     return name
 
 
@@ -290,10 +339,13 @@ def get_authors_for_email(authors):
     auths = [a.split(';')[0] for a in authors.splitlines()]
     return "; ".join(auths)
 
+def print_OK():
+    print "In cdc_manager"
+
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
-    UPDATE = False
+    event = None
 
     # exit if repo encrypted
     if repo.encrypted:
@@ -308,10 +360,17 @@ def generate_certificate(repo, commit):
         db = get_db(KEEPER_DB_NAME)
         cur = db.cursor()
 
-        # if already certified and MD has not been changed then exit
-        pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
-        if is_certified(db, cur, repo.id) and not re.match(pattern, commit.desc):
-            return False
+        cdc_id = get_cdc_id_by_repo(cur, repo.id)
+        if cdc_id is not None:
+            pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
+            if re.match(pattern, commit.desc):
+                # if cdc pdf is deleted, add pdf again!
+                event = EVENT.pdf_delete
+            else:
+                pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
+                if not re.match(pattern, commit.desc):
+                    # if already certified and MD has not been changed then exit
+                    return False
 
 
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
@@ -339,7 +398,11 @@ def generate_certificate(repo, commit):
         cdc_dict = parse_markdown(file.get_content())
         if validate(cdc_dict):
 
-            cdc_id, UPDATE = register_cdc_in_db(db, cur, repo.id, owner)
+            if event == EVENT.pdf_delete:
+                # only modified update
+                cdc_id = register_cdc_in_db(db, cur, repo.id, owner)[0]
+            else:
+                cdc_id, event = register_cdc_in_db(db, cur, repo.id, owner)
 
             logging.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
@@ -347,12 +410,12 @@ def generate_certificate(repo, commit):
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
             args = [ "date;",
                     "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
-                    "-i", "\"" + cdc_id + "\"",
-                    "-t", "\"" + cdc_dict['Title']  + "\"",
-                    "-aa", "\"" + cdc_dict['Author'] + "\"",
-                    "-d", "\"" + cdc_dict['Description']  + "\"",
-                    "-c", "\"" + owner  + "\"",
-                    "-u", "\"" + SERVICE_URL  + "\"",
+                    "-i", quote_arg(cdc_id),
+                    "-t", quote_arg(cdc_dict['Title']),
+                    "-aa", quote_arg(cdc_dict['Author']),
+                    "-d", quote_arg(cdc_dict['Description']),
+                    "-c", quote_arg(owner),
+                    "-u", quote_arg(SERVICE_URL),
                     tmp_path,
                     "1>&2;",
                     ]
@@ -370,12 +433,12 @@ def generate_certificate(repo, commit):
                 logging.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
             else:
                 logging.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
-                if not UPDATE:
+                if event == EVENT.db_create:
                     rollback_register(db, cur, cdc_id)
                 return False
 
             logging.info("Add " + cdc_pdf + " to the repo...")
-            if UPDATE:
+            if event == EVENT.db_update:
                 seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
                 logging.info("Sucessfully updated")
             else:
@@ -400,7 +463,9 @@ def generate_certificate(repo, commit):
 
 
 # test
-# if DEBUG:
+if DEBUG:
+    event = EVENT.db_update
+    print event
     """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
