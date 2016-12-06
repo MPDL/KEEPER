@@ -77,8 +77,7 @@ def application(env, start_response):
 
 
 		# default text if IP not allowed
-                AAA = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
-		errmsg = AAA
+		errmsg = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
 
 
 		# test for valid IP

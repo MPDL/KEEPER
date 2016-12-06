@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import traceback
+
 from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
 from seahub.settings import ARCHIVE_METADATA_TARGET
@@ -68,9 +70,10 @@ def get_catalog():
     catalog = []
 
     repos_all = seafile_api.get_repo_list(0, MAX_INT)
+
     #repos_all = [seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')]
 
-    for repo in repos_all:
+    for repo in sorted(repos_all, key=lambda x: x.last_modify, reverse=True):
 
         try:
             proj = {}
@@ -82,6 +85,7 @@ def get_catalog():
             if user_name != email:
                 proj["owner_name"] = user_name
             proj["in_progress"] = True
+            proj["modified"] = repo.last_modify
 
             commits = get_commits(repo.id, 0, 1)
             commit = get_commit(repo.id, repo.version, commits[0].id)
@@ -125,18 +129,20 @@ def get_catalog():
                     proj["is_certified"] = is_certified_by_repo_id(repo.id)
             else:
                 if DEBUG:
-                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name)
+                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name.encode("utf-8"))
             catalog.append(proj)
 
         except Exception as err:
-            msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
+            #msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
+            msg = "repo_name: %s, id: %s" % ( repo.name.encode("utf-8"), repo.id  )
             logging.error (msg)
+            logging.error(traceback.format_exc())
             if DEBUG:
                 print msg
 
     return catalog
 
 
-if DEBUG:
-    print is_in_mpg_ip_range ('192.129.78.1')
+# if DEBUG:
+    # print is_in_mpg_ip_range ('192.129.78.1')
     # print json.dumps(get_catalog(), indent=4, sort_keys=True, separators=(',', ': '))
