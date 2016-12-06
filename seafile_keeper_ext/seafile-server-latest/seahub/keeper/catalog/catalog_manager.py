@@ -30,12 +30,12 @@ def trim_by_len(str, max_len, suffix="..."):
         str = str.strip()
         if str and len(str) > max_len:
             str = str[0:max_len] + suffix
-        str = unicode(str, "utf-8")
+        str = unicode(str, 'utf-8', errors='replace')
     return str
 
 def strip_uni(str):
     if str:
-        str = unicode(str.strip(), "utf-8")
+        str = unicode(str.strip(), 'utf-8', errors='replace')
     return str
 
 def get_mpg_ip_set():
@@ -83,7 +83,7 @@ def get_catalog():
             proj["owner"] = email
             user_name = get_user_name(email)
             if user_name != email:
-                proj["owner_name"] = user_name
+                proj["owner_name"] = strip_uni(user_name)
             proj["in_progress"] = True
             proj["modified"] = repo.last_modify
 
@@ -129,12 +129,12 @@ def get_catalog():
                     proj["is_certified"] = is_certified_by_repo_id(repo.id)
             else:
                 if DEBUG:
-                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name.encode("utf-8"))
+                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name)
             catalog.append(proj)
 
         except Exception as err:
             #msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
-            msg = "repo_name: %s, id: %s" % ( repo.name.encode("utf-8"), repo.id  )
+            msg = "repo_name: %s, id: %s" % ( repo.name, repo.id  )
             logging.error (msg)
             logging.error(traceback.format_exc())
             if DEBUG:
