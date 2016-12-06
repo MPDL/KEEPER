@@ -39,7 +39,7 @@ export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
 
 export PYTHONIOENCODING=utf-8
 
-python $1 
+python $*  
 
 
 
