@@ -35,7 +35,7 @@ def trim_by_len(str, max_len, suffix="..."):
 
 def strip_uni(str):
     if str:
-        str = unicode(str.strip(), "utf-8")
+        str = unicode(str.strip(), 'utf-8', errors='replace')
     return str
 
 def get_mpg_ip_set():
@@ -129,12 +129,12 @@ def get_catalog():
                     proj["is_certified"] = is_certified_by_repo_id(repo.id)
             else:
                 if DEBUG:
-                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name.encode("utf-8"))
+                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name)
             catalog.append(proj)
 
         except Exception as err:
             #msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
-            msg = "repo_name: %s, id: %s" % ( repo.name.encode("utf-8"), repo.id  )
+            msg = "repo_name: %s, id: %s" % ( repo.name, repo.id  )
             logging.error (msg)
             logging.error(traceback.format_exc())
             if DEBUG:
@@ -143,6 +143,6 @@ def get_catalog():
     return catalog
 
 
-# if DEBUG:
+if DEBUG:
     # print is_in_mpg_ip_range ('192.129.78.1')
-    # print json.dumps(get_catalog(), indent=4, sort_keys=True, separators=(',', ': '))
+    print json.dumps(get_catalog(), ensure_ascii=False, indent=4, sort_keys=True, separators=(',', ': '))
