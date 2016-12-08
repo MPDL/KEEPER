@@ -18,5 +18,4 @@ class CatalogView(APIView):
     @json_response
     def get(self, request, format=None):
         catalog = get_catalog()
-        # catalog.append(request.META.get('REMOTE_ADDR'))
         return catalog

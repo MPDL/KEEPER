@@ -17,7 +17,7 @@ os.environ.setdefault("SEAFILE_CONF_DIR", "/opt/seafile/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "/opt/seafile/conf")
 os.environ.setdefault("SEAFES_DIR", "/opt/seafile/seafile-server-latest/pro/python/seafes")
 
-
+from seahub.settings import SERVICE_URL
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range
 
 #########################
@@ -34,7 +34,7 @@ allowed_ip_prefixes = []
 # allowed_ip_prefixes = ['','172.16.1','10.10.','192.168.1.10','192.129.1.102']
 
 # absolute url of json file with data of all projects
-json_data_url = 'https://qa-keeper.mpdl.mpg.de/api2/catalog/'
+json_data_url = SERVICE_URL + '/api2/catalog/'
 
 # path to cache json, make sure it is writable for script user
 json_cache_file_path = install_path+'catalog.json'
