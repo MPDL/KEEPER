@@ -143,6 +143,5 @@ def get_catalog():
     return catalog
 
 
-# if DEBUG:
-    # print is_in_mpg_ip_range ('192.129.78.1')
-    # print json.dumps(get_catalog(), indent=4, sort_keys=True, separators=(',', ': '))
+    # # print is_in_mpg_ip_range ('192.129.78.1')
+    # print json.dumps(get_catalog(), ensure_ascii = False, encoding='latin-1', indent=4, sort_keys=True, separators=(',', ': '))
