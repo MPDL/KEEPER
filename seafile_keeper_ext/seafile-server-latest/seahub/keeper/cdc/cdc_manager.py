@@ -284,7 +284,6 @@ def get_user_name(user):
 
 def send_email(to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
-
     try:
         t = loader.get_template(CDC_EMAIL_TEMPLATE)
         msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(Context(msg_ctx)), SERVER_EMAIL, [to, SERVER_EMAIL] )
