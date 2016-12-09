@@ -93,7 +93,7 @@ def get_catalog():
                     # Author
                     a = md.get("Author")
                     if a:
-                        a_list = strip_uni(a.strip()).split('\n')
+                        a_list = strip_uni(a).split('\n')
                         authors = []
                         for _ in a_list:
                             author = {}
@@ -126,8 +126,7 @@ def get_catalog():
             catalog.append(proj)
 
         except Exception as err:
-            #msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
-            msg = "repo_name: %s, id: %s" % ( repo.name, repo.id  )
+            msg = "repo_name: %s, id: %s" % ( repo.name, repo.id )
             logging.error (msg)
             logging.error(traceback.format_exc())
 

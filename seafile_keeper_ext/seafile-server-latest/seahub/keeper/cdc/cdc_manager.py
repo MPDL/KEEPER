@@ -15,6 +15,8 @@ from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
+from seahub.profile.models import Profile
+
 from seafobj import commit_mgr, fs_mgr
 from subprocess import STDOUT, call
 
@@ -225,7 +227,8 @@ def get_db(db_name):
     return MySQLdb.connect(host=DATABASES['default']['HOST'],
          user=DATABASES['default']['USER'],
          passwd=DATABASES['default']['PASSWORD'],
-         db=db_name)
+         db=db_name,
+         charset='utf8')
 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
@@ -266,21 +269,12 @@ def rollback_register(db, cur, cdc_id):
 def get_user_name(user):
     """Get user name"""
     # default name is user id
-    name = user
-    try:
-        db = get_db(DATABASES['default']['NAME'])
-        cur = db.cursor()
-        cur.execute("SELECT nickname FROM profile_profile WHERE user='" + name + "'")
-        row = cur.fetchone()
-        if row is not None and row[0]:
-            # nick is name if nick available
-            name = str(row[0])
-    except Exception as err:
-        logging.error('Cannot get name from db: ' + ": ".join(str(i) for i in err))
-    finally:
-        db.close()
-    return name
 
+    name = user
+    p = Profile.objects.get_profile_by_user(user)
+    if p and p.nickname:
+        name = p.nickname
+    return name
 
 def send_email(to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")
