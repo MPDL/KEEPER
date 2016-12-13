@@ -163,7 +163,7 @@ def validate_author(txt):
 
 def validate_institute(txt):
     """Institute checking, format:
-    Name; Department; Director(or PI)forschungsgruppenleiter
+    InstituionName; Department; Director(or PI)Name, Vorname|Abbr.
     """
     valid = True
     if txt:

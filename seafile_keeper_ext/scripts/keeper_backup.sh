@@ -10,6 +10,7 @@ export PATH
 TODAY=`date '+%Y%m%d'`
 GPFS_DEVICE="/dev/gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
+NO_REMOTE_BACKUP=0
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -117,14 +118,16 @@ function asynchronous_backup () {
     fi 
 	echo_green "OK"
 
-	# 3. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
-    echo "Start remote backup..."
-	# TODO: generate log on remote !!!!
-    ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
-    if [ $? -ne 0 ]; then
-	    up_err_and_exit "Could not start remote backup" 
-    fi 
-	echo_green "OK"
+    if [ $NO_REMOTE_BACKUP -ne 1 ]; then
+        # 3. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
+        echo "Start remote backup..."
+        # TODO: generate log on remote !!!!
+        ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
+        if [ $? -ne 0 ]; then
+            up_err_and_exit "Could not start remote backup" 
+        fi 
+        echo_green "OK"
+    fi
 
     echo -e "Asynchronous backup is OK\n"
 		
