@@ -69,6 +69,7 @@ def test_get_user_name(create_tmp_user):
 
 def test_validate_institute():
     assert validate_institute("MPG; MPE; Name, FirstName")
+    assert validate_institute("Max Planck Digital Library; DRG; Frank, Sander")
     assert validate_institute("Institute;Department;Name,F."), "no spaces"
     assert not validate_institute("Institute Department Name,F."), "No semicolon"
 

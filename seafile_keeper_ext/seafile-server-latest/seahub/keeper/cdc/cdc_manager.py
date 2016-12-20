@@ -167,7 +167,7 @@ def validate_institute(txt):
     """
     valid = True
     if txt:
-        pattern = re.compile("^\s*[\w-]+\s*;\s*[\w-]+\s*;\s*[\w-]+,(\s*[\w.-]+)+\s*$", re.UNICODE)
+        pattern = re.compile("^(\s*[\w-]+\s*)+;(\s*[\w-]+\s*)+;\s*[\w-]+,(\s*[\w.-]+)+\s*$", re.UNICODE)
         if not re.match(pattern, txt.decode('utf-8')):
             logging.error('Wrong Institution string: ' + txt)
             valid = False
