@@ -66,9 +66,10 @@ function startup_seafile () {
 function check_object_storage_integrity () {
     if [ $(date +'%u')  -eq "${__DAY_TO_CHECK_INTEGRITY__}" ]; then
         pushd $SEAFILE_LATEST_DIR
-        ./seaf-fsck.sh
-        if [ $? -ne 0  ]; then
-            err_and_exit "Object storage integrity test has failed"
+        RESULT="$(./seaf-fsck.sh)"
+        echo "${RESULT}"
+        if [[ "$RESULT" =~ "is corrupted" ]]; then
+            warn "Object storage integrity test has failed"
         fi
         popd
     fi
