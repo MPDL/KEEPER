@@ -15,12 +15,11 @@ from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
-from seahub.profile.models import Profile
-
 from seafobj import commit_mgr, fs_mgr
 from subprocess import STDOUT, call
 
 from keeper.default_library_manager import get_keeper_default_library
+from keeper.common import parse_markdown, get_user_name
 
 import mistune
 
@@ -48,8 +47,6 @@ DEBUG = False
 # if DEBUG:
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-HEADER_STEP = 2
-cdc_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'DOI', 'Comments']
 cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description', 'Institute']
 err_list = []
 
@@ -59,51 +56,6 @@ class EVENT(Enum):
     db_update = 2
     pdf_delete = 3
 
-
-class TokenTreeRenderer(mistune.Renderer):
-    # options is required
-    options = {}
-
-    def placeholder(self):
-        return []
-
-    def __getattribute__(self, name):
-        """Saves the arguments to each Markdown handling method."""
-        found = TokenTreeRenderer.__dict__.get(name)
-        if found is not None:
-            return object.__getattribute__(self, name)
-
-        def fake_method(*args, **kwargs):
-            # return [(name, args, kwargs)]
-            return [name, args]
-        return fake_method
-
-md_processor = mistune.Markdown(renderer=TokenTreeRenderer())
-
-def parse_markdown (md):
-    """parse markdown string"""
-    cdc = {}
-    stack = []
-    parsed = md_processor.render(md)
-
-    for i in range(0, len(parsed)-1, 2):
-        str = parsed[i]
-        h = parsed[i+1]
-        if str == 'header':
-            if h[2] in cdc_headers and h[1] == HEADER_STEP:
-                stack.append(h[2])
-        elif str == 'paragraph':
-            if len(stack) > 0:
-                txt_list = []
-                for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] in ['text', 'autolink']:
-                        txt_list.append(h[0][i1+1][0])
-                val = ''.join(txt_list).strip()
-                if val:
-                    cdc[stack.pop()] = val
-                else:
-                    stack.pop()
-    return cdc
 
 def quote_arg(arg):
     """
@@ -265,16 +217,6 @@ def rollback_register(db, cur, cdc_id):
     db.commit()
     logging.info("Sucessfully rollback register of cdc_id: " + cdc_id)
 
-
-def get_user_name(user):
-    """Get user name"""
-    # default name is user id
-
-    name = user
-    p = Profile.objects.get_profile_by_user(user)
-    if p and p.nickname:
-        name = p.nickname
-    return name
 
 def send_email(to, msg_ctx):
     logging.info("Send CDC email and keeper notification...")

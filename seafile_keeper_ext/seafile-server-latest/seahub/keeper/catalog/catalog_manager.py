@@ -6,7 +6,8 @@ from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
 from seahub.settings import ARCHIVE_METADATA_TARGET
 
-from keeper.cdc.cdc_manager import is_certified_by_repo_id, parse_markdown, get_user_name
+from keeper.cdc.cdc_manager import is_certified_by_repo_id
+from keeper.common import parse_markdown, get_user_name
 
 import logging
 import json
