@@ -7,4 +7,10 @@
 		<pdfEmbedded>true</pdfEmbedded>
 		<exportFonts/>
 	</fontFamily>
+	<fontFamily name="ArialUnicodeMS">
+		<normal>fonts/ArialUnicode/ARIALUNI.TTF</normal>
+		<pdfEncoding>Identity-H</pdfEncoding>
+		<pdfEmbedded>true</pdfEmbedded>
+		<exportFonts/>
+	</fontFamily>
 </fontFamilies>
