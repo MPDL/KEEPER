@@ -5,8 +5,8 @@ import tempfile
 import json
 from seaserv import seafile_api, get_repo
 from seafobj import commit_mgr, fs_mgr
-import cdc.cdc_manager
-from cdc.cdc_manager import quote_arg, get_user_name, validate_institute, CDC_PDF_PREFIX
+from common import get_user_name
+from cdc.cdc_manager import quote_arg, validate_institute, CDC_PDF_PREFIX
 from default_library_manager import copy_keeper_default_library, get_keeper_default_library
 from seahub.settings import SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 
