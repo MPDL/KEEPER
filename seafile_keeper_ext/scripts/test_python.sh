@@ -36,6 +36,8 @@ export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.6/site-packages:${INSTALLPA
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPATH}/seafile/lib64/python2.7/site-packages:$PYTHONPATH
 #Vlad: TODO: check security
 export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/pro/python/seafevents/virus_scanner:$PYTHONPATH
 
 export PYTHONIOENCODING=utf-8
 
