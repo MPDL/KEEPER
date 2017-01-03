@@ -73,6 +73,22 @@ def test_validate_institute():
     assert validate_institute("Institute;Department;Name,F."), "no spaces"
     assert not validate_institute("Institute Department Name,F."), "No semicolon"
 
+    assert validate_institute("Institute")
+    assert validate_institute("Institute;")
+    assert validate_institute("Institute; Department")
+    assert validate_institute("Institute; Department;")
+    assert validate_institute("Institute Long Name; Department Long Name")
+    assert validate_institute("Institute Long Name; Department Long Name;")
+    assert validate_institute("Institute; Department; Director")
+    assert validate_institute("Institute; Department; Director With Long Name")
+    assert validate_institute("Institute; Department; Director N.")
+    assert validate_institute("Institute; Department; Director, N.")
+    assert validate_institute("Institute Long Name; Department Long Name; Director, N.")
+    assert validate_institute("Institute; Department; Director, N.;")
+    assert validate_institute("Institute; Department; Director, , ,, N. ;; ; ")
+    assert validate_institute("Institute Long Name; Department Long Name; Director, , N.; ")
+    assert validate_institute("Institute Long Name; Department Long Name; Director, , Ivan Pupkin; ")
+
 
 def test_cdc_completely(create_tmp_repo):
     """Test CDC generation, complete workflow
