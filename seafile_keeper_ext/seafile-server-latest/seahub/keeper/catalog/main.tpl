@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>KEEPER</title>
+<title>Catalog - KEEPER</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="keywords" content="File Collaboration Team Organization" />
 <link rel="icon" type="image/x-icon" href="https://keeper.mpdl.mpg.de/media/img/favicon.png?t=1465786517" />
@@ -116,7 +116,7 @@
             </div>
             <div id="right-panel">
             	    <div class="hd ovhd">
-						<h3 class="fleft">Projektkatalog</h3>
+						<h3 class="fleft">Project Catalog</h3>
 						<!--<button class="repo-create btn-white fright"><span aria-hidden="true" class="icon-plus-square add vam"></span><span class="vam">New Library</span></button>-->
 					</div>
 			{/data-nav}
@@ -146,10 +146,10 @@
 					{/pagination-start}
 					
 					{page-prev}
-						<a class="pagination" href="index.py?page=%page%">vorherige</a>
+						<a class="pagination" href="index.py?page=%page%">Previous</a>
 					{/page-prev}
 					{page-prev-disabled}
-						<span class="disabled">vorherige</span>
+						<span class="disabled">Previous</span>
 					{/page-prev-disabled}
 					
 					{pagination}
@@ -157,10 +157,10 @@
 					{/pagination}
 					
 					{page-next}
-						<a class="pagination" href="index.py?page=%page%">nächste</a>
+						<a class="pagination" href="index.py?page=%page%">Next</a>
 					{/page-next}
 					{page-next-disabled}
-						<span class="disabled">nächste</span>
+						<span class="disabled">Next</span>
 					{/page-next-disabled}
 					
 					{pagination-end}

@@ -6,7 +6,8 @@ from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
 from seahub.settings import ARCHIVE_METADATA_TARGET
 
-from keeper.cdc.cdc_manager import is_certified_by_repo_id, parse_markdown, get_user_name
+from keeper.cdc.cdc_manager import is_certified_by_repo_id
+from keeper.common import parse_markdown, get_user_name
 
 import logging
 import json
@@ -19,8 +20,6 @@ from django.core.cache import cache
 #time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
 
-DEBUG = False
-
 MAX_INT = 2147483647
 
 JSON_DATA_URL = 'https://rena.mpdl.mpg.de/iplists/keeper.json'
@@ -30,12 +29,12 @@ def trim_by_len(str, max_len, suffix="..."):
         str = str.strip()
         if str and len(str) > max_len:
             str = str[0:max_len] + suffix
-        str = unicode(str, "utf-8")
+        str = unicode(str, 'utf-8', errors='replace')
     return str
 
 def strip_uni(str):
     if str:
-        str = unicode(str.strip(), "utf-8")
+        str = unicode(str.strip(), 'utf-8', errors='replace')
     return str
 
 def get_mpg_ip_set():
@@ -71,8 +70,6 @@ def get_catalog():
 
     repos_all = seafile_api.get_repo_list(0, MAX_INT)
 
-    #repos_all = [seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')]
-
     for repo in sorted(repos_all, key=lambda x: x.last_modify, reverse=True):
 
         try:
@@ -97,7 +94,7 @@ def get_catalog():
                     # Author
                     a = md.get("Author")
                     if a:
-                        a_list = strip_uni(a.strip()).split('\n')
+                        a_list = strip_uni(a).split('\n')
                         authors = []
                         for _ in a_list:
                             author = {}
@@ -127,22 +124,11 @@ def get_catalog():
                         del proj["in_progress"]
 
                     proj["is_certified"] = is_certified_by_repo_id(repo.id)
-            else:
-                if DEBUG:
-                    print "No %s for repo %s found" % (ARCHIVE_METADATA_TARGET, repo.name.encode("utf-8"))
             catalog.append(proj)
 
         except Exception as err:
-            #msg = "repo_name: %s, id: %s, err: %s" % ( repo.name, repo.id, str(err) )
-            msg = "repo_name: %s, id: %s" % ( repo.name.encode("utf-8"), repo.id  )
+            msg = "repo_name: %s, id: %s" % ( repo.name, repo.id )
             logging.error (msg)
             logging.error(traceback.format_exc())
-            if DEBUG:
-                print msg
 
     return catalog
-
-
-# if DEBUG:
-    # print is_in_mpg_ip_range ('192.129.78.1')
-    # print json.dumps(get_catalog(), indent=4, sort_keys=True, separators=(',', ': '))
