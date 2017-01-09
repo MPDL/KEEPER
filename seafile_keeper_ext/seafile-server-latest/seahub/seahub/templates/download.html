@@ -1,4 +1,4 @@
-{% extends "myhome_base.html" %}
+{% extends "base.html" %}
 {% load i18n %}
 
 {% block sub_title %}{% trans "Download" %} - {% endblock %}
@@ -8,8 +8,7 @@
     {% if LANGUAGE_CODE == 'zh-cn' %}
     <p>你可以从 Seafile 的<a href="http://seafile.com/download/">官方下载页面</a>下载 Windows，Mac 以及 Linux 的客户端。</p>
     {% else %}
-    <p>You can download Seafile desktop client for Windows, Mac and Linux from Seafile's <a href="http://seafile.com/en/download/">official download page</a>.
-        Please download the desktop client without Shibboleth support.</p>
+    <p>You can download Seafile desktop client for Windows, Mac and Linux from Seafile's <a href="http://seafile.com/en/download/">official download page</a>.</p>
     {% endif %}
 </div>
 {% endblock %}

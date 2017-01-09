@@ -1,4 +1,4 @@
-# !!!MERGE MANUALLY!!!
+# Copyright (c) 2012-2016 Seafile Ltd.
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
 
@@ -35,7 +35,7 @@ DATABASES = {
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Europe/Berlin'
+TIME_ZONE = 'Asia/Shanghai'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -97,8 +97,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-# !!!MERGE!!!
-SECRET_KEY = '__SECRET_KEY__'
+SECRET_KEY = 'n*v0=jz-1rz@(4gx^tf%6^e7c&um@2)g-l=3_)t@19a69n1nv6'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -118,10 +117,11 @@ MIDDLEWARE_CLASSES = (
     'seahub.base.middleware.BaseMiddleware',
     'seahub.base.middleware.InfobarMiddleware',
     'seahub.password_session.middleware.CheckPasswordHash',
+    'seahub.base.middleware.ForcePasswdChangeMiddleware',
+    'termsandconditions.middleware.TermsAndConditionsRedirectMiddleware',
 )
 
 SITE_ROOT_URLCONF = 'seahub.urls'
-#ROOT_URLCONF = 'djblets.util.rooturl'
 ROOT_URLCONF = 'seahub.utils.rooturl'
 SITE_ROOT = '/'
 
@@ -139,10 +139,34 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
-# !!!MERGE!!!
 LANGUAGES = (
+    ('ca', gettext_noop('català')),
     ('de', gettext_noop(u'Deutsch')),
     ('en', gettext_noop('English')),
+    ('es', gettext_noop('Español')),
+    ('es-ar', gettext_noop('Español de Argentina')),
+    ('es-mx', gettext_noop('Español de México')),
+    ('fi', gettext_noop('Suomi')),
+    ('fr', gettext_noop('français')),
+    ('he', gettext_noop('עברית')),
+    ('hu', gettext_noop('Magyar')),
+    ('is', gettext_noop('Íslenska')),
+    ('it', gettext_noop('Italiano')),
+    ('ja', gettext_noop('日本語')),
+    ('ko', gettext_noop('한국어')),
+    ('lv', gettext_noop('Latvian')),
+    ('nl', gettext_noop('Nederlands')),
+    ('pl', gettext_noop('Polski')),
+    ('pt-br', gettext_noop('Portuguese, Brazil')),
+    ('ru', gettext_noop(u'Русский')),
+    ('sk', gettext_noop('Slovak')),
+    ('sl', gettext_noop('Slovenian')),
+    ('sv', gettext_noop('Svenska')),
+    ('th', gettext_noop('ไทย')),
+    ('tr', gettext_noop('Türkçe')),
+    ('uk', gettext_noop('українська мова')),
+    ('zh-cn', gettext_noop(u'简体中文')),
+    ('zh-tw', gettext_noop(u'繁體中文')),
 )
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, 'locale'),
@@ -173,11 +197,14 @@ INSTALLED_APPS = (
     'constance',
     'constance.backends.database',
     'post_office',
+    'termsandconditions',
+
     'seahub.api2',
     'seahub.avatar',
     'seahub.base',
     'seahub.contacts',
     'seahub.institutions',
+    'seahub.invitations',
     'seahub.wiki',
     'seahub.group',
     'seahub.message',
@@ -190,13 +217,14 @@ INSTALLED_APPS = (
     'seahub.password_session',
 )
 
+# Enabled or disable constance(web settings).
+ENABLE_SETTINGS_VIA_WEB = True
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
 AUTHENTICATION_BACKENDS = (
     'seahub.base.accounts.AuthBackend',
 )
-
 LOGIN_REDIRECT_URL = '/profile/'
 LOGIN_URL = SITE_ROOT + 'accounts/login'
 
@@ -207,6 +235,7 @@ ENABLE_SYS_ADMIN_VIEW_REPO = False
 
 #allow search from LDAP directly during auto-completion (not only search imported users)
 ENABLE_SEARCH_FROM_LDAP_DIRECTLY = False
+
 # show traffic on the UI
 SHOW_TRAFFIC = True
 
@@ -222,6 +251,9 @@ ENABLE_UPLOAD_FOLDER = False
 # enable resumable fileupload or not
 ENABLE_RESUMABLE_FILEUPLOAD = False
 
+## maxNumberOfFiles for fileupload
+MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 500
+
 # enable encrypt library
 ENABLE_ENCRYPTED_LIBRARY = True
 
@@ -233,6 +265,9 @@ SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 
 # enable or disable share link audit
 ENABLE_SHARE_LINK_AUDIT = False
+
+# check virus for files uploaded form upload link
+ENABLE_UPLOAD_LINK_VIRUS_CHECK = False
 
 # mininum length for user's password
 USER_PASSWORD_MIN_LENGTH = 6
@@ -248,6 +283,7 @@ USER_STRONG_PASSWORD_REQUIRED = False
 
 # Force user to change password when admin add/reset a user.
 FORCE_PASSWORD_CHANGE = True
+
 # Using server side crypto by default, otherwise, let user choose crypto method.
 FORCE_SERVER_CRYPTO = True
 
@@ -259,6 +295,7 @@ ENABLE_USER_CREATE_ORG_REPO = True
 
 DISABLE_SYNC_WITH_ANY_FOLDER = False
 
+ENABLE_TERMS_AND_CONDITIONS = False
 
 # File preview
 FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
@@ -266,7 +303,7 @@ OFFICE_PREVIEW_MAX_SIZE = 2 * 1024 * 1024
 USE_PDFJS = True
 FILE_ENCODING_LIST = ['auto', 'utf-8', 'gbk', 'ISO-8859-1', 'ISO-8859-5']
 FILE_ENCODING_TRY_LIST = ['utf-8', 'gbk']
-HIGHLIGHT_KEYWORD = True # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+HIGHLIGHT_KEYWORD = False # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
 
 # Common settings(file extension, storage) for avatar and group avatar.
 AVATAR_FILE_STORAGE = '' # Replace with 'seahub.base.database_storage.DatabaseStorage' if save avatar files to database
@@ -280,7 +317,7 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
+AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -320,6 +357,8 @@ REST_FRAMEWORK = {
         'anon': '5/minute',
         'user': '300/minute',
     },
+    # https://github.com/tomchristie/django-rest-framework/issues/2891
+    'UNICODE_JSON': False,
 }
 
 # file and path
@@ -334,7 +373,7 @@ FILE_LOCK_EXPIRATION_DAYS = 0
 ACTIVATE_AFTER_REGISTRATION = True
 # Whether or not send activation Email to user when registration complete.
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
-REGISTRATION_SEND_MAIL = True
+REGISTRATION_SEND_MAIL = False
 
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
@@ -343,36 +382,29 @@ REQUIRE_DETAIL_ON_REGISTRATION = False
 def genpassword():
     from django.utils.crypto import get_random_string
     return get_random_string(10)
-
 INIT_PASSWD = genpassword
 
 # browser tab title
-# !!!MERGE!!!
-SITE_TITLE = 'KEEPER'
+SITE_TITLE = 'Private Seafile'
 
 # Base name used in email sending
-# !!!MERGE!!!
-SITE_NAME = 'KEEPER'
+SITE_NAME = 'Seafile'
 
 # Path to the Logo Imagefile (relative to the media path)
-# !!!MERGE!!!
-LOGO_PATH = 'custom/KeeperLogo.svg'
+LOGO_PATH = 'img/seafile-logo.png'
 # logo size. the unit is 'px'
-# !!!MERGE!!!
-LOGO_WIDTH = 140
-# !!!MERGE!!!
-LOGO_HEIGHT = 40
+LOGO_WIDTH = 128
+LOGO_HEIGHT = 32
 
 # css to modify the seafile css (e.g. css/my_site.css)
-# !!!MERGE!!!
-BRANDING_CSS = 'custom/keeper.css'
+BRANDING_CSS = ''
 
 # Using Django to server static file. Set to `False` if deployed behide a web
 # server.
 SERVE_STATIC = True
 
 # Enable or disable registration on web.
-ENABLE_SIGNUP = True
+ENABLE_SIGNUP = False
 
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
@@ -486,6 +518,11 @@ ENABLE_GLOBAL_ADDRESSBOOK = True
 #####################
 ENABLE_FOLDER_PERM = False
 
+####################
+# Guest Invite     #
+####################
+ENABLE_GUEST_INVITATION = False
+
 #####################
 # Sudo Mode #
 #####################
@@ -499,31 +536,8 @@ SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = True # Whether to send email when a system 
 SEND_EMAIL_ON_RESETTING_USER_PASSWD = True # Whether to send email when a system staff resetting user's password.
 
 ##########################
-# Settings for seafevents #
-##########################
-
-def get_events_conf_file():
-    if not 'CCNET_CONF_DIR' in os.environ:
-        return
-
-    ccnet_dir = os.environ['CCNET_CONF_DIR']
-    seafile_ini = os.path.join(ccnet_dir, 'seafile.ini')
-    if not os.path.exists(seafile_ini):
-        return
-
-    with open(seafile_ini, 'r') as fp:
-        seafile_data_dir = fp.read().strip()
-        seafevents_conf = os.path.join(seafile_data_dir, 'seafevents.conf')
-        if os.path.exists(seafevents_conf):
-            globals()['EVENTS_CONFIG_FILE'] = seafevents_conf
-
-get_events_conf_file()
-
-##########################
 # Settings for Extra App #
 ##########################
-
-# ENABLE_PUBFILE = False
 
 ENABLE_SUB_LIBRARY = True
 
@@ -538,6 +552,9 @@ REPLACE_FROM_EMAIL = False
 ADD_REPLY_TO_HEADER = False
 
 CLOUD_DEMO_USER = 'demo@seafile.com'
+
+ENABLE_TWO_FACTOR_AUTH = False
+OTP_LOGIN_URL = '/profile/two_factor_authentication/setup/'
 
 #####################
 # External settings #
@@ -609,10 +626,7 @@ if 'win32' in sys.platform:
     fp.write("%d\n" % os.getpid())
     fp.close()
 
-# Put here after loading other settings files if `SITE_ROOT` is modified in
-# other settings files.
-# LOGIN_URL = SITE_ROOT + 'accounts/login'
-
+# Following settings are private, can not be overwrite.
 INNER_FILE_SERVER_ROOT = 'http://127.0.0.1:' + FILE_SERVER_PORT
 
 CONSTANCE_ENABLED = ENABLE_SETTINGS_VIA_WEB
@@ -627,6 +641,7 @@ CONSTANCE_CONFIG = {
     'LOGIN_REMEMBER_DAYS': (LOGIN_REMEMBER_DAYS,''),
     'LOGIN_ATTEMPT_LIMIT': (LOGIN_ATTEMPT_LIMIT, ''),
     'FREEZE_USER_ON_LOGIN_FAILED': (FREEZE_USER_ON_LOGIN_FAILED, ''),
+
     'ENABLE_USER_CREATE_ORG_REPO': (ENABLE_USER_CREATE_ORG_REPO, ''),
 
     'ENABLE_ENCRYPTED_LIBRARY': (ENABLE_ENCRYPTED_LIBRARY,''),
@@ -639,8 +654,7 @@ CONSTANCE_CONFIG = {
     'USER_PASSWORD_STRENGTH_LEVEL': (USER_PASSWORD_STRENGTH_LEVEL,''),
 
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH,''),
+    'ENABLE_TWO_FACTOR_AUTH': (ENABLE_TWO_FACTOR_AUTH,''),
 }
 
-# !!!MERGE!!!
-SEAFILE_VERSION = "5.1.8"
-
+SEAFILE_VERSION = "6.0.5"

@@ -1,3 +1,4 @@
+# Copyright (c) 2012-2016 Seafile Ltd.
 # encoding: utf-8
 import logging
 import os
@@ -16,12 +17,11 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from django.contrib.auth.hashers import check_password
 from django.contrib.sites.models import RequestSite
 from django.db import IntegrityError
-from django.db.models import F, Q
+from django.db.models import F
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -40,6 +40,8 @@ from .utils import get_diff_details, \
     api_repo_user_folder_perm_check, api_repo_setting_permission_check, \
     api_repo_group_folder_perm_check
 
+from seahub.api2.base import APIView
+from seahub.api2.models import TokenV2, DESKTOP_PLATFORMS
 from seahub.avatar.templatetags.avatar_tags import api_avatar_url, avatar
 from seahub.avatar.templatetags.group_avatar_tags import api_grp_avatar_url, \
         grp_avatar
@@ -54,7 +56,6 @@ from seahub.group.utils import BadGroupNameError, ConflictGroupNameError, \
 from seahub.thumbnail.utils import generate_thumbnail
 from seahub.notifications.models import UserNotification
 from seahub.options.models import UserOptions
-from seahub.contacts.models import Contact
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.signals import (repo_created, repo_deleted)
 from seahub.share.models import FileShare, OrgFileShare, UploadLinkShare
@@ -64,8 +65,9 @@ from seahub.utils import gen_file_get_url, gen_token, gen_file_upload_url, \
     gen_block_get_url, get_file_type_and_ext, HAS_FILE_SEARCH, \
     gen_file_share_link, gen_dir_share_link, is_org_context, gen_shared_link, \
     get_org_user_events, calculate_repos_last_modify, send_perm_audit_msg, \
-    gen_shared_upload_link, convert_cmmt_desc_link, is_org_repo_creation_allowed
-from seahub.utils.devices import get_user_devices, do_unlink_device
+    gen_shared_upload_link, convert_cmmt_desc_link, \
+    is_org_repo_creation_allowed, is_windows_operating_system
+from seahub.utils.devices import do_unlink_device
 from seahub.utils.repo import get_sub_repo_abbrev_origin_path
 from seahub.utils.star import star_file, unstar_file
 from seahub.utils.file_types import DOCUMENT
@@ -73,8 +75,7 @@ from seahub.utils.file_size import get_file_size_unit
 from seahub.utils.timeutils import utc_to_local, datetime_to_isoformat_timestr
 from seahub.views import is_registered_user, check_file_lock, \
     group_events_data, get_diff, create_default_library, \
-    list_inner_pub_repos, get_virtual_repos_by_owner, \
-    check_folder_permission
+    list_inner_pub_repos, check_folder_permission
 from seahub.views.ajax import get_share_in_repo_list, get_groups_by_user, \
     get_group_repos
 from seahub.views.file import get_file_view_path_and_perm, send_file_access_msg
@@ -85,7 +86,7 @@ if HAS_OFFICE_CONVERTER:
     from seahub.utils import query_office_convert_status, prepare_converted_html
 import seahub.settings as settings
 from seahub.settings import THUMBNAIL_EXTENSION, THUMBNAIL_ROOT, \
-    ENABLE_GLOBAL_ADDRESSBOOK, FILE_LOCK_EXPIRATION_DAYS, \
+    FILE_LOCK_EXPIRATION_DAYS, \
     ENABLE_THUMBNAIL, ENABLE_FOLDER_PERM
 try:
     from seahub.settings import CLOUD_MODE
@@ -116,8 +117,7 @@ from seaserv import seafserv_threaded_rpc, \
     get_personal_groups_by_user, get_session_info, is_personal_repo, \
     get_repo, check_permission, get_commits, is_passwd_set,\
     check_quota, list_share_repos, get_group_repos_by_owner, get_group_repoids, \
-    list_inner_pub_repos_by_owner, is_group_user, \
-    remove_share, unset_inner_pub_repo, get_group, \
+    is_group_user, remove_share, get_group, \
     get_commit, get_file_id_by_path, MAX_DOWNLOAD_DIR_SIZE, edit_repo, \
     ccnet_threaded_rpc, get_personal_groups, seafile_api, \
     create_org, ccnet_api
@@ -189,8 +189,17 @@ class ObtainAuthToken(APIView):
         if serializer.is_valid():
             key = serializer.validated_data
             return Response({'token': key})
+        headers = {}
+        if serializer.two_factor_auth_failed:
+            # Add a special response header so the client knows to ask the user
+            # for the 2fa token.
+            headers = {
+                'X-Seafile-OTP': 'required',
+            }
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST,
+                        headers=headers)
 
 ########## Accounts
 class Accounts(APIView):
@@ -208,14 +217,17 @@ class Accounts(APIView):
         # reading scope user list
         scope = request.GET.get('scope', None)
 
+        accounts_ldapimport = []
         accounts_ldap = []
         accounts_db = []
         if scope:
             scope = scope.upper()
             if scope == 'LDAP':
-                accounts_ldap = seaserv.get_emailusers('LDAP', start, limit)
+                accounts_ldap = ccnet_api.get_emailusers('LDAP', start, limit)
+            elif scope == 'LDAPIMPORT':
+                accounts_ldapimport = ccnet_api.get_emailusers('LDAPImport', start, limit)
             elif scope == 'DB':
-                accounts_db = seaserv.get_emailusers('DB', start, limit)
+                accounts_db = ccnet_api.get_emailusers('DB', start, limit)
             else:
                 return api_error(status.HTTP_400_BAD_REQUEST, "%s is not a valid scope value" % scope)
         else:
@@ -227,6 +239,10 @@ class Accounts(APIView):
         accounts_json = []
         for account in accounts_ldap:
             accounts_json.append({'email': account.email, 'source' : 'LDAP'})
+
+        for account in accounts_ldapimport:
+            accounts_json.append({'email': account.email, 'source' : 'LDAPImport'})
+
         for account in accounts_db:
             accounts_json.append({'email': account.email, 'source' : 'DB'})
 
@@ -369,6 +385,7 @@ def repo_download_info(request, repo_id, gen_sync_token=True):
         'magic': magic,
         'random_key': random_key,
         'repo_version': repo_version,
+        'head_commit_id': repo.head_cmmt_id,
         }
     return Response(info_json)
 
@@ -381,7 +398,6 @@ class Repos(APIView):
         # parse request params
         filter_by = {
             'mine': False,
-            'sub': False,
             'shared': False,
             'group': False,
             'org': False,
@@ -397,8 +413,6 @@ class Repos(APIView):
             filter_by[f] = True
 
         email = request.user.username
-        if not UserOptions.objects.is_sub_lib_enabled(email):
-            filter_by['sub'] = False
 
         repos_json = []
         if filter_by['mine']:
@@ -431,41 +445,7 @@ class Repos(APIView):
                     "virtual": r.is_virtual,
                     "root": r.root,
                     "head_commit_id": r.head_cmmt_id,
-                }
-                if r.encrypted:
-                    repo["enc_version"] = r.enc_version
-                    repo["magic"] = r.magic
-                    repo["random_key"] = r.random_key
-                repos_json.append(repo)
-
-        if filter_by['sub']:
-            # compose abbrev origin path for display
-            sub_repos = []
-            sub_repos = get_virtual_repos_by_owner(request)
-            for repo in sub_repos:
-                repo.abbrev_origin_path = get_sub_repo_abbrev_origin_path(
-                    repo.origin_repo_name, repo.origin_path)
-
-            sub_repos.sort(lambda x, y: cmp(y.last_modify, x.last_modify))
-            for r in sub_repos:
-                # print r._dict
-                repo = {
-                    "type": "repo",
-                    "id": r.id,
-                    "name": r.name,
-                    "origin_repo_id": r.origin_repo_id,
-                    "origin_path": r.origin_path,
-                    "abbrev_origin_path": r.abbrev_origin_path,
-                    "mtime": r.last_modify,
-                    "mtime_relative": translate_seahub_time(r.last_modify),
-                    "owner": email,
-                    "desc": r.desc,
-                    "size": r.size,
-                    "encrypted": r.encrypted,
-                    "permission": 'rw',
-                    "virtual": r.is_virtual,
-                    "root": r.root,
-                    "head_commit_id": r.head_cmmt_id,
+                    "version": r.version,
                 }
                 if r.encrypted:
                     repo["enc_version"] = r.enc_version
@@ -494,6 +474,7 @@ class Repos(APIView):
                     "share_type": r.share_type,
                     "root": r.root,
                     "head_commit_id": r.head_cmmt_id,
+                    "version": r.version,
                 }
                 if r.encrypted:
                     repo["enc_version"] = r.enc_version
@@ -519,6 +500,7 @@ class Repos(APIView):
                     "permission": check_permission(r.id, email),
                     "root": r.root,
                     "head_commit_id": r.head_cmmt_id,
+                    "version": r.version,
                 }
                 if r.encrypted:
                     repo["enc_version"] = r.enc_version
@@ -545,6 +527,7 @@ class Repos(APIView):
                     "share_type": r.share_type,
                     "root": r.root,
                     "head_commit_id": r.head_cmmt_id,
+                    "version": r.version,
                 }
                 if r.encrypted:
                     repo["enc_version"] = r.enc_version
@@ -596,11 +579,13 @@ class Repos(APIView):
             return api_error(HTTP_520_OPERATION_FAILED,
                              'Failed to create library.')
         else:
+            library_template = request.data.get("library_template", '')
             repo_created.send(sender=None,
                               org_id=org_id,
                               creator=username,
                               repo_id=repo_id,
-                              repo_name=repo_name)
+                              repo_name=repo_name,
+                              library_template=library_template)
             resp = repo_download_info(request, repo_id,
                                       gen_sync_token=gen_sync_token)
 
@@ -716,6 +701,7 @@ class PubRepos(APIView):
         if permission != 'r' and permission != 'rw':
             return api_error(status.HTTP_400_BAD_REQUEST, 'Invalid permission')
 
+        org_id = -1
         if is_org_context(request):
             org_id = request.user.org.org_id
             repo_id = seafile_api.create_org_repo(repo_name, repo_desc,
@@ -729,6 +715,13 @@ class PubRepos(APIView):
             repo = seafile_api.get_repo(repo_id)
             seafile_api.add_inner_pub_repo(repo.id, permission)
 
+        library_template = request.data.get("library_template", '')
+        repo_created.send(sender=None,
+                          org_id=org_id,
+                          creator=username,
+                          repo_id=repo_id,
+                          repo_name=repo_name,
+                          library_template=library_template)
         pub_repo = {
             "id": repo.id,
             "name": repo.name,
@@ -1027,58 +1020,6 @@ class DownloadRepo(APIView):
 
         return repo_download_info(request, repo_id)
 
-class RepoPublic(APIView):
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAuthenticated, )
-    throttle_classes = (UserRateThrottle, )
-
-    def post(self, request, repo_id, format=None):
-        """Set organization library.
-        """
-        repo = get_repo(repo_id)
-        if not repo:
-            return api_error(status.HTTP_404_NOT_FOUND, 'Library %s not found.' % repo_id)
-
-        if not is_org_repo_creation_allowed(request):
-            return api_error(status.HTTP_403_FORBIDDEN,
-                             'Permission denied.')
-
-        if check_permission(repo_id, request.user.username) != 'rw':
-            return api_error(status.HTTP_403_FORBIDDEN,
-                    'You do not have permission to access this library.')
-
-        try:
-            seafile_api.add_inner_pub_repo(repo_id, "r")
-        except:
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    'Unable to make library public')
-
-        return HttpResponse(json.dumps({'success': True}), status=200,
-                            content_type=json_content_type)
-
-    def delete(self, request, repo_id, format=None):
-        """Unset organization library.
-        """
-        username = request.user.username
-
-        repo = get_repo(repo_id)
-        if not repo:
-            return api_error(status.HTTP_404_NOT_FOUND, 'Library not found.')
-
-        if not request.user.is_staff and \
-           not seafile_api.is_repo_owner(username, repo_id):
-            return api_error(status.HTTP_403_FORBIDDEN,
-                             'You do not have permission to unshare library.')
-
-        try:
-            seafile_api.remove_inner_pub_repo(repo_id)
-        except:
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                             'Unable to make library private')
-
-        return HttpResponse(json.dumps({'success': True}), status=200,
-                            content_type=json_content_type)
-
 
 class RepoOwner(APIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
@@ -1109,48 +1050,129 @@ class RepoOwner(APIView):
                             content_type=json_content_type)
 
     def put(self, request, repo_id, format=None):
-        repo = get_repo(repo_id)
-        if not repo:
-            error_msg = 'Library %s not found.' % repo_id
-            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+        """ Currently only for transfer repo.
+
+        Permission checking:
+        1. only repo owner can transfer repo.
+        """
 
         org_id = None
         if is_org_context(request):
             org_id = request.user.org.org_id
 
-        # check permission
-        if org_id:
-            repo_owner = seafile_api.get_org_repo_owner(repo.id)
-        else:
-            repo_owner = seafile_api.get_repo_owner(repo.id)
-
-        if request.user.username != repo_owner:
-            error_msg = 'Permission denied.'
-            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
-
-        # check new owner validation
+        # argument check
         new_owner = request.data.get('owner', '').lower()
+        if not new_owner:
+            error_msg = 'owner invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        # resource check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         try:
             User.objects.get(email=new_owner)
         except User.DoesNotExist:
             error_msg = 'User %s not found.' % new_owner
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
+        if org_id and not ccnet_api.org_user_exists(org_id, new_owner):
+            error_msg = _(u'User %s not found in organization.') % new_owner
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if org_id:
-            if not ccnet_api.org_user_exists(org_id, new_owner):
-                error_msg = _(u'User %s not found in organization.') % new_owner
-                return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+            repo_owner = seafile_api.get_org_repo_owner(repo_id)
+        else:
+            repo_owner = seafile_api.get_repo_owner(repo_id)
+
+        username = request.user.username
+        if username != repo_owner:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+
+        pub_repos = []
+        if org_id:
+            # get repo shared to user/group list
+            shared_users = seafile_api.list_org_repo_shared_to(org_id,
+                    repo_owner, repo_id)
+            shared_groups = seafile_api.list_org_repo_shared_group(org_id,
+                    repo_owner, repo_id)
+
+            # get all org pub repos
+            pub_repos = seaserv.seafserv_threaded_rpc.list_org_inner_pub_repos_by_owner(
+                    org_id, repo_owner)
+        else:
+            # get repo shared to user/group list
+            shared_users = seafile_api.list_repo_shared_to(
+                    repo_owner, repo_id)
+            shared_groups = seafile_api.list_repo_shared_group_by_user(
+                    repo_owner, repo_id)
+
+            # get all pub repos
+            if not request.cloud_mode:
+                pub_repos = seafile_api.list_inner_pub_repos_by_owner(repo_owner)
 
         # transfer repo
-        if org_id:
-            seafile_api.set_org_repo_owner(org_id, repo_id, new_owner)
-        else:
-            if ccnet_api.get_orgs_by_user(new_owner):
-                # can not transfer library to organization user %s.
-                error_msg = 'Email %s invalid.' % new_owner
-                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        try:
+            if org_id:
+                seafile_api.set_org_repo_owner(org_id, repo_id, new_owner)
             else:
-                seafile_api.set_repo_owner(repo_id, new_owner)
+                if ccnet_api.get_orgs_by_user(new_owner):
+                    # can not transfer library to organization user %s.
+                    error_msg = 'Email %s invalid.' % new_owner
+                    return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+                else:
+                    seafile_api.set_repo_owner(repo_id, new_owner)
+        except SearpcError as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        # reshare repo to user
+        for shared_user in shared_users:
+            shared_username = shared_user.user
+
+            if new_owner == shared_username:
+                continue
+
+            if org_id:
+                seaserv.seafserv_threaded_rpc.org_add_share(org_id, repo_id,
+                        new_owner, shared_username, shared_user.perm)
+            else:
+                seafile_api.share_repo(repo_id, new_owner,
+                        shared_username, shared_user.perm)
+
+        # reshare repo to group
+        for shared_group in shared_groups:
+            shared_group_id = shared_group.group_id
+
+            if not ccnet_api.is_group_user(shared_group_id, new_owner):
+                continue
+
+            if org_id:
+                seafile_api.add_org_group_repo(repo_id, org_id,
+                        shared_group_id, new_owner, shared_group.perm)
+            else:
+                seafile_api.set_group_repo(repo_id, shared_group_id,
+                        new_owner, shared_group.perm)
+
+        # check if current repo is pub-repo
+        # if YES, reshare current repo to public
+        for pub_repo in pub_repos:
+            if repo_id != pub_repo.id:
+                continue
+
+            if org_id:
+                seafile_api.set_org_inner_pub_repo(org_id, repo_id,
+                        pub_repo.permission)
+            else:
+                seaserv.seafserv_threaded_rpc.set_inner_pub_repo(
+                        repo_id, pub_repo.permission)
+
+            break
 
         return HttpResponse(json.dumps({'success': True}),
                 content_type=json_content_type)
@@ -1162,7 +1184,19 @@ class FileBlockDownloadLinkView(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, repo_id, file_id, block_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) is None:
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this repo.')
@@ -1181,7 +1215,19 @@ class UploadLinkView(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, repo_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this folder.')
@@ -1200,7 +1246,19 @@ class UpdateLinkView(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, repo_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this folder.')
@@ -1219,7 +1277,19 @@ class UploadBlksLinkView(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, repo_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this folder.')
@@ -1247,9 +1317,20 @@ class UploadBlksLinkView(APIView):
 
         return blklist
 
-
     def post(self, request, repo_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this folder.')
@@ -1281,7 +1362,19 @@ class UpdateBlksLinkView(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, repo_id, format=None):
+        # recourse check
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
         parent_dir = request.GET.get('p', '/')
+        dir_id = seafile_api.get_dir_id_by_path(repo_id, parent_dir)
+        if not dir_id:
+            error_msg = 'Folder %s not found.' % parent_dir
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        # permission check
         if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this folder.')
@@ -1565,7 +1658,8 @@ class OpMoveView(APIView):
             try:
                 seafile_api.move_file(repo_id, parent_dir_utf8, file_name,
                                       dst_repo, dst_dir, new_filename,
-                                      username, 0, synchronous=1)
+                                      replace=False, username=username,
+                                      need_progress=0, synchronous=1)
             except SearpcError as e:
                 logger.error(e)
                 return api_error(HTTP_520_OPERATION_FAILED,
@@ -1770,20 +1864,33 @@ class OwaFileView(APIView):
 
 
 class DevicesView(APIView):
-    """List user devices"""
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle, )
 
     def get(self, request, format=None):
+        """ List user's devices.
+
+        Permission checking:
+        1. All authenticated users.
+        """
+
         username = request.user.username
-        user_devices = get_user_devices(username)
-        return Response(user_devices)
+        devices = TokenV2.objects.get_user_devices(username)
+
+        for device in devices:
+            device['last_accessed'] = datetime_to_isoformat_timestr(device['last_accessed'])
+            device['is_desktop_client'] = False
+            if device['platform'] in DESKTOP_PLATFORMS:
+                device['is_desktop_client'] = True
+
+        return Response(devices)
 
     def delete(self, request, format=None):
 
         platform = request.data.get('platform', '')
         device_id = request.data.get('device_id', '')
+        remote_wipe = request.data.get('wipe_device', '')
 
         if not platform:
             error_msg = 'platform invalid.'
@@ -1794,7 +1901,10 @@ class DevicesView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         try:
-            do_unlink_device(request.user.username, platform, device_id)
+            do_unlink_device(request.user.username,
+                             platform,
+                             device_id,
+                             remote_wipe=remote_wipe)
         except SearpcError as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
@@ -1823,7 +1933,8 @@ class FileView(APIView):
         if not path:
             return api_error(status.HTTP_400_BAD_REQUEST, 'Path is missing.')
 
-        if check_folder_permission(request, repo_id, path) is None:
+        parent_dir = os.path.dirname(path)
+        if check_folder_permission(request, repo_id, parent_dir) is None:
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to access this file.')
 
@@ -1870,7 +1981,7 @@ class FileView(APIView):
         operation = request.POST.get('operation', '')
 
         if operation.lower() == 'rename':
-            if check_folder_permission(request, repo_id, path) != 'rw':
+            if check_folder_permission(request, repo_id, parent_dir) != 'rw':
                 return api_error(status.HTTP_403_FORBIDDEN,
                                  'You do not have permission to rename file.')
 
@@ -1906,7 +2017,7 @@ class FileView(APIView):
                 return resp
 
         elif operation.lower() == 'move':
-            if check_folder_permission(request, repo_id, path) != 'rw':
+            if check_folder_permission(request, repo_id, parent_dir) != 'rw':
                 return api_error(status.HTTP_403_FORBIDDEN,
                                  'You do not have permission to move file.')
 
@@ -1939,7 +2050,8 @@ class FileView(APIView):
                 seafile_api.move_file(src_repo_id, src_dir_utf8,
                                       filename_utf8, dst_repo_id,
                                       dst_dir_utf8, new_filename_utf8,
-                                      username, 0, synchronous=1)
+                                      replace=False, username=username,
+                                      need_progress=0, synchronous=1)
             except SearpcError, e:
                 return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR,
                                  "SearpcError:" + e.msg)
@@ -1974,7 +2086,7 @@ class FileView(APIView):
                 return Response('success', status=status.HTTP_200_OK)
 
             # check src folder permission
-            if check_folder_permission(request, repo_id, path) is None:
+            if check_folder_permission(request, repo_id, src_dir) is None:
                 return api_error(status.HTTP_403_FORBIDDEN,
                                  'You do not have permission to copy file.')
 
@@ -2049,7 +2161,8 @@ class FileView(APIView):
 
         username = request.user.username
         # check file access permission
-        if check_folder_permission(request, repo_id, path) != 'rw':
+        parent_dir = os.path.dirname(path)
+        if check_folder_permission(request, repo_id, parent_dir) != 'rw':
             return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
 
         operation = request.data.get('operation', '')
@@ -2424,6 +2537,7 @@ class DirView(APIView):
                                             content_type=json_content_type)
                     response["oid"] = dir_id
                     response["dir_perm"] = seafile_api.check_permission_by_path(repo_id, path, username)
+
                     return response
 
             return get_dir_entrys_by_id(request, repo, path, dir_id, request_type)
@@ -2605,10 +2719,18 @@ class DirDownloadView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST,
                              'Unable to download directory "%s": size is too large.' % dirname)
 
-        token = seafile_api.get_fileserver_access_token(repo_id,
-                                                        dir_id,
-                                                        'download-dir',
-                                                        request.user.username)
+        is_windows = 0
+        if is_windows_operating_system(request):
+            is_windows = 1
+
+        fake_obj_id = {
+            'obj_id': dir_id,
+            'dir_name': dirname,
+            'is_windows': is_windows
+        }
+
+        token = seafile_api.get_fileserver_access_token(
+                repo_id, json.dumps(fake_obj_id), 'download-dir', request.user.username)
 
         redirect_url = gen_file_get_url(token, dirname)
         return HttpResponse(json.dumps(redirect_url), status=200,
@@ -2655,67 +2777,94 @@ class DirRevert(APIView):
 
 
 class DirSubRepoView(APIView):
-    authentication_classes = (TokenAuthentication, )
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle, )
+    throttle_classes = (UserRateThrottle,)
 
-    # from seahub.views.ajax.py::sub_repo
     def get(self, request, repo_id, format=None):
-        '''
-        check if a dir has a corresponding sub_repo
-        if it does not have, create one
-        '''
+        """ Create sub-repo for folder
 
-        result = {}
+        Permission checking:
+        1. user with `r` or `rw` permission.
+        2. password correct for encrypted repo.
+        """
 
-        path = request.GET.get('p')
-        name = request.GET.get('name')
-        password = request.GET.get('password', None)
+        # argument check
+        path = request.GET.get('p', None)
+        if not path:
+            error_msg = 'p invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
+        name = request.GET.get('name', None)
+        if not name:
+            error_msg = 'name invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        # recourse check
         repo = get_repo(repo_id)
         if not repo:
-            result['error'] = 'Library not found.'
-            return HttpResponse(json.dumps(result), status=404, content_type=json_content_type)
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-        if not (path and name):
-            result['error'] = 'Argument missing'
-            return HttpResponse(json.dumps(result), status=400, content_type=json_content_type)
+        # permission check
+        if not check_folder_permission(request, repo_id, path) or \
+                not request.user.permissions.can_add_repo():
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
         username = request.user.username
-
-        # check if the sub-lib exist
-        try:
-            sub_repo = seafile_api.get_virtual_repo(repo_id, path, username)
-        except SearpcError, e:
-            result['error'] = e.msg
-            return HttpResponse(json.dumps(result), status=500, content_type=json_content_type)
-
-        if sub_repo:
-            result['sub_repo_id'] = sub_repo.id
-        else:
-            if not request.user.permissions.can_add_repo():
-                return api_error(status.HTTP_403_FORBIDDEN,
-                                 'You do not have permission to create library.')
-
-            # create a sub-lib
-            try:
-                # use name as 'repo_name' & 'repo_desc' for sub_repo
-                if repo.encrypted:
-                    if password:
-                        sub_repo_id = seafile_api.create_virtual_repo(repo_id,
-                                path, name, name, username, password)
+        password = request.GET.get('password', '')
+        if repo.encrypted:
+            # check password for encrypted repo
+            if not password:
+                error_msg = 'password invalid.'
+                return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+            else:
+                try:
+                    seafile_api.set_passwd(repo_id, username, password)
+                except SearpcError as e:
+                    if e.msg == 'Bad arguments':
+                        error_msg = 'Bad arguments'
+                        return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+                    elif e.msg == 'Incorrect password':
+                        error_msg = _(u'Wrong password')
+                        return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+                    elif e.msg == 'Internal server error':
+                        error_msg = _(u'Internal server error')
+                        return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
                     else:
-                        result['error'] = 'Password Required.'
-                        return HttpResponse(json.dumps(result), status=403, content_type=json_content_type)
+                        error_msg = _(u'Decrypt library error')
+                        return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+            # create sub-lib for encrypted repo
+            try:
+                if is_org_context(request):
+                    org_id = request.user.org.org_id
+                    sub_repo_id = seafile_api.create_org_virtual_repo(
+                            org_id, repo_id, path, name, name, username, password)
                 else:
-                    sub_repo_id = seafile_api.create_virtual_repo(repo_id, path, name, name, username)
+                    sub_repo_id = seafile_api.create_virtual_repo(
+                            repo_id, path, name, name, username, password)
+            except SearpcError as e:
+                logger.error(e)
+                error_msg = 'Internal Server Error'
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        else:
+            # create sub-lib for common repo
+            try:
+                if is_org_context(request):
+                    org_id = request.user.org.org_id
+                    sub_repo_id = seafile_api.create_org_virtual_repo(
+                            org_id, repo_id, path, name, name, username)
+                else:
+                    sub_repo_id = seafile_api.create_virtual_repo(
+                            repo_id, path, name, name, username)
+            except SearpcError as e:
+                logger.error(e)
+                error_msg = 'Internal Server Error'
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
-                result['sub_repo_id'] = sub_repo_id
-            except SearpcError, e:
-                result['error'] = e.msg
-                return HttpResponse(json.dumps(result), status=500, content_type=json_content_type)
-
-        return HttpResponse(json.dumps(result), content_type=json_content_type)
+        return Response({'sub_repo_id': sub_repo_id})
 
 ########## Sharing
 class SharedRepos(APIView):
@@ -2733,12 +2882,12 @@ class SharedRepos(APIView):
         shared_repos += list_share_repos(username, 'from_email', -1, -1)
         shared_repos += get_group_repos_by_owner(username)
         if not CLOUD_MODE:
-            shared_repos += list_inner_pub_repos_by_owner(username)
+            shared_repos += seafile_api.list_inner_pub_repos_by_owner(username)
 
         return HttpResponse(json.dumps(shared_repos, cls=SearpcObjEncoder),
                             status=200, content_type=json_content_type)
 
-class BeShared(APIView):
+class BeSharedRepos(APIView):
     """
     List repos that others/groups share to user.
     """
@@ -2780,24 +2929,6 @@ class BeShared(APIView):
         return HttpResponse(json.dumps(shared_repos, cls=SearpcObjEncoder),
                             status=200, content_type=json_content_type)
 
-
-class VirtualRepos(APIView):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle, )
-
-    def get(self, request, format=None):
-        result = {}
-
-        try:
-            virtual_repos = get_virtual_repos_by_owner(request)
-        except SearpcError, e:
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR,
-                             "error:" + e.msg)
-
-        result['virtual-repos'] = virtual_repos
-        return HttpResponse(json.dumps(result, cls=SearpcObjEncoder),
-                            content_type=json_content_type)
 
 class SharedFileView(APIView):
     # Anyone should be able to access a Shared File assuming they have the token
@@ -2911,7 +3042,6 @@ class SharedLinksView(APIView):
     permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle, )
 
-    # from seahub.share.view::list_shared_links
     def get(self, request, format=None):
         username = request.user.username
 
@@ -3093,9 +3223,17 @@ class SharedRepo(APIView):
         Unshare a library.
         Repo owner and system admin can perform this operation.
         """
+        repo = get_repo(repo_id)
+        if not repo:
+            return api_error(status.HTTP_404_NOT_FOUND, 'Library not found.')
+
         username = request.user.username
-        if not request.user.is_staff and not seafile_api.is_repo_owner(
-                username, repo_id):
+        if is_org_context(request):
+            repo_owner = seafile_api.get_org_repo_owner(repo_id)
+        else:
+            repo_owner = seafile_api.get_repo_owner(repo_id)
+
+        if not request.user.is_staff and not username == repo_owner:
             return api_error(status.HTTP_403_FORBIDDEN,
                              'You do not have permission to unshare library.')
 
@@ -3129,7 +3267,11 @@ class SharedRepo(APIView):
 
             seafile_api.unset_group_repo(repo_id, int(group_id), username)
         elif share_type == 'public':
-            unset_inner_pub_repo(repo_id)
+            if is_org_context(request):
+                org_id = request.user.org.org_id
+                seaserv.seafserv_threaded_rpc.unset_org_inner_pub_repo(org_id, repo_id)
+            else:
+                seafile_api.remove_inner_pub_repo(repo_id)
         else:
             return api_error(status.HTTP_400_BAD_REQUEST,
                              'Share type can only be personal or group or public.')
@@ -3602,6 +3744,7 @@ class GroupRepos(APIView):
         if permission != 'r' and permission != 'rw':
             return api_error(status.HTTP_400_BAD_REQUEST, 'Invalid permission')
 
+        org_id = -1
         if is_org_context(request):
             org_id = request.user.org.org_id
             repo_id = seafile_api.create_org_repo(repo_name, repo_desc,
@@ -3610,13 +3753,18 @@ class GroupRepos(APIView):
             seafile_api.add_org_group_repo(repo_id, org_id, group.id,
                                            username, permission)
         else:
-            # KEEPER
-            org_id = -1
             repo_id = seafile_api.create_repo(repo_name, repo_desc,
                                               username, passwd)
             repo = seafile_api.get_repo(repo_id)
             seafile_api.set_group_repo(repo.id, group.id, username, permission)
 
+        library_template = request.data.get("library_template", '')
+        repo_created.send(sender=None,
+                          org_id=org_id,
+                          creator=username,
+                          repo_id=repo_id,
+                          repo_name=repo_name,
+                          library_template=library_template)
         group_repo = {
             "id": repo.id,
             "name": repo.name,
@@ -3631,12 +3779,6 @@ class GroupRepos(APIView):
             "owner_nickname": email2nickname(username),
             "share_from_me": True,
         }
-        # KEEPER
-        repo_created.send(sender=None,
-                            org_id=org_id,
-                            creator=username,
-                            repo_id=repo_id,
-                            repo_name=repo_name)
 
         return Response(group_repo, status=200)
 
@@ -3729,110 +3871,6 @@ class GroupAvatarView(APIView):
             "mtime": get_timestamp(date_uploaded)}
         return Response(ret)
 
-# Html related code
-def html_events(request):
-    if not EVENTS_ENABLED:
-        events = None
-        return render_to_response('api2/events.html', {
-            "events":events,
-            }, context_instance=RequestContext(request))
-
-    email = request.user.username
-    start = 0
-    events_count = 15
-
-    if is_org_context(request):
-        org_id = request.user.org.org_id
-        events, events_more_offset = get_org_user_events(org_id, email,
-                                                         start, events_count)
-    else:
-        events, events_more_offset = get_user_events(email, start,
-                                                     events_count)
-
-    events_more = True if len(events) == events_count else False
-    event_groups = group_events_data(events)
-    prepare_events(event_groups)
-
-    return render_to_response('api2/events.html', {
-            "events": events,
-            "events_more_offset": events_more_offset,
-            "events_more": events_more,
-            "event_groups": event_groups,
-            "events_count": events_count,
-            }, context_instance=RequestContext(request))
-
-def ajax_events(request):
-    events_count = 15
-    username = request.user.username
-    start = int(request.GET.get('start', 0))
-
-    events, start = get_user_events(username, start, events_count)
-    events_more = True if len(events) == events_count else False
-
-    event_groups = group_events_data(events)
-
-    prepare_events(event_groups)
-    ctx = {'event_groups': event_groups}
-    html = render_to_string("api2/events_body.html", ctx)
-
-    return HttpResponse(json.dumps({'html':html, 'events_more':events_more,
-                                    'new_start': start}),
-                            content_type=json_content_type)
-
-
-def html_repo_history_changes(request, repo_id):
-    changes = {}
-
-    repo = get_repo(repo_id)
-    if not repo:
-        return HttpResponse(json.dumps({"err": 'Library does not exist'}), status=400, content_type=json_content_type)
-
-    if not check_folder_permission(request, repo_id, '/'):
-        return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
-
-    if repo.encrypted and not is_passwd_set(repo_id, request.user.username):
-        return HttpResponse(json.dumps({"err": 'Library is encrypted'}), status=400, content_type=json_content_type)
-
-    commit_id = request.GET.get('commit_id', '')
-    if not commit_id:
-        return HttpResponse(json.dumps({"err": 'Invalid argument'}), status=400, content_type=json_content_type)
-
-    changes = get_diff(repo_id, '', commit_id)
-
-    c = get_commit(repo_id, repo.version, commit_id)
-    if c.parent_id is None:
-        # A commit is a first commit only if its parent id is None.
-        changes['cmt_desc'] = repo.desc
-    elif c.second_parent_id is None:
-        # Normal commit only has one parent.
-        if c.desc.startswith('Changed library'):
-            changes['cmt_desc'] = 'Changed library name or description'
-    else:
-        # A commit is a merge only if it has two parents.
-        changes['cmt_desc'] = 'No conflict in the merge.'
-    for k in changes:
-        changes[k] = [f.replace ('a href="/', 'a class="normal" href="api://') for f in changes[k] ]
-
-    html = render_to_string('api2/event_details.html', {'changes': changes})
-    return HttpResponse(json.dumps({"html": html}), content_type=json_content_type)
-
-
-class AjaxEvents(APIView):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle, )
-
-    def get(self, request, format=None):
-        return ajax_events(request)
-
-class EventsHtml(APIView):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle, )
-
-    def get(self, request, format=None):
-        return html_events(request)
-
 class RepoHistoryChange(APIView):
     authentication_classes = (TokenAuthentication, )
     permission_classes = (IsAuthenticated,)
@@ -3859,13 +3897,6 @@ class RepoHistoryChange(APIView):
         return HttpResponse(json.dumps(details),
                             content_type=json_content_type)
 
-class RepoHistoryChangeHtml(APIView):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated,)
-    throttle_classes = (UserRateThrottle, )
-
-    def get(self, request, repo_id, format=None):
-        return html_repo_history_changes(request, repo_id)
 
 # based on views/file.py::office_convert_query_status
 class OfficeConvertQueryStatus(APIView):
@@ -4523,3 +4554,25 @@ class RepoGroupFolderPerm(APIView):
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+class RemoteWipeReportView(APIView):
+    throttle_classes = (UserRateThrottle,)
+
+    @json_response
+    def post(self, request):
+        token = request.data.get('token', '')
+        if not token or len(token) != 40:
+            error_msg = 'token invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        try:
+            entry = TokenV2.objects.get(key=token)
+        except TokenV2.DoesNotExist:
+            error_msg = 'token %s not found.' % token
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+        else:
+            if not entry.wiped_at:
+                return api_error(status.HTTP_400_BAD_REQUEST, "invalid device token")
+            entry.delete()
+
+        return {}
