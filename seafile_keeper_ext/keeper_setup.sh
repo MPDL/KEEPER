@@ -94,7 +94,7 @@ function deploy_directories () {
         if [ ! -d "$DEST_DIR" ]; then
             err_and_exit "Directory does not exist: $DEST_DIR"
         else
-            local SOURCE_FILES=( $(find -H $i -type f) )
+            local SOURCE_FILES=( $(find -H $i -type f ! -iname "*.pyc" ! -path "*/.ropeproject/*" ! -iname ".gitignore") )
             for f in "${SOURCE_FILES[@]}"; do
                 deploy_file $f
            done
