@@ -102,8 +102,9 @@ def application(env, start_response):
         if (is_valid_user == 1 and len(errmsg) <= 0):
             jsondata = get_catalog()
             """
-            # TODO: caching and JSON stuff can be used for performance improvements
+            # init var
             jsondata = ''
+            # test if json from cache is too old (5min)
             if ( not(os.path.isfile(json_cache_file_path) ) or (time.time() - os.path.getmtime(json_cache_file_path) > (json_cache_time * 60)) ):
 
                 # get json from server
@@ -129,7 +130,8 @@ def application(env, start_response):
                 with open(json_cache_file_path) as cachefile:
                     jsondata = json.load(cachefile)
             """
-            # # load pagination parameter
+
+            # load pagination parameter
             totalitemscount = 0
             pagination_current = 0
             try:
@@ -177,21 +179,21 @@ def application(env, start_response):
 
 
             # load pagination into template
-            #			main_layer.write_layer('pagination-start',style='margin-bottom:20px')
-            #			if ( pagination_current > 0 ):
-            #				main_layer.write_layer('page-prev',page=str(pagination_current))
-            #			else:
-            #				main_layer.write_layer('page-prev-disabled')
-            #			for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
-            #				if (i == pagination_current):
-            #					main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
-            #				else:
-            #					main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
-            #			if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
-            #				main_layer.write_layer('page-next',page=str(pagination_current+2))
-            #			else:
-            #				main_layer.write_layer('page-next-disabled')
-            #			main_layer.write_layer('pagination-end')
+#           main_layer.write_layer('pagination-start',style='margin-bottom:20px')
+#           if ( pagination_current > 0 ):
+#               main_layer.write_layer('page-prev',page=str(pagination_current))
+#           else:
+#               main_layer.write_layer('page-prev-disabled')
+#           for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
+#               if (i == pagination_current):
+#                   main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
+#               else:
+#                   main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
+#           if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
+#               main_layer.write_layer('page-next',page=str(pagination_current+2))
+#           else:
+#               main_layer.write_layer('page-next-disabled')
+#           main_layer.write_layer('pagination-end')
 
 
             # load datasets into template
@@ -222,13 +224,13 @@ def application(env, start_response):
                                 tmpauthor += tmpauthorlist[i]+", "
                             elif (len(tmpauthorlist[i].strip()) > 1):
                                 tmpauthor += tmpauthorlist[i].strip()[:1]+"., "
-                                tmpauthor = tmpauthor.strip()[:-1]
+                        tmpauthor = tmpauthor.strip()[:-1]
 
                         if (j >= 5):
                             tmpauthor = "et al."
-                            result_author.append( tmpauthor )
-                            if (j >= 5):
-                                break
+                        result_author.append( tmpauthor )
+                        if (j >= 5):
+                            break
 
                         if ( 'affs' in tmpauthors):
                             #TODO check if correct format
@@ -253,16 +255,16 @@ def application(env, start_response):
                 main_layer.write_layer('page-prev',page=str(pagination_current))
             else:
                 main_layer.write_layer('page-prev-disabled')
-                for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
-                    if (i == pagination_current):
-                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
-                    else:
-                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
-                        if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
-                            main_layer.write_layer('page-next',page=str(pagination_current+2))
-                        else:
-                            main_layer.write_layer('page-next-disabled')
-                            main_layer.write_layer('pagination-end')
+            for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
+                if (i == pagination_current):
+                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
+                else:
+                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
+            if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
+                main_layer.write_layer('page-next',page=str(pagination_current+2))
+            else:
+                main_layer.write_layer('page-next-disabled')
+            main_layer.write_layer('pagination-end')
 
             main_layer.write_layer('data-nav-end')
 
@@ -282,3 +284,4 @@ def application(env, start_response):
         return(response.getvalue()+"\n<!-- render: "+str(time.time()-timer)+" -->\n")
 
 # end of file while is halt so
+
