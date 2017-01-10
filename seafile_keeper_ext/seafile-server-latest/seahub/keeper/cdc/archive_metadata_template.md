@@ -14,6 +14,12 @@
 //## Year
 // MANDATORY: Please enter year of project start
 // 
+// ## Institute
+// MANDATORY: Please enter the enter the related Max Planck Institute for this research project
+// Format is: Name; Department; Director<or PI>forschungsgruppenleiter, Lastname or Abbr.
+//
+// ## DOI
+// OPTIONAL
 )
 
 ## Title
@@ -26,3 +32,9 @@
 
 
 ## Year
+
+
+## Institute
+
+
+## DOI
