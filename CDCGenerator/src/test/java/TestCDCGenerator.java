@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 public class TestCDCGenerator {
 
 
-    @Ignore
+    //@Ignore
     @Test
     public void testCDCGenerator() throws Exception {
         String fn = "target/CDC.pdf";
@@ -21,8 +21,8 @@ public class TestCDCGenerator {
                 "-i", "1",
                 "-aa", "\"Author1, Author2, Author3\"",
                 "-c", "keeper@mpdl.mpg.de",
-                "-d", "\"Description of the archived project\"",
-                "-t", "\"Library Title\"",
+                "-d", "\"Hallo !!! 倗冡厤!!! Привет!!! Description of the archived project&quote;In apos!!!&quote;\"",
+                "-t", "\"\"Library Title 2 &quote;In apos!!!&quote;\"",
                 "-u", "\"https://keeper.mpdl.mpg.de/mylibrary\"",
                 "-g",
                 "-h",
@@ -34,7 +34,7 @@ public class TestCDCGenerator {
 
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void testCDCGenerator_Long_Meta() throws Exception {
         String fn = "target/CDC_long_meta.pdf";
