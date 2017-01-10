@@ -149,7 +149,7 @@ INS; Department; Name, Fname
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
 
-    sleep(5)
+    sleep(20)
 
 
     """check cdc pdf exists"""
