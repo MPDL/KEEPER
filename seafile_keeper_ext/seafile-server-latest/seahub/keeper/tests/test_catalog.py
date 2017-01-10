@@ -23,6 +23,7 @@ def test_catalog():
             # print r
             # print json.dumps(r, indent=4, ensure_ascii = False, sort_keys=True, separators=(',', ': '))#.encode('utf8')
     print json.dumps(catalog, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
+    print "len:", len(catalog)
 
 
 
