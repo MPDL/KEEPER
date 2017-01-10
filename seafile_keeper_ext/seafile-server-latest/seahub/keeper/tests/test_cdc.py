@@ -159,4 +159,4 @@ INS; Department; Name, Fname
     file_names = [f.name for f in dir.get_files_list()]
     if not any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
         print file_names
-        pytest.fail("Cannot find cdc pdf in repo %s!" % REPO_NAME)
+        pytest.fail("Cannot find cdc pdf in repo %s!" % repo.name)
