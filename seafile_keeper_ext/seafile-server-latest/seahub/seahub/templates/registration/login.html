@@ -4,12 +4,15 @@
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
 
 {% block main_content %}
+
+<div id="login-page-ctn">
 <div class="new-narrow-panel">
-<h2 class="hd">{% trans "Log In" %}</h2>
-<form action="" method="post" class="con">{% csrf_token %}
+<h2 class="hd" onclick="if (document.getElementsByClassName('')[0].style.display==='none'){document.getElementsByClassName('')[0].style.display='block';} 
+else{document.getElementsByClassName('')[0].style.display='none';}">{% trans "Log In" %}</h2>
+<form id="form_login" action="" method="post" class="con">{% csrf_token %}
     <label for="login">{% trans "Email or Username" %}</label>
         <input type="text" name="login" id="login" value="" class="input" />
-	<label for="password">{% trans "Password" %}</label>
+	<label for="password">{% trans "Password" %}</label></br>
 	<a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
 	<input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
     {% if form.captcha %}
@@ -49,7 +52,100 @@
     {% endif %}
 </form>
 </div>
+
+<div style="border">
+
+</div>
+
+
+
+<div id="title">
+	<img id="logo_title" src="https://keeper.mpdl.mpg.de/f/afaf6a5d34/?raw=1" width="250" height="60">
+	<div id="text_title"><h3>Archive the way you work</h3></div>
+</div>
+
+<div id="subtitle">
+	<p>A new free service for all Max Planck employees and project partners with more than 1TB of storage per user. 
+	Profit from safe data storage, seamlessly integrated into your research workflow.</p>
+
+</div>
+
+<div id="square-footer">
+	<table width="50%" valign="top" cellpadding=3 style="border: 1px solid #EAEFEE; background-color: rgb(255, 255, 255);">
+		<tbody>	
+			<tr valign="top" height="10%">
+				<td width="50%">
+					<h4 style="">What you need to know</h4>
+					<a href="#">About Keeper</a></br>
+					<a href="#">Cared Data Commitment</a></br>
+					<a href="#">Terms of Servicess</a><br><br>	
+				</td>
+
+				<td width="50%">
+					<h4>Desktop client</h4>
+					<a href="#">Download the Keeper client for<br> Windows, Linux and Mac</a>
+				</td>
+			</tr>
+
+			<tr valign="top">
+				<td style="background-color: rgb(255, 255, 255);">
+					<h4>The software behind Keeper</h4>
+					<img id="seafile-logo" 
+					     src="https://www.seafile.com/media/img/seafile-logo.png"/><br><br>
+					<a href="#">© 2016 Seafile</a>
+				</td>
+		
+				<td style="background-color: rgb(255, 255, 255);">
+					<h4>A service by</h4>
+					<img id="MPDL-logo" src="http://awob.mpg.de/images/mpdl-logo.png"/></br></br>
+					<a href="#">Contact Keeper Support</a></br>
+					<a href="#">Impressum</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+</div>
+	
+
+<!-- FOOTER OF THE LOGIN PAGE -->
+
+<!-- footer container 
+<div id="login-footer-ctn">
+	
+	<div class='login-footer-item' id='login-footer-item1'>
+		<h4 style="">What you need to know</h4>
+		<a href="#">About Keeper</a></br>
+		<a href="#">Cared Data Commitment</a></br>
+		<a href="#">Terms of Servicess</a></br></br></br></br>	
+	</div>
+
+	<div class='login-footer-item' id='login-footer-item2'>
+		<h4>Desktop client</h4>
+		<a href="#">Download the Keeper client for Windows, Linux and Mac</a></br></br></br></br></br>
+	</div>
+
+	<div class='login-footer-item' id='login-footer-item3'>
+		<h4>The software behind Keeper</h4>
+		<img id="seafile-logo" 
+		     src="https://www.seafile.com/media/img/seafile-logo.png"/></br></br>
+		<a href="#">© 2016 Seafile</a></br></br></br></br>		
+	</div>
+
+	<div class='login-footer-item' id='login-footer-item4'>
+		<h4>A service by</h4>
+		<img id="MPDL-logo" src="http://awob.mpg.de/images/mpdl-logo.png"/></br></br>
+		<a href="#">Contact Keeper Support</a></br>
+		<a href="#">Impressum</a>	
+	</div>
+	
+</div>-->
+
 {% endblock %}
+
+
+
 
 {% block extra_script %}
 <script type="text/javascript">
@@ -113,3 +209,19 @@ $(function() {
 {% endif %}
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
