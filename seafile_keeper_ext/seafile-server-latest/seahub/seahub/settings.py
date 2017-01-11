@@ -1,3 +1,4 @@
+# !!!MERGE MANUALLY!!!
 # Copyright (c) 2012-2016 Seafile Ltd.
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
@@ -35,7 +36,7 @@ DATABASES = {
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Berlin'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -139,34 +140,10 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
+# !!!MERGE!!!
 LANGUAGES = (
-    ('ca', gettext_noop('català')),
     ('de', gettext_noop(u'Deutsch')),
     ('en', gettext_noop('English')),
-    ('es', gettext_noop('Español')),
-    ('es-ar', gettext_noop('Español de Argentina')),
-    ('es-mx', gettext_noop('Español de México')),
-    ('fi', gettext_noop('Suomi')),
-    ('fr', gettext_noop('français')),
-    ('he', gettext_noop('עברית')),
-    ('hu', gettext_noop('Magyar')),
-    ('is', gettext_noop('Íslenska')),
-    ('it', gettext_noop('Italiano')),
-    ('ja', gettext_noop('日本語')),
-    ('ko', gettext_noop('한국어')),
-    ('lv', gettext_noop('Latvian')),
-    ('nl', gettext_noop('Nederlands')),
-    ('pl', gettext_noop('Polski')),
-    ('pt-br', gettext_noop('Portuguese, Brazil')),
-    ('ru', gettext_noop(u'Русский')),
-    ('sk', gettext_noop('Slovak')),
-    ('sl', gettext_noop('Slovenian')),
-    ('sv', gettext_noop('Svenska')),
-    ('th', gettext_noop('ไทย')),
-    ('tr', gettext_noop('Türkçe')),
-    ('uk', gettext_noop('українська мова')),
-    ('zh-cn', gettext_noop(u'简体中文')),
-    ('zh-tw', gettext_noop(u'繁體中文')),
 )
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, 'locale'),
@@ -303,7 +280,7 @@ OFFICE_PREVIEW_MAX_SIZE = 2 * 1024 * 1024
 USE_PDFJS = True
 FILE_ENCODING_LIST = ['auto', 'utf-8', 'gbk', 'ISO-8859-1', 'ISO-8859-5']
 FILE_ENCODING_TRY_LIST = ['utf-8', 'gbk']
-HIGHLIGHT_KEYWORD = False # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+HIGHLIGHT_KEYWORD = True # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
 
 # Common settings(file extension, storage) for avatar and group avatar.
 AVATAR_FILE_STORAGE = '' # Replace with 'seahub.base.database_storage.DatabaseStorage' if save avatar files to database
@@ -317,7 +294,7 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80)
+AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -358,7 +335,7 @@ REST_FRAMEWORK = {
         'user': '300/minute',
     },
     # https://github.com/tomchristie/django-rest-framework/issues/2891
-    'UNICODE_JSON': False,
+    'UNICODE_JSON': True,
 }
 
 # file and path
@@ -373,7 +350,7 @@ FILE_LOCK_EXPIRATION_DAYS = 0
 ACTIVATE_AFTER_REGISTRATION = True
 # Whether or not send activation Email to user when registration complete.
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
-REGISTRATION_SEND_MAIL = False
+REGISTRATION_SEND_MAIL = True
 
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
@@ -385,26 +362,32 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
-SITE_TITLE = 'Private Seafile'
+# !!!MERGE!!!
+SITE_TITLE = 'KEEPER'
 
 # Base name used in email sending
-SITE_NAME = 'Seafile'
+# !!!MERGE!!!
+SITE_NAME = 'KEEPER'
 
 # Path to the Logo Imagefile (relative to the media path)
-LOGO_PATH = 'img/seafile-logo.png'
+# !!!MERGE!!!
+LOGO_PATH = 'custom/KeeperLogo.svg'
 # logo size. the unit is 'px'
-LOGO_WIDTH = 128
-LOGO_HEIGHT = 32
+# !!!MERGE!!!
+LOGO_WIDTH = 140
+# !!!MERGE!!!
+LOGO_HEIGHT = 40
 
 # css to modify the seafile css (e.g. css/my_site.css)
-BRANDING_CSS = ''
+# !!!MERGE!!!
+BRANDING_CSS = 'custom/keeper.css'
 
 # Using Django to server static file. Set to `False` if deployed behide a web
 # server.
 SERVE_STATIC = True
 
 # Enable or disable registration on web.
-ENABLE_SIGNUP = False
+ENABLE_SIGNUP = True
 
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
