@@ -62,7 +62,8 @@ function migrate_avatars () {
             err_and_exit "Cannot backup $D"
         fi
         #2) create link to CUSTOM avatar link
-        ln -s $D $AVATARS_LINK 
+        #ln -s $D $AVATARS_LINK 
+        ln -s $CUSTOM_DIR/../avatars $AVATARS_LINK
         if [ $? -ne 0  ]; then
             err_and_exit "Cannot create $AVATARS_LINK"
         fi
