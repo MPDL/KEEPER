@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import os
+import logging
+import mistune
 
 from seahub.profile.models import Profile
 
-import mistune
+
+def get_logger(name, logfile):
+
+    logger = logging.getLogger(name)
+    handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.propagate = False
+    return logger
 
 def get_user_name(user):
     """Get user name"""
