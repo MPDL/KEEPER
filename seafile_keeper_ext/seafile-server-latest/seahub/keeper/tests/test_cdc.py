@@ -5,8 +5,8 @@ import tempfile
 import json
 from seaserv import seafile_api, get_repo
 from seafobj import commit_mgr, fs_mgr
-from common import get_user_name
-from cdc.cdc_manager import quote_arg, validate_institute, CDC_PDF_PREFIX
+from common import get_user_name, parse_markdown
+from cdc.cdc_manager import quote_arg, validate, validate_institute, CDC_PDF_PREFIX
 from default_library_manager import copy_keeper_default_library, get_keeper_default_library
 from seahub.settings import SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 
@@ -17,6 +17,37 @@ from uuid import uuid4
 import django
 django.setup()
 
+MD_GOOD="""##Title
+Title
+
+## Author
+Lastname, Firstname; Affiliation1
+
+## Description
+Description
+
+## Year
+2010
+
+## Institute
+INS; Department; Name, Fname
+"""
+
+MD_BAD="""##Title
+Title
+
+## Author
+Lastname
+
+## DescriptionXXXX
+Description
+
+## Year
+2010XX
+
+## InstituteXXXX
+INS; Department; Name, Fname
+"""
 
 def test_quote_arg():
     assert quote_arg('aaa') == "\"aaa\""
@@ -89,6 +120,8 @@ def test_validate_institute():
     assert validate_institute("Institute Long Name; Department Long Name; Director, , N.; ")
     assert validate_institute("Institute Long Name; Department Long Name; Director, , Ivan Pupkin; ")
 
+def test_validate_all():
+    assert not validate(parse_markdown(MD_BAD))
 
 def test_cdc_completely(create_tmp_repo):
     """Test CDC generation, complete workflow
@@ -129,21 +162,7 @@ def test_cdc_completely(create_tmp_repo):
 
     """update md file with correct fields"""
     f = tempfile.NamedTemporaryFile()
-    f.write("""##Title
-Title
-
-## Author
-Lastname, Firstname; Affiliation1
-
-## Description
-Description
-
-## Year
-2010
-
-## Institute
-INS; Department; Name, Fname
-""")
+    f.write(MD_GOOD)
     f.flush()
 
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
