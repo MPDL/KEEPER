@@ -42,7 +42,7 @@
 		/***************** Tablet version ***********************************/
 		/********************************************************************/
 		@media screen and (min-width: 370px) and (max-width: 850px)  {
-		#login-footer-item{width:; height: 90%; border-right: 1px solid #959B9A;}
+		#login-footer-item{height: 90%; border-right: 1px solid #959B9A;}
 
 		#login-footer-item1{width: 20%; position: absolute; left:5.5%; top:10%;}
 		#login-footer-item2{width: 20%; position: absolute; left:28.5%; top:10%;}
@@ -63,7 +63,7 @@
 		#login-footer-item3{width: 12.5%; position: absolute; left:52.5%; top:10%;}
 		#login-footer-item4{width: 12.5%; position: absolute; left:67.5%; top:10%;}
 
-		.new-narrow-panel{position: absolute; bottom:-4%; right:5%; width: 30% !important; height: 50%; opacity: 0.9 !important; background-color: white;}
+		#login-page-ctn .new-narrow-panel{position: absolute; bottom:-4%; right:5%; width: 30% !important; height: 50%; opacity: 0.9 !important; background-color: white;}
 		}
 
 		#login-page-ctn{
@@ -111,15 +111,18 @@
 		#square-footer h4{color:#2D9F90 !important;font-family: AppleGothic !important;font-style: oblique;}
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
-		#login-page-ctn table{box-shadow: 5px 5px 5px #EAEFEE;}
 
 /* LOGIN PANEL */
 .con a{color: #2D9F90 !important;}
 .con{transition: display 0.5s;}
-.new-narrow-panel .hd{background:#2D9F90 !important;}
+#login-page-ctn .new-narrow-panel .hd{background:#2D9F90 !important;}
 
 @media only screen and (max-width:400px){
-	.new-narrow-panel{width:90%; height: 80%; position: absolute; left: 5%; top: 0%;}}
+	#login-page-ctn .new-narrow-panel{width:90%; height: 80%; position: absolute; left: 5%; top: 0%;}}
+
+/* RESET PASSWORD PANEL */
+/*.clear.container-fluid.top-padding .new-narrow-panel{width:30% !important; position: fixed !important; top: 20%; left: 35% !important;}*/
+.clear.container-fluid.top-padding .new-narrow-panel .hd{background:#2D9F90 !important;}
 
 /*
  ********************************************************************************
@@ -134,13 +137,8 @@
 
 /* delete the dashed outline of links */
 a:focus{outline:none;}
-
-/* deactivate logo link */
-#logo{pointer-events: none !important;}
-
-/* appearance of checkboxes */
-.vam:checked{outline:none !important; color:#40A497 !important;}
-.vam:not(:checked){outline:none !important;}
+/* no link underline */
+a:link{text-decoration:none;}
 
 /*
  ********************************************************************************
@@ -159,28 +157,21 @@ a:focus{outline:none;}
 */
 
 /* titles of the side toolbar: Files, Tools, Share Admin */
-.side-nav-con h3{color:#2D9F90 !important; 
+.side-nav-con h3{
 		 font-size: 20px !important;
 		 font-weight: bold !important; 
 		 pointer-events: none !important;}
 
 /* "My Libraries" tab is highlighted when accessing the homepage */
-.side-tabnav-tabs .tab-cur a{background-color: #2D9F90 !important;}
-.side-tabnav-tabs .tab-cur a:hover{background-color: #2D9F90 !important;}
+.side-tabnav-tabs .tab-cur a{background-color: #57a5b8 !important;}
+.side-tabnav-tabs .tab-cur a:active{background-color: #57a5b8 !important;}
 
-.tab a:hover{background-color:rgba(45, 159, 144, 0.25) !important;}
-
-.tab a:focus{background-color:#2D9F90 !important;}
-
-/* Special case of the group tab */
-#group-nav .ellipsis[title='Shared with groups']:focus{
-	background-color:rgba(45, 159, 144, 0) !important;}
 
 
 /*
  ********************************************************************************
  * NAVIGATION FOOTER	                                                        *
- *								*
+ *								                *
  * To do: no implementation of the tablet version				*
  *										*
  ********************************************************************************	
@@ -196,6 +187,7 @@ a:focus{outline:none;}
 		width:80%;
 		position:absolute;
 		left:10%;
+		bottom: 10%;
 		/* background of the footer must be transparent */
 		background-color:rgba(254,254,254,1) !important;
 		transition: bottom 0.7s;
@@ -215,8 +207,8 @@ a:focus{outline:none;}
 	
 	/* triangle picture */
 	#img-ctn{
-		width:10%;
-		height:10%;
+		width:10px;
+		height:10px;
 		position:absolute;
 		top:0%;
 		cursor:pointer;}
@@ -238,7 +230,7 @@ a:focus{outline:none;}
 		@media only screen and (min-device-width:370px) {
 			.side-nav-footer.ovhd{height:35%;bottom: -32%;}
 			#img-ctn{left:2%;}
-			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;}
+			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;font-size: 0.65vw;}
 
 			/* positioning of elements inside the toolbar */
 			#barr-link1{width: 30%; position: absolute; left:0%;}
@@ -246,14 +238,14 @@ a:focus{outline:none;}
 			#barr-link3{width: 20%; position: absolute; right:0%;}
 	
 			.footer-item{
-			width:45%;
+			max-width:45%;
 			padding:1% 2% 1% 2%;
-			position: absolute;}
+			position: absolute; font-size: 0.65vw;}
 	
-			#footer-item1{top:13%;left: 5%;height:35%;}
-			#footer-item2{height: 35%;top:13%;left: 52.5%;}
-			#footer-item3{height: 47%;top:51%;left: 5%;}
-			#footer-item4{height: 47%;top:51%;left: 52.5%;}
+			#footer-item1{top:13%;left: 5%; max-height:35%;}
+			#footer-item2{max-height: 35%;top:13%;left: 52.5%;}
+			#footer-item3{max-height: 47%;top:51%;left: 5%;}
+			#footer-item4{max-height: 47%;top:51%;left: 52.5%;}
 		}
 	
 		/********************************************************************************/
@@ -272,7 +264,7 @@ a:focus{outline:none;}
 			/* triangle image must be centered in the mobile version */
 			#img-ctn{left:45%;}
 
-			#link-bar{width: 90%; position: absolute; top: 7%; left: 15%;}
+			#link-bar{width: 90%; position: absolute; top: 7%; left: 15%;font-size: 1vw;}
 			#barr-link1{}
 			#barr-link2{}
 			#barr-link3{}			
@@ -281,7 +273,7 @@ a:focus{outline:none;}
 			width:90%; height: 17.5%;
 			padding:1% 2% 1% 2%;
 			position:absolute;
-			left:5%;}
+			left:5%;font-size: 1vw;}
 			
 			/* space after title to make item more readable */
 			.footer-item a{position:relative !important; left: 10px !important;}
@@ -292,15 +284,17 @@ a:focus{outline:none;}
 			#footer-item4{top:75%;}
 		}
 
-		/* tablet version of the navigation footer */
-		@media screen and (min-width: 370px) and (max-width: 1800px){
-  			.side-nav-footer.ovhd{display:none !important;}}
+		
+		
 
 /*
  ********************************************************************************
  ********************************************************************************	
 */
 
+#top-search-form .search-submit{border: 1px solid #E5EAEA;}
+
+/*
 #enable-mods{color:#8D8A8A !important;}
 #enable-mods:hover{color:#2D9F90 !important;}
 #enable-mods:visited{color:#8D8A8A !important;}
@@ -325,9 +319,11 @@ color:#2D9F90 !important;}
 .path-link.normal{color:#2D9F90 !important;}
 .grid-item a{color:#2D9F90 !important;}
 .dirent-name a{color:#2D9F90 !important;}
+*/
 
 /* link 'erneut anmelden' when user just logged out */
-.text-panel p a{color:#2D9F90 !important;}
+/*.text-panel p a{color:#2D9F90 !important;}*/
+
 
 /* image preview */
 
@@ -353,6 +349,8 @@ color:#2D9F90 !important;}
 #wide-panel-noframe h2 .op-target{color:#2D9F90 !important;}
 #paginator a{color:#2D9F90 !important;}
 
+h3 span{color:#2D9F90 !important;}
+
 /* user name */
 .author a{color:#2D9F90 !important;}
 
@@ -363,6 +361,7 @@ color:#2D9F90 !important;}
 .row table tr td a{color:#2D9F90 !important;}
 
 /* other settings */
+
 #notice-icon span:hover{color:#2D9F90 !important;}
 #group-settings-icon:hover{color:#57a5b8;}
 #group-members-icon:hover{color:#57a5b8;}
@@ -370,3 +369,32 @@ color:#2D9F90 !important;}
 #group-settings-icon:focus{color:#888;}
 #group-members-icon:focus{color:#888;}
 #group-discussions-icon:focus{color:#888;}
+
+
+#guide-for-new .icon-lightbulb.fleft{color: #2D9F90 !important;}
+
+/* textarea are not resizable */
+textarea{resize: none;}
+
+/* correct the problem of the group discussion panel */
+#group-discussions-icon{z-index:2;}
+#group-members{z-index:1;}
+#group-settings{z-index:1;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
