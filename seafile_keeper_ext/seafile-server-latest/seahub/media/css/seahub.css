@@ -214,13 +214,13 @@ dl { margin:1.5em 0; }
 dt { color:#666; margin:24px 0 2px; font-weight:normal; }
 dd { margin-bottom:.8em; color:#222; }
 a {
-    color:#eb8205;
+    color:#2D9F90;
     text-decoration:none;
     font-weight:bold;
 }
 a.normal {font-weight: normal;}
 a:focus, a:hover {
-    color: #eb8205;
+    color: #2D9F90;
 }
 a.black {
     color:#322;
@@ -1183,9 +1183,9 @@ textarea:-moz-placeholder {/* for FF */
 }
 .tab-popup-tabs-nav .ui-state-active .a,
 .tab-popup-tabs-nav .tab .a:hover {
-    color:#eb8205;
+    color:#2D9F90;
     text-decoration:none;
-    border-bottom-color:#eb8205;
+    border-bottom-color:#2D9F90;
 }
 .tab-popup-tabs .ui-tabs-panel .option-list {
     max-height:200px;
@@ -1522,7 +1522,7 @@ button.sf-dropdown-toggle:focus {
     margin:10px 0;
 }
 .load-more-discussion {
-    color:#eb8205;
+    color:#2D9F90;
     margin-top:1rem;
     cursor:pointer;
     text-align:center;
@@ -1678,9 +1678,9 @@ button.sf-dropdown-toggle:focus {
 .wiki-nav .link:hover,
 #right-panel .hd .ui-state-active .a,
 #right-panel .hd .a:hover {
-    color:#eb8205;
+    color:#2D9F90;
     text-decoration:none;
-    border-bottom-color: #eb8205;
+    border-bottom-color: #2D9F90;
 }
 .btn-white,
 .tabnav button,
@@ -2953,7 +2953,7 @@ button.sf-dropdown-toggle:focus {
     border:1px solid #ede;
 }
 #plans th {
-    color:#eb8205;
+    color:#2D9F90;
     font-weight:bold;
     font-size:16px;
 }
@@ -3167,7 +3167,7 @@ button.sf-dropdown-toggle:focus {
     font-size:22px;
 }
 .repo-op .op-link:hover {
-    color:#eb8205;
+    color:#2D9F90;
     text-decoration:none;
 }
 /* multi dirents operation */
