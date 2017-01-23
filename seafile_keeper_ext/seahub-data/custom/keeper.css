@@ -15,11 +15,11 @@
 	/*********************************************/
 	
 	/* language selector inside header */
-	#lang-context{color:#2D9F90 !important;}
+	#lang-context{color:#57a5b8 !important;}
 
 	/* log-in page footer */
 	#login-footer-ctn{
-		border-top: 5px solid #2D9F90; 
+		border-top: 5px solid #57a5b8; 
 		width: 100%; height: 15%; 
 		position: fixed; bottom:0px; left:0px; 
 		background: #EBEBEB;}
@@ -37,11 +37,11 @@
 		/********************************************************************/
 
 		/* no footer in the mobile version */
-		@media only screen and (max-width:750px){#login-footer-ctn{display: none;}}
+		/*@media only screen and (max-width:750px){#login-footer-ctn{display: none;}}*/
 
 		/***************** Tablet version ***********************************/
 		/********************************************************************/
-		@media screen and (min-width: 370px) and (max-width: 850px)  {
+		/*@media screen and (min-width: 370px) and (max-width: 850px)  {
 		#login-footer-item{height: 90%; border-right: 1px solid #959B9A;}
 
 		#login-footer-item1{width: 20%; position: absolute; left:5.5%; top:10%;}
@@ -52,7 +52,7 @@
 		@media only screen and (max-height:700px){
 		#login-footer-ctn{width:100%; height:25%; position: fixed; bottom:0%; left:0%;}
 		#login-footer-item{height: 90%; border-right: 1px solid #959B9A;}
-		}
+		}*/
 		
 		/***************** Desktop version **********************************/
 		/********************************************************************/
@@ -63,13 +63,14 @@
 		#login-footer-item3{width: 12.5%; position: absolute; left:52.5%; top:10%;}
 		#login-footer-item4{width: 12.5%; position: absolute; left:67.5%; top:10%;}
 
-		#login-page-ctn .new-narrow-panel{position: absolute; bottom:-4%; right:5%; width: 30% !important; height: 50%; opacity: 0.9 !important; background-color: white;}
+		#login-page-ctn .new-narrow-panel{position: absolute; bottom:0px; right:0px; background-color: white;}
+	
 		}
 
 		#login-page-ctn{
 			border-radius: 10px;
 			width: 60%; 
-			height: 85%;
+			height: 90%;
 			position: fixed; 
 			top: 10%; 
 			left: 20%;
@@ -106,23 +107,15 @@
 			top: 40%;
 			left: 1%;}
 
-		#text_title h3{font-size:40pt; font-family: AppleGothic !important;font-style: oblique; color:#2D9F90 !important; font-weight:500;}
+		#text_title h3{font-size:40pt; font-family: AppleGothic !important;font-style: oblique; color:#57a5b8 !important; font-weight:500;}
 		#subtitle p{font-size:15pt; font-family: AppleGothic !important;font-style: oblique; line-height: 1.8; font-weight: 100;}
-		#square-footer h4{color:#2D9F90 !important;font-family: AppleGothic !important;font-style: oblique;}
+		#square-footer h4{color:#57a5b8 !important;font-family: AppleGothic !important;font-style: oblique;}
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
 
 /* LOGIN PANEL */
-.con a{color: #2D9F90 !important;}
-.con{transition: display 0.5s;}
-#login-page-ctn .new-narrow-panel .hd{background:#2D9F90 !important;}
+.new-narrow-panel{position:fixed; right:10% !important; top: 10% !important;}
 
-@media only screen and (max-width:400px){
-	#login-page-ctn .new-narrow-panel{width:90%; height: 80%; position: absolute; left: 5%; top: 0%;}}
-
-/* RESET PASSWORD PANEL */
-/*.clear.container-fluid.top-padding .new-narrow-panel{width:30% !important; position: fixed !important; top: 20%; left: 35% !important;}*/
-.clear.container-fluid.top-padding .new-narrow-panel .hd{background:#2D9F90 !important;}
 
 /*
  ********************************************************************************
@@ -159,7 +152,6 @@ a:link{text-decoration:none;}
 /* titles of the side toolbar: Files, Tools, Share Admin */
 .side-nav-con h3{
 		 font-size: 20px !important;
-		 font-weight: bold !important; 
 		 pointer-events: none !important;}
 
 /* "My Libraries" tab is highlighted when accessing the homepage */
@@ -207,10 +199,12 @@ a:link{text-decoration:none;}
 	
 	/* triangle picture */
 	#img-ctn{
-		width:10px;
-		height:10px;
+		min-width:10px;
+		max-width:10px;
+		min-height:10px;
+		max-height:10px;
 		position:absolute;
-		top:0%;
+		top:-1px;
 		cursor:pointer;}
 
 	#footer-img{
@@ -264,11 +258,6 @@ a:link{text-decoration:none;}
 			/* triangle image must be centered in the mobile version */
 			#img-ctn{left:45%;}
 
-			#link-bar{width: 90%; position: absolute; top: 7%; left: 15%;font-size: 1vw;}
-			#barr-link1{}
-			#barr-link2{}
-			#barr-link3{}			
-
 			.footer-item{
 			width:90%; height: 17.5%;
 			padding:1% 2% 1% 2%;
@@ -283,9 +272,6 @@ a:link{text-decoration:none;}
 			#footer-item3{top:55%;}
 			#footer-item4{top:75%;}
 		}
-
-		
-		
 
 /*
  ********************************************************************************
@@ -334,44 +320,39 @@ color:#2D9F90 !important;}
 	.mfp-img:hover{cursor: auto !important;}
 
 	/* link to open image in another tab */
-	.mfp-bottom-bar .mfp-title a{color:#2D9F90 !important;}
+	.mfp-bottom-bar .mfp-title a{color:#57a5b8 !important;}
 
 /* trash bin */
 	
 	/* trash bin title */
-	.repo-trash-hd span{color:#2D9F90 !important;}
+	.repo-trash-hd span{color:#57a5b8 !important;}
 
 	/* deleted files list */
-	#wide-panel-noframe table td a{color:#2D9F90 !important;}
+	#wide-panel-noframe table td a{color:#57a5b8 !important;}
 
 /* file modifications */
 
-#wide-panel-noframe h2 .op-target{color:#2D9F90 !important;}
-#paginator a{color:#2D9F90 !important;}
 
-h3 span{color:#2D9F90 !important;}
+#paginator a{color:#57a5b8 !important;}
+
+h3 span{color:#57a5b8 !important;}
 
 /* user name */
-.author a{color:#2D9F90 !important;}
+.author a{color:#57a5b8 !important;}
 
-.go-back:hover{color:#2D9F90 !important;}
+.go-back:hover{color:#57a5b8 !important;}
 
 /* system administration */
-#side-nav h3{color:#2D9F90 !important;}
-.row table tr td a{color:#2D9F90 !important;}
+#side-nav h3{color:#005c71 !important;}
+.row table tr td a{color:#57a5b8 !important;}
 
-/* other settings */
+/* icon hover color */
+#notice-icon span:hover{color:#006f7b !important;}
+#group-settings-icon:hover{color:#006f7b;}
+#group-members-icon:hover{color:#006f7b;}
+#group-discussions-icon:hover{color:#006f7b;}
 
-#notice-icon span:hover{color:#2D9F90 !important;}
-#group-settings-icon:hover{color:#57a5b8;}
-#group-members-icon:hover{color:#57a5b8;}
-#group-discussions-icon:hover{color:#57a5b8;}
-#group-settings-icon:focus{color:#888;}
-#group-members-icon:focus{color:#888;}
-#group-discussions-icon:focus{color:#888;}
-
-
-#guide-for-new .icon-lightbulb.fleft{color: #2D9F90 !important;}
+#guide-for-new .icon-lightbulb.fleft{color: #57a5b8 !important;}
 
 /* textarea are not resizable */
 textarea{resize: none;}
@@ -381,19 +362,16 @@ textarea{resize: none;}
 #group-members{z-index:1;}
 #group-settings{z-index:1;}
 
+.grid-item a{color: #57a5b8  !important;}
+
+#upload-menu li a:hover{background: #f4efde !important; color: black !important;}
+
+.hidden-op.dirent-hidden-op.sf-dropdown-menu li a{color: black !important;}
+.hidden-op.dirent-hidden-op.sf-dropdown-menu li a:hover{background-color: #f4efde !important; color: black !important;}
 
 
-
-
-
-
-
-
-
-
-
-
-
+.left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:focus{background-color: #57a5b8 !important;}
+.left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:active{background-color: #57a5b8 !important;}
 
 
 
