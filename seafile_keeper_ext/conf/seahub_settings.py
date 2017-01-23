@@ -65,6 +65,8 @@ EXTRA_MIDDLEWARE_CLASSES = (
 
 ENABLE_SETTINGS_VIA_WEB = True
 
+ENABLE_UPLOAD_FOLDER = True
+
 # KEEPER specific settings
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
