@@ -62,20 +62,10 @@
 		#login-footer-item2{width: 12.5%; position: absolute; left:37.5%; top:10%;}
 		#login-footer-item3{width: 12.5%; position: absolute; left:52.5%; top:10%;}
 		#login-footer-item4{width: 12.5%; position: absolute; left:67.5%; top:10%;}
-
-		#login-page-ctn .new-narrow-panel{position: absolute; bottom:0px; right:0px; background-color: white;}
-	
 		}
+	
 
-		#login-page-ctn{
-			border-radius: 10px;
-			width: 60%; 
-			height: 90%;
-			position: fixed; 
-			top: 10%; 
-			left: 20%;
-			background-color: rgba(64, 164, 151, 0.02);}
-
+		
 		#square-footer{
 			width: 30%;
 			height: 30%;
@@ -113,8 +103,7 @@
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
 
-/* LOGIN PANEL */
-.new-narrow-panel{position:fixed; right:10% !important; top: 10% !important;}
+
 
 
 /*
@@ -133,14 +122,6 @@ a:focus{outline:none;}
 /* no link underline */
 a:link{text-decoration:none;}
 
-/*
- ********************************************************************************
- * HEADER       					                        *
- ********************************************************************************	
-*/
-
-/* background color */
-#header{background-color:rgba(123, 158, 178, 0.15) !important;}
 
 /*
  ********************************************************************************
