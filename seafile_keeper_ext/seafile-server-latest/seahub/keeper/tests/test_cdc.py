@@ -3,19 +3,19 @@ import pytest
 from time import sleep
 import tempfile
 import json
-from seaserv import seafile_api, get_repo
+from seaserv import seafile_api
 from seafobj import commit_mgr, fs_mgr
 from common import get_user_name, parse_markdown
 from cdc.cdc_manager import quote_arg, validate, validate_institute, CDC_PDF_PREFIX
 from default_library_manager import copy_keeper_default_library, get_keeper_default_library
 from seahub.settings import SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 
-from seahub.base.accounts import User
 from seahub.profile.models import Profile
-from uuid import uuid4
 
 import django
 django.setup()
+
+from keepertestbase import create_tmp_user_with_profile, create_tmp_user, create_tmp_repo
 
 MD_GOOD="""##Title
 Title
@@ -51,32 +51,6 @@ INS; Department; Name, Fname
 
 def test_quote_arg():
     assert quote_arg('aaa') == "\"aaa\""
-
-@pytest.fixture(scope='function')
-def create_tmp_user(request):
-    """Create new random user"""
-    email = uuid4().hex + '@test.com'
-    kwargs = {
-        'email': email,
-        'is_staff': False,
-        'is_active': True
-    }
-    user = User.objects.create_user(password='secret', **kwargs)
-    yield email
-    # teardown code
-    User.objects.get(email).delete()
-
-@pytest.fixture(scope='function')
-def create_tmp_repo(create_tmp_user):
-    """Create new random library"""
-    REPO_NAME = "CDC_TEST_REPO-" + uuid4().hex
-    repo_id = seafile_api.create_repo(REPO_NAME, "This is Description", create_tmp_user, passwd=None)
-    repo = seafile_api.get_repo(repo_id)
-    yield repo
-    # teardown code
-    if repo and repo.id:
-        seafile_api.remove_repo(repo.id)
-
 
 def test_get_user_name(create_tmp_user):
     """Test get user/profile with unicode
@@ -179,3 +153,5 @@ def test_cdc_completely(create_tmp_repo):
     if not any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
         print file_names
         pytest.fail("Cannot find cdc pdf in repo %s!" % repo.name)
+
+
