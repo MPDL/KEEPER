@@ -103,7 +103,7 @@
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
 
-
+h2 .new-narrow-panel{background: #57a5b8 !important;}
 
 
 /*
@@ -261,35 +261,11 @@ a:link{text-decoration:none;}
 
 #top-search-form .search-submit{border: 1px solid #E5EAEA;}
 
-/*
-#enable-mods{color:#8D8A8A !important;}
-#enable-mods:hover{color:#2D9F90 !important;}
-#enable-mods:visited{color:#8D8A8A !important;}
-.repo-name-span a{color:#2D9F90 !important;}
-.op-container a{color:#2D9F90 !important;}
-.hidden-op.repo-hidden-op.sf-dropdown-menu a{
-color:#000000 !important;}
-.hidden-op.repo-hidden-op.sf-dropdown-menu a:hover{
-background-color:rgba(45, 159, 144, 0.25) !important;}
-.hidden-op.dirent-hidden-op.sf-dropdown-menu a{
-color:#000000 !important;}
-.hidden-op.dirent-hidden-op.sf-dropdown-menu a:hover{
-background-color:rgba(45, 159, 144, 0.25) !important;}
-.grid-item-op.sf-dropdown-menu a{
-color:#000000 !important;}
-.grid-item-op.sf-dropdown-menu a:hover{
-background-color:rgba(45, 159, 144, 0.25) !important;}
-.op-link.sf2-icon-trash:hover{
-color:#2D9F90 !important;}
-.op-link.sf2-icon-history:hover{
-color:#2D9F90 !important;}
-.path-link.normal{color:#2D9F90 !important;}
-.grid-item a{color:#2D9F90 !important;}
-.dirent-name a{color:#2D9F90 !important;}
-*/
+@media only screen and (max-device-width:400px) {
+	#info_panel, #lg_footer{display:none;}
+	#login_panel{width: 90% !important; top: 30% !important; left: 5% !important; font-size: 1em !important; margin: 4px !important; z-index: -1 !important;}
 
-/* link 'erneut anmelden' when user just logged out */
-/*.text-panel p a{color:#2D9F90 !important;}*/
+}
 
 
 /* image preview */
