@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
-
 {% block main_content %}
-<div class="new-narrow-panel">
-<h2 class="hd">{% trans "Log In" %}</h2>
-<form action="" method="post" class="con">{% csrf_token %}
+<div id="info_panel" style="width: 30%; height: auto; position: absolute; left: 22.5%; top: 20%; transition: width 0.8s; transition: left 0.8s; background-image: url('https://keeper.mpdl.mpg.de/f/4b85ca70ab/?raw=1'); background-repeat: no-repeat; background-position: left top; background-size: 60%, 60%;">
+	<h3 style="font-size: 3em ; color:#57a5b8 ;">Archive the way you work</h3>
+	<p style="font-size: 1.5em ;" >A new free service for all Max Planck employees and project partners with more than 1TB of storage per user. 
+	Profit from safe data storage, seamlessly integrated into your research workflow.</p>
+	<p>Browse all research projects in KEEPER</p>
+	<input type="button" value="Project Catalog" onclick="window.location='https://keeper.mpdl.mpg.de/catalog/';"> 
+</div>
+<div id="login_panel" class="new-narrow-panel" style="position: absolute; left: 57.5%; top: 22%; margin: 0 !important; transition: top 0.8s; transition: left 0.8s; background: rgba(255, 255, 255, 1) !important; z-index: 1;">
+<h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
+<form id="form_login" action="" method="post" class="con">{% csrf_token %}
     <label for="login">{% trans "Email or Username" %}</label>
         <input type="text" name="login" id="login" value="" class="input" />
-	<label for="password">{% trans "Password" %}</label>
+	<label for="password">{% trans "Password" %}</label></br>
 	<a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
 	<input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
     {% if form.captcha %}
@@ -29,36 +34,51 @@
     {% else %}
 	<p class="error hide"></p>
     {% endif %}
-
     <label class="checkbox-label">
         <input type="checkbox" name="remember_me" class="vam" />
         <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
     </label>
-
     <input type="submit" value="{% trans "Log In" %}" class="submit" />
     {% if enable_signup %}
     <a href="{{ signup_url }}">{% trans "Signup" %}</a>
     {% endif %}
-
-    {% if enable_adfs_login %}
-    <button id="adfs-login" class="submit fright">ADFS</button>
-    {% endif %}
-
     {% if enable_shib_login %}
     <button id="shib-login" class="submit fright">{% trans "Shibboleth" %}</button>
     {% endif %}
-
     {% if enable_krb5_login %}
     <button id="krb5-login" class="submit fright">{% trans "Kerberos" %}</button>
     {% endif %}
 </form>
 </div>
+<div id="lg_footer" style="border-top: 1px solid #DCDCDC; width: 55% ; height: 150px; position: absolute; top: 80%; left: 24%;">
+	<div style="height:80%; width: 20%; position: absolute; left:5%; top: 20%;">
+		<h4 style="color: #57a5b8;">What you need to know</h4>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">About Keeper</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="#">Cared Data Commitment</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="#">Terms of Services</a></br></br></br></br>	
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; left:28%; top: 20%;">
+		<h4 style="color: #57a5b8;">Desktop client</h4>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Download the Keeper client for Windows, Linux and Mac</a>
+		</br></br></br></br></br>
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; left:52%; top: 20%;">
+		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
+		<img id="seafile-logo" 
+		     src="https://www.seafile.com/media/img/seafile-logo.png"/></br></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">© 2016 Seafile</a></br></br></br></br>		
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; right:4%; top: 20%;">
+		<h4 style="color: #57a5b8;" >A service by</h4>
+		<img src="http://awob.mpg.de/images/mpdl-logo.png" style="height: 50px; width: auto;"/></br></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Contact Keeper Support</a></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Impressum</a>	
+	</div>
+</div>
 {% endblock %}
-
 {% block extra_script %}
 <script type="text/javascript">
 $('[name="login"]').focus();
-
 function setCaptchaInputWidth() {
     $('#id_captcha_1').css({'width': $('.input').outerWidth() - $('.captcha').width() - 10});
 }
@@ -97,7 +117,6 @@ $(function() {
         $(this).attr('tabindex', index + 1);
     });
 });
-
 {% if enable_shib_login %}
 $(function() {
     $('#shib-login').click(function() {
@@ -106,7 +125,6 @@ $(function() {
     });
 });
 {% endif %}
-
 {% if enable_krb5_login %}
 $(function() {
     $('#krb5-login').click(function() {
@@ -115,14 +133,22 @@ $(function() {
     });
 });
 {% endif %}
-
-{% if enable_adfs_login %}
-$(function() {
-    $('#adfs-login').click(function() {
-        window.location = "{% url 'saml2_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
-        return false;
-    });
-});
-{% endif %}
+</script>
+<script type="text/javascript">
+var login_panel=document.getElementById('login_panel');
+var info_panel=document.getElementById('info_panel');
+var footer=document.getElementById('lg_footer');
+var lg_floor=document.getElementById('lg_floor');
+window.onresize = function () {
+	width = window.innerWidth;
+	if (width<=1400){
+		login_panel.style.top='75%';login_panel.style.left='30%';
+		info_panel.style.width='40%';info_panel.style.left='30%';
+		footer.style.top='150%';}
+	if (width>=1400){
+		login_panel.style.top='22%';login_panel.style.left='57.5%';
+		info_panel.style.width='30%';info_panel.style.left='22.5%';
+		footer.style.top='80%';}}
 </script>
 {% endblock %}
+

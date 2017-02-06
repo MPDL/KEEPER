@@ -1,10 +1,94 @@
-{% load i18n %}
-<a href="{{SITE_ROOT}}help/" target="_blank">{% trans "Help" %}</a>
-<a href="#" class="js-about">{% trans "About" %}</a>
-<a href="{% url 'download_client' %}" class="fright"><span aria-hidden="true" class="sf2-icon-monitor vam"></span> <span class="vam">{% trans "Clients" %}</span></a>
+<!-- NAVIGATION FOOTER -->
+<!--------------------------------------------------------------------------------->
 
+<!-- container of the footer -->
+<!-- TO DO: logo path is absolute -->
+<div id='footer-ctn'>
+	
+	<!-- triangle icon -->
+	<div id="img-ctn" onclick="triangle_onclick();">
+		<img id="footer-img" 
+		     src="http://img.freepik.com/icones-gratuites/triangle-pointant-vers-le-haut_318-30311.jpg?size=338&ext=jpg"/>
+	</div>
+
+	<!-- visible toolbar -->
+	<div id="link-bar">
+		<a id="barr-link1" href="https://keeper.mpdl.mpg.de/catalog" target="_blank">Project Catalog</a>
+		<a id="barr-link2" href="{{SITE_ROOT}}help/" target="_blank">Help</a>
+		<a id="barr-link3" href="#" class="js-about">About</a>
+		<!--<a id="barr-link3" href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About</a>-->
+	</div>
+	</br>
+
+	<!-- first item -->
+	<div class='footer-item' id='footer-item1'>
+		<h4>What you need to know</h4>
+		<a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
+		<a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
+		<a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Service</a>
+	</div>
+	
+	<!-- second item -->
+	<div class='footer-item' id='footer-item2'>
+		<h4>Desktop client</h4>
+		<a href="https://keeper.mpdl.mpg.de/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
+	</div>
+
+	<!-- third item -->
+	<!-- TO DO: logo path is absolute -->
+	<div class='footer-item' id='footer-item3'>
+		<h4>The software behind Keeper</h4>
+		<span>
+			<img class="logo" id="seafile-logo" 
+			     src="https://shop.seafile.de/wp-content/uploads/2015/06/seafile-transparent-1024.png"/></br>
+			<a href="https://seafile.com/en/home/" target="_blank">© 2016 Seafile</a></br>
+			
+	</div>
+
+	<!-- fourth item -->
+	<!-- TO DO: logo path is absolute -->
+	<div class='footer-item' id='footer-item4'>
+		<h4>A service by</h4>
+		<img class="logo" id="MPDL-logo" src="http://awob.mpg.de/images/mpdl-logo.png"/></br>
+		<span>
+			<a href="mailto:keeper@mpdl.mpg.de" target="_blank">Contact Keeper Support</a></br>
+			<a href="./seahub-data/custom/Impressum.markdown" target="_blank">Impressum</a>
+		</span>
+	</div>
+</div>
+
+
+{% load i18n %}
+<a href="{{SITE_ROOT}}help/" target="_blank"></a>
+<a href="#" class="js-about" id=""></a>
+<a href="{% url 'download_client' %}" class="fright"><span class="vam"></span></a>
+</div>
+
+
+
+<!-- POP-UP WINDOW -->
 <div class="about-content hide">
     <p><img src="{{ MEDIA_URL }}{{ logo_path }}" title="Seafile" alt="logo" width="{{logo_width}}" height="{{logo_height}}" /></p>
     <p>{% trans "Server Version: " %}{{ seafile_version }}<br/> © 2016 {% trans "Seafile" %}</p>
     <p><a href="http://seafile.com/en/about/" target="_blank">{% trans "About Us" %}</a></p>
 </div>
+
+<script>
+	/* global variables */
+	var footer = document.getElementsByClassName('side-nav-footer')[0];
+	var width = screen.width;
+	var img = document.getElementById('footer-img');
+	var x = 0;
+	function triangle_onclick(){	
+		/* mobile version */
+		if(width<=1300){
+			if(x===0){footer.style.bottom="0%";img.style.transform = 'rotate(180deg)';x=1;}
+			else{footer.style.bottom="-85%";img.style.transform = 'rotate(0deg)';x=0;}}
+		/* wide screen version */
+		else{
+			if(x===0){footer.style.bottom="0%";img.style.transform = 'rotate(180deg)';x=1;}
+			else{footer.style.bottom="-32%";img.style.transform = 'rotate(0deg)';x=0;}}}
+
+	var pop_up = ""+"<tr>c</td><td>d</td></tr></table>";
+
+</script>
