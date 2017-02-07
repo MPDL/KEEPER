@@ -189,8 +189,8 @@ a:link{text-decoration:none;}
 		cursor:pointer;}
 
 	#footer-img{
-		width:18px; 
-		height:20px; 
+		width:10px; 
+		height:10px; 
 		opacity:0.35; 
 		/* rotation transition */
 		transition: transform 0.4s;}
