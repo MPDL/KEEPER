@@ -305,6 +305,8 @@ textarea{resize: none;}
 .left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:focus{background-color: #57a5b8 !important;}
 .left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:active{background-color: #57a5b8 !important;}
 
+#lg_ft:hover{cursor: pointer;}
+
 
 
 
