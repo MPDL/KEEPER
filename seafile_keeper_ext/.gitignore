@@ -4,3 +4,6 @@
 *.pyc
 tags
 *.*_orig
+__pycache__
+.cache
+
