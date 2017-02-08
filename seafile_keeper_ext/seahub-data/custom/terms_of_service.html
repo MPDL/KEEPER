@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+	<title>About.markdown - Keeper Server</title>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<meta name="keywords" content="File Collaboration Team Organization" />
+	<link rel="icon" type="image/x-icon" href="/media/img/favicon.png?t=1484643852" />
+	<!--[if IE]>
+	<link rel="shortcut icon" href="/media/img/favicon.png?t=1484643852"/>
+	<![endif]-->
+	<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.b00faad199b5.css"/>
+	<link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1484643852" />
+	<link rel="stylesheet" type="text/css" href="/media/css/file_view_extra.css" />
+	<link rel="stylesheet" type="text/css" media="print" href="/media/css/print_for_file_view.css" />
+	<link rel="stylesheet" type="text/css" href="/media/custom/keeper.css" />
+</head>
+
+<body>
+
+<img src="/media/custom/logo.png" title="Seafile" alt="logo" width="128" height="32" style="position: relative; top: 5px; left: 15px;"/>
+
+<div id="wrapper" class="de">
+<div id="main" class="clear container-fluid ">
+<div id="file">
+<div id="file-view">
+<div id="md-view" class="article">
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript" src="/media/js/jquery-1.12.1.min.js" id="jquery"></script>
+<script type="text/javascript" src="/media/assets/scripts/lib/jquery.simplemodal.67fb20a63282.js"></script>
+<script type="text/javascript" src="/media/assets/scripts/lib/jquery.ui.tabs.7406a3c5d2e3.js"></script>
+<script type="text/javascript" src="/media/js/jq.min.js"></script>
+<script type="text/javascript" src="/media/js/base.js?t=1484643852"></script>
+<script type="text/javascript" src="/media/assets/scripts/lib/underscore.1dccc53d7339.js"></script>
+<script type="text/javascript" src="/media/assets/scripts/lib/moment-with-locales.c4492e6216cc.js"></script>
+<script type="text/javascript" src="/media/assets/scripts/lib/marked.min.c2a88705e206.js"></script>
+<script type="text/javascript" src="/media/js/editormd/lib/marked.min.js"></script>
+<script type="text/javascript">
+    
+    var renderer = new marked.Renderer();
+    // remove 'id' attribute for headings
+    renderer.heading = function (text, level) {
+        return '<h' + level + '>' + text + '</h' + level + '>';
+    };
+    marked.setOptions({
+        renderer: renderer,
+        breaks: true, // keep linebreak
+        smartLists: true,
+        sanitize: true // Ignore any HTML that has been input
+    });
+    $('#md-view').html(marked('# Keeper Terms of Service\u000A\u000AThis Terms of Service defines the conditions and limits of the Keeper service. By using the Keeper service you agree to the Keeper Terms of Service, please read these Terms of Service carefully.\u000A\u000AThe Keeper Service is free of charge for all employees of the Max Planck Society and its project partners with a maximum of 1TB of storage as a default for data from research projects. The Keeper Service team can extend this quota any time, please contact us. It is not allowed to exploit this service for data other than those arising from research projects associated with the Max Planck Society.\u000AThe Keeper Service will not provide third party access to data. All content uploaded into the Keeper software is, unless explicitly stated otherwise by the depositor, only accessible by the depositor himself.\u000AThe Keeper Service does not prescreen any content, but we reserve the right to refuse or remove any content which is not related to a scientific research or violate the “Max Planck Richtlinien zur Sicherung guter wissenschaftlicher Praxis”.\u000AThe Keeper Service reserves the right to trigger an access evaluation process if a third party claims access to data according to the “Max Planck Richtlinien zur Sicherung guter wissenschaftlicher Praxis” which may apply to data related to a scientific publication.\u000A\u000A**Cared Data Certificate:**\u000AThe Cared Data Certificate can be obtained from the Keeper service if following conditions apply to your data:\u000A1. Upload all relevant data of a research project.\u000A2. Adjust a minimum of documentation, software and/or metadata to understand and reconstruct the data.\u000A3. Grant access to the project data to your institution and make sure the data is not encrypted.\u000A4. Provide the basic metadata for your project in the archive\u002Dmetadata.md file.\u000A\u000A**The Keeper Service and its operators agree to:**\u000A1. Assist and consult you during the whole archiving process of your data\u000A2. Store your data in the Max Planck Territory of the Max Planck Computing and Data Facility (MPCDF) on German servers\u000A3. Take care that your project data is regularly backed up  \u000A4. Archive your data for at least 10 years\u000A\u000A**General Conditions:**\u000A\u002D You must not upload any viruses or any code of destructive nature\u000A\u002D The service is provided on an “as is” basis\u000A\u002D The Keeper Service reserves the right to alter the Terms of Services at any time. The Keeper Service operators will make reasonable efforts to communicate these Terms of Service changes to submitters.\u000A\u002D Questions about the Terms of Service should be sent to: keeper@mpdl.mpg.de\u000A\u000A\u000A**Legal Statement:**\u000AAs a service of the Max Planck Digital Library the Keeper Service is subject to the conditions of the general terms of services of the Max Planck Digital Library. Please make sure you also read and understand the terms of services [here.](https://www.mpdl.mpg.de/en/services/tos.html \u0022here.\u0022)')).children(':first').css('margin-top', '0');
+    
+
+    $('#file-enc').change(function() {
+        var file_enc = $(this).val();
+        var s = location.search;
+        if (s.indexOf('?') == -1) {
+            location.search = '?file_enc=' + file_enc;
+        } else {
+            if (s.indexOf('file_enc') == -1) {
+                location.search += '&file_enc=' + file_enc; 
+            } else {
+                var params = s.substr(1).split('&');
+                var param;
+                for (var i = 0, len = params.length; i < len; i++) {
+                    param = params[i].split('=');
+                    if (param[0] == 'file_enc') {
+                        param[1] = file_enc;
+                        params[i] = param.join('=');
+                        break;
+                    }
+                }
+                location.search = '?' + params.join('&');
+            }
+        }
+    })
+
+    // for 'go back'
+    var $fileDiff = $('.file-diff');
+    $fileDiff.attr('href', $fileDiff.attr('href') + '&referer=' + encodeURIComponent(location.href));
+</script>
+
+</body>
+</html>
+
