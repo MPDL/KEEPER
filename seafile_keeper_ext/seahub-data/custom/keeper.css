@@ -202,7 +202,7 @@ a:link{text-decoration:none;}
 		/********************************************************************************/
 		/***** wide screen version ******************************************************/
 		/********************************************************************************/
-		@media only screen and (min-device-width:370px) {
+		@media (min-width:900px) {
 			.side-nav-footer.ovhd{height:35%;bottom: -32%;}
 			#img-ctn{left:2%;}
 			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;font-size: 0.65vw;}
@@ -226,34 +226,9 @@ a:link{text-decoration:none;}
 		/********************************************************************************/
 		/***** mobile version ***********************************************************/
 		/********************************************************************************/
-
-		/****************************************************************************************************************/
-		/***** special design for the very small screens: seafile implements a new window for the side navigation barr **/
-		/****************************************************************************************************************/
-		@media only screen and (max-device-width:370px) {
-
-			/* much higher footer container in the mobile version because items are
-		   	arranged in a column */
-			.side-nav-footer.ovhd{height:90%; bottom: -85%;}
-
-			/* triangle image must be centered in the mobile version */
-			#img-ctn{left:45%;}
-
-			.footer-item{
-			width:90%; height: 17.5%;
-			padding:1% 2% 1% 2%;
-			position:absolute;
-			left:5%;font-size: 1vw;}
-			
-			/* space after title to make item more readable */
-			.footer-item a{position:relative !important; left: 10px !important;}
-
-			#footer-item1{top:15%}
-			#footer-item2{top:37.5%;}
-			#footer-item3{top:55%;}
-			#footer-item4{top:75%;}
-		}
-
+		@media (max-width:900px) {
+		.side-nav-footer{display: none;}}
+		
 /*
  ********************************************************************************
  ********************************************************************************	
