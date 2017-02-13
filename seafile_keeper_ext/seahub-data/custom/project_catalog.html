@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<title>Anmelden - Keeper Server</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="File Collaboration Team Organization" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<link rel="icon" type="image/x-icon" href="/media/img/favicon.png?t=1484643852" />
+<!--[if IE]>
+<link rel="shortcut icon" href="/media/img/favicon.png?t=1484643852"/>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.b00faad199b5.css"/>
+<link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1484643852" />
+<link rel="stylesheet" type="text/css" href="/media/custom/keeper.css" />
+
+</head>
+<body>
+    <div id="wrapper" class="de">
+        <div id="header" class="navbar navbar-fixed-top">
+            <div id="header-inner">
+                <a href="/" id="logo" class="fleft">
+                    <img src="/media/custom/logo.png" title="Seafile" alt="logo" width="128" height="32" />
+                </a>
+            </div>
+        </div>
+        <div id="main" class="clear container-fluid top-padding">
+	<br><br><br><br>
+	<div style="text-align: center;">
+	<p>Es kann noch kein Katalog angezeigt werden.</p>
+	</div>
+
+
+			<div id="lg_footer" style="border-top: 1px solid #DCDCDC; width: 55% ; height: 150px; position: absolute; top: 80%; left: 24%;">
+				<div style="height:80%; width: 20%; position: absolute; left:5%; top: 20%;">
+					<h4 style="color: #57a5b8;">What you need to know</h4>
+					<a class="normal" style="color: #B7B7B7;  font-weight: lighter;" href="/media/custom/about.html" target="_blank">About Keeper</a></br>
+					<a style="color: #B7B7B7; font-weight: lighter;" href="/media/custom/cared_data_certificate.html" target="_blank">Cared Data Commitment</a></br>
+					<a style="color: #B7B7B7; font-weight: lighter;" href="/media/custom/terms_of_service.html" target="_blank">Terms of Services</a></br></br></br></br>	
+				</div>
+				<div style="height:80%; width: 20%; position: absolute; left:28%; top: 20%;">
+					<h4 style="color: #57a5b8;">Desktop client</h4>
+					<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/download/" target="_blank">Download the Keeper client for Windows, Linux and 					Mac</a>
+					</br></br></br></br></br>
+				</div>
+				<div style="height:80%; width: 20%; position: absolute; left:52%; top: 20%;">
+					<h4 style="color: #57a5b8;">The software behind Keeper</h4>
+					<img id="seafile-logo" 
+					     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+					<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2016 Seafile</a></br></br></br></br>		
+				</div>
+				<div style="height:80%; width: 20%; position: absolute; right:4%; top: 20%;">
+					<h4 style="color: #57a5b8;" >A service by</h4>
+					<img id="lg_ft" src="/media/custom/mpdl_logo_footer.png" style="height: 50px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
+					<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
+					<a style="color: #B7B7B7;  font-weight: lighter;" href="/media/custom/impressum.html" target="_blank">Impressum</a>	
+				</div>
+			</div>
+        </div>
+</div>
+
+
+
+<script type="text/javascript">
+var login_panel=document.getElementById('login_panel');
+var info_panel=document.getElementById('info_panel');
+var footer=document.getElementById('lg_footer');
+var lg_floor=document.getElementById('lg_floor');
+window.onresize = function () {
+	width = window.innerWidth;
+	if (width<=1400){
+		login_panel.style.top='75%';login_panel.style.left='30%';
+		info_panel.style.width='40%';info_panel.style.left='30%';
+		footer.style.top='150%';}
+	if (width>=1400){
+		login_panel.style.top='22%';login_panel.style.left='57.5%';
+		info_panel.style.width='30%';info_panel.style.left='22.5%';
+		footer.style.top='80%';}}
+</script>
+
+</body>
+</html>
+
