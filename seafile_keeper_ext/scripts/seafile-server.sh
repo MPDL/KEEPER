@@ -106,11 +106,13 @@ case "$1" in
             fi
             sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
             service nginx ${1}
+            systemctl ${1} memcached.service
         ;;
         stop)
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
             sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
+            systemctl ${1} memcached.service
         ;;
         switch-maintenance-mode)
             check_en_dis_nginx
