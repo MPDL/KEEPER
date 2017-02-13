@@ -30,6 +30,7 @@ FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 
 BRANDING_CSS = 'custom/keeper.css'
 
+LOGO_PATH = 'custom/__LOGO_IMG__'
 
 # Whether to show the used traffic in user's profile popup dialog. Default is True
 SHOW_TRAFFIC = True
