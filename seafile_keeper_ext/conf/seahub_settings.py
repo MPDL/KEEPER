@@ -16,10 +16,11 @@ DATABASES = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
         'LOCATION': '127.0.0.1:11211',
     }
 }
+
 FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 
 # Enalbe or disalbe registration on web. Default is `False`.
@@ -29,6 +30,7 @@ FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 
 BRANDING_CSS = 'custom/keeper.css'
 
+LOGO_PATH = 'custom/__LOGO_IMG__'
 
 # Whether to show the used traffic in user's profile popup dialog. Default is True
 SHOW_TRAFFIC = True
@@ -71,3 +73,32 @@ ENABLE_UPLOAD_FOLDER = True
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
+
+# Enable LibreOffice Online
+ENABLE_OFFICE_WEB_APP = True
+
+# Url of LibreOffice Online's discovery page
+# The discovery page tells Seafile how to interact with LibreOffice Online when view file online
+# You should change `https://collabora.mpdl.mpg.de/hosting/discovery` to your actual LibreOffice Online server address
+#OFFICE_WEB_APP_BASE_URL = 'https://collabora.mpdl.mpg.de/hosting/discovery'
+OFFICE_WEB_APP_BASE_URL = 'https://share.mpdl.mpg.de/hosting/discovery'
+
+# Expiration of WOPI access token
+# WOPI access token is a string used by Seafile to determine the file's
+# identity and permissions when use LibreOffice Online view it online
+# And for security reason, this token should expire after a set time period
+WOPI_ACCESS_TOKEN_EXPIRATION = 30 * 60   # seconds
+
+# List of file formats that you want to view through LibreOffice Online
+# You can change this value according to your preferences
+# And of course you should make sure your LibreOffice Online supports to preview
+# the files with the specified extensions
+OFFICE_WEB_APP_FILE_EXTENSION = ('ods', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt',
+    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt')
+
+# Enable edit files through LibreOffice Online
+ENABLE_OFFICE_WEB_APP_EDIT = True
+
+# types of files should be editable through LibreOffice Online
+OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ('ods', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt',
+    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt')
