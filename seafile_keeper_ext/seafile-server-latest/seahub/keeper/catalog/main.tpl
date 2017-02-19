@@ -181,45 +181,31 @@
 
         
 <div id="footer" class="ovhd">
-  <div class="items fleft">
-	<div class="item">
-      <h4>What you need to know</h4>	   		
-      <ul>
-        <li><a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></li>
-		<li><a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></li>
-		<li><a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Service</a></li>
-      </ul>
-    </div>
 
-	
-    <div class="item">
-		<h4>Desktop Client</h4>
-		<ul>
-			<li><a href="https://keeper.mpdl.mpg.de/download_client_program/">Download the Keeper client for Windows, Linux and Mac</a></li>
-			<li>&nbsp;</li>
-			<li>&nbsp;</li>
-		</ul>
-	</div>	
-   <div class="item">
-			<h4>The software behind Keeper</h4>
-			<img src="https://keeper.mpdl.mpg.de/media/custom/seafile-logo.png" alt="Max Planck Digital Library" height="35" width="40"/>	   
-			<ul>
-				<p>© 2016 Seafile </p>
-				<li><a href="https://seafile.com/en/home/" target="_blank">About Seafile</a></li>	
-			</ul>
-		</div>
-  </div>
-  <div class="other-info fright">
-	<div class="item">
-      <h4>A service by</h4>	   
-	  <img src="https://keeper.mpdl.mpg.de/media/custom/mpdl.png" alt="Max Planck Digital Library" height="30" width="105"/>
-      <ul>
-		<li><a href="https://keeper.mpdl.mpg.de/help/" target="_blank">Help</a></li>		
-		<li><a href="mailto:keeper@mpdl.mpg.de">Keeper Support</a></li>
-		<li><a href="https://keeper.mpdl.mpg.de/f/7121a8a69d/" target="_blank">Impressum</a></li>
-      </ul>
-    </div>
-  
+	<div style="height:80%; width: 20%; position: absolute; left:0%; top: 20%;">
+		<h4 style="color: #57a5b8;">What you need to know</h4>
+		<a class="normal" style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/catalog" target="_blank">Project Catalog</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a></br></br></br></br>	
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; left:27%; top: 20%;">
+		<h4 style="color: #57a5b8;">Desktop client</h4>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/download/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
+		</br></br></br></br></br>
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; right:27%; top: 20%;">
+		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
+		<img id="seafile-logo" 
+		     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2016 Seafile</a></br></br></br></br>		
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; right:0%; top: 20%;">
+		<h4 style="color: #57a5b8;" >A service by</h4>
+		<img id="lg_ft" src="/media/custom/mpdl_logo_footer.png" style="height: 50px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
+	</div>  
 </div>
 
 
