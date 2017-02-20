@@ -21,7 +21,7 @@ You do the right thing - with storing your data in Keeper you can be sure to ful
     {% if form.captcha %}
     <label>{% trans "CAPTCHA" %}</label><br />
     {{ form.captcha }}
-    <p class="clear"><a  style="position: relative; right: 63px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
+    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
     {% endif %}
     <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
     {% if form.errors %}
@@ -148,7 +148,7 @@ var lg_floor=document.getElementById('lg_floor');
 
 window.onresize = function () {
 	width = window.innerWidth;
-	if ((width<=1500)||(h>=400)){
+	if (width<=1500){
 		login_panel.style.top='75%';login_panel.style.left='30%';
 		info_panel.style.width='40%';info_panel.style.left='30%';
 		footer.style.top='150%';}
