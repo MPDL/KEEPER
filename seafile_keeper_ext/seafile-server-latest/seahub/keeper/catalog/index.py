@@ -17,7 +17,7 @@ os.environ.setdefault("SEAFILE_CONF_DIR", "/opt/seafile/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "/opt/seafile/conf")
 os.environ.setdefault("SEAFES_DIR", "/opt/seafile/seafile-server-latest/pro/python/seafes")
 
-from seahub.settings import SERVICE_URL
+from seahub.settings import SERVICE_URL, LOGO_PATH
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 
 #########################
@@ -172,7 +172,7 @@ def application(env, start_response):
             # load template
             tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
             file_writer = tmpl.start_file(response)
-            main_layer = file_writer.open(errmsg='')
+            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH)
 
 
             main_layer.write_layer('data-nav')
@@ -276,7 +276,7 @@ def application(env, start_response):
             # load template with error message
             tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
             file_writer = tmpl.start_file(response)
-            file_writer.open(errmsg=errmsg)
+            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH)
             file_writer.close()
 
 

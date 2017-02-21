@@ -68,7 +68,7 @@
                 
                 <a href="/" id="logo" class="fleft">
                     
-                    <img src="/media/custom/KeeperLogo.svg" title="Catalog" alt="logo" width="140" height="40" />
+                    <img src="/media/%logo_path%" title="Catalog" alt="logo" width="140" height="40" />
                     
                 </a>
                 
