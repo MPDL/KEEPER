@@ -39,7 +39,7 @@
 		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
 		<span>
 			<img class="logo" id="seafile-logo" 
-			     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+			     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');" style="height: 30px !important; width: auto !important;"/></br>
 			<a href="https://seafile.com/en/home/" target="_blank" style="color: #B7B7B7;">© 2017 Seafile</a></br>
 			
 	</div>
@@ -68,8 +68,8 @@
 <!-- POP-UP WINDOW -->
 <div class="about-content hide">
     <p><img src="{{ MEDIA_URL }}{{ logo_path }}" title="Seafile" alt="logo" width="{{logo_width}}" height="{{logo_height}}" /></p>
-    <p>{% trans "Server Version: " %}{{ seafile_version }}<br/> © 2016 {% trans "Seafile" %}</p>
-    <p><a href="http://seafile.com/en/about/" target="_blank">{% trans "About Us" %}</a></p>
+    <p>{% trans "Server Version: " %}{{ seafile_version }}<br/> © 2017 {% trans "Seafile" %}</p>
+    {#  <p><a href="http://seafile.com/en/about/" target="_blank">{% trans "About Us" %}</a></p> #}
 </div>
 
 <script>
