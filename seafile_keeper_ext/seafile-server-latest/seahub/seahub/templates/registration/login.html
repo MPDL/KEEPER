@@ -2,18 +2,15 @@
 {% load i18n %}
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
 {% block main_content %}
-
-
-
-<div id="info_panel" style="width: 30%; height: auto; position: absolute; left: 22.5%; top: 20%; transition: width 0.8s; transition: left 0.8s; background-image: url('/media/custom/background.svg'); background-repeat: no-repeat; background-position: left top; background-size: 60%, 60%;">
+ 
+<div id="info_panel" style="width: 30%; height: auto; position: absolute; left: 22.5%; top: 20%; transition: width 0.8s; transition: left 0.8s; background-image: url('/media/custom/background.svg'); background-repeat: no-repeat; background-position: 0% 0% -20%; background-size: 50% 50%;">
 	<h3 style="font-size: 3em ; color:#57a5b8 ;">Archive the way you work</h3>
-	<p style="font-size: 1.5em ;" >A new free service for all Max Planck employees and project partners with more than 1TB of storage per user. 
-	Profit from safe data storage, seamlessly integrated into your research workflow.</p>
-	<p>Browse all research projects in KEEPER</p>
-	<input type="button" value="Project Catalog" onclick="window.location='/catalog/';"> 
+	<p style="font-size: 1.35em ;" >A new free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</br></br>
+You do the right thing - with storing your data in Keeper you can be sure to fulfil the regulations of the Max Planck Society to ensure ‘good scientific practice’.</p>
+	<p>Browse all research projects in KEEPER &nbsp; &nbsp;<span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog'";"></span></p>
 </div>
 
-<div id="login_panel" class="new-narrow-panel" style="position: absolute; left: 57.5%; top: 22%; margin: 0 !important; transition: top 0.8s; transition: left 0.8s; background: rgba(255, 255, 255, 1) !important; z-index: 1;">
+<div id="login_panel" class="new-narrow-panel" style="position: absolute; right: 16%; top: 22%; margin: 0 !important; transition: top 0.8s; transition: right 0.8s; background: rgba(255, 255, 255, 1) !important; z-index: 1;">
 <h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
 <form id="form_login" action="" method="post" class="con">{% csrf_token %}
     <label for="login">{% trans "Email or Username" %}</label>
@@ -24,7 +21,7 @@
     {% if form.captcha %}
     <label>{% trans "CAPTCHA" %}</label><br />
     {{ form.captcha }}
-    <p class="clear"><a href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
+    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
     {% endif %}
     <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
     {% if form.errors %}
@@ -54,29 +51,30 @@
     {% endif %}
 </form>
 </div>
-<div id="lg_footer" style="border-top: 1px solid #DCDCDC; width: 55% ; height: 150px; position: absolute; top: 80%; left: 24%;">
-	<div style="height:80%; width: 20%; position: absolute; left:5%; top: 20%;">
+<div id="lg_footer" style="border-top: 1px solid #DCDCDC; width: 61.5% ; height: 150px; position: absolute; top: 86%; left: 22.5%;">
+	<div style="height:80%; width: 20%; position: absolute; left:0%; top: 10%;">
 		<h4 style="color: #57a5b8;">What you need to know</h4>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">About Keeper</a></br>
-		<a style="color: #B7B7B7; font-weight: lighter;" href="#">Cared Data Commitment</a></br>
-		<a style="color: #B7B7B7; font-weight: lighter;" href="#">Terms of Services</a></br></br></br></br>	
+		<a class="normal" style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="/catalog" target="_blank">Project Catalog</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a></br></br></br></br>	
 	</div>
-	<div style="height:80%; width: 20%; position: absolute; left:28%; top: 20%;">
+	<div style="height:80%; width: 20%; position: absolute; left:27%; top: 10%;">
 		<h4 style="color: #57a5b8;">Desktop client</h4>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Download the Keeper client for Windows, Linux and Mac</a>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
 		</br></br></br></br></br>
 	</div>
-	<div style="height:80%; width: 20%; position: absolute; left:52%; top: 20%;">
+	<div style="height:80%; width: 20%; position: absolute; right:27%; top: 10%;">
 		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
-		<img id="seafile-logo" 
-		     src="https://www.seafile.com/media/img/seafile-logo.png"/></br></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">© 2016 Seafile</a></br></br></br></br>		
+		<img id="seafile-logo" style="height: 30px; width: auto;"
+		     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a></br></br></br></br>		
 	</div>
-	<div style="height:80%; width: 20%; position: absolute; right:4%; top: 20%;">
+	<div style="height:80%; width: 20%; position: absolute; right:0%; top: 10%;">
 		<h4 style="color: #57a5b8;" >A service by</h4>
-		<img src="http://awob.mpg.de/images/mpdl-logo.png" style="height: 50px; width: auto;"/></br></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Contact Keeper Support</a></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="#">Impressum</a>	
+		<img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
 	</div>
 </div>
 {% endblock %}
@@ -139,19 +137,28 @@ $(function() {
 {% endif %}
 </script>
 <script type="text/javascript">
+
+var h=document.getElementById("login_panel").offsetHeight;
+
+
 var login_panel=document.getElementById('login_panel');
 var info_panel=document.getElementById('info_panel');
 var footer=document.getElementById('lg_footer');
 var lg_floor=document.getElementById('lg_floor');
+
 window.onresize = function () {
 	width = window.innerWidth;
-	if (width<=1400){
+	if (width<=1500){
 		login_panel.style.top='75%';login_panel.style.left='30%';
 		info_panel.style.width='40%';info_panel.style.left='30%';
 		footer.style.top='150%';}
-	if (width>=1400){
-		login_panel.style.top='22%';login_panel.style.left='57.5%';
+	if (width>=1500){
+		login_panel.style.top='22%';login_panel.style.right='16%';
+		login_panel.style.left='';
 		info_panel.style.width='30%';info_panel.style.left='22.5%';
-		footer.style.top='80%';}}
+		footer.style.top='86%';}}
 </script>
 {% endblock %}
+
+
+

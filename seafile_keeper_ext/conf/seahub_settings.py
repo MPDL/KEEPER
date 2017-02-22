@@ -94,11 +94,11 @@ WOPI_ACCESS_TOKEN_EXPIRATION = 30 * 60   # seconds
 # And of course you should make sure your LibreOffice Online supports to preview
 # the files with the specified extensions
 OFFICE_WEB_APP_FILE_EXTENSION = ('ods', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt',
-    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt')
+    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt', 'odp')
 
 # Enable edit files through LibreOffice Online
 ENABLE_OFFICE_WEB_APP_EDIT = True
 
 # types of files should be editable through LibreOffice Online
 OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ('ods', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx', 'ppt',
-    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt')
+    'pptm', 'pptx', 'doc', 'docm', 'docx', 'odt', 'odp')
