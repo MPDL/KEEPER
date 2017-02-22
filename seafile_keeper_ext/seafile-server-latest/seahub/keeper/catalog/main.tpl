@@ -59,14 +59,14 @@
 	#header {
    		background: #f4f4f7 !important;
     		width: 100% !important;
-    		height: 53px !important;
+    		height: 32px !important;
    		font-size: 14px !important;
     		border-bottom: 1px solid #e8e8e8 !important;
     		padding-bottom: 4px !important;
     		z-index: 1 !important;
 	}
 
-	#logo{position: absolute; top: 17px; left: 11px;}
+	#logo{position: absolute; top: 13px !important; left: 16px !important;}
 </style>
 </head>
 
