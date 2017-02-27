@@ -310,4 +310,7 @@ textarea{resize: none;}
 #MPDL-logo:hover{cursor: pointer;}
 #seafile-logo:hover{cursor: pointer;}
 
+.left-right-tabs-nav.ui-state-active a{background: #57a5b8 !important;}
+
+.op-target{color: #57a5b8 !important;}
 
