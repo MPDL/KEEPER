@@ -314,3 +314,6 @@ textarea{resize: none;}
 
 .op-target{color: #57a5b8 !important;}
 
+.hidden-op.repo-hidden-op.sf-dropdown-menu a:hover{background: #EEF0DB !important;}
+.hidden-op.dirent-hidden-op.sf-dropdown-menu a:hover{background: none !important;}
+.hidden-op.repo-hidden-op.sf-dropdown-menu a{color: black !important;}
