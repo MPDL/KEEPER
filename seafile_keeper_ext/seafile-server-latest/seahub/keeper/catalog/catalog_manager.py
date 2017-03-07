@@ -15,10 +15,8 @@ from netaddr import IPAddress, IPSet
 
 import urllib2
 
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
-
 from django.core.cache import cache
+from django.db import connections
 
 #time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
@@ -69,9 +67,13 @@ def is_in_mpg_ip_range(ip):
 
 def get_catalog():
 
+    # force db reconnect
+    # see https://code.djangoproject.com/ticket/21597#comment:29
+    connections['default'].close()
+
     catalog = []
 
-    repos_all = seafile_api.get_repo_list(0, MAX_INT)
+    repos_all = [r for r in seafile_api.get_repo_list(0, MAX_INT) if get_repo_owner(r.id) != 'system']
 
     for repo in sorted(repos_all, key=lambda x: x.last_modify, reverse=True):
 
