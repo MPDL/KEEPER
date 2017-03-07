@@ -15,6 +15,9 @@ from netaddr import IPAddress, IPSet
 
 import urllib2
 
+import os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
+
 from django.core.cache import cache
 
 #time to live of the mpg IP set: day
