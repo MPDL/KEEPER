@@ -49,6 +49,11 @@ Description
 INS; Department; Name, Fname
 """
 
+def get_root_dir(repo):
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+    return fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+
 def test_quote_arg():
     assert quote_arg('aaa') == "\"aaa\""
 
@@ -142,16 +147,33 @@ def test_cdc_completely(create_tmp_repo):
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
 
-    sleep(20)
-
+    sleep(10)
 
     """check cdc pdf exists"""
-    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
-    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
-    file_names = [f.name for f in dir.get_files_list()]
-    if not any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
-        print file_names
+    dir = get_root_dir(repo)
+    cdc_pdfs = [f.name for f in dir.get_files_list() if f.name.startswith(CDC_PDF_PREFIX) and f.name.endswith('.pdf')]
+    if not cdc_pdfs:
         pytest.fail("Cannot find cdc pdf in repo %s!" % repo.name)
 
+    """check cdc pdf remove"""
+    seafile_api.del_file(repo.id, "/", cdc_pdfs[0], SERVER_EMAIL)
 
+    sleep(10)
+
+    dir = get_root_dir(repo)
+    cdc_pdfs = [f.name for f in dir.get_files_list() if f.name.startswith(CDC_PDF_PREFIX) and f.name.endswith('.pdf')]
+    assert not cdc_pdfs, "cdc pdf should not be recreated if it has been deleted"
+
+    """update md file with corrected field"""
+    f = tempfile.NamedTemporaryFile()
+    f.write(MD_GOOD.replace("2010", "2017"))
+    f.flush()
+
+    seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
+    f.close()
+
+    sleep(10)
+
+    dir = get_root_dir(repo)
+    cdc_pdfs = [f.name for f in dir.get_files_list() if f.name.startswith(CDC_PDF_PREFIX) and f.name.endswith('.pdf')]
+    assert cdc_pdfs, "cdc pdf should be recreated if metadata md has been changed"
