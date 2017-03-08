@@ -307,7 +307,6 @@ def print_OK():
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
-
     event = None
 
     # exit if repo encrypted
@@ -316,6 +315,12 @@ def generate_certificate(repo, commit):
 
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
+        return False
+
+    # exit if cdc pdf is deleted
+    # see https://github.com/MPDL/KEEPER/issues/41
+    pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
+    if re.match(pattern, commit.desc):
         return False
 
     try:
@@ -332,7 +337,7 @@ def generate_certificate(repo, commit):
             else:
                 pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
                 if not re.match(pattern, commit.desc):
-                    # if already certified and MD has not been changed then exit
+                    # exit if already certified and MD has not been changed
                     return False
 
 
@@ -343,13 +348,13 @@ def generate_certificate(repo, commit):
         # if any(file_name.startswith(CDC_PDF_PREFIX) and file_name.endswith('.pdf') for file_name in file_names):
             # return False
 
-
         # get latest version of the ARCHIVE_METADATA_TARGET
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
 
         #exit if no metadata file exists
         if not file:
             return False
+
 
         # check whether there is at least one creative dirent
         if not has_at_least_one_creative_dirent(dir):
@@ -409,8 +414,14 @@ def generate_certificate(repo, commit):
 
             LOGGER.info("Add " + cdc_pdf + " to the repo...")
             if event == EVENT.db_update:
-                seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
-                LOGGER.info("Sucessfully updated")
+                # cdc pdf already exists, then put
+                if dir.lookup(cdc_pdf):
+                    seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
+                    LOGGER.info("Sucessfully updated")
+                # post otherwise
+                else:
+                    seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
+                    LOGGER.info("Sucessfully recreated")
                 logging.info("CDC has been successfully updated for repo %s, id: %s" % (repo.id, cdc_id) )
             else:
                 seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
