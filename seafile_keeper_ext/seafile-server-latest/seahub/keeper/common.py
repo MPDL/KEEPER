@@ -10,7 +10,8 @@ from seahub.profile.models import Profile
 def get_logger(name, logfile):
 
     logger = logging.getLogger(name)
-    handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1)
+    # handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1)
+    handler = logging.handlers.WatchedFileHandler(logfile)
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(message)s')
     handler.setFormatter(formatter)

@@ -436,7 +436,8 @@ def generate_certificate(repo, commit):
 
     except Exception as err:
         LOGGER.error(traceback.format_exc())
-        logging.error("CDC generation for repo %s has been failed, check %s for details" % (repo.id, CDC_LOG) )
+        logging.error("CDC generation for repo %s has been failed, check %s for details. \nTraceback:" % (repo.id, CDC_LOG) )
+        logging.error(traceback.format_exc())
     finally:
        # other final stuff
         db.close()
