@@ -105,17 +105,17 @@
             {contents}
 			{data-nav}
             <div id="left-panel" class="side-tabnav hide" role="navigation" style="display: block;">
-            	<!--
-				<h3 class="hd">Institute</h3>
+                
+                <h3 class="hd">Institute</h3>
                 <ul class="side-tabnav-tabs">
-					<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>
-					<li class="tab"><a href="#" class="lib">Institut A</a></li>
-					<li class="tab"><a href="#" class="lib">Institut B</a></li>
-					<li class="tab"><a href="#" class="lib">Institut C</a></li>
-					<li class="tab"><a href="#" class="lib">Institut D</a></li>
-					<li class="tab"><a href="#" class="lib">Institut E</a></li>
-				</ul>
-				-->
+                    <li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>
+                    <li class="tab"><a href="#" class="lib">Institut A</a></li>
+                    <li class="tab"><a href="#" class="lib">Institut B</a></li>
+                    <li class="tab"><a href="#" class="lib">Institut C</a></li>
+                    <li class="tab"><a href="#" class="lib">Institut D</a></li>
+                    <li class="tab"><a href="#" class="lib">Institut E</a></li>
+                </ul>
+                
             </div>
             <div id="right-panel">
             	    <div class="hd ovhd">
@@ -130,6 +130,7 @@
 							<h3>%title%</h3>
 							<p>%smalltext%</p>
 							<p>%author%</p>
+                            %year%
 							<p>Contact: %contact%</p>
 						</div>
 					{/dataset}
@@ -139,10 +140,14 @@
 							<h3>%title%</h3>
 							<p>%smalltext%</p>
 							<p>%author%</p>
+                            %year%
 							<p>Contact: %contact%</p>
 						</div>
 					{/dataset_certified}
-					
+                    
+                    {fyear} 
+                        <p>Year: %year%</p>
+                    {/fyear}
 					
 					{pagination-start}
 						<p style="text-align:center;%style%">
