@@ -62,19 +62,6 @@ function startup_seafile () {
     popd
 }
 
-# check seafile object storage integrity
-function check_object_storage_integrity () {
-    if [ $(date +'%u')  -eq "${__DAY_TO_CHECK_INTEGRITY__}" ]; then
-        pushd $SEAFILE_LATEST_DIR
-        RESULT="$(./seaf-fsck.sh)"
-        echo "${RESULT}"
-        if [[ "$RESULT" =~ "is corrupted" ]]; then
-            warn "Object storage integrity test has failed"
-        fi
-        popd
-    fi
-}
-
 function backup_databases () {
 
     echo -e "Backup seafile databases...\n"
@@ -171,8 +158,6 @@ if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
         warn "Old snapshots still exist! Please clean them up!"
     fi
 fi
-
-check_object_storage_integrity
 
 ##### END CHECK
 
