@@ -6,11 +6,12 @@ import mistune
 
 from seahub.profile.models import Profile
 
+import MySQLdb
+from seahub.settings import DATABASES
 
 def get_logger(name, logfile):
 
     logger = logging.getLogger(name)
-    # handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1)
     handler = logging.handlers.WatchedFileHandler(logfile)
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(message)s')
@@ -27,6 +28,15 @@ def get_user_name(user):
     if p and p.nickname:
         name = p.nickname
     return name
+
+def get_db(db_name):
+    """Get DB connection"""
+    return MySQLdb.connect(host=DATABASES['default']['HOST'],
+         user=DATABASES['default']['USER'],
+         passwd=DATABASES['default']['PASSWORD'],
+         db=db_name,
+         charset='utf8')
+
 
 HEADER_STEP = 2
 # Headers in MD file to be processed by the parse_markdown
