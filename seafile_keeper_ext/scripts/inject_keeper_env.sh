@@ -53,6 +53,13 @@ function timestamp () {
     echo $(date +'%s')
 }
 
+# calculate elapsed time, 
+# first param is start timestamp in seconds
+function elapsed_time() {
+    ELAPSED_TIME=$(($(timestamp) - ${1}))
+    printf '%dh:%dm:%ds' $((${ELAPSED_TIME}/3600)) $((${ELAPSED_TIME}%3600/60)) $((${ELAPSED_TIME}%60))
+}
+
 ### INJECT KEEPER PROPERTIES
 
 SEAFILE_DIR=/opt/seafile
