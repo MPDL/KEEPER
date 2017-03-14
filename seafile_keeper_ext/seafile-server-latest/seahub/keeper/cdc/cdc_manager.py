@@ -20,7 +20,7 @@ import subprocess
 # from subprocess import STDOUT, call
 
 from keeper.default_library_manager import get_keeper_default_library
-from keeper.common import parse_markdown, get_user_name, get_logger
+from keeper.common import parse_markdown, get_user_name, get_logger, get_db
 
 from django.core.mail import EmailMessage
 from django.template import Context, loader
@@ -200,13 +200,13 @@ def get_file_pivate_url(repo_id, file_name):
     """Get file private url"""
     return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name
 
-def get_db(db_name):
-    """Get DB connection"""
-    return MySQLdb.connect(host=DATABASES['default']['HOST'],
-         user=DATABASES['default']['USER'],
-         passwd=DATABASES['default']['PASSWORD'],
-         db=db_name,
-         charset='utf8')
+# def get_db(db_name):
+    # """Get DB connection"""
+    # return MySQLdb.connect(host=DATABASES['default']['HOST'],
+         # user=DATABASES['default']['USER'],
+         # passwd=DATABASES['default']['PASSWORD'],
+         # db=db_name,
+         # charset='utf8')
 
 
 def register_cdc_in_db(db, cur, repo_id, owner):
