@@ -173,7 +173,7 @@ asynchronous_backup
 startup_seafile
 
 echo_green "Backup ended at $(date)"
-echo_green "Elapsed time in seconds: $(($(timestamp) - $START))"
+echo_green "Elapsed time: $(elapsed_time ${START})\n"
 
 echo_green "Backup is successful!"
 
