@@ -43,7 +43,7 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 25 # per page
+pagination_items = 500 # per page
 
 #########################
 #                       #
@@ -198,20 +198,24 @@ def application(env, start_response):
 
             # load datasets into template
             for tmpresult in results:
+
+                slots = {}
                 result_id = '#'
                 if ( 'id' in tmpresult):
                     result_id = '/f/'+tmpresult['id']
 
-                result_title = 'Project in progress;'
+                result_title = "Projektarchiv Nr. " + tmpresult['catalog_id']
                 if ( 'title' in tmpresult and len(tmpresult['title']) > 0 ):
                     if ( len(tmpresult['title']) > 200 ):
                         result_title = (tmpresult['title'][0:197]+'...')
                     else:
                         result_title = tmpresult['title']
+                slots['title'] = result_title
 
                 result_owner = ''
                 if ( 'owner' in tmpresult):
                     result_owner = tmpresult['owner'].lower()
+                slots['contact'] = result_owner
 
                 result_author = []
                 if ( 'authors' in tmpresult):
@@ -235,6 +239,7 @@ def application(env, start_response):
                         if ( 'affs' in tmpauthors):
                             #TODO check if correct format
                             result_author.append( ','.join(tmpauthors['affs']).title() )
+                slots['author'] = ', '.join(result_author)
 
                 result_description = ''
                 if ( 'description' in tmpresult and len(tmpresult['description']) > 0 ):
@@ -242,11 +247,20 @@ def application(env, start_response):
                         result_description = (tmpresult['description'][0:197]+'...')
                     else:
                         result_description = tmpresult['description']
+                slots['smalltext'] = result_description
+
+
+                slots['year']=''
+                if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
+                    slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
 
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
-                    main_layer.write_layer('dataset_certified', title=result_title, author=', '.join(result_author), contact=result_owner, smalltext=result_description )
+                    main_layer.write_layer('dataset_certified', **slots)
                 else:
-                    main_layer.write_layer('dataset', title=result_title, author=', '.join(result_author), contact=result_owner, smalltext=result_description )
+                    main_layer.write_layer('dataset', **slots)
+
+
+
 
 
             # load pagination into template

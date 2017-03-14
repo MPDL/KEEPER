@@ -4,10 +4,10 @@ import traceback
 
 from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
-from seahub.settings import ARCHIVE_METADATA_TARGET
+from seahub.settings import ARCHIVE_METADATA_TARGET, DATABASES, KEEPER_DB_NAME
 
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
-from keeper.common import parse_markdown, get_user_name
+from keeper.common import parse_markdown, get_user_name, get_db
 
 import logging
 import json
@@ -17,6 +17,9 @@ import urllib2
 
 from django.core.cache import cache
 from django.db import connections
+
+
+import MySQLdb
 
 #time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
@@ -65,11 +68,52 @@ def get_mpg_ip_set():
 def is_in_mpg_ip_range(ip):
     return IPAddress(ip) in get_mpg_ip_set()
 
+
+def get_catalog_id_by_repo(cur, repo_id):
+    """Get catalog_id by repo_id. Return None if nothing found"""
+    try:
+        cur.execute("SELECT catalog_id FROM catalog_repos WHERE repo_id='" + repo_id + "'")
+        rs = cur.fetchone()
+        catalog_id = str(rs[0]) if rs is not None else None
+    except Exception:
+        # if not DEBUG:
+        logging.error('Cannot get_catalog_id_by_repo: ' + repo_id)
+        logging.error(traceback.format_exc())
+        catalog_id = None
+    return catalog_id
+
+def register_catalog_in_db(db, cur, repo_id, owner):
+    """
+    Register repo in catalog DB
+    Returns repo catalog id
+    """
+    logging.info("""Register Repo in Catalog DB in keeper-db""")
+    try:
+        catalog_id = get_catalog_id_by_repo(cur, repo_id)
+        if catalog_id is not None:
+            # UPDATE
+            cur.execute("UPDATE catalog_repos SET modified=CURRENT_TIMESTAMP WHERE repo_id='" + repo_id + "'")
+            db.commit()
+            logging.info("Sucessfully updated, catalog_id: " + catalog_id)
+        else:
+            # CREATE
+            cur.execute("INSERT INTO catalog_repos (`repo_id`, `catalog_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
+            db.commit()
+            catalog_id = get_catalog_id_by_repo(cur, repo_id)
+            logging.info("Sucessfully created, catalog_id: " + catalog_id)
+    except Exception as err:
+        db.rollback()
+        # if not DEBUG:
+        logging.error("Cannot register catalog_id in DB for repo: %s, owner: %s" % (repo_id, owner))
+        raise err
+    return catalog_id
+
 def get_catalog():
 
     # force db reconnect
     # see https://code.djangoproject.com/ticket/21597#comment:29
     connections['default'].close()
+    db = get_db(KEEPER_DB_NAME)
 
     catalog = []
 
@@ -128,7 +172,17 @@ def get_catalog():
                         proj["title"] = t
                         del proj["in_progress"]
 
+                    #Year
+                    y = strip_uni(md.get("Year"))
+                    if y:
+                        proj["year"] = y
+
                     proj["is_certified"] = is_certified_by_repo_id(repo.id)
+
+            #Catalog_id
+            catalog_id = register_catalog_in_db(db, db.cursor(), repo.id, email)
+            proj["catalog_id"] = catalog_id
+
             catalog.append(proj)
 
         except Exception as err:
