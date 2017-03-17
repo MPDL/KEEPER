@@ -35,8 +35,6 @@ export PYTHONPATH=${INSTALLPATH}/seahub-extra:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
 export PYTHONPATH="..:${PYTHONPATH}"
 
-
-
 OPTS=""
 while getopts ":" opt; do
    OPTS="${OPTS}${OPTARG}" 

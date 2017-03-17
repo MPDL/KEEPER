@@ -1,16 +1,16 @@
 # coding: utf-8
 
-import os
 import logging
 import logging.handlers
 import datetime
 
 from seaserv import get_related_users_by_repo, get_org_id_by_repo_id, \
-        get_related_users_by_org_repo, get_commit, get_repo
+        get_related_users_by_org_repo, get_commit
 from .db import save_user_events, save_org_user_events, save_file_audit_event, \
         save_file_update_event, save_perm_audit_event
 
 from keeper.cdc.cdc_manager import generate_certificate_by_commit
+from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
 
 def RepoUpdateEventHandler(session, msg):
     elements = msg.body.split('\t')
@@ -40,6 +40,17 @@ def RepoUpdateEventHandler(session, msg):
         save_org_user_events (session, org_id, etype, detail, users, time)
     else:
         save_user_events (session, etype, detail, users, time)
+
+
+    # KEEPER
+    logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
+    logging.info("Trying to create/update keeper catalog entry for repo_id: %s..." % repo_id)
+    if bool(generate_catalog_entry_by_repo_id(repo_id)):
+        logging.info("Success!")
+    else:
+        logging.error("Something went wrong...")
+
+
 
 def FileUpdateEventHandler(session, msg):
     elements = msg.body.split('\t')

@@ -1,9 +1,10 @@
 # Copyright (c) 2012-2016 Seafile Ltd.
 
+
 import logging
 import settings
 from seaserv import seafile_api
-logger = logging.getLogger(__name__)
+
 
 from keeper.default_library_manager import copy_keeper_default_library
 
@@ -48,7 +49,7 @@ else:
                 seafile_api.mkdir_with_parents(repo_id, '/',
                         dir_path.strip('/'), creator)
         except Exception as e:
-            logger.error(e)
+            logging.error(e)
         session.close()
 
         # KEEPER
@@ -83,3 +84,16 @@ else:
         else:
             seafevents.save_user_events (session, etype, detail, users, None)
         session.close()
+
+        # KEEPER
+        logging.info("REPO DELETE EVENT repo_name: %s, repo_id: %s" % (repo_name, repo_id))
+        try:
+            from keeper.catalog.catalog_manager import delete_catalog_entry_by_repo_id
+            delete_catalog_entry_by_repo_id(repo_id)
+            logging.info('Catalog entry for repo: %s is successfully deleted!' % repo_id)
+        except Exception as e:
+            logging.error(e)
+
+
+
+

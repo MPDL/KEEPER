@@ -43,7 +43,7 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 500 # per page
+pagination_items = 25 # per page
 
 #########################
 #                       #
@@ -204,7 +204,7 @@ def application(env, start_response):
                 if ( 'id' in tmpresult):
                     result_id = '/f/'+tmpresult['id']
 
-                result_title = "Projektarchiv Nr. " + tmpresult['catalog_id']
+                result_title = "Projektarchiv Nr. %s" % tmpresult['catalog_id']
                 if ( 'title' in tmpresult and len(tmpresult['title']) > 0 ):
                     if ( len(tmpresult['title']) > 200 ):
                         result_title = (tmpresult['title'][0:197]+'...')
