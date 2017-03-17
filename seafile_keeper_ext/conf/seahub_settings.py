@@ -11,6 +11,17 @@ DATABASES = {
         'OPTIONS': {
             'init_command': 'SET storage_engine=INNODB',
         }
+    },
+    'keeper': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'keeper-db',
+        'USER': '__DB_USER__',
+        'PASSWORD': '__DB_PASSWORD__',
+        'HOST': '__DB_HOST__',
+        'PORT': '__DB_PORT__',
+        'OPTIONS': {
+            'init_command': 'SET storage_engine=INNODB',
+        }
     }
 }
 

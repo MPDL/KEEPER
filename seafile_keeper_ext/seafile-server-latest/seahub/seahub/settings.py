@@ -192,6 +192,9 @@ INSTALLED_APPS = (
     'seahub.help',
     'seahub.thumbnail',
     'seahub.password_session',
+
+    'keeper',
+
 )
 
 # Enabled or disable constance(web settings).
