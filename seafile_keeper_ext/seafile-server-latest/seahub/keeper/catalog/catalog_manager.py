@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 import traceback
@@ -20,12 +21,13 @@ import urllib2
 from django.core.cache import cache
 from django.db import connections
 
-#time to live of the mpg IP set: day
+# time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
 
 MAX_INT = 2147483647
 
 JSON_DATA_URL = 'https://rena.mpdl.mpg.de/iplists/keeper.json'
+
 
 def trim_by_len(str, max_len, suffix="..."):
     if str:
@@ -35,10 +37,21 @@ def trim_by_len(str, max_len, suffix="..."):
         str = unicode(str, 'utf-8', errors='replace')
     return str
 
+
 def strip_uni(str):
     if str:
         str = unicode(str.strip(), 'utf-8', errors='replace')
     return str
+
+
+def reconnect_db():
+    """
+    Force reconnect db, a walkaround to fix (2006, 'MySQL server has gone away') issue,
+    see https://code.djangoproject.com/ticket/21597#comment:29
+    """
+    connections['default'].close()
+    connections['keeper'].close()
+
 
 def get_mpg_ip_set():
     """
@@ -56,9 +69,15 @@ def get_mpg_ip_set():
             ip_ranges = [(ipr.items())[0][0] for ipr in json_dict['details']]
             ip_set = IPSet(ip_ranges)
             cache.set('KEEPER_CATALOG_MPG_IP_SET', ip_set, None)
-            cache.set('KEEPER_CATALOG_LAST_FETCHED', json_dict['timestamp'], IP_SET_TTL)
+            cache.set(
+                'KEEPER_CATALOG_LAST_FETCHED',
+                json_dict['timestamp'],
+                IP_SET_TTL)
         except Exception as e:
-            logging.info("Cannot get/parse MPG IPs DB: " + ": ".join(str(i) for i in e))
+            logging.info(
+                "Cannot get/parse MPG IPs DB: " +
+                ": ".join(
+                    str(i) for i in e))
             logging.info("Get IPS from old cache")
             ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
     else:
@@ -66,13 +85,18 @@ def get_mpg_ip_set():
         ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
     return ip_set
 
+
 def is_in_mpg_ip_range(ip):
-    return IPAddress(ip) in get_mpg_ip_set()
+    # only for tests!
+    return True
+    # return IPAddress(ip) in get_mpg_ip_set()
+
 
 def generate_catalog_entry(repo):
     """
     Generate catalog entry in for the repo DB
     """
+    reconnect_db()
 
     proj = {}
 
@@ -104,8 +128,9 @@ def generate_catalog_entry(repo):
                         aa = _.split(';')
                         author['name'] = aa[0]
                         if len(aa) > 1 and aa[1].strip():
-                            author['affs'] = [x.strip() for x in aa[1].split('|')]
-                            author['affs'] = [x for x in author['affs'] if x ]
+                            author['affs'] = [x.strip()
+                                              for x in aa[1].split('|')]
+                            author['affs'] = [x for x in author['affs'] if x]
                         authors.append(author)
                     if a:
                         proj["authors"] = authors
@@ -120,13 +145,13 @@ def generate_catalog_entry(repo):
                 if c:
                     proj["comments"] = c
 
-                #Title
+                # Title
                 t = strip_uni(md.get("Title"))
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
 
-                #Year
+                # Year
                 y = strip_uni(md.get("Year"))
                 if y:
                     proj["year"] = y
@@ -135,13 +160,12 @@ def generate_catalog_entry(repo):
 
         # add or update project metadata in DB
         c = Catalog.objects.add_or_update_by_repo_id(repo.id, email, proj)
-        #Catalog_id
+        # Catalog_id
         proj["catalog_id"] = str(c.catalog_id)
 
-
     except Exception:
-        msg = "repo_name: %s, id: %s" % ( repo.name, repo.id )
-        logging.error (msg)
+        msg = "repo_name: %s, id: %s" % (repo.name, repo.id)
+        logging.error(msg)
         logging.error(traceback.format_exc())
 
     return proj
@@ -153,15 +177,12 @@ def generate_catalog_entry_by_repo_id(repo_id):
     """
     return generate_catalog_entry(seafile_api.get_repo(repo_id))
 
+
 def get_catalog():
     """
     Get catalog metadata from pre-generated DB cache
     """
-    # force db reconnect
-    # see https://code.djangoproject.com/ticket/21597#comment:29
-    connections['default'].close()
-    connections['keeper'].close()
-
+    reconnect_db()
     return Catalog.objects.get_all_mds_ordered()
 
 
@@ -169,8 +190,8 @@ def delete_catalog_entry_by_repo_id(repo_id):
     """
     Delete catalog entry by repo_id
     """
+    reconnect_db()
     Catalog.objects.delete_by_repo_id(repo_id)
-
 
 
 def generate_catalog():
@@ -180,5 +201,5 @@ def generate_catalog():
     repos_all = [r for r in seafile_api.get_repo_list(0, MAX_INT)
                  if get_repo_owner(r.id) != 'system']
 
-    return [ generate_catalog_entry(repo) for repo in
-            sorted(repos_all, key=lambda x: x.last_modify, reverse=True) ]
+    return [generate_catalog_entry(repo) for repo in
+            sorted(repos_all, key=lambda x: x.last_modify, reverse=False)]
