@@ -104,19 +104,19 @@
             
             {contents}
 			{data-nav}
-            <div id="left-panel" class="side-tabnav hide" role="navigation" style="display: block;">
+            <!--<div id="left-panel" class="side-tabnav hide" role="navigation" style="display: block;">-->
                 
-                <h3 class="hd">Institute</h3>
-                <ul class="side-tabnav-tabs">
-                    <li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>
-                    <li class="tab"><a href="#" class="lib">Institut A</a></li>
-                    <li class="tab"><a href="#" class="lib">Institut B</a></li>
-                    <li class="tab"><a href="#" class="lib">Institut C</a></li>
-                    <li class="tab"><a href="#" class="lib">Institut D</a></li>
-                    <li class="tab"><a href="#" class="lib">Institut E</a></li>
-                </ul>
+                <!--<h3 class="hd">Institute</h3>-->
+                <!--<ul class="side-tabnav-tabs">-->
+                    <!--<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut A</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut B</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut C</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut D</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut E</a></li>-->
+                <!--</ul>-->
                 
-            </div>
+            <!--</div>-->
             <div id="right-panel">
             	    <div class="hd ovhd">
 						<h3 class="fleft">Project Catalog</h3>

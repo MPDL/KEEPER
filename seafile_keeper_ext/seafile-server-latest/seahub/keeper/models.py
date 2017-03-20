@@ -17,7 +17,7 @@ class CatalogManager(models.Manager):
 
     def get_all_mds_ordered(self):
         mds = []
-        for c in self.using('keeper').order_by('-catalog_id').all():
+        for c in self.using('keeper').order_by('-modified').all():
             c.md['catalog_id'] = c.catalog_id
             mds.append(c.md)
         return mds
