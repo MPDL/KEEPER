@@ -88,8 +88,8 @@ def get_mpg_ip_set():
 
 def is_in_mpg_ip_range(ip):
     # only for tests!
-    return True
-    # return IPAddress(ip) in get_mpg_ip_set()
+    # return True
+    return IPAddress(ip) in get_mpg_ip_set()
 
 
 def generate_catalog_entry(repo):

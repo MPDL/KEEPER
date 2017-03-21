@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 06, 2017 at 01:04 PM
+-- Generation Time: Mar 21, 2017 at 10:43 AM
 -- Server version: 5.5.54-0+deb8u1
 -- PHP Version: 5.6.30-0+deb8u1
 
@@ -32,7 +32,24 @@ CREATE TABLE IF NOT EXISTS `cdc_repos` (
   `owner` varchar(255) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `modified` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
-) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2073 DEFAULT CHARSET=utf8;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `keeper_catalog`
+--
+
+CREATE TABLE IF NOT EXISTS `keeper_catalog` (
+  `repo_id` varchar(37) NOT NULL,
+`catalog_id` int(11) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `md` text NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `modified` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8;
+
 
 --
 -- Indexes for dumped tables
@@ -45,6 +62,12 @@ ALTER TABLE `cdc_repos`
  ADD PRIMARY KEY (`repo_id`), ADD KEY `cdc_id` (`cdc_id`);
 
 --
+-- Indexes for table `keeper_catalog`
+--
+ALTER TABLE `keeper_catalog`
+ ADD PRIMARY KEY (`catalog_id`), ADD UNIQUE KEY `repo_id` (`repo_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -52,7 +75,12 @@ ALTER TABLE `cdc_repos`
 -- AUTO_INCREMENT for table `cdc_repos`
 --
 ALTER TABLE `cdc_repos`
-MODIFY `cdc_id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=48;
+MODIFY `cdc_id` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2073;
+--
+-- AUTO_INCREMENT for table `keeper_catalog`
+--
+ALTER TABLE `keeper_catalog`
+MODIFY `catalog_id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=87;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
