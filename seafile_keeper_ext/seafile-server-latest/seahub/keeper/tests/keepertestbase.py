@@ -7,6 +7,8 @@ from uuid import uuid4
 
 from seaserv import seafile_api
 
+from keeper.models import Catalog
+
 @pytest.fixture(scope='function')
 def create_tmp_user():
     """Create new random user"""
@@ -39,3 +41,5 @@ def create_tmp_repo(create_tmp_user):
     # teardown code
     if repo and repo.id:
         seafile_api.remove_repo(repo.id)
+        # clean up Catalog table, repo_deleted_cb is not called for tests!!!
+        Catalog.objects.delete_by_repo_id(repo.id)
