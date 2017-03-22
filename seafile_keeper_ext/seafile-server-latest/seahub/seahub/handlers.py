@@ -19,6 +19,8 @@ else:
     import seafevents
     from utils import SeafEventsSession
 
+    import traceback
+
     def repo_created_cb(sender, **kwargs):
         org_id  = kwargs['org_id']
         creator = kwargs['creator']
@@ -49,7 +51,7 @@ else:
                 seafile_api.mkdir_with_parents(repo_id, '/',
                         dir_path.strip('/'), creator)
         except Exception as e:
-            logging.error(e)
+            logging.error(traceback.format_exc())
         session.close()
 
         # KEEPER
@@ -87,12 +89,12 @@ else:
 
         # KEEPER
         logging.info("REPO DELETE EVENT repo_name: %s, repo_id: %s" % (repo_name, repo_id))
-        try:
-            from keeper.catalog.catalog_manager import delete_catalog_entry_by_repo_id
-            delete_catalog_entry_by_repo_id(repo_id)
-            logging.info('Catalog entry for repo: %s is successfully deleted!' % repo_id)
-        except Exception as e:
-            logging.error(e)
+        # try:
+            # from keeper.catalog.catalog_manager import delete_catalog_entry_by_repo_id
+            # delete_catalog_entry_by_repo_id(repo_id)
+            # logging.info('Catalog entry for repo: %s is successfully deleted!' % repo_id)
+        # except Exception as e:
+            # logging.error(e)
 
 
 
