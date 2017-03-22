@@ -203,3 +203,19 @@ def generate_catalog():
 
     return [generate_catalog_entry(repo) for repo in
             sorted(repos_all, key=lambda x: x.last_modify, reverse=False)]
+
+def clean_up_catalog():
+    """
+    Remove catalog entries for non existed repos
+    """
+    reconnect_db()
+    repo_ids = [r.id for r in seafile_api.get_repo_list(0, MAX_INT)
+                 if get_repo_owner(r.id) != 'system']
+
+    i = 0
+    for ce in Catalog.objects.get_all():
+        if ce.repo_id not in repo_ids:
+            ce.delete()
+            i += 1
+
+    return i
