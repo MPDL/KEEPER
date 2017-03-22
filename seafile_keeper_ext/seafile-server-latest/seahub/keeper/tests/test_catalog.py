@@ -36,6 +36,7 @@ def test_generate_catalog():
     """
         Test catalog generation
         Note: you prorbaly need to truncate keeper_catalog table
+        TODO: move to catalog admin script
     """
     start_time = time.time()
     catalog = generate_catalog()
@@ -43,10 +44,11 @@ def test_generate_catalog():
     print json.dumps(catalog, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
     print "len:", len(catalog)
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_clean_up_catalog():
     """
         Test catalog clean up
+        TODO: move to catalog admin script
     """
     import os
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
