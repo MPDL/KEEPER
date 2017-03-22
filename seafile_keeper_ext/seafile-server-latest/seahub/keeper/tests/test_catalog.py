@@ -4,13 +4,14 @@ import time
 # import cchardet
 
 
-from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog, get_user_name, generate_catalog
+from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog, \
+        get_user_name, generate_catalog, clean_up_catalog
 
 # @pytest.mark.skip
 # def test_dummy():
     # pass
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_is_in_mpg_ip_range():
     is_in_mpg = is_in_mpg_ip_range('192.129.78.1')
     assert is_in_mpg == False
@@ -41,6 +42,20 @@ def test_generate_catalog():
     print "--- %s seconds ---" % (time.time() - start_time)
     print json.dumps(catalog, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
     print "len:", len(catalog)
+
+# @pytest.mark.skip
+def test_clean_up_catalog():
+    """
+        Test catalog clean up
+    """
+    import os
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
+
+    import django
+    django.setup()
+
+    print "Deleted catalog entries: ", clean_up_catalog()
+
 
 
 
