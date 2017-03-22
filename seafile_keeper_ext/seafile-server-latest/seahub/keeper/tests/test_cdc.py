@@ -121,9 +121,12 @@ def test_cdc_completely(create_tmp_repo):
     sleep(2)
 
     # get copied files
-    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
-    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+    # commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    # commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+    # dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+    dir = get_root_dir(repo)
+
+
 
     # check copied files
     for fn in check_set:
