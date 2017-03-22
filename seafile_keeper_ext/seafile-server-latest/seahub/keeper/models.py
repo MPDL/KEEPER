@@ -1,19 +1,23 @@
 import logging
+import traceback
 
 from django.db import models
-from django.utils import timezone
 
 from picklefield.fields import PickledObjectField
-
-logger = logging.getLogger(__name__)
 
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
         return super(CatalogManager, self).using('keeper').get(repo_id=repo_id)
 
+    def get_all(self):
+        return super(CatalogManager, self).using('keeper').all()
+
     def delete_by_repo_id(self, repo_id):
-        return self.get_by_repo_id(repo_id).delete()
+        c = self.get_by_repo_id(repo_id)
+        if c:
+            return c.delete()
+        return None
 
     def get_all_mds_ordered(self):
         mds = []
@@ -39,9 +43,6 @@ class CatalogManager(models.Manager):
 
         return catalog
 
-
-
-
 class Catalog(models.Model):
     repo_id = models.CharField(max_length=37, unique=True, null=False)
     # catalog_id = models.PositiveIntegerField()
@@ -51,3 +52,19 @@ class Catalog(models.Model):
     modified = models.DateTimeField(auto_now=True)
     md = PickledObjectField()
     objects = CatalogManager()
+
+
+
+###### signal handlers
+from django.dispatch import receiver
+from seahub.signals import repo_deleted
+
+@receiver(repo_deleted)
+def remove_catalog_entry(sender, **kwargs):
+    repo_id = kwargs['repo_id']
+
+    logging.info("Repo deleted, id: %s" % repo_id)
+    try:
+        Catalog.objects.delete_by_repo_id(repo_id)
+    except Exception:
+        logging.error(traceback.format_exc())
