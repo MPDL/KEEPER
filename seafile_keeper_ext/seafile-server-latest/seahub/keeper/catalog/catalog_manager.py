@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
+import sys
+
 import traceback
 
 from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
@@ -8,7 +10,7 @@ from seafobj import fs_mgr
 from seahub.settings import ARCHIVE_METADATA_TARGET
 
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
-from keeper.common import parse_markdown, get_user_name
+from keeper.common import parse_markdown, get_user_name, print_json
 
 from keeper.models import Catalog
 
@@ -217,5 +219,25 @@ def clean_up_catalog():
         if ce.repo_id not in repo_ids:
             ce.delete()
             i += 1
-
     return i
+
+
+def usage():
+    print 'Usage: catalog_manager.py (sync-db|gen-db)'
+
+if __name__ == "__main__":
+
+    try:
+        param = sys.argv[1]
+    except:
+        usage()
+        sys.exit(1)
+
+    if param == 'clean-db':
+        print '%s catalog entries have been cleaned up' % clean_up_catalog()
+    elif param == 'gen-db':
+        print 'Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog())
+    else:
+        print str(sys.argv)
+        usage()
+        sys.exit(1)

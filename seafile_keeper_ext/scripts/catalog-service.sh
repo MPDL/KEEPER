@@ -50,6 +50,11 @@ function stop_catalog () {
 
 }
 
+function run_catalog_manager() {
+    RESULT=$($SEAFILE_DIR/../scripts/run_keeper_script.sh $SEAFILE_DIR/seahub/keeper/catalog/catalog_manager.py $1)    
+    echo $RESULT
+}
+
 case "$1" in
         start|restart)
             if [ "$1" = "restart" ]; then
@@ -60,8 +65,16 @@ case "$1" in
         stop)
             stop_catalog
         ;;
-       *)
-            echo "Usage: $0 {start|stop|restart}"
+        clean-db|gen-db)
+            run_catalog_manager $1
+        ;;
+        sync-db)
+            echo $0
+            $0 clean-db
+            $0 gen-db
+        ;;
+        *)
+            echo "Usage: $0 {start|stop|restart|clean-db|gen-db|sync-db}"
             exit 1
         ;;
 esac
