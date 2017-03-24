@@ -1703,7 +1703,7 @@ msgid ""
 "More technical details of encrypted library can be found at <a "
 "href=\"http://manual.seafile.com/security/security_features.html\">Seafile "
 "Manual</a>."
-msgstr "Weitere technische Details zu verschlüsselten Bibliotheken finden Sie auf <a href=\"http://manual.seafile.com/security/security_features.html\"> KEEPER-Handbuch</a>."
+msgstr "Weitere technische Details zu verschlüsselten Bibliotheken finden Sie auf <a href=\"http://manual.seafile.com/security/security_features.html\"> Seafile Handbuch</a>."
 
 #: seahub/help/templates/help/ignore.html:6
 msgid "Excluding files/folders from syncing"
