@@ -3,6 +3,7 @@
 import os
 import logging
 import mistune
+import json
 
 from seahub.profile.models import Profile
 
@@ -19,6 +20,9 @@ def get_logger(name, logfile):
     logger.addHandler(handler)
     logger.propagate = False
     return logger
+
+def print_json(obj):
+    print json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
 
 def get_user_name(user):
     """Get user name"""
