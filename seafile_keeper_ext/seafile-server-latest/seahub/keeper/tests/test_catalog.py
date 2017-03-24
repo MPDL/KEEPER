@@ -7,6 +7,7 @@ import time
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog, \
         get_user_name, generate_catalog, clean_up_catalog
 
+from keeper.common import print_json
 # @pytest.mark.skip
 # def test_dummy():
     # pass
@@ -41,7 +42,7 @@ def test_generate_catalog():
     start_time = time.time()
     catalog = generate_catalog()
     print "--- %s seconds ---" % (time.time() - start_time)
-    print json.dumps(catalog, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
+    print_json(catalog)
     print "len:", len(catalog)
 
 @pytest.mark.skip
@@ -57,9 +58,5 @@ def test_clean_up_catalog():
     django.setup()
 
     print "Deleted catalog entries: ", clean_up_catalog()
-
-
-
-
 
 
