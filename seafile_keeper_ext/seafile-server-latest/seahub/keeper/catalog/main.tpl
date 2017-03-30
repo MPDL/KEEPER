@@ -9,7 +9,7 @@
 <link rel="shortcut icon" href="https://keeper.mpdl.mpg.de/media/img/favicon.png?t=1465786517"/>
 <![endif]-->
 <link rel="stylesheet" type="text/css" href="https://keeper.mpdl.mpg.de/media/css/seahub.min.css?t=1465786517" />
-<link rel="stylesheet" type="text/css" href="https://keeper.mpdl.mpg.de/media/custom/keeper.css" />
+<link rel="stylesheet" type="text/css" href="https://keeper.mpdl.mpg.de/media/custom/catalog.css" />
 <style>
 	.item-block {
 		box-sizing:border-box;
