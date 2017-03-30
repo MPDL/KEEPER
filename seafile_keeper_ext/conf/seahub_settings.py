@@ -86,7 +86,7 @@ KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
 
 # Enable LibreOffice Online
-ENABLE_OFFICE_WEB_APP = True
+ENABLE_OFFICE_WEB_APP = False
 
 # Url of LibreOffice Online's discovery page
 # The discovery page tells Seafile how to interact with LibreOffice Online when view file online
