@@ -4,12 +4,12 @@
 <title>Catalog - KEEPER</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="keywords" content="File Collaboration Team Organization" />
-<link rel="icon" type="image/x-icon" href="https://keeper.mpdl.mpg.de/media/img/favicon.png?t=1465786517" />
+<link rel="icon" type="image/x-icon" href="/media/img/favicon.png?t=1465786517" />
 <!--[if IE]>
 <link rel="shortcut icon" href="https://keeper.mpdl.mpg.de/media/img/favicon.png?t=1465786517"/>
 <![endif]-->
-<link rel="stylesheet" type="text/css" href="https://keeper.mpdl.mpg.de/media/css/seahub.min.css?t=1465786517" />
-<link rel="stylesheet" type="text/css" href="https://keeper.mpdl.mpg.de/media/custom/catalog.css" />
+<link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1465786517" />
+<link rel="stylesheet" type="text/css" href="/media/custom/catalog.css" />
 <style>
 	.item-block {
 		box-sizing:border-box;
