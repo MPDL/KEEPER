@@ -1,21 +1,27 @@
 {% extends "base.html" %}
 {% load i18n %}
-
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
-
 {% block main_content %}
-<div class="new-narrow-panel">
-<h2 class="hd">{% trans "Log In" %}</h2>
-<form action="" method="post" class="con">{% csrf_token %}
+ 
+<div id="info_panel" style="width: 30%; height: auto; position: absolute; left: 22.5%; top: 20%; transition: width 0.8s; transition: left 0.8s; background-image: url('/media/custom/background.svg'); background-repeat: no-repeat; background-size: 30%; background-position: 10px 0px;">
+	<h3 style="font-size: 3em ; color:#57a5b8 ;">Archive the way you work</h3>
+	<p style="font-size: 1.35em ;"><span id="intro1">A new free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</span></br></br>
+<span id="intro2">You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</span></p>
+	<p><span id="intro3">Browse all research projects in KEEPER</span><span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog'";"></span></p>
+</div>
+
+<div id="login_panel" class="new-narrow-panel" style="position: absolute; right: 16%; top: 22%; margin: 0 !important; transition: top 0.8s; transition: right 0.8s; background: rgba(255, 255, 255, 1) !important; z-index: 1;">
+<h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
+<form id="form_login" action="" method="post" class="con">{% csrf_token %}
     <label for="login">{% trans "Email or Username" %}</label>
         <input type="text" name="login" id="login" value="" class="input" />
-	<label for="password">{% trans "Password" %}</label>
+	<label for="password">{% trans "Password" %}</label></br>
 	<a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
 	<input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
     {% if form.captcha %}
     <label>{% trans "CAPTCHA" %}</label><br />
     {{ form.captcha }}
-    <p class="clear"><a href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
+    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
     {% endif %}
     <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
     {% if form.errors %}
@@ -41,11 +47,6 @@
     {% if enable_signup %}
     <a href="{{ signup_url }}">{% trans "Signup" %}</a>
     {% endif %}
-
-    {% if enable_adfs_login %}
-    <button id="adfs-login" class="submit fright">ADFS</button>
-    {% endif %}
-
     {% if enable_shib_login %}
     <button id="shib-login" class="submit fright">{% trans "Shibboleth" %}</button>
     {% endif %}
@@ -54,6 +55,32 @@
     <button id="krb5-login" class="submit fright">{% trans "Kerberos" %}</button>
     {% endif %}
 </form>
+</div>
+<div id="lg_footer" style="border-top: 1px solid #DCDCDC; width: 61.5% ; height: 150px; position: absolute; top: 86%; left: 22.5%;">
+	<div style="height:80%; width: 20%; position: absolute; left:0%; top: 10%;">
+		<h4 style="color: #57a5b8;">What you need to know</h4>
+		<a class="normal" style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="/catalog" target="_blank">Project Catalog</a></br>
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a></br></br></br></br>	
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; left:27%; top: 10%;">
+		<h4 style="color: #57a5b8;">Desktop client</h4>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
+		</br></br></br></br></br>
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; right:27%; top: 10%;">
+		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
+		<img id="seafile-logo" style="height: 30px; width: auto;"
+		     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a></br></br></br></br>		
+	</div>
+	<div style="height:80%; width: 20%; position: absolute; right:0%; top: 10%;">
+		<h4 style="color: #57a5b8;" >A service by</h4>
+		<img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
+	</div>
 </div>
 {% endblock %}
 
@@ -108,6 +135,60 @@ $(function() {
     });
 });
 {% endif %}
+</script>
+<script type="text/javascript">
+
+var h=document.getElementById("login_panel").offsetHeight;
+
+
+var login_panel=document.getElementById('login_panel');
+var info_panel=document.getElementById('info_panel');
+var footer=document.getElementById('lg_footer');
+var lg_floor=document.getElementById('lg_floor');
+
+window.onresize = function () {
+	width = window.innerWidth;
+	if (width<=1500){
+		login_panel.style.top='75%';login_panel.style.left='30%';
+		info_panel.style.width='40%';info_panel.style.left='30%';
+		footer.style.top='150%';}
+	if (width>=1500){
+		login_panel.style.top='22%';login_panel.style.right='16%';
+		login_panel.style.left='';
+		info_panel.style.width='30%';info_panel.style.left='22.5%';
+		footer.style.top='86%';}}
+</script>
+
+<script type="text/javascript">
+
+var language=document.getElementById('lang-context').innerText;
+var intro1=document.getElementById("intro1");
+var intro2=document.getElementById("intro2");
+var intro3=document.getElementById("intro3");
+
+function translate(){
+	if(language=="Deutsch "){
+		intro1.innerText='Ein kostenloser Service für alle Max-Planck-Mitarbeiter und Projektpartner'
+				+' mit mehr als 1 TB Speicher pro Nutzer für Ihre Forschungsdaten.'
+				+' Profitieren Sie von einer sicheren Datenspeicherung, nahtlos integriert' 
+				+' in Ihrem Forschungsprozess.';
+		intro2.innerText='Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können'
+				+' Sie sicher sein, die Archivierungsvorschriften der' 
+				+' Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur'
+   				+' Sicherung "guter wissenschaftlicher Praxis" einzuhalten.';
+		intro3.innerText='Übersicht aller Forschungsprojekte in KEEPER';	
+	}
+	else{
+		intro1.innerText='A new free service for all Max Planck employees and project partners'
+				+' with more than 1TB of storage per user for your researchdata. Profit from safe data storage,'
+				+' seamlessly integrated into your research workflow.';
+		intro2.innerText='You do the right thing - with storing your data in Keeper you can be sure to fulfil'
+				+' the archiving regulations of the Max Planck Society to ensure "good scientific practice".';
+		intro3.innerText='Browse all research projects in KEEPER';
+	}	
+}
+
+language.onchange=translate();
 
 {% if enable_krb5_login %}
 $(function() {
