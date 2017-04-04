@@ -254,6 +254,21 @@ function restore_directories () {
     done
 }
 
+# Overwrites keeper EXT files with the seafiles sources. 
+# This is part of migration procedure, see https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%20System%20Administration/Migration.md
+function copy_seaf_src_to_ext() {
+    pushd $EXT_DIR/seafile-server-latest
+    TARGET_FILES=( $(find -H . -type f -not \( -path "*/.rope*" -or -path "*/__pycache*" -or -path "*/.cache*" -or -path "*/.git*" -or -path "*/tags" -or -name "*.pyc" -or -path "*/keeper*" \) ) )
+    echo "$TARGET_FILES"
+    for i in "${TARGET_FILES[@]}"; do
+        local SRC_FILE="${SEAFILE_LATEST_DIR}/${i}" 
+        [ -f "$SRC_FILE" ] && cp -v "$SRC_FILE" "${i}"
+    done
+    popd
+}
+
+
+
 check_consistency
 
 case "$1" in
@@ -302,9 +317,13 @@ case "$1" in
         popd
     ;;
 
+    copy-seafile-sources-in-ext)
+         copy_seaf_src_to_ext   
+    ;;
+
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext}"
         exit 1
      ;;
 esac
