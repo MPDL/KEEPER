@@ -42,11 +42,19 @@ def test_account_auto_activation(mocker):
     request_mock = mocker.patch('django.http.request.HttpRequest')
     login_mock = mocker.patch('seahub.base.accounts.login')
 
-    EMAIL = 'test_email_for_mpg_domain@mpdl.mpg.de'
+    reg = RegistrationBackend()
 
+    EMAIL = 'test_email_for_mpg_domain@mpdl.mpg.de'
     try:
-        reg = RegistrationBackend()
         new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
         assert new_user.is_active
     finally:
         User.objects.get(EMAIL).delete()
+
+    EMAIL = 'test_email_for_non_mpg_domain@gmail.com'
+    try:
+        new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
+        assert not new_user.is_active
+    finally:
+        User.objects.get(EMAIL).delete()
+
