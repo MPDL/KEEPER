@@ -214,13 +214,13 @@ dl { margin:1.5em 0; }
 dt { color:#666; margin:24px 0 2px; font-weight:normal; }
 dd { margin-bottom:.8em; color:#222; }
 a {
-    color:#57a5b8;
+    color:#eb8205;
     text-decoration:none;
     font-weight:bold;
 }
 a.normal {font-weight: normal;}
 a:focus, a:hover {
-    color: #57a5b8;
+    color: #eb8205;
 }
 a.black {
     color:#322;
@@ -420,6 +420,26 @@ table img { vertical-align:middle; }
     background:#fddaa4;
     color:#1f0600;
     text-align:center;
+}
+.fixed-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+.top-bar {
+    padding:7px 4px;
+    background:#fff1a8;
+    text-align:center;
+    border-bottom:1px solid #ccc;
+    margin:0;
+    z-index:3;
+}
+.top-bar-click {
+    display:inline-block;
+    margin-left:10px;
+    cursor:pointer;
+    color:#15c;
 }
 .outstanding-tip { color:red; }
 .label { color:#333; font-size:12px; font-style:normal; }
@@ -759,7 +779,7 @@ textarea:-moz-placeholder {/* for FF */
 }
 .left-right-tabs-nav .ui-state-active a,
 .left-right-tabs-nav .ui-state-active a:hover {
-    background:#57a5b8;
+    background:#feac74;
     color:#fff;
 }
 .left-right-tabs-content {
@@ -915,7 +935,7 @@ textarea:-moz-placeholder {/* for FF */
 }
 .side-tabnav-tabs .tab-cur a,
 .side-tabnav-tabs .tab-cur a:hover {
-    background-color:#57a5b8;
+    background-color:#feac74;
 }
 .side-tabnav-tabs .tab-cur [class^="sf2-icon-"],
 .side-tabnav-tabs .tab-cur a,
@@ -1183,9 +1203,9 @@ textarea:-moz-placeholder {/* for FF */
 }
 .tab-popup-tabs-nav .ui-state-active .a,
 .tab-popup-tabs-nav .tab .a:hover {
-    color:#57a5b8;
+    color:#eb8205;
     text-decoration:none;
-    border-bottom-color:#57a5b8;
+    border-bottom-color:#eb8205;
 }
 .tab-popup-tabs .ui-tabs-panel .option-list {
     max-height:200px;
@@ -1522,7 +1542,7 @@ button.sf-dropdown-toggle:focus {
     margin:10px 0;
 }
 .load-more-discussion {
-    color:#57a5b8;
+    color:#eb8205;
     margin-top:1rem;
     cursor:pointer;
     text-align:center;
@@ -1678,9 +1698,9 @@ button.sf-dropdown-toggle:focus {
 .wiki-nav .link:hover,
 #right-panel .hd .ui-state-active .a,
 #right-panel .hd .a:hover {
-    color:#57a5b8;
+    color:#eb8205;
     text-decoration:none;
-    border-bottom-color: #57a5b8;
+    border-bottom-color: #eb8205;
 }
 .btn-white,
 .tabnav button,
@@ -1694,10 +1714,6 @@ button.sf-dropdown-toggle:focus {
     color: #1f0600;
     padding:1px 25px 1px 10px;
     background: #fddaa4;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     z-index: 2;
 }
 #info-bar .close {
@@ -1735,7 +1751,7 @@ button.sf-dropdown-toggle:focus {
     font-size:12px;
     line-height:1;
     padding:1px 2px;
-    background:#57a5b8;
+    background:#feac74;
     border:1px solid #cb8a5d;
     top:0;
     left:15px;
@@ -1758,7 +1774,7 @@ button.sf-dropdown-toggle:focus {
     background:#f5f5f7;
     padding-right:10px;
     padding-left:8px;
-    border-left:2px solid #57a5b8;
+    border-left:2px solid #feac74;
     margin:0 -10px;
 }
 #notice-popover .avatar {
@@ -2009,6 +2025,9 @@ button.sf-dropdown-toggle:focus {
 #notices-more-btn:hover {
     color:#000;
     background:#dfdfdf;
+}
+#trash-more {
+    margin-bottom:30px;
 }
 #notices-more {
     margin-top: -20px;
@@ -2881,6 +2900,7 @@ button.sf-dropdown-toggle:focus {
 }
 #search-form,
 #search-user-form,
+#search-group-form,
 #search-repo-form {
     padding:7px 5px;
     background:#f7f7f8;
@@ -2953,7 +2973,7 @@ button.sf-dropdown-toggle:focus {
     border:1px solid #ede;
 }
 #plans th {
-    color:#57a5b8;
+    color:#eb8205;
     font-weight:bold;
     font-size:16px;
 }
@@ -2982,10 +3002,12 @@ button.sf-dropdown-toggle:focus {
     margin:10px 15px 20px 0;
 }
 #search-repo-form label,
+#search-group-form label,
 #search-user-form label {
     width:3.5em;
 }
 #search-repo-form .submit,
+#search-group-form .submit,
 #search-user-form .submit {
     margin-left:3.5em;
 }
@@ -3066,6 +3088,9 @@ button.sf-dropdown-toggle:focus {
 }
 #set-quota-form {
     min-width:255px;
+}
+#set-quota-form .input {
+    width:180px;
 }
 
 /* org reg */
@@ -3167,7 +3192,7 @@ button.sf-dropdown-toggle:focus {
     font-size:22px;
 }
 .repo-op .op-link:hover {
-    color:#57a5b8;
+    color:#eb8205;
     text-decoration:none;
 }
 /* multi dirents operation */
@@ -3270,19 +3295,6 @@ button.sf-dropdown-toggle:focus {
 #download-link-operations dt {
     margin: 0;
 }
-#top-browser-tip {
-    padding:7px 4px;
-    background:#fff1a8;
-    text-align:center;
-    border-bottom:1px solid #ccc;
-    margin:0;
-}
-#top-browser-tip .close {
-    display:inline-block;
-    margin-left:10px;
-    cursor:pointer;
-    color:#15c;
-}
 /* shared upload link */
 #upload-link-panel {
     width:600px;
@@ -3308,7 +3320,7 @@ button.sf-dropdown-toggle:focus {
 }
 #guide-for-new .icon-lightbulb {
     font-size:6em;
-    color:#57a5b8;
+    color:#feac74;
 }
 #guide-for-new .txt {
     margin-left:6.4em;

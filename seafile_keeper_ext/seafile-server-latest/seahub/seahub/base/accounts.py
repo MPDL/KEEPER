@@ -16,11 +16,10 @@ from constance import config
 from registration import signals
 
 from seahub.auth import login
-from seahub.constants import DEFAULT_USER
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.role_permissions.utils import get_enabled_role_permissions_by_role
 from seahub.utils import is_user_password_strong, \
-    clear_token, get_system_admins
+    clear_token, get_system_admins, is_pro_version
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 from seahub.utils.licenseparse import user_number_over_limit
 
@@ -215,7 +214,10 @@ class User(object):
             source = "LDAP"
 
         username = self.username
-        orgs = ccnet_threaded_rpc.get_orgs_by_user(username)
+
+        orgs = []
+        if is_pro_version():
+            orgs = ccnet_api.get_orgs_by_user(username)
 
         # remove owned repos
         owned_repos = []
@@ -459,10 +461,7 @@ class RegistrationBackend(object):
             site = RequestSite(request)
 
         from registration.models import RegistrationProfile
-        # KEEPER
-        from keeper.utils import account_can_be_auto_activated
-        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True \
-                or account_can_be_auto_activated(email):
+        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,

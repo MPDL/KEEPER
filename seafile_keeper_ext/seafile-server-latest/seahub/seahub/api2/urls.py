@@ -17,8 +17,6 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView
-
 urlpatterns = patterns('',
     url(r'^ping/$', Ping.as_view()),
     url(r'^auth/ping/$', AuthPing.as_view()),
@@ -107,10 +105,6 @@ urlpatterns = patterns('',
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view()),
-
-    # KEEPER
-    url(r'^catalog/$', CatalogView.as_view()),
-
 )
 
 # serve office converter static files
