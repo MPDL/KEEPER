@@ -950,6 +950,13 @@ def send_user_add_mail(request, email, password):
         'email': email,
         'password': password,
         }
+    # KEEPER
+    try:
+        from keeper.common import get_user_name
+        c['user'] = get_user_name(c['user'])
+    except Exception:
+        pass
+
     send_html_email(_(u'You are invited to join %s') % SITE_NAME,
             'sysadmin/user_add_email.html', c, None, [email])
 

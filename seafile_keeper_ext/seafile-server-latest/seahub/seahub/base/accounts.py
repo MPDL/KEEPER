@@ -461,7 +461,10 @@ class RegistrationBackend(object):
             site = RequestSite(request)
 
         from registration.models import RegistrationProfile
-        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
+        # KEEPER
+        from keeper.utils import account_can_be_auto_activated
+        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True \
+                or account_can_be_auto_activated(email):
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,
