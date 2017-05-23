@@ -27,7 +27,7 @@ RC = 0
 db = get_db('seahub-db')
 cur = db.cursor(MySQLdb.cursors.DictCursor)
 
-cur.execute("SELECT * FROM `VirusFile` WHERE `has_handle`=1")
+cur.execute("SELECT * FROM `VirusFile` WHERE `has_handle`=0")
 rows = cur.fetchall()
 
 
@@ -36,7 +36,7 @@ if len(rows)>0:
     print "WARNING: There are non handled viruses:"
     for row in rows:
         print row
-    RC = 1
+    RC = 2
 
 sys.exit(RC)
 
