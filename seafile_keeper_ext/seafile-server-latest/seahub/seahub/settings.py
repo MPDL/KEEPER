@@ -375,7 +375,8 @@ SITE_NAME = 'KEEPER'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
-FAVICON_PATH = 'img/favicon.ico'
+# FAVICON_PATH = 'img/favicon.ico'
+FAVICON_PATH = 'img/favicon.png'
 
 
 # Path to the Logo Imagefile (relative to the media path)
