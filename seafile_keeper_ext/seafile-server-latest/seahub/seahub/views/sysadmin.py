@@ -55,7 +55,7 @@ from seahub.views.ajax import (get_related_users_by_org_repo,
                                get_related_users_by_repo)
 from seahub.forms import SetUserQuotaForm, AddUserForm, BatchAddUserForm, \
     TermsAndConditionsForm
-from seahub.profile.forms import ProfileForm, DetailedProfileForm 
+from seahub.profile.forms import ProfileForm, DetailedProfileForm
 from seahub.options.models import UserOptions
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.signals import repo_deleted
