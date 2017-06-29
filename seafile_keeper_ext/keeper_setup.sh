@@ -123,7 +123,7 @@ function create_and_deploy_directories () {
 # Deploy conf/ directory
 function deploy_conf () {
 	check_file "$PROPERTIES_FILE" "Cannot find properties file $PROPERTIES_FILE for the instance"
-	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf; do 
+	for i in seahub_settings.py ccnet.conf seafile.conf seafevents.conf seafdav.conf; do 
 		deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
     done
 }
