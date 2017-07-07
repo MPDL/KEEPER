@@ -12,7 +12,7 @@ import logging
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
 from seaserv import seafile_api, get_repo
-from seahub.settings import SERVICE_URL, SERVER_EMAIL, DATABASES, KEEPER_DB_NAME, ARCHIVE_METADATA_TARGET
+from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 from seahub.share.models import FileShare
 
 from seafobj import commit_mgr, fs_mgr
@@ -20,12 +20,12 @@ import subprocess
 # from subprocess import STDOUT, call
 
 from keeper.default_library_manager import get_keeper_default_library
-from keeper.common import parse_markdown, get_user_name, get_logger, get_db
+from keeper.common import parse_markdown, get_user_name, get_logger
 
 from django.core.mail import EmailMessage
 from django.template import Context, loader
 
-import MySQLdb
+from keeper.models import CDC
 
 import tempfile
 
@@ -71,31 +71,12 @@ def quote_arg(arg):
         .replace('`', '\\`')
     )
 
-def get_cdc_id_by_repo(cur, repo_id):
+def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
-    try:
-        cur.execute("SELECT cdc_id FROM cdc_repos WHERE repo_id='" + repo_id + "'")
-        rs = cur.fetchone()
-        cdc_id = str(rs[0]) if rs is not None else None
-    except Exception:
-        # if not DEBUG:
-        LOGGER.error('Cannot get_cdc_id_by_repo: ' + repo_id)
-        LOGGER.error(traceback.format_exc())
-        cdc_id = None
-    return cdc_id
+    return CDC.objects.get_cdc_id_by_repo(repo_id)
 
 def is_certified_by_repo_id(repo_id):
-    guess = False
-    db = get_db(KEEPER_DB_NAME)
-    try:
-        guess = is_certified(db, db.cursor(), repo_id)
-    finally:
-        db.close()
-    return guess
-
-def is_certified(db, cur, repo_id):
-    """Check whether the repo is already certified"""
-    return get_cdc_id_by_repo(cur, repo_id) is not None
+    return CDC.objects.is_certified(repo_id)
 
 DEBUG_MESSAGE = []
 
@@ -200,49 +181,16 @@ def get_file_pivate_url(repo_id, file_name):
     """Get file private url"""
     return SERVICE_URL + '/lib/' + repo_id + '/file/' + file_name
 
-# def get_db(db_name):
-    # """Get DB connection"""
-    # return MySQLdb.connect(host=DATABASES['default']['HOST'],
-         # user=DATABASES['default']['USER'],
-         # passwd=DATABASES['default']['PASSWORD'],
-         # db=db_name,
-         # charset='utf8')
 
-
-def register_cdc_in_db(db, cur, repo_id, owner):
+def register_cdc_in_db(repo_id, owner):
     """
     Register in DB a new certificate or update modified field if already created
     Returns certificate id and EVENT: db_create
     """
-    event = EVENT.db_create
-    LOGGER.info("""Register CDC in keeper-db""")
-    try:
-        cdc_id = get_cdc_id_by_repo(cur, repo_id)
-        if cdc_id is not None:
-            # UPDATE
-            cur.execute("UPDATE cdc_repos SET modified=CURRENT_TIMESTAMP WHERE repo_id='" + repo_id + "'")
-            db.commit()
-            event = EVENT.db_update
-            LOGGER.info("Sucessfully updated, cdc_id: " + cdc_id)
-        else:
-            # CREATE
-            cur.execute("INSERT INTO cdc_repos (`repo_id`, `cdc_id`, `owner`, `created`) VALUES ('" + repo_id + "', NULL, '" + owner + "', CURRENT_TIMESTAMP)")
-            db.commit()
-            cdc_id = get_cdc_id_by_repo(cur, repo_id)
-            event = EVENT.db_create
-            LOGGER.info("Sucessfully created, cdc_id: " + cdc_id)
-    except Exception as err:
-        db.rollback()
-        # if not DEBUG:
-        LOGGER.error("Cannot register in DB for repo: %s, owner: %" % (repo_id, owner))
-        raise err
+    LOGGER.info("Register CDC in keeper-db")
+    cdc_id, event = CDC.objects.register_cdc_in_db(repo_id, owner)
+    LOGGER.info("Sucessfully %s, cdc_id: %s" % ("updated" if event == EVENT.db_update else "created", cdc_id) )
     return cdc_id, event
-
-def rollback_register(db, cur, cdc_id):
-    cur.execute("DELETE FROM cdc_repos WHERE cdc_id='" + cdc_id + "'")
-    db.commit()
-    LOGGER.info("Sucessfully rollback register of cdc_id: " + cdc_id)
-
 
 def send_email(to, msg_ctx):
     LOGGER.info("Send CDC email and keeper notification...")
@@ -325,10 +273,7 @@ def generate_certificate(repo, commit):
 
     try:
 
-        db = get_db(KEEPER_DB_NAME)
-        cur = db.cursor()
-
-        cdc_id = get_cdc_id_by_repo(cur, repo.id)
+        cdc_id = get_cdc_id_by_repo(repo.id)
         if cdc_id is not None:
             pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
             if re.match(pattern, commit.desc):
@@ -368,10 +313,11 @@ def generate_certificate(repo, commit):
 
             if event == EVENT.pdf_delete:
                 # only modified update
-                cdc_id = register_cdc_in_db(db, cur, repo.id, owner)[0]
+                cdc_id = register_cdc_in_db(repo.id, owner)[0]
             else:
-                cdc_id, event = register_cdc_in_db(db, cur, repo.id, owner)
+                cdc_id, event = register_cdc_in_db(repo.id, owner)
 
+            cdc_id = str(cdc_id)
             LOGGER.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
             jars = ":".join(map(lambda e : MODULE_PATH + '/' + e, CDC_GENERATOR_JARS))
@@ -409,7 +355,8 @@ def generate_certificate(repo, commit):
             else:
                 LOGGER.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
                 if event == EVENT.db_create:
-                    rollback_register(db, cur, cdc_id)
+                    # TODO: test it!
+                    CDC.objects.get(cdc_id=cdc_id).delete()
                 return False
 
             LOGGER.info("Add " + cdc_pdf + " to the repo...")
@@ -440,7 +387,6 @@ def generate_certificate(repo, commit):
         logging.error(traceback.format_exc())
     finally:
        # other final stuff
-        db.close()
         if not DEBUG:
             if 'tmp_path' in vars() and os.path.exists(tmp_path):
                 os.remove(tmp_path)

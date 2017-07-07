@@ -5,13 +5,16 @@ from django.db import models
 
 from picklefield.fields import PickledObjectField
 
+from datetime import datetime
+
+
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
-        return super(CatalogManager, self).using('keeper').get(repo_id=repo_id)
+        return super(CatalogManager, self).get(repo_id=repo_id)
 
     def get_all(self):
-        return super(CatalogManager, self).using('keeper').all()
+        return super(CatalogManager, self).all()
 
     def delete_by_repo_id(self, repo_id):
         c = self.get_by_repo_id(repo_id)
@@ -21,7 +24,7 @@ class CatalogManager(models.Manager):
 
     def get_all_mds_ordered(self):
         mds = []
-        for c in self.using('keeper').order_by('-modified').all():
+        for c in self.order_by('-modified').all():
             c.md['catalog_id'] = c.catalog_id
             mds.append(c.md)
         return mds
@@ -29,21 +32,25 @@ class CatalogManager(models.Manager):
     def update_md_by_repo_id(self, repo_id, proj_md):
         catalog = self.get_by_repo_id(repo_id)
         catalog.md = proj_md
-        catalog.save(using='keeper')
+        catalog.save()
         return proj_md
 
     def add_or_update_by_repo_id(self, repo_id, owner, proj_md):
         try:
-            catalog = self.using('keeper').get(repo_id=repo_id)
+            catalog = self.get(repo_id=repo_id)
             catalog.md = proj_md
             catalog.owner = owner
         except Catalog.DoesNotExist:
             catalog = self.model(repo_id=repo_id, owner=owner, md=proj_md)
-        catalog.save(using='keeper')
+        catalog.save()
 
         return catalog
 
+
 class Catalog(models.Model):
+
+    """ Keeper Catalog DB model"""
+
     repo_id = models.CharField(max_length=37, unique=True, null=False)
     # catalog_id = models.PositiveIntegerField()
     catalog_id = models.AutoField(primary_key=True)
@@ -55,16 +62,70 @@ class Catalog(models.Model):
 
 
 
+class CDCManager(models.Manager):
+
+    def get_cdc_by_repo(self, repo_id):
+        """Get cdc_id by repo_id. Return None if nothing found"""
+        try:
+            cdc = self.get(repo_id=repo_id)
+        except CDC.DoesNotExist:
+            return None
+        return cdc
+
+    def get_cdc_id_by_repo(self, repo_id):
+        cdc = self.get_cdc_by_repo(repo_id)
+        return cdc.cdc_id if cdc else None
+
+
+    def is_certified(self, repo_id):
+        """Check whether the repo is already certified"""
+        return self.get_cdc_id_by_repo(repo_id) is not None
+
+    def register_cdc_in_db(self, repo_id, owner):
+        """
+        Register in DB a new certificate or update modified field if already created
+        Returns certificate id and EVENT: db_create
+        """
+        from keeper.cdc.cdc_manager import EVENT
+        event = EVENT.db_create
+        cdc = self.get_cdc_by_repo(repo_id=repo_id)
+        if cdc is not None:
+            cdc.modified = datetime.now()
+            cdc.save()
+            event = EVENT.db_update
+        else:
+            cdc = self.model(repo_id=repo_id, owner=owner)
+            cdc.save()
+            cdc = self.get(repo_id=repo_id)
+            event = EVENT.db_create
+        return cdc.cdc_id, event
+
+class CDC(models.Model):
+
+    """ Keeper Cared Data Certficate DB model"""
+
+    class Meta:
+        db_table = 'cdc_repos'
+
+    repo_id = models.CharField(max_length=37, unique=True, null=False)
+    cdc_id = models.AutoField(primary_key=True)
+    owner = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+    objects = CDCManager()
+
+
+
 ###### signal handlers
 from django.dispatch import receiver
 from seahub.signals import repo_deleted
 
 @receiver(repo_deleted)
-def remove_catalog_entry(sender, **kwargs):
+def remove_catalog_and_cdc_entry(sender, **kwargs):
     repo_id = kwargs['repo_id']
-
     logging.info("Repo deleted, id: %s" % repo_id)
     try:
         Catalog.objects.delete_by_repo_id(repo_id)
+        CDC.objects.get(repo_id=repo_id).delete()
     except Exception:
         logging.error(traceback.format_exc())
