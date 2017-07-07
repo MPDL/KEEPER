@@ -5071,11 +5071,11 @@ msgid "If you did not request it, just skip it."
 msgstr "Wenn Sie es nicht angefordert haben, ignorieren Sie es,"
 
 #: seahub/templates/registration/password_reset_form.html:9
-msgid "Your email used in login: "
+msgid "Your e-mail used in login: "
 msgstr "Ihre E-Mail-Adresse, welche Sie beim Anmelden verwendet haben: "
 
 #: seahub/templates/registration/password_reset_form.html:12
-msgid "We will send you an email to set new password"
+msgid "We will send you an e-mail to set new password"
 msgstr "Zur Änderung des Passworts schicken wir Ihnen eine E-Mail."
 
 #: seahub/templates/registration/registration_complete.html:4

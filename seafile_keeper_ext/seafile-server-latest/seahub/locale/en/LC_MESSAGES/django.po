@@ -5013,10 +5013,10 @@ msgstr ""
 
 #: seahub/templates/registration/password_reset_form.html:9
 msgid "Your email used in login: "
-msgstr ""
+msgstr "Your e-mail used in login: "
 
 #: seahub/templates/registration/password_reset_form.html:12
-msgid "We will send you an email to set new password"
+msgid "We will send you an e-mail to set new password"
 msgstr ""
 
 #: seahub/templates/registration/registration_complete.html:4
