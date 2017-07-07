@@ -25,6 +25,8 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ['keeper.dbrouter.DbRouter',]
+
 CACHES = {
     'default': {
         'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',

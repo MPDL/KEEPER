@@ -313,7 +313,6 @@ case "$1" in
 
     compile-i18n)
         pushd $SEAFILE_LATEST_DIR/seahub
-        echo $PYTHONPATH
         ./i18n.sh compile-all
         popd
     ;;
