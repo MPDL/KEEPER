@@ -1,4 +1,3 @@
-# !!!MERGE MANUALLY!!!
 # Copyright (c) 2012-2016 Seafile Ltd.
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
@@ -36,7 +35,7 @@ DATABASES = {
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'Europe/Berlin'
+TIME_ZONE = 'UTC'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -140,10 +139,41 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
-# !!!MERGE!!!
 LANGUAGES = (
+    ('ar', gettext_noop(u'العربية')),
+    # ('bg', gettext_noop(u'български език')),
+    ('ca', gettext_noop(u'Català')),
+    # ('cs', gettext_noop(u'čeština')),
     ('de', gettext_noop(u'Deutsch')),
+    ('el', gettext_noop(u'ελληνικά')),
     ('en', gettext_noop('English')),
+    ('es', gettext_noop('Español')),
+    ('es-ar', gettext_noop('Español de Argentina')),
+    ('es-mx', gettext_noop('Español de México')),
+    ('fi', gettext_noop('Suomi')),
+    ('fr', gettext_noop('français')),
+    ('he', gettext_noop('עברית')),
+    ('hu', gettext_noop('Magyar')),
+    ('is', gettext_noop('Íslenska')),
+    ('it', gettext_noop('Italiano')),
+    ('ja', gettext_noop('日本語')),
+    ('ko', gettext_noop('한국어')),
+    # ('lt', gettext_noop(u'Lietuvių kalba')),
+    ('lv', gettext_noop('Latvian')),
+    # ('mk', gettext_noop(u'македонски јазик')),
+    ('nl', gettext_noop('Nederlands')),
+    ('pl', gettext_noop('Polski')),
+    ('pt-br', gettext_noop('Portuguese, Brazil')),
+    ('ru', gettext_noop(u'Русский')),
+    # ('sk', gettext_noop('Slovak')),
+    ('sl', gettext_noop('Slovenian')),
+    ('sv', gettext_noop('Svenska')),
+    ('th', gettext_noop('ไทย')),
+    ('tr', gettext_noop('Türkçe')),
+    ('uk', gettext_noop('українська мова')),
+    ('vi', gettext_noop(u'Tiếng Việt')),
+    ('zh-cn', gettext_noop(u'简体中文')),
+    ('zh-tw', gettext_noop(u'繁體中文')),
 )
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, 'locale'),
@@ -184,17 +214,16 @@ INSTALLED_APPS = (
     'seahub.invitations',
     'seahub.wiki',
     'seahub.group',
-    'seahub.message',
     'seahub.notifications',
     'seahub.options',
+    'seahub.onlyoffice',
     'seahub.profile',
     'seahub.share',
     'seahub.help',
     'seahub.thumbnail',
     'seahub.password_session',
-
-    'keeper',
-
+    'seahub.admin_log',
+    'seahub.wopi',
 )
 
 # Enabled or disable constance(web settings).
@@ -227,7 +256,7 @@ ENABLE_MAKE_GROUP_PUBLIC = False
 SHOW_REPO_DOWNLOAD_BUTTON = False
 
 # enable 'upload folder' or not
-ENABLE_UPLOAD_FOLDER = False
+ENABLE_UPLOAD_FOLDER = True
 
 # enable resumable fileupload or not
 ENABLE_RESUMABLE_FILEUPLOAD = False
@@ -241,11 +270,17 @@ ENABLE_ENCRYPTED_LIBRARY = True
 # mininum length for password of encrypted library
 REPO_PASSWORD_MIN_LENGTH = 8
 
+# token length for the share link
+SHARE_LINK_TOKEN_LENGTH = 20
+
 # mininum length for the password of a share link
 SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 
 # enable or disable share link audit
 ENABLE_SHARE_LINK_AUDIT = False
+
+# Control the language that send email. Default to user's current language.
+SHARE_LINK_EMAIL_LANGUAGE = ''
 
 # check virus for files uploaded form upload link
 ENABLE_UPLOAD_LINK_VIRUS_CHECK = False
@@ -284,7 +319,12 @@ OFFICE_PREVIEW_MAX_SIZE = 2 * 1024 * 1024
 USE_PDFJS = True
 FILE_ENCODING_LIST = ['auto', 'utf-8', 'gbk', 'ISO-8859-1', 'ISO-8859-5']
 FILE_ENCODING_TRY_LIST = ['utf-8', 'gbk']
-HIGHLIGHT_KEYWORD = True # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+HIGHLIGHT_KEYWORD = False # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+# extensions of previewed files
+TEXT_PREVIEW_EXT = """ac, am, bat, c, cc, cmake, cpp, cs, css, diff, el, h, html,
+htm, java, js, json, less, make, org, php, pl, properties, py, rb,
+scala, script, sh, sql, txt, text, tex, vi, vim, xhtml, xml, log, csv,
+groovy, rst, patch, go"""
 
 # Common settings(file extension, storage) for avatar and group avatar.
 AVATAR_FILE_STORAGE = '' # Replace with 'seahub.base.database_storage.DatabaseStorage' if save avatar files to database
@@ -298,7 +338,7 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
+AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 42, 48, 60, 64, 72, 80, 84, 96, 128, 160)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -339,8 +379,9 @@ REST_FRAMEWORK = {
         'user': '300/minute',
     },
     # https://github.com/tomchristie/django-rest-framework/issues/2891
-    'UNICODE_JSON': True,
+    'UNICODE_JSON': False,
 }
+REST_FRAMEWORK_THROTTING_WHITELIST = []
 
 # file and path
 MAX_UPLOAD_FILE_NAME_LEN    = 255
@@ -354,7 +395,7 @@ FILE_LOCK_EXPIRATION_DAYS = 0
 ACTIVATE_AFTER_REGISTRATION = True
 # Whether or not send activation Email to user when registration complete.
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
-REGISTRATION_SEND_MAIL = True
+REGISTRATION_SEND_MAIL = False
 
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
@@ -366,38 +407,30 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
-# !!!MERGE!!!
-SITE_TITLE = 'KEEPER'
+SITE_TITLE = 'Private Seafile'
 
 # Base name used in email sending
-# !!!MERGE!!!
-SITE_NAME = 'KEEPER'
+SITE_NAME = 'Seafile'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
-# FAVICON_PATH = 'img/favicon.ico'
-FAVICON_PATH = 'img/favicon.png'
-
+FAVICON_PATH = 'img/favicon.ico'
 
 # Path to the Logo Imagefile (relative to the media path)
-# !!!MERGE!!!
-LOGO_PATH = 'custom/KeeperLogo.svg'
+LOGO_PATH = 'img/seafile-logo.png'
 # logo size. the unit is 'px'
-# !!!MERGE!!!
-LOGO_WIDTH = 140
-# !!!MERGE!!!
-LOGO_HEIGHT = 40
+LOGO_WIDTH = 128
+LOGO_HEIGHT = 32
 
 # css to modify the seafile css (e.g. css/my_site.css)
-# !!!MERGE!!!
-BRANDING_CSS = 'custom/keeper.css'
+BRANDING_CSS = ''
 
 # Using Django to server static file. Set to `False` if deployed behide a web
 # server.
 SERVE_STATIC = True
 
 # Enable or disable registration on web.
-ENABLE_SIGNUP = True
+ENABLE_SIGNUP = False
 
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
@@ -423,7 +456,6 @@ LOGGING = {
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB
-            'backupCount': 52,
             'formatter':'standard',
         },
         'request_handler': {
@@ -431,7 +463,6 @@ LOGGING = {
                 'class':'logging.handlers.RotatingFileHandler',
                 'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
                 'maxBytes': 1024*1024*10, # 10 MB
-                'backupCount': 52,
                 'formatter':'standard',
         },
         'mail_admins': {
@@ -465,6 +496,8 @@ SESSION_COOKIE_AGE = 24 * 60 * 60
 # Days of remembered login info (deafult: 7 days)
 LOGIN_REMEMBER_DAYS = 7
 
+SEAFILE_VERSION = '6.1.1'
+
 # Compress static files(css, js)
 COMPRESS_URL = MEDIA_URL
 COMPRESS_ROOT = MEDIA_ROOT
@@ -495,11 +528,18 @@ THUMBNAIL_EXTENSION = 'png'
 # for thumbnail: height(px) and width(px)
 THUMBNAIL_DEFAULT_SIZE = 48
 THUMBNAIL_SIZE_FOR_GRID = 192
-
+THUMBNAIL_SIZE_FOR_ORIGINAL = 1024
 
 # size(MB) limit for generate thumbnail
 THUMBNAIL_IMAGE_SIZE_LIMIT = 20
 THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT = 256
+
+# video thumbnails
+ENABLE_VIDEO_THUMBNAIL = False
+THUMBNAIL_VIDEO_FRAME_TIME = 5  # use the frame at 5 second as thumbnail
+
+# template for create new office file
+OFFICE_TEMPLATE_ROOT = os.path.join(MEDIA_ROOT, 'office-template')
 
 #####################
 # Global AddressBook #
@@ -551,7 +591,7 @@ ENABLE_TWO_FACTOR_AUTH = False
 OTP_LOGIN_URL = '/profile/two_factor_authentication/setup/'
 
 # Enable personal wiki, group wiki
-ENABLE_WIKI = True
+ENABLE_WIKI = False
 
 #####################
 # External settings #
@@ -650,8 +690,11 @@ CONSTANCE_CONFIG = {
     'USER_PASSWORD_MIN_LENGTH': (USER_PASSWORD_MIN_LENGTH,''),
     'USER_PASSWORD_STRENGTH_LEVEL': (USER_PASSWORD_STRENGTH_LEVEL,''),
 
+    'SHARE_LINK_TOKEN_LENGTH': (SHARE_LINK_TOKEN_LENGTH, ''),
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH,''),
     'ENABLE_TWO_FACTOR_AUTH': (ENABLE_TWO_FACTOR_AUTH,''),
+
+    'TEXT_PREVIEW_EXT': (TEXT_PREVIEW_EXT, ''),
 }
 
-SEAFILE_VERSION = "6.0.12"
+SEAFILE_VERSION = "6.1.3"

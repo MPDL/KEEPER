@@ -146,6 +146,9 @@ class UserPermissions(object):
     def can_export_files_via_mobile_client(self):
         return get_enabled_role_permissions_by_role(self.user.role)['can_export_files_via_mobile_client']
 
+    def role_quota(self):
+        return get_enabled_role_permissions_by_role(self.user.role).get('role_quota', '')
+
 
 class User(object):
     is_staff = False
@@ -252,6 +255,10 @@ class User(object):
         ccnet_api.remove_group_user(username)
         ccnet_api.remove_emailuser(source, username)
         Profile.objects.delete_profile_by_user(username)
+
+        if settings.ENABLE_TERMS_AND_CONDITIONS:
+            from termsandconditions.models import UserTermsAndConditions
+            UserTermsAndConditions.objects.filter(username=username).delete()
 
     def get_and_delete_messages(self):
         messages = []
@@ -461,16 +468,12 @@ class RegistrationBackend(object):
             site = RequestSite(request)
 
         from registration.models import RegistrationProfile
-        # KEEPER
-        from keeper.utils import account_can_be_auto_activated
-        is_auto_activated = account_can_be_auto_activated(email)
-        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True \
-                or is_auto_activated:
+        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,
                                                                         password, site,
-                                                                        send_email=is_auto_activated)
+                                                                        send_email=False)
             # login the user
             new_user.backend=settings.AUTHENTICATION_BACKENDS[0]
 

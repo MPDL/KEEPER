@@ -17,8 +17,6 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView
-
 urlpatterns = patterns('',
     url(r'^ping/$', Ping.as_view()),
     url(r'^auth/ping/$', AuthPing.as_view()),
@@ -27,6 +25,7 @@ urlpatterns = patterns('',
     url(r'^logout-device/$', LogoutDeviceView.as_view()),
     url(r'^client-login/$', ClientLoginTokenView.as_view()),
     url(r'^device-wiped/$', RemoteWipeReportView.as_view()),
+    url(r'^wopi/', include('seahub.wopi.urls')),
 
     # RESTful API
     url(r'^accounts/$', Accounts.as_view(), name="accounts"),
@@ -45,9 +44,9 @@ urlpatterns = patterns('',
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-info/$', DownloadRepo.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/owner/$', RepoOwner.as_view(), name="api2-repo-owner"),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-shared-links/$', RepoDownloadSharedLinks.as_view(), name="api2-repo-download-shared-links"),
-    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-shared-links/(?P<token>[a-f0-9]{10})/$', RepoDownloadSharedLink.as_view(), name="api2-repo-download-shared-link"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/download-shared-links/(?P<token>[a-f0-9]+)/$', RepoDownloadSharedLink.as_view(), name="api2-repo-download-shared-link"),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-shared-links/$', RepoUploadSharedLinks.as_view(), name="api2-repo-upload-shared-links"),
-    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-shared-links/(?P<token>[a-f0-9]{10})/$', RepoUploadSharedLink.as_view(), name="api2-repo-upload-shared-link"),
+    url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-shared-links/(?P<token>[a-f0-9]+)/$', RepoUploadSharedLink.as_view(), name="api2-repo-upload-shared-link"),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-link/$', UploadLinkView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/update-link/$', UpdateLinkView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/upload-blks-link/$', UploadBlksLinkView.as_view()),
@@ -83,11 +82,10 @@ urlpatterns = patterns('',
 
     url(r'^organization/$', OrganizationView.as_view()),
 
-    url(r'^f/(?P<token>[a-f0-9]{10})/$', SharedFileView.as_view()),
-    url(r'^f/(?P<token>[a-f0-9]{10})/detail/$', SharedFileDetailView.as_view()),
-    url(r'^d/(?P<token>[a-f0-9]{10})/dir/$', SharedDirView.as_view()),
+    url(r'^f/(?P<token>[a-f0-9]+)/$', SharedFileView.as_view()),
+    url(r'^f/(?P<token>[a-f0-9]+)/detail/$', SharedFileDetailView.as_view()),
+    url(r'^d/(?P<token>[a-f0-9]+)/dir/$', SharedDirView.as_view()),
 
-    url(r'^groupandcontacts/$', GroupAndContacts.as_view()),
     url(r'^events/$', EventsView.as_view()),
     url(r'^repo_history_changes/(?P<repo_id>[-0-9a-f]{36})/$', RepoHistoryChange.as_view()),
     url(r'^unseen_messages/$', UnseenMessagesCountView.as_view()),
@@ -104,13 +102,9 @@ urlpatterns = patterns('',
     url(r'^groups/(?P<group_id>\d+)/discussions/(?P<discuss_id>\d+)/$', GroupDiscussion.as_view(), name="api2-group-discussion"),
 
     # Deprecated
-    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view()),
-    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view()),
-    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view()),
-
-    # KEEPER
-    url(r'^catalog/$', CatalogView.as_view()),
-
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view(), name="api2-fileops-delete"),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view(), name="api2-fileops-copy"),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view(), name="api2-fileops-move"),
 )
 
 # serve office converter static files
@@ -125,10 +119,4 @@ if HAS_OFFICE_CONVERTER:
     )
     urlpatterns += patterns('',
         url(r'^office-convert/generate/repos/(?P<repo_id>[-0-9-a-f]{36})/$', OfficeGenerateView.as_view()),
-    )
-
-from seahub import settings
-if getattr(settings, 'ENABLE_OFFICE_WEB_APP', False):
-    urlpatterns += patterns('',
-        (r'^wopi/', include('seahub_extra.wopi.urls')),
     )

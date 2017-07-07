@@ -16,14 +16,15 @@ from django.conf import settings as dj_settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 import seaserv
 from seaserv import ccnet_threaded_rpc, seafserv_threaded_rpc, \
-    seafile_api, get_group, get_group_members, ccnet_api
+    seafile_api, get_group, get_group_members, ccnet_api, \
+    get_related_users_by_repo, get_related_users_by_org_repo
 from pysearpc import SearpcError
 
 from seahub.base.accounts import User
@@ -34,7 +35,9 @@ from seahub.base.templatetags.seahub_tags import tsstr_sec, email2nickname
 from seahub.auth import authenticate
 from seahub.auth.decorators import login_required, login_required_ajax
 from seahub.constants import GUEST_USER, DEFAULT_USER
-from seahub.institutions.models import Institution, InstitutionAdmin
+from seahub.institutions.models import (Institution, InstitutionAdmin,
+                                        InstitutionQuota)
+from seahub.institutions.utils import get_institution_space_usage
 from seahub.invitations.models import Invitation
 from seahub.role_permissions.utils import get_available_roles
 from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
@@ -51,15 +54,14 @@ from seahub.utils.ms_excel import write_xls
 from seahub.utils.user_permissions import (get_basic_user_roles,
                                            get_user_role)
 from seahub.views import get_system_default_repo_id
-from seahub.views.ajax import (get_related_users_by_org_repo,
-                               get_related_users_by_repo)
 from seahub.forms import SetUserQuotaForm, AddUserForm, BatchAddUserForm, \
     TermsAndConditionsForm
-from seahub.profile.forms import ProfileForm, DetailedProfileForm
 from seahub.options.models import UserOptions
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.signals import repo_deleted
 from seahub.share.models import FileShare, UploadLinkShare
+from seahub.admin_log.signals import admin_operation
+from seahub.admin_log.models import USER_DELETE, USER_ADD
 import seahub.settings as settings
 from seahub.settings import INIT_PASSWD, SITE_NAME, SITE_ROOT, \
     SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER, SEND_EMAIL_ON_RESETTING_USER_PASSWD, \
@@ -137,8 +139,8 @@ def _populate_user_quota_usage(user):
         if orgs:
             user.org = orgs[0]
             org_id = user.org.org_id
-            user.space_usage = seafserv_threaded_rpc.get_org_user_quota_usage(org_id, user.email)
-            user.space_quota = seafserv_threaded_rpc.get_org_user_quota(org_id, user.email)
+            user.space_usage = seafile_api.get_org_user_quota_usage(org_id, user.email)
+            user.space_quota = seafile_api.get_org_user_quota(org_id, user.email)
         else:
             user.space_usage = seafile_api.get_user_self_usage(user.email)
             user.space_quota = seafile_api.get_user_quota(user.email)
@@ -512,9 +514,8 @@ def user_info(request, email):
     else:
         org_id = org[0].org_id
         org_name = org[0].org_name
-        space_usage = seafserv_threaded_rpc.get_org_user_quota_usage(org_id,
-                                                                     email)
-        space_quota = seafserv_threaded_rpc.get_org_user_quota(org_id, email)
+        space_usage = seafile_api.get_org_user_quota_usage(org_id, email)
+        space_quota = seafile_api.get_org_user_quota(org_id, email)
         owned_repos = seafile_api.get_org_owned_repo_list(org_id, email,
                                                           ret_corrupted=True)
         in_repos = seafile_api.get_org_share_in_repo_list(org_id, email, -1, -1)
@@ -658,7 +659,7 @@ def user_set_quota(request, email):
                                             org_quota_mb)
                     return HttpResponse(json.dumps(result), status=400, content_type=content_type)
                 else:
-                    seafserv_threaded_rpc.set_org_user_quota(org_id, email, space_quota)
+                    seafile_api.set_org_user_quota(org_id, email, space_quota)
         except:
             result['error'] = _(u'Failed to set quota: internal server error')
             return HttpResponse(json.dumps(result), status=500, content_type=content_type)
@@ -710,6 +711,14 @@ def user_remove(request, email):
 
         user.delete()
         messages.success(request, _(u'Successfully deleted %s') % user.username)
+
+        # send admin operation log signal
+        admin_op_detail = {
+            "email": email,
+        }
+        admin_operation.send(sender=None, admin_name=request.user.username,
+                operation=USER_DELETE, detail=admin_op_detail)
+
     except User.DoesNotExist:
         messages.error(request, _(u'Failed to delete: the user does not exist'))
 
@@ -950,13 +959,6 @@ def send_user_add_mail(request, email, password):
         'email': email,
         'password': password,
         }
-    # KEEPER
-    try:
-        from keeper.common import get_user_name
-        c['user'] = get_user_name(c['user'])
-    except Exception:
-        pass
-
     send_html_email(_(u'You are invited to join %s') % SITE_NAME,
             'sysadmin/user_add_email.html', c, None, [email])
 
@@ -993,6 +995,13 @@ def user_add(request):
             err_msg = _(u'Fail to add user %s.') % email
             return HttpResponse(json.dumps({'error': err_msg}), status=403, content_type=content_type)
 
+        # send admin operation log signal
+        admin_op_detail = {
+            "email": email,
+        }
+        admin_operation.send(sender=None, admin_name=request.user.username,
+                operation=USER_ADD, detail=admin_op_detail)
+
         if user:
             User.objects.update_role(email, role)
             if config.FORCE_PASSWORD_CHANGE:
@@ -1004,7 +1013,6 @@ def user_add(request):
 
         if request.user.org:
             org_id = request.user.org.org_id
-            url_prefix = request.user.org.url_prefix
             ccnet_threaded_rpc.add_org_user(org_id, email, 0)
             if IS_EMAIL_CONFIGURED:
                 try:
@@ -1302,10 +1310,8 @@ def sys_org_info_user(request, org_id):
         if user.email == request.user.email:
             user.is_self = True
         try:
-            user.self_usage =seafserv_threaded_rpc. \
-                    get_org_user_quota_usage(org_id, user.email)
-            user.quota = seafserv_threaded_rpc. \
-                    get_org_user_quota(org_id, user.email)
+            user.self_usage = seafile_api.get_org_user_quota_usage(org_id, user.email)
+            user.quota = seafile_api.get_org_user_quota(org_id, user.email)
         except SearpcError as e:
             logger.error(e)
             user.self_usage = -1
@@ -1805,7 +1811,7 @@ def batch_add_user(request):
         filestream = StringIO.StringIO(content)
         reader = csv.reader(filestream)
         new_users_count = len(list(reader))
-        if user_number_over_limit(new_users = new_users_count):
+        if user_number_over_limit(new_users=new_users_count):
             messages.error(request, _(u'The number of users exceeds the limit.'))
             return HttpResponseRedirect(next)
 
@@ -1829,8 +1835,8 @@ def batch_add_user(request):
             try:
                 User.objects.get(email=username)
             except User.DoesNotExist:
-                User.objects.create_user(username,
-                        password, is_staff=False, is_active=True)
+                User.objects.create_user(
+                    username, password, is_staff=False, is_active=True)
 
                 if config.FORCE_PASSWORD_CHANGE:
                     UserOptions.objects.set_force_passwd_change(username)
@@ -1840,31 +1846,47 @@ def batch_add_user(request):
                     nickname = row[2].strip()
                     if len(nickname) <= 64 and '/' not in nickname:
                         Profile.objects.add_or_update(username, nickname, '')
+                except Exception as e:
+                    logger.error(e)
 
+                try:
                     department = row[3].strip()
                     if len(department) <= 512:
                         DetailedProfile.objects.add_or_update(username, department, '')
+                except Exception as e:
+                    logger.error(e)
 
+                try:
                     role = row[4].strip()
                     if is_pro_version() and role in get_available_roles():
                         User.objects.update_role(username, role)
+                except Exception as e:
+                    logger.error(e)
 
+                try:
                     space_quota_mb = row[5].strip()
                     space_quota_mb = int(space_quota_mb)
                     if space_quota_mb >= 0:
                         space_quota = int(space_quota_mb) * get_file_size_unit('MB')
                         seafile_api.set_user_quota(username, space_quota)
-
-                    send_html_email_with_dj_template(
-                        username, dj_template='sysadmin/user_batch_add_email.html',
-                        subject=_(u'You are invited to join %s') % SITE_NAME,
-                        context={
-                            'user': email2nickname(request.user.username),
-                            'email': username,
-                            'password': password,
-                        })
                 except Exception as e:
                     logger.error(e)
+
+                send_html_email_with_dj_template(
+                    username, dj_template='sysadmin/user_batch_add_email.html',
+                    subject=_(u'You are invited to join %s') % SITE_NAME,
+                    context={
+                        'user': email2nickname(request.user.username),
+                        'email': username,
+                        'password': password,
+                    })
+
+                # send admin operation log signal
+                admin_op_detail = {
+                    "email": username,
+                }
+                admin_operation.send(sender=None, admin_name=request.user.username,
+                                     operation=USER_ADD, detail=admin_op_detail)
 
         messages.success(request, _('Import succeeded'))
     else:
@@ -1922,7 +1944,7 @@ def sys_settings(request):
     if HAS_TWO_FACTOR_AUTH:
         DIGIT_WEB_SETTINGS.append('ENABLE_TWO_FACTOR_AUTH')
 
-    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT',)
+    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT', 'TEXT_PREVIEW_EXT')
 
     if request.is_ajax() and request.method == "POST":
         content_type = 'application/json; charset=utf-8'
@@ -2105,6 +2127,8 @@ def sys_inst_info_user(request, inst_id):
                 u.last_login = last_login.last_login
 
     users_count = Profile.objects.filter(institution=inst.name).count()
+    space_quota = InstitutionQuota.objects.get_or_none(institution=inst)
+    space_usage = get_institution_space_usage(inst)
 
     return render_to_response('sysadmin/sys_inst_info_user.html', {
         'inst': inst,
@@ -2115,6 +2139,8 @@ def sys_inst_info_user(request, inst_id):
         'next_page': current_page + 1,
         'per_page': per_page,
         'page_next': page_next,
+        'space_usage': space_usage,
+        'space_quota': space_quota,
     }, context_instance=RequestContext(request))
 
 @login_required
@@ -2230,6 +2256,31 @@ def sys_inst_toggle_admin(request, inst_id, email):
 
 @login_required
 @sys_staff_required
+@require_POST
+def sys_inst_set_quota(request, inst_id):
+    """Set institution quota"""
+    try:
+        inst = Institution.objects.get(pk=inst_id)
+    except Institution.DoesNotExist:
+        raise Http404
+
+    next = request.META.get('HTTP_REFERER', None)
+    if not next:
+        next = reverse('sys_inst_info_users', args=[inst.pk])
+
+    quota_mb = int(request.POST.get('space_quota', ''))
+    quota = quota_mb * get_file_size_unit('MB')
+
+    obj, created = InstitutionQuota.objects.update_or_create(
+        institution=inst,
+        defaults={'quota': quota},
+    )
+    content_type = 'application/json; charset=utf-8'
+    return HttpResponse(json.dumps({'success': True}), status=200,
+                        content_type=content_type)
+
+@login_required
+@sys_staff_required
 def sys_invitation_admin(request):
     """List all invitations .
     """
@@ -2264,6 +2315,27 @@ def sys_invitation_admin(request):
             'page_next': page_next,
         },
         context_instance=RequestContext(request))
+
+@login_required
+@sys_staff_required
+def sys_invitation_remove(request):
+    """Delete an invitation.
+    """
+    ct = 'application/json; charset=utf-8'
+    result = {}
+
+    if not ENABLE_GUEST_INVITATION:
+        return HttpResponse(json.dumps({}), status=400, content_type=ct)
+
+    inv_id = request.POST.get('inv_id', '')
+    if not inv_id:
+        result = {'error': "Argument missing"}
+        return HttpResponse(json.dumps(result), status=400, content_type=ct)
+
+    inv = get_object_or_404(Invitation, pk=inv_id)
+    inv.delete()
+
+    return HttpResponse(json.dumps({'success': True}), content_type=ct)
 
 @login_required
 @sys_staff_required
