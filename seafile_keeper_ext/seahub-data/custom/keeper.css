@@ -103,7 +103,18 @@
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
 
-h2 .new-narrow-panel{background: #57a5b8 !important;}
+.new-narrow-panel .hd {background: #57a5b8 !important;}
+
+a.path-link, p a, div.empty-tips a, div.commit a, div span a, div a:hover.op-link, div form a, 
+#wiki-pages a, div#search-results a {color: #57a5b8 !important}
+
+.nav-con-tabs-nav .ui-state-active a {background: #57a5b8 !important}
+
+.tabnav-tab-cur a, .tabnav-tab a:hover, .wiki-nav .cur-item .link, .wiki-nav .link:hover, #right-panel .hd .ui-state-active .a, #right-panel .hd .a:hover {
+    color: #57a5b8 !important;
+    border-bottom-color: #57a5b8 !important;
+}
+
 
 
 /*
