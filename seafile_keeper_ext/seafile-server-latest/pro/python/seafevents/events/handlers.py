@@ -10,6 +10,9 @@ from seaserv import get_related_users_by_repo, get_org_id_by_repo_id, \
 from .db import save_user_events, save_org_user_events, save_file_audit_event, \
         save_file_update_event, save_perm_audit_event
 
+from keeper.cdc.cdc_manager import generate_certificate_by_commit
+from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
+
 def RepoUpdateEventHandler(session, msg):
     elements = msg.body.split('\t')
     if len(elements) != 3:
@@ -39,6 +42,17 @@ def RepoUpdateEventHandler(session, msg):
     else:
         save_user_events (session, etype, detail, users, time)
 
+
+    # KEEPER
+    logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
+    logging.info("Trying to create/update keeper catalog entry for repo_id: %s..." % repo_id)
+    if bool(generate_catalog_entry_by_repo_id(repo_id)):
+        logging.info("Success!")
+    else:
+        logging.error("Something went wrong...")
+
+
+
 def FileUpdateEventHandler(session, msg):
     elements = msg.body.split('\t')
     if len(elements) != 3:
@@ -57,6 +71,10 @@ def FileUpdateEventHandler(session, msg):
             return
 
     time = datetime.datetime.utcfromtimestamp(msg.ctime)
+
+    #KEEPER:
+    logging.info("FILE UPDATE EVENT: %s, try generate_certificate", commit.desc)
+    generate_certificate_by_commit(commit)
 
     save_file_update_event(session, time, commit.creator_name, org_id, \
                            repo_id, commit_id, commit.desc)

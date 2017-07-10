@@ -320,10 +320,16 @@ case "$1" in
     copy-seafile-sources-in-ext)
          copy_seaf_src_to_ext   
     ;;
-
+    
+    min.css)
+        pushd $SEAFILE_LATEST_DIR/seahub/media/css
+        yui-compressor -v seahub.css -o seahub.min.css
+        popd
+    ;;
+ 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext|min.css}"
         exit 1
      ;;
 esac
