@@ -1,3 +1,4 @@
+# !!!MERGE MANUALLY!!!
 # Copyright (c) 2012-2016 Seafile Ltd.
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
@@ -35,7 +36,7 @@ DATABASES = {
 # although not all choices may be available on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Berlin'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -139,41 +140,10 @@ TEMPLATE_DIRS = (
 # This is defined here as a do-nothing function because we can't import
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
+# !!!MERGE!!!
 LANGUAGES = (
-    ('ar', gettext_noop(u'العربية')),
-    # ('bg', gettext_noop(u'български език')),
-    ('ca', gettext_noop(u'Català')),
-    # ('cs', gettext_noop(u'čeština')),
     ('de', gettext_noop(u'Deutsch')),
-    ('el', gettext_noop(u'ελληνικά')),
     ('en', gettext_noop('English')),
-    ('es', gettext_noop('Español')),
-    ('es-ar', gettext_noop('Español de Argentina')),
-    ('es-mx', gettext_noop('Español de México')),
-    ('fi', gettext_noop('Suomi')),
-    ('fr', gettext_noop('français')),
-    ('he', gettext_noop('עברית')),
-    ('hu', gettext_noop('Magyar')),
-    ('is', gettext_noop('Íslenska')),
-    ('it', gettext_noop('Italiano')),
-    ('ja', gettext_noop('日本語')),
-    ('ko', gettext_noop('한국어')),
-    # ('lt', gettext_noop(u'Lietuvių kalba')),
-    ('lv', gettext_noop('Latvian')),
-    # ('mk', gettext_noop(u'македонски јазик')),
-    ('nl', gettext_noop('Nederlands')),
-    ('pl', gettext_noop('Polski')),
-    ('pt-br', gettext_noop('Portuguese, Brazil')),
-    ('ru', gettext_noop(u'Русский')),
-    # ('sk', gettext_noop('Slovak')),
-    ('sl', gettext_noop('Slovenian')),
-    ('sv', gettext_noop('Svenska')),
-    ('th', gettext_noop('ไทย')),
-    ('tr', gettext_noop('Türkçe')),
-    ('uk', gettext_noop('українська мова')),
-    ('vi', gettext_noop(u'Tiếng Việt')),
-    ('zh-cn', gettext_noop(u'简体中文')),
-    ('zh-tw', gettext_noop(u'繁體中文')),
 )
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, 'locale'),
@@ -224,6 +194,9 @@ INSTALLED_APPS = (
     'seahub.password_session',
     'seahub.admin_log',
     'seahub.wopi',
+
+    'keeper',
+
 )
 
 # Enabled or disable constance(web settings).
@@ -256,7 +229,7 @@ ENABLE_MAKE_GROUP_PUBLIC = False
 SHOW_REPO_DOWNLOAD_BUTTON = False
 
 # enable 'upload folder' or not
-ENABLE_UPLOAD_FOLDER = True
+ENABLE_UPLOAD_FOLDER = False
 
 # enable resumable fileupload or not
 ENABLE_RESUMABLE_FILEUPLOAD = False
@@ -407,30 +380,38 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
-SITE_TITLE = 'Private Seafile'
+# !!!MERGE!!!
+SITE_TITLE = 'KEEPER'
 
 # Base name used in email sending
-SITE_NAME = 'Seafile'
+# !!!MERGE!!!
+SITE_NAME = 'KEEPER'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
-FAVICON_PATH = 'img/favicon.ico'
+# FAVICON_PATH = 'img/favicon.ico'
+FAVICON_PATH = 'img/favicon.png'
+
 
 # Path to the Logo Imagefile (relative to the media path)
-LOGO_PATH = 'img/seafile-logo.png'
+# !!!MERGE!!!
+LOGO_PATH = 'custom/KeeperLogo.svg'
 # logo size. the unit is 'px'
-LOGO_WIDTH = 128
-LOGO_HEIGHT = 32
+# !!!MERGE!!!
+LOGO_WIDTH = 140
+# !!!MERGE!!!
+LOGO_HEIGHT = 40
 
 # css to modify the seafile css (e.g. css/my_site.css)
-BRANDING_CSS = ''
+# !!!MERGE!!!
+BRANDING_CSS = 'custom/keeper.css'
 
 # Using Django to server static file. Set to `False` if deployed behide a web
 # server.
 SERVE_STATIC = True
 
 # Enable or disable registration on web.
-ENABLE_SIGNUP = False
+ENABLE_SIGNUP = True
 
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
@@ -456,6 +437,7 @@ LOGGING = {
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB
+            'backupCount': 52,
             'formatter':'standard',
         },
         'request_handler': {
@@ -463,6 +445,7 @@ LOGGING = {
                 'class':'logging.handlers.RotatingFileHandler',
                 'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
                 'maxBytes': 1024*1024*10, # 10 MB
+                'backupCount': 52,
                 'formatter':'standard',
         },
         'mail_admins': {
@@ -495,8 +478,6 @@ SESSION_COOKIE_AGE = 24 * 60 * 60
 
 # Days of remembered login info (deafult: 7 days)
 LOGIN_REMEMBER_DAYS = 7
-
-SEAFILE_VERSION = '6.1.1'
 
 # Compress static files(css, js)
 COMPRESS_URL = MEDIA_URL
@@ -591,7 +572,7 @@ ENABLE_TWO_FACTOR_AUTH = False
 OTP_LOGIN_URL = '/profile/two_factor_authentication/setup/'
 
 # Enable personal wiki, group wiki
-ENABLE_WIKI = False
+ENABLE_WIKI = True
 
 #####################
 # External settings #

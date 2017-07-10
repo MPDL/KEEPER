@@ -959,6 +959,13 @@ def send_user_add_mail(request, email, password):
         'email': email,
         'password': password,
         }
+    # KEEPER
+    try:
+        from keeper.common import get_user_name
+        c['user'] = get_user_name(c['user'])
+    except Exception:
+        pass
+
     send_html_email(_(u'You are invited to join %s') % SITE_NAME,
             'sysadmin/user_add_email.html', c, None, [email])
 
@@ -1849,44 +1856,30 @@ def batch_add_user(request):
                 except Exception as e:
                     logger.error(e)
 
-                try:
                     department = row[3].strip()
                     if len(department) <= 512:
                         DetailedProfile.objects.add_or_update(username, department, '')
-                except Exception as e:
-                    logger.error(e)
 
-                try:
                     role = row[4].strip()
                     if is_pro_version() and role in get_available_roles():
                         User.objects.update_role(username, role)
-                except Exception as e:
-                    logger.error(e)
 
-                try:
                     space_quota_mb = row[5].strip()
                     space_quota_mb = int(space_quota_mb)
                     if space_quota_mb >= 0:
                         space_quota = int(space_quota_mb) * get_file_size_unit('MB')
                         seafile_api.set_user_quota(username, space_quota)
+
+                    send_html_email_with_dj_template(
+                        username, dj_template='sysadmin/user_batch_add_email.html',
+                        subject=_(u'You are invited to join %s') % SITE_NAME,
+                        context={
+                            'user': email2nickname(request.user.username),
+                            'email': username,
+                            'password': password,
+                        })
                 except Exception as e:
                     logger.error(e)
-
-                send_html_email_with_dj_template(
-                    username, dj_template='sysadmin/user_batch_add_email.html',
-                    subject=_(u'You are invited to join %s') % SITE_NAME,
-                    context={
-                        'user': email2nickname(request.user.username),
-                        'email': username,
-                        'password': password,
-                    })
-
-                # send admin operation log signal
-                admin_op_detail = {
-                    "email": username,
-                }
-                admin_operation.send(sender=None, admin_name=request.user.username,
-                                     operation=USER_ADD, detail=admin_op_detail)
 
         messages.success(request, _('Import succeeded'))
     else:
@@ -1944,7 +1937,7 @@ def sys_settings(request):
     if HAS_TWO_FACTOR_AUTH:
         DIGIT_WEB_SETTINGS.append('ENABLE_TWO_FACTOR_AUTH')
 
-    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT', 'TEXT_PREVIEW_EXT')
+    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT',)
 
     if request.is_ajax() and request.method == "POST":
         content_type = 'application/json; charset=utf-8'
@@ -2127,8 +2120,6 @@ def sys_inst_info_user(request, inst_id):
                 u.last_login = last_login.last_login
 
     users_count = Profile.objects.filter(institution=inst.name).count()
-    space_quota = InstitutionQuota.objects.get_or_none(institution=inst)
-    space_usage = get_institution_space_usage(inst)
 
     return render_to_response('sysadmin/sys_inst_info_user.html', {
         'inst': inst,
@@ -2139,8 +2130,6 @@ def sys_inst_info_user(request, inst_id):
         'next_page': current_page + 1,
         'per_page': per_page,
         'page_next': page_next,
-        'space_usage': space_usage,
-        'space_quota': space_quota,
     }, context_instance=RequestContext(request))
 
 @login_required
@@ -2256,31 +2245,6 @@ def sys_inst_toggle_admin(request, inst_id, email):
 
 @login_required
 @sys_staff_required
-@require_POST
-def sys_inst_set_quota(request, inst_id):
-    """Set institution quota"""
-    try:
-        inst = Institution.objects.get(pk=inst_id)
-    except Institution.DoesNotExist:
-        raise Http404
-
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = reverse('sys_inst_info_users', args=[inst.pk])
-
-    quota_mb = int(request.POST.get('space_quota', ''))
-    quota = quota_mb * get_file_size_unit('MB')
-
-    obj, created = InstitutionQuota.objects.update_or_create(
-        institution=inst,
-        defaults={'quota': quota},
-    )
-    content_type = 'application/json; charset=utf-8'
-    return HttpResponse(json.dumps({'success': True}), status=200,
-                        content_type=content_type)
-
-@login_required
-@sys_staff_required
 def sys_invitation_admin(request):
     """List all invitations .
     """
@@ -2315,27 +2279,6 @@ def sys_invitation_admin(request):
             'page_next': page_next,
         },
         context_instance=RequestContext(request))
-
-@login_required
-@sys_staff_required
-def sys_invitation_remove(request):
-    """Delete an invitation.
-    """
-    ct = 'application/json; charset=utf-8'
-    result = {}
-
-    if not ENABLE_GUEST_INVITATION:
-        return HttpResponse(json.dumps({}), status=400, content_type=ct)
-
-    inv_id = request.POST.get('inv_id', '')
-    if not inv_id:
-        result = {'error': "Argument missing"}
-        return HttpResponse(json.dumps(result), status=400, content_type=ct)
-
-    inv = get_object_or_404(Invitation, pk=inv_id)
-    inv.delete()
-
-    return HttpResponse(json.dumps({'success': True}), content_type=ct)
 
 @login_required
 @sys_staff_required
