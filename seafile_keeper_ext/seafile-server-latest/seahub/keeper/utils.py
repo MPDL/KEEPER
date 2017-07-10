@@ -129,18 +129,19 @@ Stuttgarter Institute	Stuttgart	mpis.mpg.de	Nachfolgeinstitute: MPI Intelligente
 ACCOUNT_ACTIVATION_PATTERN = '^.*@(' + "|".join(
     map((lambda s: re.escape(s.split('\t')[2])), EMAIL_DOMAIN_LIST.splitlines())
 ) + ')$'
+COMPILED_PATTERN = re.compile(ACCOUNT_ACTIVATION_PATTERN)
+
 
 def account_can_be_auto_activated(email):
     activate = False
-
     try:
-        activation_pattern = re.compile(ACCOUNT_ACTIVATION_PATTERN)
-        activate = re.match(activation_pattern, email)
+        activate = re.match(COMPILED_PATTERN, email)
     except Exception as e:
         logging.error("Cannot match pattern: %s" % e)
 
     return activate
 
 if __name__ == "__main__":
+    print(ACCOUNT_ACTIVATION_PATTERN)
     if account_can_be_auto_activated('some_user@mpdl.mpg.de'):
         print('Matched')
