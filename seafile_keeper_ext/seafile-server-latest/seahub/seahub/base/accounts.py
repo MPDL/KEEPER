@@ -477,7 +477,7 @@ class RegistrationBackend(object):
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,
                                                                         password, site,
-                                                                        send_email=is_auto_activated)
+                                                                        send_email=False)
             # login the user
             new_user.backend=settings.AUTHENTICATION_BACKENDS[0]
 
