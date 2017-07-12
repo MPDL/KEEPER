@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import logging
 import re
 
@@ -143,5 +144,7 @@ def account_can_be_auto_activated(email):
 
 if __name__ == "__main__":
     print(ACCOUNT_ACTIVATION_PATTERN)
-    if account_can_be_auto_activated('some_user@mpdl.mpg.de'):
-        print('Matched')
+    # if account_can_be_auto_activated('some_user@mpdl.mpg.de'):
+    if not account_can_be_auto_activated('test_email_for_non_mpg_domain@gmail.com'):
+        print('NOT ', end='')
+    print('Matched')
