@@ -202,6 +202,14 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
     color: black !important;
 }
 
+.ui-progressbar-value, .progress .bar {
+    background: #57a5b8;
+}
+
+.fixed-upload-file-dialog .fileupload-buttonbar .cancel, .template-upload .btn {
+    color: #57a5b8;
+}
+
 /*
  ********************************************************************************
  * SIDE TOOLBAR					                               
