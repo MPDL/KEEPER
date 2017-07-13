@@ -183,18 +183,22 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 #side-nav a#enable-mods:focus {
     color: #ccc !important
 }
-.nav-con-tabs-nav .ui-state-active a, .new-narrow-panel .hd {
+.nav-con-tabs-nav .ui-state-active a, .new-narrow-panel .hd, #notifications .num {
     background: #57a5b8 !important
 }
+#notifications .num {
+    border-color: #57a5b8;
+}
+
 .side-tabnav-tabs .tab-cur a {
     background-color: #57a5b8 !important;
 }
-.dirent-hidden-op.sf-dropdown-menu a:hover, .grid-item-op.sf-dropdown-menu a:hover,
-.repo-hidden-op.sf-dropdown-menu a:hover {
+.sf-dropdown-menu a:hover, .dirent-hidden-op.sf-dropdown-menu a:hover, .grid-item-op.sf-dropdown-menu a:hover,
+.repo-hidden-op.sf-dropdown-menu a:hover, #my-libs-more-op .sf-dropdown-menu a:hover {
     background: #eef0db !important;
 }
-.dirent-hidden-op.sf-dropdown-menu a, .grid-item-op.sf-dropdown-menu a,
-.repo-hidden-op.sf-dropdown-menu a {
+.sf-dropdown-menu a, .dirent-hidden-op.sf-dropdown-menu a, .grid-item-op.sf-dropdown-menu a,
+.repo-hidden-op.sf-dropdown-menu a, #my-libs-more-op .sf-dropdown-menu a  {
     color: black !important;
 }
 
