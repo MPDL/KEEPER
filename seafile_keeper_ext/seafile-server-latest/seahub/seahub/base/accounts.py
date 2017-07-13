@@ -436,6 +436,12 @@ class RegistrationBackend(object):
     fields and supported operations.
 
     """
+
+    # KEEPER
+    def __init__(self):
+        self.is_keeper_auto_activated = False
+
+
     def register(self, request, **kwargs):
         """
         Given a username, email address and password, register a new
@@ -470,9 +476,10 @@ class RegistrationBackend(object):
         from registration.models import RegistrationProfile
         # KEEPER
         from keeper.utils import account_can_be_auto_activated
-        is_auto_activated = account_can_be_auto_activated(email)
+        self.is_keeper_auto_activated = account_can_be_auto_activated(email)
+
         if bool(config.ACTIVATE_AFTER_REGISTRATION) is True \
-                or is_auto_activated:
+                or self.is_keeper_auto_activated:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,
@@ -482,6 +489,7 @@ class RegistrationBackend(object):
             new_user.backend=settings.AUTHENTICATION_BACKENDS[0]
 
             login(request, new_user)
+
         else:
             # create inactive user, user can be activated by admin, or through activated email
             new_user = RegistrationProfile.objects.create_inactive_user(username, email,
@@ -558,6 +566,10 @@ class RegistrationBackend(object):
         user registration.
 
         """
+        # KEEPER
+        if self.is_keeper_auto_activated:
+            return self.post_activation_redirect(request, user)
+
         return ('registration_complete', (), {})
 
     def post_activation_redirect(self, request, user):
