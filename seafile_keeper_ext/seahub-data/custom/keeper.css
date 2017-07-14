@@ -231,7 +231,8 @@ a, a:focus, a:hover {
 a.path-link, p a, div.empty-tips a, div.commit a, div span a, div a:hover.op-link, div form a, 
 #wiki-pages a, div#search-results a, div#ls-ch ul li a, a#file-star, a.icon-star, #share-tabs div#dir-user-share a,
 div.members a, div#group a:focus, #group-discussions a.msg-username, span.op-target, a.go-back:hover,
-div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list a, .side-tabnav h3 {
+div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list a, .side-tabnav h3,
+.op-icon.sf2-x, [class^='sf2-icon-']:hover {
     color: #57a5b8 !important
 }
 #side-nav a#enable-mods:focus {
