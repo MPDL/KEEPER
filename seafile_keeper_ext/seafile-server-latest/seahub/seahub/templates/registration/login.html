@@ -5,83 +5,95 @@
 
 {% block main_content %}
  
-<div id="info_panel">
-	<h3 style="font-size: 3em ; color:#57a5b8 ;">Archive the way you work</h3>
-	<p style="font-size: 1.35em ;"><span id="intro1">A new free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</span></br></br>
-<span id="intro2">You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</span></p>
-	<p><span id="intro3">Browse all research projects in KEEPER</span><span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-7">
+            <div id="info_panel">
+                <h3>Archive the way you work</h3>
+                <p><span id="intro1">A new free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</span></br></br>
+                    <span id="intro2">You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</span></p>
+                <p><span id="intro3">Browse all research projects in KEEPER</span><span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
+            </div>
+        </div>
+        <!--<div class="clearfix visible-lg-block"></div>-->
+        <div id="login_panel_parent" class="col-lg-5">
+            <div id="login_panel" class="new-narrow-panel">
+                <h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
+                <form id="form_login" action="" method="post" class="con">{% csrf_token %}
+                    <label for="login">{% trans "Email or Username" %}</label>
+                    <input type="text" name="login" id="login" value="" class="input" />
+                    <label for="password">{% trans "Password" %}</label></br>
+                    <a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
+                    <input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
+                    {% if form.captcha %}
+                    <label>{% trans "CAPTCHA" %}</label><br />
+                    {{ form.captcha }}
+                    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
+                    {% endif %}
+                    <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+                    {% if form.errors %}
+                    {% if form.captcha.errors %}
+                    <p class="error">{{ form.captcha.errors}}</p>
+                    {% elif form.errors.freeze_account %}
+                    <p class="error">{{ form.errors.freeze_account }}</p>
+                    {% elif form.errors.inactive %}
+                    <p class="error">{{ form.errors.inactive }}</p>
+                    {% else %}
+                    <p class="error">{% trans "Incorrect email or password" %}</p>
+                    {% endif %}
+                    {% else %}
+                    <p class="error hide"></p>
+                    {% endif %}
+
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember_me" class="vam" />
+                        <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+                    </label>
+
+                    <input type="submit" value="{% trans "Log In" %}" class="submit" />
+                    {% if enable_signup %}
+                    <a href="{{ signup_url }}">{% trans "Signup" %}</a>
+                    {% endif %}
+                    {% if enable_shib_login %}
+                    <button id="shib-login" class="submit fright">{% trans "Shibboleth" %}</button>
+                    {% endif %}
+
+                    {% if enable_krb5_login %}
+                    <button id="krb5-login" class="submit fright">{% trans "Kerberos" %}</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-
-<div id="login_panel" class="new-narrow-panel">
-<h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
-<form id="form_login" action="" method="post" class="con">{% csrf_token %}
-    <label for="login">{% trans "Email or Username" %}</label>
-        <input type="text" name="login" id="login" value="" class="input" />
-	<label for="password">{% trans "Password" %}</label></br>
-	<a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
-	<input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
-    {% if form.captcha %}
-    <label>{% trans "CAPTCHA" %}</label><br />
-    {{ form.captcha }}
-    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
-    {% endif %}
-    <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-    {% if form.errors %}
-      {% if form.captcha.errors %}
-        <p class="error">{{ form.captcha.errors}}</p>
-      {% elif form.errors.freeze_account %}
-        <p class="error">{{ form.errors.freeze_account }}</p>
-      {% elif form.errors.inactive %}
-        <p class="error">{{ form.errors.inactive }}</p>
-      {% else %}
-        <p class="error">{% trans "Incorrect email or password" %}</p>
-      {% endif %}
-    {% else %}
-	<p class="error hide"></p>
-    {% endif %}
-
-    <label class="checkbox-label">
-        <input type="checkbox" name="remember_me" class="vam" />
-        <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
-    </label>
-
-    <input type="submit" value="{% trans "Log In" %}" class="submit" />
-    {% if enable_signup %}
-    <a href="{{ signup_url }}">{% trans "Signup" %}</a>
-    {% endif %}
-    {% if enable_shib_login %}
-    <button id="shib-login" class="submit fright">{% trans "Shibboleth" %}</button>
-    {% endif %}
-
-    {% if enable_krb5_login %}
-    <button id="krb5-login" class="submit fright">{% trans "Kerberos" %}</button>
-    {% endif %}
-</form>
-</div>
-<div id="lg_footer" class="row">
-	<div class="col-md-3">
-		<h4>What you need to know</h4>
-		<a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
-		<a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
-		<a href="/catalog" target="_blank">Project Catalog</a></br>
-		<a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a>
-	</div>
-	<div class="col-md-3">
-		<h4>Desktop client</h4>
-		<a href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
-	</div>
-	<div class="col-md-3">
-		<h4>The software behind Keeper</h4>
-		<img id="seafile-logo" style="height: 30px; width: auto;"
-		     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
-		<a href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a>
-	</div>
-	<div class="col-md-3">
-		<h4>A service by</h4>
-		<img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
-		<a href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
-		<a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
-	</div>
+<div id="lg_footer">
+    <div class="container">
+        <div class="raw">
+            <div class="col-md-3">
+                <h4>What you need to know</h4>
+                <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
+                <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
+                <a href="/catalog" target="_blank">Project Catalog</a></br>
+                <a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a>
+            </div>
+            <div class="col-md-3">
+                <h4>Desktop client</h4>
+                <a href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
+            </div>
+            <div class="col-md-3">
+                <h4>The software behind Keeper</h4>
+                <img id="seafile-logo" style="height: 30px; width: auto;"
+                src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
+                <a href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a>
+            </div>
+            <div class="col-md-3">
+                <h4>A service by</h4>
+                <img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
+                <a href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
+                <a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>    
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -136,28 +148,6 @@ $(function() {
     });
 });
 {% endif %}
-</script>
-<script type="text/javascript">
-
-var h=document.getElementById("login_panel").offsetHeight;
-
-
-var login_panel=document.getElementById('login_panel');
-var info_panel=document.getElementById('info_panel');
-var footer=document.getElementById('lg_footer');
-var lg_floor=document.getElementById('lg_floor');
-
-window.onresize = function () {
-	width = window.innerWidth;
-	if (width<=1500){
-		login_panel.style.top='75%';login_panel.style.left='30%';
-		info_panel.style.width='40%';info_panel.style.left='30%';
-		footer.style.top='150%';}
-	if (width>=1500){
-		login_panel.style.top='22%';login_panel.style.right='16%';
-		login_panel.style.left='';
-		info_panel.style.width='30%';info_panel.style.left='22.5%';
-		footer.style.top='86%';}}
 </script>
 
 <script type="text/javascript">
