@@ -209,7 +209,9 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 .fixed-upload-file-dialog .fileupload-buttonbar .cancel, .template-upload .btn {
     color: #57a5b8;
 }
-
+#notice-popover li.unread {
+    border-left-color: #57a5b8;
+}
 /*
  ********************************************************************************
  * SIDE TOOLBAR					                               
