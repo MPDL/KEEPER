@@ -166,8 +166,11 @@ function deploy_file () {
 	
 	# at least one paramater and should be a path to file
 	check_file "$1"
+    # make relate seafile path if path is absolute
+    local REL_PATH="$SEAFILE_DIR/"
+    REL_PATH=${1#$REL_PATH} 
 	# default destination is seafile dirs
-	local DEST_FILE="$SEAFILE_DIR/$1"
+	local DEST_FILE="$SEAFILE_DIR/$REL_PATH"
 	# if second parameter defined and is not -p, it is an absolute path
 	if [ -n "$2" ] && [ "$2" != "-p" ]; then
 		DEST_FILE=$2
