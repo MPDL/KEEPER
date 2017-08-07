@@ -24,7 +24,7 @@ def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
 
     send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
 
-    inviter_email =  create_tmp_user_with_profile
+    inviter_email = create_tmp_user_with_profile
     fake_request = type("", (), { 'user' : type("", (), dict(username=inviter_email, org=None))  })
     send_user_add_mail(fake_request, 'user@invited.to.keeper.de', 'FAKE_PASSWORD')
 
@@ -44,16 +44,21 @@ def test_account_auto_activation(mocker):
 
     for EMAIL in ('test_email_for_mpg_domain@mpdl.mpg.de','some@rzg.mpg.de','another@biblhertz.it',):
         try:
+            send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
             new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
-            assert new_user.is_active
+            args, kwargs = send_mail_mock.call_args
+            assert args[-1][0]==EMAIL
+            assert not new_user.is_active
         except:
             pytest.fail(msg="Bad account: %s" % EMAIL)
         finally:
             User.objects.get(EMAIL).delete()
 
-    EMAIL = 'test_email_for_non_mpg_domain@gmail.com'
+    EMAIL = 'test_email_for_non_mpg_domain@no_mpg_domain.com'
     try:
+        send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
         new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
+        assert not send_mail_mock.called, 'method should not have been called'
         assert not new_user.is_active
     finally:
         User.objects.get(EMAIL).delete()

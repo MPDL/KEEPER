@@ -437,10 +437,6 @@ class RegistrationBackend(object):
 
     """
 
-    # KEEPER
-    def __init__(self):
-        self.is_keeper_auto_activated = False
-
 
     def register(self, request, **kwargs):
         """
@@ -474,12 +470,11 @@ class RegistrationBackend(object):
             site = RequestSite(request)
 
         from registration.models import RegistrationProfile
+
         # KEEPER
         from keeper.utils import account_can_be_auto_activated
-        self.is_keeper_auto_activated = account_can_be_auto_activated(email)
 
-        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True \
-                or self.is_keeper_auto_activated:
+        if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
             new_user = RegistrationProfile.objects.create_active_user(username, email,
@@ -489,6 +484,13 @@ class RegistrationBackend(object):
             new_user.backend=settings.AUTHENTICATION_BACKENDS[0]
 
             login(request, new_user)
+
+        #KEEPER: send activation email to MPG users
+        elif account_can_be_auto_activated(email):
+            # create inactive user, user can be activated by admin, or through activated email
+            new_user = RegistrationProfile.objects.create_inactive_user(username, email,
+                                                                        password, site,
+                                                                        send_email=True)
 
         else:
             # create inactive user, user can be activated by admin, or through activated email
@@ -566,10 +568,6 @@ class RegistrationBackend(object):
         user registration.
 
         """
-        # KEEPER
-        if self.is_keeper_auto_activated:
-            return self.post_activation_redirect(request, user)
-
         return ('registration_complete', (), {})
 
     def post_activation_redirect(self, request, user):
