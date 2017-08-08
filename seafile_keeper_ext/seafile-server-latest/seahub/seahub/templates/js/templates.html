@@ -1082,11 +1082,13 @@
             <a href="{{ SITE_ROOT }}#shared-libs/" class="ellipsis" title="{% trans "Shared with me" %}"><span aria-hidden="true" class="sf2-icon-share"></span>{% trans "Shared with me" %}</a>
         </li>
 
-        {% if user.permissions.can_view_org %}
-        <li class="tab<% if (cur_tab == 'org') { %> tab-cur<% } %>">
-            <a href="{{ SITE_ROOT }}#org/" class="ellipsis" title="{% trans "Shared with all" %}"><span aria-hidden="true" class="sf2-icon-organization"></span>{% trans "Shared with all" %}</a>
-        </li>
-        {% endif %}
+        {% comment "KEEPER commented" %}    
+            {% if user.permissions.can_view_org %}
+            <li class="tab<% if (cur_tab == 'org') { %> tab-cur<% } %>">
+                <a href="{{ SITE_ROOT }}#org/" class="ellipsis" title="{% trans "Shared with all" %}"><span aria-hidden="true" class="sf2-icon-organization"></span>{% trans "Shared with all" %}</a>
+            </li>
+            {% endif %}
+        {% endcomment %}
 
         <% if (cur_tab == 'group') { %>
         <li class="tab" id="group-nav">
