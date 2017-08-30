@@ -3196,7 +3196,7 @@ msgstr ""
 #: seahub/templates/registration/login.html:42
 #: seahub/templates/registration/registration_form.html:11
 msgid "Signup"
-msgstr ""
+msgstr "Sign Up"
 
 #: seahub/templates/choose_register.html:14
 msgid "Create a personal account"
