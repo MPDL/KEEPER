@@ -436,7 +436,9 @@ class RegistrationBackend(object):
     fields and supported operations.
 
     """
-
+    # KEEPER
+    def __init__(self):
+        self.mpg_user=False
 
     def register(self, request, **kwargs):
         """
@@ -487,6 +489,7 @@ class RegistrationBackend(object):
 
         #KEEPER: send activation email to MPG users
         elif account_can_be_auto_activated(email):
+            self.mpg_user = True
             # create inactive user, user can be activated by admin, or through activated email
             new_user = RegistrationProfile.objects.create_inactive_user(username, email,
                                                                         password, site,
@@ -568,7 +571,12 @@ class RegistrationBackend(object):
         user registration.
 
         """
-        return ('registration_complete', (), {})
+        ### KEEPER
+        return (
+            'registration_mpg_complete' if self.mpg_user
+                else 'registration_complete',
+            (), {}
+        )
 
     def post_activation_redirect(self, request, user):
         """
