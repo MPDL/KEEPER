@@ -29,8 +29,8 @@
 	
 	/* background of the footer(if any) */
 	@media only screen and (min-height:700px){
-	#login-footer-ctn{width:100%; height:20%; position: fixed; bottom:0%; left:0%;}
-	#login-footer-item{height: 90%; border-right: 1px solid #959B9A;}
+        #login-footer-ctn{width:100%; height:20%; position: fixed; bottom:0%; left:0%;}
+        #login-footer-item{height: 90%; border-right: 1px solid #959B9A;}
 	}
 
 		/***************** Mobile version ***********************************/
@@ -103,8 +103,76 @@
 		#square-footer a{color: #7C7F7E !important;font-family: AppleGothic !important;font-style: oblique;font-weight: 100;}
 		#square-footer table td{border: none !important; padding:10px;}
 
-h2 .new-narrow-panel{background: #57a5b8 !important;}
 
+
+
+        /* Login page common css */
+
+		#main .container {
+			margin-top: 2%;
+            padding-bottom: 20px;
+		}
+
+        #info_panel {
+            transition: left 0.8s; 
+            background-image: url('/media/custom/background.svg'); 
+            background-repeat: no-repeat; 
+            background-size: 30%; 
+            background-position: 10px 0px;
+        }
+        #info_panel h3 {
+            font-size: 3em;
+            color: #57a5b8;
+        }
+
+        #info_panel p {
+            font-size: 1.35em;
+        }
+
+		#login_panel {
+            float: none;
+            margin: 0 0 0 87px;
+			transition: top 0.8s; 
+			transition: right 0.8s; 
+			background: rgba(255, 255, 255, 1) !important; 
+			z-index: 1;            
+		}
+       
+
+
+        #login_panel_parent {
+            padding: 0 0 0 0;
+        }
+
+
+        
+        /* FOOTER */
+        body {
+            margin-bottom: 150px;
+        }
+        #lg_footer {
+            /*position: absolute; */
+            bottom: 0;
+            width: 100%; 
+            height: 150px;
+       }
+
+        #lg_footer .container {
+            border-top: 1px solid #dcdcdc; 
+        }
+
+       #lg_footer div {
+            top: 10px;
+        }
+        
+        #lg_footer div a {
+            color: #b7b7b7; 
+            font-weight: lighter;
+        }
+
+        #lg_footer div h4 {
+            color: #57a5b8; 
+        }
 
 /*
  ********************************************************************************
@@ -122,6 +190,87 @@ a:focus{outline:none;}
 /* no link underline */
 a:link{text-decoration:none;}
 
+/**** COLOR SUBSTITUTION ->#57a5b8 ****/
+/**** Global ****/
+a, a:focus, a:hover {
+    color: #57a5b8 
+}
+@media (max-width:767px) {
+    .nav-con-tabs-nav a:hover,
+    .nav-con-tabs-nav .ui-state-active a,
+    .nav-con-tabs-nav .ui-state-active a:hover {
+        color:#57a5b8;
+        border-color:#57a5b8;
+    }
+}
+.tab-popup-tabs-nav .ui-state-active .a,
+.tab-popup-tabs-nav .tab .a:hover {
+    color:#57a5b8;
+    border-bottom-color:#57a5b8;
+}
+.load-more-discussion {
+    color:#57a5b8;
+}
+.tabnav-tab-cur a,
+.tabnav-tab a:hover,
+.wiki-nav .cur-item .link,
+.wiki-nav .link:hover,
+#right-panel .hd .ui-state-active .a,
+#right-panel .hd .a:hover {
+    color:#57a5b8;
+    border-bottom-color: #57a5b8;
+}
+#plans th { 
+   color:#57a5b8;
+}
+.repo-op .op-link:hover {
+   color:#57a5b8;
+}
+
+/**** Fine ****/
+a.path-link, p a, div.empty-tips a, div.commit a, div span a, div a:hover.op-link, div form a, 
+#wiki-pages a, div#search-results a, div#ls-ch ul li a, a#file-star, a.icon-star, #share-tabs div#dir-user-share a,
+div.members a, div#group a:focus, #group-discussions a.msg-username, span.op-target, a.go-back:hover,
+div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list a, .side-tabnav h3,
+.op-icon.sf2-x, [class^='sf2-icon-']:hover {
+    color: #57a5b8 !important
+}
+#side-nav a#enable-mods:focus {
+    color: #ccc !important
+}
+.nav-con-tabs-nav .ui-state-active a, .new-narrow-panel .hd, #notifications .num {
+    background: #57a5b8 !important
+}
+#notifications .num {
+    border-color: #57a5b8;
+}
+
+.side-tabnav-tabs .tab-cur a {
+    background-color: #57a5b8 !important;
+}
+.sf-dropdown-menu a:hover, .dirent-hidden-op.sf-dropdown-menu a:hover, .grid-item-op.sf-dropdown-menu a:hover,
+.repo-hidden-op.sf-dropdown-menu a:hover, #my-libs-more-op .sf-dropdown-menu a:hover {
+    background: #eef0db !important;
+}
+.sf-dropdown-menu a, .dirent-hidden-op.sf-dropdown-menu a, .grid-item-op.sf-dropdown-menu a,
+.repo-hidden-op.sf-dropdown-menu a, #my-libs-more-op .sf-dropdown-menu a  {
+    color: black !important;
+}
+
+.ui-progressbar-value, .progress .bar {
+    background: #57a5b8;
+}
+
+.fixed-upload-file-dialog .fileupload-buttonbar .cancel, .template-upload .btn {
+    color: #57a5b8;
+}
+#notice-popover li.unread {
+    border-left-color: #57a5b8;
+}
+
+div.fright.js-file-op > a:focus {
+    color: white;
+}
 
 /*
  ********************************************************************************
@@ -136,8 +285,8 @@ a:link{text-decoration:none;}
 		 pointer-events: none !important;}
 
 /* "My Libraries" tab is highlighted when accessing the homepage */
-.side-tabnav-tabs .tab-cur a{background-color: #57a5b8 !important;}
-.side-tabnav-tabs .tab-cur a:active{background-color: #57a5b8 !important;}
+/*.side-tabnav-tabs .tab-cur a{background-color: #57a5b8 !important;}*/
+/*.side-tabnav-tabs .tab-cur a:active{background-color: #57a5b8 !important;}*/
 
 
 
@@ -221,14 +370,58 @@ a:link{text-decoration:none;}
 			#footer-item2{max-height: 35%;top:13%;left: 52.5%;}
 			#footer-item3{max-height: 47%;top:51%;left: 5%;}
 			#footer-item4{max-height: 47%;top:51%;left: 52.5%;}
-		}
-	
+
+   		}
+
 		/********************************************************************************/
 		/***** mobile version ***********************************************************/
 		/********************************************************************************/
-		@media (max-width:900px) {
-		.side-nav-footer{display: none;}}
-		
+		/*@media (max-width:900px) {*/
+		/*@media (max-width: @screen-sm-max) {*/
+
+		@media (max-width: 768px) {
+
+			.side-nav-footer, #info_panel {
+                display: none;
+            }
+
+            #login_panel_parent {
+                padding: 0;
+            }
+
+            #login_panel {
+                float: none;
+                clear: both;
+                margin: 0;
+            }
+
+            #lg_footer h4 {
+                margin-top: 20px;
+            }
+
+            #lg_footer div a {
+                color: black; 
+                font-weight: normal;
+
+            }
+            #lg_footer .container {
+                border-top: unset; 
+            }
+
+ 
+        }
+		@media (min-width: 769px) and (max-width: 991px) {
+            #login_panel_parent {
+                padding-left: 15px;
+            }
+
+            #login_panel {
+                float: none;
+                clear: both;
+                margin: 0;
+            }
+
+
 /*
  ********************************************************************************
  ********************************************************************************	
@@ -238,7 +431,7 @@ a:link{text-decoration:none;}
 
 @media only screen and (max-device-width:400px) {
 	#info_panel, #lg_footer{display:none;}
-	#login_panel{width: 90% !important; top: 30% !important; left: 5% !important; font-size: 1em !important; margin: 4px !important; z-index: -1 !important;}
+    #login_panel{width: 90% !important; top: 30% !important; left: 5% !important; font-size: 1em !important; margin: 4px !important; z-index: -1 !important;}
 
 }
 
@@ -252,31 +445,31 @@ a:link{text-decoration:none;}
 	.mfp-img:hover{cursor: auto !important;}
 
 	/* link to open image in another tab */
-	.mfp-bottom-bar .mfp-title a{color:#57a5b8 !important;}
+	/*.mfp-bottom-bar .mfp-title a{color:#57a5b8 !important;}*/
 
 /* trash bin */
 	
 	/* trash bin title */
-	.repo-trash-hd span{color:#57a5b8 !important;}
+	/*.repo-trash-hd span{color:#57a5b8 !important;}*/
 
 	/* deleted files list */
-	#wide-panel-noframe table td a{color:#57a5b8 !important;}
+	/*#wide-panel-noframe table td a{color:#57a5b8 !important;}*/
 
 /* file modifications */
 
 
-#paginator a{color:#57a5b8 !important;}
+/*#paginator a{color:#57a5b8 !important;}*/
 
-h3 span{color:#57a5b8 !important;}
+/*h3 span{color:#57a5b8 !important;}*/
 
 /* user name */
-.author a{color:#57a5b8 !important;}
+/*.author a{color:#57a5b8 !important;}*/
 
-.go-back:hover{color:#57a5b8 !important;}
+/*.go-back:hover{color:#57a5b8 !important;}*/
 
 /* system administration */
 #side-nav h3{color:#005c71 !important;}
-.row table tr td a{color:#57a5b8 !important;}
+div#right-panel td a{color:#57a5b8}
 
 /* icon hover color */
 #notice-icon span:hover{color:#006f7b !important;}
@@ -284,7 +477,6 @@ h3 span{color:#57a5b8 !important;}
 #group-members-icon:hover{color:#006f7b;}
 #group-discussions-icon:hover{color:#006f7b;}
 
-#guide-for-new .icon-lightbulb.fleft{color: #57a5b8 !important;}
 
 /* textarea are not resizable */
 textarea{resize: none;}
@@ -294,26 +486,13 @@ textarea{resize: none;}
 #group-members{z-index:1;}
 #group-settings{z-index:1;}
 
-.grid-item a{color: #57a5b8  !important;}
-
 #upload-menu li a:hover{background: #f4efde !important; color: black !important;}
 
-.hidden-op.dirent-hidden-op.sf-dropdown-menu li a{color: black !important;}
-.hidden-op.dirent-hidden-op.sf-dropdown-menu li a:hover{background-color: #f4efde !important; color: black !important;}
-
-
-.left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:focus{background-color: #57a5b8 !important;}
-.left-right-tabs-nav.fleft.ui-tabs-nav.ui-helper-reset.ui-helper-clearfix.ui-widget-header.ui-corner-all li a:active{background-color: #57a5b8 !important;}
-
 #lg_ft:hover{cursor: pointer;}
-.commit.fleft a{color: #57a5b8 !important; font-weight: 600 !important;}
+.commit.fleft a {font-weight: 600 !important;}
 #MPDL-logo:hover{cursor: pointer;}
 #seafile-logo:hover{cursor: pointer;}
 
-.left-right-tabs-nav.ui-state-active a{background: #57a5b8 !important;}
 
-.op-target{color: #57a5b8 !important;}
 
-.hidden-op.repo-hidden-op.sf-dropdown-menu a:hover{background: #EEF0DB !important;}
-.hidden-op.dirent-hidden-op.sf-dropdown-menu a:hover{background: none !important;}
-.hidden-op.repo-hidden-op.sf-dropdown-menu a{color: black !important;}
+

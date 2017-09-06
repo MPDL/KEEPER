@@ -1,11 +1,12 @@
 # coding: utf-8
 
+import os
 import logging
 import logging.handlers
 import datetime
 
 from seaserv import get_related_users_by_repo, get_org_id_by_repo_id, \
-        get_related_users_by_org_repo, get_commit
+    get_related_users_by_org_repo, get_commit
 from .db import save_user_events, save_org_user_events, save_file_audit_event, \
         save_file_update_event, save_perm_audit_event
 
