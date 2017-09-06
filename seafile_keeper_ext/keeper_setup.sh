@@ -95,7 +95,7 @@ function deploy_directories () {
         if [ ! -d "$DEST_DIR" ]; then
             err_and_exit "Directory does not exist: $DEST_DIR"
         else
-            local SOURCE_FILES=( $(find -H $i -type f ! -iname "*.pyc" ! -path "*/.ropeproject/*" ! -iname ".gitignore") )
+            local SOURCE_FILES=( $(find -H $i -type f ! -iname "*.pyc" ! -path "*/.ropeproject/*" ! -path "*/.cache/*" ! -iname ".gitignore") )
             for f in "${SOURCE_FILES[@]}"; do
                 deploy_file $f
            done
@@ -123,7 +123,7 @@ function create_and_deploy_directories () {
 # Deploy conf/ directory
 function deploy_conf () {
 	check_file "$PROPERTIES_FILE" "Cannot find properties file $PROPERTIES_FILE for the instance"
-	for i in seahub_settings.py ccnet.conf seafevents.conf seafdav.conf; do 
+	for i in seahub_settings.py ccnet.conf seafile.conf seafevents.conf seafdav.conf; do 
 		deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
     done
 }
@@ -166,8 +166,11 @@ function deploy_file () {
 	
 	# at least one paramater and should be a path to file
 	check_file "$1"
+    # make relate seafile path if path is absolute
+    local REL_PATH="$SEAFILE_DIR/"
+    REL_PATH=${1#$REL_PATH} 
 	# default destination is seafile dirs
-	local DEST_FILE="$SEAFILE_DIR/$1"
+	local DEST_FILE="$SEAFILE_DIR/$REL_PATH"
 	# if second parameter defined and is not -p, it is an absolute path
 	if [ -n "$2" ] && [ "$2" != "-p" ]; then
 		DEST_FILE=$2
@@ -254,6 +257,21 @@ function restore_directories () {
     done
 }
 
+# Overwrites keeper EXT files with the seafiles sources. 
+# This is part of migration procedure, see https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%20System%20Administration/Migration.md
+function copy_seaf_src_to_ext() {
+    pushd $EXT_DIR/seafile-server-latest
+    TARGET_FILES=( $(find -H . -type f -not \( -path "*/.rope*" -or -path "*/__pycache*" -or -path "*/.cache*" -or -path "*/.git*" -or -path "*/tags" -or -name "*.pyc" -or -path "*/keeper*" \) ) )
+    echo "$TARGET_FILES"
+    for i in "${TARGET_FILES[@]}"; do
+        local SRC_FILE="${SEAFILE_LATEST_DIR}/${i}" 
+        [ -f "$SRC_FILE" ] && cp -v "$SRC_FILE" "${i}"
+    done
+    popd
+}
+
+
+
 check_consistency
 
 case "$1" in
@@ -298,13 +316,23 @@ case "$1" in
 
     compile-i18n)
         pushd $SEAFILE_LATEST_DIR/seahub
-        bash ./i18n.sh compile-all
+        ./i18n.sh compile-all
         popd
     ;;
 
+    copy-seafile-sources-in-ext)
+         copy_seaf_src_to_ext   
+    ;;
+    
+    min.css)
+        pushd $SEAFILE_LATEST_DIR/seahub/media/css
+        yui-compressor -v seahub.css -o seahub.min.css
+        popd
+    ;;
+ 
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext|min.css}"
         exit 1
      ;;
 esac

@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from seaserv import seafile_api
 
-from keeper.models import Catalog
+from keeper.models import Catalog, CDC
 
 @pytest.fixture(scope='function')
 def create_tmp_user():
@@ -42,4 +42,5 @@ def create_tmp_repo(create_tmp_user):
     if repo and repo.id:
         seafile_api.remove_repo(repo.id)
         # clean up Catalog table, repo_deleted_cb is not called for tests!!!
+        CDC.objects.get(repo_id=repo_id).delete()
         Catalog.objects.delete_by_repo_id(repo.id)

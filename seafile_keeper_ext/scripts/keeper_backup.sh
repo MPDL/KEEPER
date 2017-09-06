@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 # Set seafile root directory
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest

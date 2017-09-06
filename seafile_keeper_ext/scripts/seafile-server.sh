@@ -34,6 +34,20 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
+function check_gpfs() {
+    [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
+    [ ! -d "/keeper/${__GPFS_FILESET__}/" ] &&  err_and_exit "Cannot access /keeper/${__GPFS_FILESET__}"
+    echo_green "/dev/gpfs_keeper is OK"
+}
+
+
+function restart_gpfs () {
+    $0 status
+    [ $? -eq 0 ] && err_and_exit "Keeper is running, please shutdown it first"
+    mmshutdown && mmstartup
+    sleep 10
+    check_gpfs 
+}
 
 function check_en_dis_nginx () {
     RESULT=$(type "nginx_ensite" 2>/dev/null)
@@ -68,7 +82,7 @@ function switch_maintenance_mode () {
 	fi
 }
 
- function check_component_running() {
+function check_component_running() {
     name=$1
     cmd=$2
     if pid=$(pgrep -f "$cmd" 2>/dev/null); then
@@ -88,7 +102,6 @@ function check_seahub_running () {
         [[ $1 == "CRITICAL" ]] && RC=1
     fi
 }
-
 #
 # Write a polite log message with date and time
 #
@@ -114,7 +127,10 @@ case "$1" in
             sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
             systemctl ${1} memcached.service
         ;;
-        switch-maintenance-mode)
+        restart-gpfs)
+            restart_gpfs
+        ;;
+       switch-maintenance-mode)
             check_en_dis_nginx
             switch_maintenance_mode
         ;;
@@ -137,7 +153,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|switch-maintenance-mode}"
+            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac

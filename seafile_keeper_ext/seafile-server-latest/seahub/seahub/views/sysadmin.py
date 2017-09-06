@@ -16,14 +16,15 @@ from django.conf import settings as dj_settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 import seaserv
 from seaserv import ccnet_threaded_rpc, seafserv_threaded_rpc, \
-    seafile_api, get_group, get_group_members, ccnet_api
+    seafile_api, get_group, get_group_members, ccnet_api, \
+    get_related_users_by_repo, get_related_users_by_org_repo
 from pysearpc import SearpcError
 
 from seahub.base.accounts import User
@@ -34,7 +35,9 @@ from seahub.base.templatetags.seahub_tags import tsstr_sec, email2nickname
 from seahub.auth import authenticate
 from seahub.auth.decorators import login_required, login_required_ajax
 from seahub.constants import GUEST_USER, DEFAULT_USER
-from seahub.institutions.models import Institution, InstitutionAdmin
+from seahub.institutions.models import (Institution, InstitutionAdmin,
+                                        InstitutionQuota)
+from seahub.institutions.utils import get_institution_space_usage
 from seahub.invitations.models import Invitation
 from seahub.role_permissions.utils import get_available_roles
 from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
@@ -42,23 +45,23 @@ from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
     clear_token, handle_virus_record, get_virus_record_by_id, \
     get_virus_record, FILE_AUDIT_ENABLED, get_max_upload_file_size
 from seahub.utils.file_size import get_file_size_unit
-from seahub.utils.rpc import mute_seafile_api
+from seahub.utils.ldap import get_ldap_info
 from seahub.utils.licenseparse import parse_license, user_number_over_limit
+from seahub.utils.rpc import mute_seafile_api
 from seahub.utils.sysinfo import get_platform_name
 from seahub.utils.mail import send_html_email_with_dj_template
 from seahub.utils.ms_excel import write_xls
 from seahub.utils.user_permissions import (get_basic_user_roles,
                                            get_user_role)
 from seahub.views import get_system_default_repo_id
-from seahub.views.ajax import (get_related_users_by_org_repo,
-                               get_related_users_by_repo)
 from seahub.forms import SetUserQuotaForm, AddUserForm, BatchAddUserForm, \
     TermsAndConditionsForm
-from seahub.profile.forms import ProfileForm, DetailedProfileForm
 from seahub.options.models import UserOptions
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.signals import repo_deleted
 from seahub.share.models import FileShare, UploadLinkShare
+from seahub.admin_log.signals import admin_operation
+from seahub.admin_log.models import USER_DELETE, USER_ADD
 import seahub.settings as settings
 from seahub.settings import INIT_PASSWD, SITE_NAME, SITE_ROOT, \
     SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER, SEND_EMAIL_ON_RESETTING_USER_PASSWD, \
@@ -131,13 +134,13 @@ def _populate_user_quota_usage(user):
     Arguments:
     - `user`:
     """
-    orgs = ccnet_threaded_rpc.get_orgs_by_user(user.email)
+    orgs = ccnet_api.get_orgs_by_user(user.email)
     try:
         if orgs:
             user.org = orgs[0]
             org_id = user.org.org_id
-            user.space_usage = seafserv_threaded_rpc.get_org_user_quota_usage(org_id, user.email)
-            user.space_quota = seafserv_threaded_rpc.get_org_user_quota(org_id, user.email)
+            user.space_usage = seafile_api.get_org_user_quota_usage(org_id, user.email)
+            user.space_quota = seafile_api.get_org_user_quota(org_id, user.email)
         else:
             user.space_usage = seafile_api.get_user_self_usage(user.email)
             user.space_quota = seafile_api.get_user_quota(user.email)
@@ -225,8 +228,6 @@ def sys_user_admin(request):
             if trial_user.user_or_org == user.email:
                 user.trial_info = {'expire_date': trial_user.expire_date}
 
-    have_ldap = True if len(seaserv.get_emailusers('LDAP', 0, 1)) > 0 else False
-
     platform = get_platform_name()
     server_id = get_server_id()
     pro_server = 1 if is_pro_version() else 0
@@ -241,7 +242,7 @@ def sys_user_admin(request):
             'next_page': current_page+1,
             'per_page': per_page,
             'page_next': page_next,
-            'have_ldap': have_ldap,
+            'have_ldap': get_ldap_info(),
             'platform': platform,
             'server_id': server_id[:8],
             'default_user': DEFAULT_USER,
@@ -487,13 +488,11 @@ def sys_user_admin_admins(request):
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    have_ldap = True if len(seaserv.get_emailusers('LDAP', 0, 1)) > 0 else False
-
     return render_to_response(
         'sysadmin/sys_useradmin_admins.html', {
             'users': admin_users,
             'not_admin_users': not_admin_users,
-            'have_ldap': have_ldap,
+            'have_ldap': get_ldap_info(),
             'default_user': DEFAULT_USER,
             'guest_user': GUEST_USER,
             'is_pro': is_pro_version(),
@@ -505,7 +504,7 @@ def user_info(request, email):
     org_name = None
     space_quota = space_usage = 0
 
-    org = ccnet_threaded_rpc.get_orgs_by_user(email)
+    org = ccnet_api.get_orgs_by_user(email)
     if not org:
         owned_repos = mute_seafile_api.get_owned_repo_list(email,
                                                            ret_corrupted=True)
@@ -515,9 +514,8 @@ def user_info(request, email):
     else:
         org_id = org[0].org_id
         org_name = org[0].org_name
-        space_usage = seafserv_threaded_rpc.get_org_user_quota_usage(org_id,
-                                                                     email)
-        space_quota = seafserv_threaded_rpc.get_org_user_quota(org_id, email)
+        space_usage = seafile_api.get_org_user_quota_usage(org_id, email)
+        space_quota = seafile_api.get_org_user_quota(org_id, email)
         owned_repos = seafile_api.get_org_owned_repo_list(org_id, email,
                                                           ret_corrupted=True)
         in_repos = seafile_api.get_org_share_in_repo_list(org_id, email, -1, -1)
@@ -649,7 +647,7 @@ def user_set_quota(request, email):
         space_quota_mb = f.cleaned_data['space_quota']
         space_quota = space_quota_mb * get_file_size_unit('MB')
 
-        org = ccnet_threaded_rpc.get_orgs_by_user(email)
+        org = ccnet_api.get_orgs_by_user(email)
         try:
             if not org:
                 seafile_api.set_user_quota(email, space_quota)
@@ -661,7 +659,7 @@ def user_set_quota(request, email):
                                             org_quota_mb)
                     return HttpResponse(json.dumps(result), status=400, content_type=content_type)
                 else:
-                    seafserv_threaded_rpc.set_org_user_quota(org_id, email, space_quota)
+                    seafile_api.set_org_user_quota(org_id, email, space_quota)
         except:
             result['error'] = _(u'Failed to set quota: internal server error')
             return HttpResponse(json.dumps(result), status=500, content_type=content_type)
@@ -705,7 +703,7 @@ def user_remove(request, email):
 
     try:
         user = User.objects.get(email=email)
-        org = ccnet_threaded_rpc.get_orgs_by_user(user.email)
+        org = ccnet_api.get_orgs_by_user(user.email)
         if org:
             if org[0].creator == user.email:
                 messages.error(request, _(u'Failed to delete: the user is an organization creator'))
@@ -713,6 +711,14 @@ def user_remove(request, email):
 
         user.delete()
         messages.success(request, _(u'Successfully deleted %s') % user.username)
+
+        # send admin operation log signal
+        admin_op_detail = {
+            "email": email,
+        }
+        admin_operation.send(sender=None, admin_name=request.user.username,
+                operation=USER_DELETE, detail=admin_op_detail)
+
     except User.DoesNotExist:
         messages.error(request, _(u'Failed to delete: the user does not exist'))
 
@@ -920,9 +926,10 @@ def user_reset(request, email):
         if IS_EMAIL_CONFIGURED:
             if SEND_EMAIL_ON_RESETTING_USER_PASSWD:
                 try:
-                    send_user_reset_email(request, user.email, new_password)
+                    contact_email = Profile.objects.get_contact_email_by_user(user.email)
+                    send_user_reset_email(request, contact_email, new_password)
                     msg = _('Successfully reset password to %(passwd)s, an email has been sent to %(user)s.') % \
-                        {'passwd': new_password, 'user': user.email}
+                        {'passwd': new_password, 'user': contact_email}
                     messages.success(request, msg)
                 except Exception, e:
                     logger.error(str(e))
@@ -952,12 +959,13 @@ def send_user_add_mail(request, email, password):
         'email': email,
         'password': password,
         }
+
     # KEEPER
     try:
-        from keeper.common import get_user_name
-        c['user'] = get_user_name(c['user'])
-    except Exception:
-        pass
+		from keeper.common import get_user_name
+		c['user'] = get_user_name(c['user'])
+    except Exception as e:
+        raise e
 
     send_html_email(_(u'You are invited to join %s') % SITE_NAME,
             'sysadmin/user_add_email.html', c, None, [email])
@@ -995,6 +1003,13 @@ def user_add(request):
             err_msg = _(u'Fail to add user %s.') % email
             return HttpResponse(json.dumps({'error': err_msg}), status=403, content_type=content_type)
 
+        # send admin operation log signal
+        admin_op_detail = {
+            "email": email,
+        }
+        admin_operation.send(sender=None, admin_name=request.user.username,
+                operation=USER_ADD, detail=admin_op_detail)
+
         if user:
             User.objects.update_role(email, role)
             if config.FORCE_PASSWORD_CHANGE:
@@ -1006,7 +1021,6 @@ def user_add(request):
 
         if request.user.org:
             org_id = request.user.org.org_id
-            url_prefix = request.user.org.url_prefix
             ccnet_threaded_rpc.add_org_user(org_id, email, 0)
             if IS_EMAIL_CONFIGURED:
                 try:
@@ -1069,26 +1083,6 @@ def sys_group_admin_export_excel(request):
     response['Content-Disposition'] = 'attachment; filename=groups.xlsx'
     wb.save(response)
     return response
-
-@login_required
-@sys_staff_required
-def sys_admin_group_info(request, group_id):
-
-    group_id = int(group_id)
-    group = get_group(group_id)
-    org_id = request.GET.get('org_id', None)
-    if org_id:
-        repos = seafile_api.get_org_group_repos(org_id, group_id)
-    else:
-        repos = seafile_api.get_repos_by_group(group_id)
-    members = get_group_members(group_id)
-
-    return render_to_response('sysadmin/sys_admin_group_info.html', {
-            'group': group,
-            'repos': repos,
-            'members': members,
-            'enable_sys_admin_view_repo': ENABLE_SYS_ADMIN_VIEW_REPO,
-            }, context_instance=RequestContext(request))
 
 @login_required
 @sys_staff_required
@@ -1324,10 +1318,8 @@ def sys_org_info_user(request, org_id):
         if user.email == request.user.email:
             user.is_self = True
         try:
-            user.self_usage =seafserv_threaded_rpc. \
-                    get_org_user_quota_usage(org_id, user.email)
-            user.quota = seafserv_threaded_rpc. \
-                    get_org_user_quota(org_id, user.email)
+            user.self_usage = seafile_api.get_org_user_quota_usage(org_id, user.email)
+            user.quota = seafile_api.get_org_user_quota(org_id, user.email)
         except SearpcError as e:
             logger.error(e)
             user.self_usage = -1
@@ -1825,10 +1817,9 @@ def batch_add_user(request):
             content = content.decode(encoding, 'replace').encode('utf-8')
 
         filestream = StringIO.StringIO(content)
-
         reader = csv.reader(filestream)
         new_users_count = len(list(reader))
-        if user_number_over_limit(new_users = new_users_count):
+        if user_number_over_limit(new_users=new_users_count):
             messages.error(request, _(u'The number of users exceeds the limit.'))
             return HttpResponseRedirect(next)
 
@@ -1836,48 +1827,58 @@ def batch_add_user(request):
         filestream.seek(0)
         reader = csv.reader(filestream)
         for row in reader:
+
             if not row:
                 continue
 
-            username = row[0].strip()
-            password = row[1].strip()
-
-            # nickname & department are optional
             try:
-                nickname = row[2].strip()
-            except IndexError:
-                nickname = ''
-
-            try:
-                department = row[3].strip()
-            except IndexError:
-                department = ''
-
-            if not is_valid_username(username):
-                continue
-
-            if password == '':
-                continue
-
-            if nickname:
-                if len(nickname) > 64 or '/' in nickname:
+                username = row[0].strip()
+                password = row[1].strip()
+                if not is_valid_username(username) or not password:
                     continue
-
-            if department:
-                if len(department) > 512:
-                    continue
+            except Exception as e:
+                logger.error(e)
+                continue
 
             try:
                 User.objects.get(email=username)
-                continue
             except User.DoesNotExist:
-                User.objects.create_user(username, password, is_staff=False,
-                                         is_active=True)
+                User.objects.create_user(
+                    username, password, is_staff=False, is_active=True)
 
-                if nickname:
-                    Profile.objects.add_or_update(username, nickname, '')
-                if department:
-                    DetailedProfile.objects.add_or_update(username, department, '')
+                if config.FORCE_PASSWORD_CHANGE:
+                    UserOptions.objects.set_force_passwd_change(username)
+
+                # then update the user's optional info
+                try:
+                    nickname = row[2].strip()
+                    if len(nickname) <= 64 and '/' not in nickname:
+                        Profile.objects.add_or_update(username, nickname, '')
+                except Exception as e:
+                    logger.error(e)
+
+                try:
+                    department = row[3].strip()
+                    if len(department) <= 512:
+                        DetailedProfile.objects.add_or_update(username, department, '')
+                except Exception as e:
+                    logger.error(e)
+
+                try:
+                    role = row[4].strip()
+                    if is_pro_version() and role in get_available_roles():
+                        User.objects.update_role(username, role)
+                except Exception as e:
+                    logger.error(e)
+
+                try:
+                    space_quota_mb = row[5].strip()
+                    space_quota_mb = int(space_quota_mb)
+                    if space_quota_mb >= 0:
+                        space_quota = int(space_quota_mb) * get_file_size_unit('MB')
+                        seafile_api.set_user_quota(username, space_quota)
+                except Exception as e:
+                    logger.error(e)
 
                 send_html_email_with_dj_template(
                     username, dj_template='sysadmin/user_batch_add_email.html',
@@ -1887,6 +1888,13 @@ def batch_add_user(request):
                         'email': username,
                         'password': password,
                     })
+
+                # send admin operation log signal
+                admin_op_detail = {
+                    "email": username,
+                }
+                admin_operation.send(sender=None, admin_name=request.user.username,
+                                     operation=USER_ADD, detail=admin_op_detail)
 
         messages.success(request, _('Import succeeded'))
     else:
@@ -1944,7 +1952,7 @@ def sys_settings(request):
     if HAS_TWO_FACTOR_AUTH:
         DIGIT_WEB_SETTINGS.append('ENABLE_TWO_FACTOR_AUTH')
 
-    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT',)
+    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT', 'TEXT_PREVIEW_EXT')
 
     if request.is_ajax() and request.method == "POST":
         content_type = 'application/json; charset=utf-8'
@@ -2127,6 +2135,8 @@ def sys_inst_info_user(request, inst_id):
                 u.last_login = last_login.last_login
 
     users_count = Profile.objects.filter(institution=inst.name).count()
+    space_quota = InstitutionQuota.objects.get_or_none(institution=inst)
+    space_usage = get_institution_space_usage(inst)
 
     return render_to_response('sysadmin/sys_inst_info_user.html', {
         'inst': inst,
@@ -2137,6 +2147,8 @@ def sys_inst_info_user(request, inst_id):
         'next_page': current_page + 1,
         'per_page': per_page,
         'page_next': page_next,
+        'space_usage': space_usage,
+        'space_quota': space_quota,
     }, context_instance=RequestContext(request))
 
 @login_required
@@ -2252,6 +2264,31 @@ def sys_inst_toggle_admin(request, inst_id, email):
 
 @login_required
 @sys_staff_required
+@require_POST
+def sys_inst_set_quota(request, inst_id):
+    """Set institution quota"""
+    try:
+        inst = Institution.objects.get(pk=inst_id)
+    except Institution.DoesNotExist:
+        raise Http404
+
+    next = request.META.get('HTTP_REFERER', None)
+    if not next:
+        next = reverse('sys_inst_info_users', args=[inst.pk])
+
+    quota_mb = int(request.POST.get('space_quota', ''))
+    quota = quota_mb * get_file_size_unit('MB')
+
+    obj, created = InstitutionQuota.objects.update_or_create(
+        institution=inst,
+        defaults={'quota': quota},
+    )
+    content_type = 'application/json; charset=utf-8'
+    return HttpResponse(json.dumps({'success': True}), status=200,
+                        content_type=content_type)
+
+@login_required
+@sys_staff_required
 def sys_invitation_admin(request):
     """List all invitations .
     """
@@ -2286,6 +2323,27 @@ def sys_invitation_admin(request):
             'page_next': page_next,
         },
         context_instance=RequestContext(request))
+
+@login_required
+@sys_staff_required
+def sys_invitation_remove(request):
+    """Delete an invitation.
+    """
+    ct = 'application/json; charset=utf-8'
+    result = {}
+
+    if not ENABLE_GUEST_INVITATION:
+        return HttpResponse(json.dumps({}), status=400, content_type=ct)
+
+    inv_id = request.POST.get('inv_id', '')
+    if not inv_id:
+        result = {'error': "Argument missing"}
+        return HttpResponse(json.dumps(result), status=400, content_type=ct)
+
+    inv = get_object_or_404(Invitation, pk=inv_id)
+    inv.delete()
+
+    return HttpResponse(json.dumps({'success': True}), content_type=ct)
 
 @login_required
 @sys_staff_required

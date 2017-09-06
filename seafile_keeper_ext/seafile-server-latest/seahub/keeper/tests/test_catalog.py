@@ -12,6 +12,9 @@ from keeper.common import print_json
 # def test_dummy():
     # pass
 
+import django
+django.setup()
+
 # @pytest.mark.skip
 def test_is_in_mpg_ip_range():
     is_in_mpg = is_in_mpg_ip_range('192.129.78.1')

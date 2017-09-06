@@ -25,6 +25,8 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ['keeper.dbrouter.DbRouter',]
+
 CACHES = {
     'default': {
         'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
@@ -84,6 +86,7 @@ ENABLE_UPLOAD_FOLDER = True
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
+
 
 # Enable LibreOffice Online
 ENABLE_OFFICE_WEB_APP = False

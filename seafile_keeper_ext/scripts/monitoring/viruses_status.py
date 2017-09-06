@@ -33,7 +33,7 @@ rows = cur.fetchall()
 
 if len(rows)>0:
     # found not hadlen viruses
-    print "WARNING: There are non handled viruses:"
+    print "There are non handled viruses:"
     for row in rows:
         print row
     RC = 2

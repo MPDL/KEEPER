@@ -184,14 +184,16 @@ INSTALLED_APPS = (
     'seahub.invitations',
     'seahub.wiki',
     'seahub.group',
-    'seahub.message',
     'seahub.notifications',
     'seahub.options',
+    'seahub.onlyoffice',
     'seahub.profile',
     'seahub.share',
     'seahub.help',
     'seahub.thumbnail',
     'seahub.password_session',
+    'seahub.admin_log',
+    'seahub.wopi',
 
     'keeper',
 
@@ -207,6 +209,7 @@ AUTHENTICATION_BACKENDS = (
 )
 LOGIN_REDIRECT_URL = '/profile/'
 LOGIN_URL = SITE_ROOT + 'accounts/login'
+LOGOUT_REDIRECT_URL = None
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
@@ -240,11 +243,17 @@ ENABLE_ENCRYPTED_LIBRARY = True
 # mininum length for password of encrypted library
 REPO_PASSWORD_MIN_LENGTH = 8
 
+# token length for the share link
+SHARE_LINK_TOKEN_LENGTH = 20
+
 # mininum length for the password of a share link
 SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 
 # enable or disable share link audit
 ENABLE_SHARE_LINK_AUDIT = False
+
+# Control the language that send email. Default to user's current language.
+SHARE_LINK_EMAIL_LANGUAGE = ''
 
 # check virus for files uploaded form upload link
 ENABLE_UPLOAD_LINK_VIRUS_CHECK = False
@@ -283,7 +292,12 @@ OFFICE_PREVIEW_MAX_SIZE = 2 * 1024 * 1024
 USE_PDFJS = True
 FILE_ENCODING_LIST = ['auto', 'utf-8', 'gbk', 'ISO-8859-1', 'ISO-8859-5']
 FILE_ENCODING_TRY_LIST = ['utf-8', 'gbk']
-HIGHLIGHT_KEYWORD = True # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+HIGHLIGHT_KEYWORD = False # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
+# extensions of previewed files
+TEXT_PREVIEW_EXT = """ac, am, bat, c, cc, cmake, cpp, cs, css, diff, el, h, html,
+htm, java, js, json, less, make, org, php, pl, properties, py, rb,
+scala, script, sh, sql, txt, text, tex, vi, vim, xhtml, xml, log, csv,
+groovy, rst, patch, go"""
 
 # Common settings(file extension, storage) for avatar and group avatar.
 AVATAR_FILE_STORAGE = '' # Replace with 'seahub.base.database_storage.DatabaseStorage' if save avatar files to database
@@ -297,7 +311,7 @@ AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 48, 60, 64, 80, 290)
+AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 42, 48, 60, 64, 72, 80, 84, 96, 128, 160)
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -338,8 +352,9 @@ REST_FRAMEWORK = {
         'user': '300/minute',
     },
     # https://github.com/tomchristie/django-rest-framework/issues/2891
-    'UNICODE_JSON': True,
+    'UNICODE_JSON': False,
 }
+REST_FRAMEWORK_THROTTING_WHITELIST = []
 
 # file and path
 MAX_UPLOAD_FILE_NAME_LEN    = 255
@@ -353,7 +368,7 @@ FILE_LOCK_EXPIRATION_DAYS = 0
 ACTIVATE_AFTER_REGISTRATION = True
 # Whether or not send activation Email to user when registration complete.
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
-REGISTRATION_SEND_MAIL = True
+REGISTRATION_SEND_MAIL = False
 
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
@@ -371,6 +386,12 @@ SITE_TITLE = 'KEEPER'
 # Base name used in email sending
 # !!!MERGE!!!
 SITE_NAME = 'KEEPER'
+
+# Path to the favicon file (relative to the media path)
+# tip: use a different name when modify it.
+# FAVICON_PATH = 'img/favicon.ico'
+FAVICON_PATH = 'img/favicon.png'
+
 
 # Path to the Logo Imagefile (relative to the media path)
 # !!!MERGE!!!
@@ -488,11 +509,18 @@ THUMBNAIL_EXTENSION = 'png'
 # for thumbnail: height(px) and width(px)
 THUMBNAIL_DEFAULT_SIZE = 48
 THUMBNAIL_SIZE_FOR_GRID = 192
-
+THUMBNAIL_SIZE_FOR_ORIGINAL = 1024
 
 # size(MB) limit for generate thumbnail
 THUMBNAIL_IMAGE_SIZE_LIMIT = 20
 THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT = 256
+
+# video thumbnails
+ENABLE_VIDEO_THUMBNAIL = False
+THUMBNAIL_VIDEO_FRAME_TIME = 5  # use the frame at 5 second as thumbnail
+
+# template for create new office file
+OFFICE_TEMPLATE_ROOT = os.path.join(MEDIA_ROOT, 'office-template')
 
 #####################
 # Global AddressBook #
@@ -542,6 +570,9 @@ CLOUD_DEMO_USER = 'demo@seafile.com'
 
 ENABLE_TWO_FACTOR_AUTH = False
 OTP_LOGIN_URL = '/profile/two_factor_authentication/setup/'
+
+# Enable personal wiki, group wiki
+ENABLE_WIKI = True
 
 #####################
 # External settings #
@@ -640,8 +671,11 @@ CONSTANCE_CONFIG = {
     'USER_PASSWORD_MIN_LENGTH': (USER_PASSWORD_MIN_LENGTH,''),
     'USER_PASSWORD_STRENGTH_LEVEL': (USER_PASSWORD_STRENGTH_LEVEL,''),
 
+    'SHARE_LINK_TOKEN_LENGTH': (SHARE_LINK_TOKEN_LENGTH, ''),
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH,''),
     'ENABLE_TWO_FACTOR_AUTH': (ENABLE_TWO_FACTOR_AUTH,''),
+
+    'TEXT_PREVIEW_EXT': (TEXT_PREVIEW_EXT, ''),
 }
 
-SEAFILE_VERSION = "6.0.7"
+SEAFILE_VERSION = "6.1.3"
