@@ -46,9 +46,10 @@ def test_account_auto_activation(mocker):
         try:
             send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
             new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
+            assert send_mail_mock.called, 'email should be sent'
             args, kwargs = send_mail_mock.call_args
             assert args[-1][0]==EMAIL
-            assert not new_user.is_active
+            assert not new_user.is_active, 'user should not be active'
         except:
             pytest.fail(msg="Bad account: %s" % EMAIL)
         finally:
@@ -58,8 +59,8 @@ def test_account_auto_activation(mocker):
     try:
         send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
         new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
-        assert not send_mail_mock.called, 'method should not have been called'
-        assert not new_user.is_active
+        assert send_mail_mock.called, 'email should be sent'
+        assert not new_user.is_active, 'user should not be active'
     finally:
         User.objects.get(EMAIL).delete()
 
