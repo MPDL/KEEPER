@@ -88,8 +88,13 @@ KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
 
 
+# From 6.1.0 CE version on, Seafile support viewing/editing **doc**, **ppt**,
+# **xls** files via LibreOffice
+# Add this setting to view/edit **doc**, **ppt**, **xls** files
+OFFICE_SERVER_TYPE = 'CollaboraOffice'
+
 # Enable LibreOffice Online
-ENABLE_OFFICE_WEB_APP = False
+ENABLE_OFFICE_WEB_APP = True
 
 # Url of LibreOffice Online's discovery page
 # The discovery page tells Seafile how to interact with LibreOffice Online when view file online
