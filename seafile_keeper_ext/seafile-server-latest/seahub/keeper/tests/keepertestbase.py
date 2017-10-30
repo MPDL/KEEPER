@@ -44,3 +44,4 @@ def create_tmp_repo(create_tmp_user):
         # clean up Catalog table, repo_deleted_cb is not called for tests!!!
         CDC.objects.get(repo_id=repo_id).delete()
         Catalog.objects.delete_by_repo_id(repo.id)
+
