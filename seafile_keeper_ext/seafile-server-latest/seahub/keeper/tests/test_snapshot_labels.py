@@ -20,6 +20,8 @@ def get_headers(username, password):
             'Accept':'application/json; indent=4'}
 
 
+
+
 # REMOTE with REST
 #https://manual.seafile.com/develop/web_api_v2.1html#admin-only-create-account
 # PUT https://cloud.seafile.com/api2/accounts/{email}/
@@ -128,45 +130,33 @@ def test_snapshot_labels_api(get_admin_headers):
         # ADMIN
         # Get Snapshots by Label
 
-        headers = admin_headers
 
         ADMIN_URL = BASE_URL + '/api/v2.1/admin/revision-tags/tagged-items/'
-
 
         ###################################################################
         print('''List of labels for all users with corresponding snapshots''')
         response = requests.get(ADMIN_URL,
-                                headers=headers)
+                                headers=admin_headers)
         # TODO: NOT IMPLEMENTED
         # https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Seafile/Development/Snapshot%20Labels/offer_snapshot_labels.pdf
         print(response.text)
+
 
         ###################################################################
         print('''List of tagged items for users''')
         for i in range(0, 2):
             response = requests.get(ADMIN_URL+
                                     '?user=' + users[i]['name'],
-                                    headers=headers)
+                                    headers=admin_headers)
             print('user:{}\nitems:{}\n'.format(users[i]['name'], response.text))
             assert json.loads('["test_tag1_{}","test_tag2_{}","test_tag3_{}"]'.format(i,i,i)) == \
                 sorted([e['tag'] for e in response.json()])
         ###################################################################
 
-        print('''List of labels, where label contains "test_"''')
-        response = requests.get(ADMIN_URL+
-                                '?tag_contains=test_',
-                                headers=headers)
-        print('\n{}'.format(response.text))
-        # TODO: NOT IMPLEMENTED
-        # assert len(response.json()) == 6
-        print(response)
-
-        ###################################################################
-
         print('''Snapshots for the tag''')
         response = requests.get(ADMIN_URL+
                                 '?tag_name=test_tag1_0',
-                                headers=headers)
+                                headers=admin_headers)
         # TODO: NOT IMPLEMENTED
         print(response.text)
 
@@ -181,7 +171,7 @@ def test_snapshot_labels_api(get_admin_headers):
             print('''Labeled items for repo''')
             response = requests.get(ADMIN_URL+
                                     '?repo_id='+repo_id,
-                                    headers=headers)
+                                    headers=admin_headers)
 
             print('repo:{}\nitems:{}'.format(repo_id, response.text))
             assert len(response.json()) == 3
@@ -194,7 +184,7 @@ def test_snapshot_labels_api(get_admin_headers):
                 tag_name = 'test_tag{}_{}'.format(j, i)
                 response = requests.get(ADMIN_URL +
                                         '?repo_id={}&tag_name={}'.format(repo_id, tag_name),
-                                        headers=headers)
+                                        headers=admin_headers)
                 print('repo:{}\ntag_name={}\nitems:{}'.format(repo_id, tag_name, response.text))
                 assert len(response.json())==1 and response.json()[0]['tag'] == tag_name
 
@@ -203,10 +193,21 @@ def test_snapshot_labels_api(get_admin_headers):
             print('''Labeled items by label contains''')
             response = requests.get(ADMIN_URL +
                                     '?repo_id='+repo_id+'&tag_contains=test_',
-                                    headers=headers)
+                                    headers=admin_headers)
             print('repo:{}\ntag_contains=test_\nitems:{}'.format(repo_id, response.text))
             assert len(response.json()) == 3
 
+
+
+        ###################################################################
+        print('''List of labels, where label contains "test_"''')
+        response = requests.get(ADMIN_URL+
+                                '?tag_contains=test_',
+                                headers=admin_headers)
+        print('\n{}'.format(response.text))
+        # TODO: NOT IMPLEMENTED
+        # assert len(response.json()) == 6
+        print(response)
 
 
 
@@ -224,6 +225,15 @@ def test_snapshot_labels_api(get_admin_headers):
 
 
         #####################################################################################
+        print('''Get the snapshots for labels''')
+        response = requests.get(BASE_URL+'/api/v2.1/revision-tags/tagged-items/',
+                                data={'repo_id':repo_id,'tag_names':'test_tag1_0'},
+                                headers=headers)
+        print(response.text)
+
+
+
+        #####################################################################################
         print('''Update Snapshot Label''')
         #get commit
         response = requests.get(ADMIN_URL +
@@ -234,7 +244,7 @@ def test_snapshot_labels_api(get_admin_headers):
         #update
         response = requests.put(BASE_URL+'/api/v2.1/revision-tags/tagged-items/',
                                 data={'repo_id':repo_id,'commit_id':commit_id,'tag_names':'test_tag1_0_updated'},
-                                 headers=headers)
+                                headers=headers)
 
         assert response.json()['revisionTags'][0]['tag'] == 'test_tag1_0_updated'
         print(response.text)
@@ -243,14 +253,11 @@ def test_snapshot_labels_api(get_admin_headers):
 
 
         # Delete Snapshot Label
-        # response = requests.put(BASE_URL+'/api/v2.1/revision-tags/tagged-items/',
-                                # data={'repo_id':repo_id,'tag_names':''},
-                                # headers=headers)
-
-        #Note: emulataion of delete via setting tags to ''
-
-        # print(response.json())
-
+        response = requests.delete(BASE_URL+'/api/v2.1/revision-tags/tagged-items/',
+                                data={'repo_id':repo_id,'tag_names':'test_tag1_0_updated'},
+                                headers=headers)
+        # TODO: NOT IMPLEMENTED
+        print(response.text)
 
 
 
