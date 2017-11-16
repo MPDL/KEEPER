@@ -13,7 +13,7 @@
 #set -x
 
 # Change the value of "user" to linux user name who runs seafile
-user=root
+user=seafile
 
 # Change the value of "seafile_dir" to your path of seafile installation
 # usually the home directory of $user
@@ -24,7 +24,7 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
 # Change the value of fastcgi to true if fastcgi is to be used
-fastcgi=true
+fastcgi=false
 # Set the port of fastcgi, default is 8000. Change it if you need different.
 fastcgi_port=8001
 
@@ -118,13 +118,13 @@ case "$1" in
             else
                     sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             fi
-            sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
+            ${seafile_dir}/scripts/catalog-service.sh ${1}
             service nginx ${1}
         ;;
         stop)
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-            sudo -u ${user} ${seafile_dir}/scripts/catalog-service.sh ${1}
+            ${seafile_dir}/scripts/catalog-service.sh ${1}
             systemctl ${1} memcached.service
         ;;
         restart-gpfs)

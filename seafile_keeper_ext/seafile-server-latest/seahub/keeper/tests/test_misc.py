@@ -1,6 +1,7 @@
 import pytest
 import mock
 from pytest_mock import mocker
+import traceback
 # from mock import patch
 
 import seahub.base
@@ -34,6 +35,9 @@ def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
 def test_account_auto_activation(mocker):
     """ Test auto activation for MPG signed up users,
         see https://github.com/MPDL/KEEPER/issues/133
+        NOTES: 
+            'activate after registration' checkbox in admin panel should be unchecked
+            'send activation email' should be checked
     """
 
     # create mocks to go tests through
@@ -51,7 +55,7 @@ def test_account_auto_activation(mocker):
             assert args[-1][0]==EMAIL
             assert not new_user.is_active, 'user should not be active'
         except:
-            pytest.fail(msg="Bad account: %s" % EMAIL)
+            pytest.fail(msg="Bad account: %s,\nmessage: %s" % (EMAIL, traceback.format_exc()) )
         finally:
             User.objects.get(EMAIL).delete()
 

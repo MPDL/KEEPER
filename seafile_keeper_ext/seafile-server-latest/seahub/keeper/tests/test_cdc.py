@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import pytest
 from time import sleep
 import tempfile
@@ -114,7 +115,7 @@ def test_cdc_completely(create_tmp_repo):
     if kdl:
         check_set = set([d.obj_name for d in kdl['dirents']])
     else:
-        pytest.fail(msg="Default Library is empty!")
+        pytest.fail(msg="Default Library is empty, please install!")
 
     """copy library default files to lib"""
     copy_keeper_default_library(repo.id)
@@ -138,6 +139,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write('Text')
     f.flush()
+    os.chmod(f.name, 0666)
 
     seafile_api.post_file(repo.id, f.name, "/", "some_file.txt", SERVER_EMAIL)
     f.close()
@@ -146,6 +148,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write(MD_GOOD)
     f.flush()
+    os.chmod(f.name, 0666)
 
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
@@ -171,6 +174,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write(MD_GOOD.replace("2010", "2017"))
     f.flush()
+    os.chmod(f.name, 0666)
 
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
