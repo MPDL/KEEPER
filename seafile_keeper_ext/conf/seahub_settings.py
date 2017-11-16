@@ -30,9 +30,19 @@ DATABASE_ROUTERS = ['keeper.dbrouter.DbRouter',]
 CACHES = {
     'default': {
         'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': ['__MEMCACHED_SERVER_1__', '__MEMCACHED_SERVER_2__', '__MEMCACHED_SERVER_3__'],
+        'OPTIONS': {
+            'ketama': True,
+            'remove_failed': 1,
+            'retry_timeout': 3600,
+            'dead_timeout': 3600
+        }
     }
 }
+
+AVATAR_FILE_STORAGE = 'seahub.base.database_storage.DatabaseStorage'
+
+COMPRESS_CACHE_BACKEND = 'django.core.cache.backends.locmem.LocMemCache'
 
 FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 

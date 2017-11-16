@@ -37,7 +37,7 @@ CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
-CDC_LOG = '/var/log/nginx/keeper.cdc.log'
+CDC_LOG = '/var/log/keeper/keeper.cdc.log'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 

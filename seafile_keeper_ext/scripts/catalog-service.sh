@@ -2,8 +2,10 @@
 
 #set -x
 
+
 SEAFILE_DIR=/opt/seafile/seafile-server-latest
 GATALOG_PID_FILE=${SEAFILE_DIR}/runtime/catalog.pid
+
 
 function start_catalog () {
     uwsgi --pidfile $GATALOG_PID_FILE --ini ${SEAFILE_DIR}/seahub/keeper/catalog/catalog.ini 2>/dev/null & 
