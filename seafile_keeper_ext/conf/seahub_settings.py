@@ -87,6 +87,10 @@ ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
 
+TEST_SERVER="__TEST_SERVER__"
+TEST_SERVER_ADMIN="__TEST_SERVER_ADMIN__"
+TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
+
 
 # From 6.1.0 CE version on, Seafile support viewing/editing **doc**, **ppt**,
 # **xls** files via LibreOffice
