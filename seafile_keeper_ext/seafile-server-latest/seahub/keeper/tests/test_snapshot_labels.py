@@ -9,16 +9,33 @@ from uuid import uuid4
 import requests
 import tempfile
 
+import sys
+import logging
+from logging import INFO, DEBUG
+logging.basicConfig(stream=sys.stdout, level=INFO)
+
 from seahub.settings import TEST_SERVER, TEST_SERVER_ADMIN, TEST_SERVER_PASSWORD
 
 BASE_URL=TEST_SERVER
+HEADERS = {}
+
+def log(url, headers, response, level=DEBUG):
+    logging.log(level, 'URL:{}\nheaders:{},\nresponse:\n{}'.format(url, headers, response))
+
+def _l(msg, level=DEBUG):
+    logging.log(level, '{}'.format(msg))
+
 
 def get_headers(username, password):
-    response = requests.post(BASE_URL + '/api2/auth-token/',
+    # key = username[:username.index('@')]
+    key = username
+    if key not in HEADERS:
+        response = requests.post(BASE_URL + '/api2/auth-token/',
                              data={'username':username,'password':password} )
-    return {'Authorization':'Token ' + response.json()['token'],
-            'Accept':'application/json; indent=4'}
-
+        assert response.status_code == 200
+        HEADERS[key] = {'Authorization':'Token ' + response.json()['token'],
+                                'Accept':'application/json; indent=4'}
+    return HEADERS[key]
 
 
 
@@ -57,7 +74,6 @@ def update_file(repo_id, headers, content):
                              headers=headers)
 
 
-
 def test_snapshot_labels_api(get_admin_headers):
 
     users = []
@@ -76,13 +92,13 @@ def test_snapshot_labels_api(get_admin_headers):
 
             headers=get_headers(n, p)
             users[i].update(headers=headers)
-            print("\nNew user:{}\n".format(users[i]))
+            logging.debug("\nNew user:{}\n".format(users[i]))
 
             response = requests.post(BASE_URL + '/api2/repos/',
                                     data={'name':'test_snap_labels_repo_{}'.format(i)}, headers=headers)
             repo_id = response.json()['repo_id']
             users[i]['repo_id'] = repo_id
-            # print(repo_id)
+            logging.debug(repo_id)
 
             # create file
             response = requests.post(BASE_URL+'/api/v2.1/repos/'+repo_id+'/file/?p=/test.txt',
@@ -120,11 +136,11 @@ def test_snapshot_labels_api(get_admin_headers):
 
             # TODO: NOT IMPLEMENTED. Should it be????
             #assert json.loads(response.text) == json.loads('["test_tag2_{}","test_tag3_{}"]'.format(i, i))
-            print(response.text)
+            logging.debug(response.text)
 
             # response = requests.get(BASE_URL+'/api/v2.1/repos/'+repo_id+'/history/',
                                     # headers=headers)
-            # print(response.text)
+            # logging.debug(response.text)
 
         #####################################################################################
         # ADMIN
@@ -134,31 +150,39 @@ def test_snapshot_labels_api(get_admin_headers):
         ADMIN_URL = BASE_URL + '/api/v2.1/admin/revision-tags/tagged-items/'
 
         ###################################################################
-        print('''List of labels for all users with corresponding snapshots''')
-        response = requests.get(ADMIN_URL,
+        logging.debug('''List of labels for all users with corresponding snapshots''')
+        URL = ADMIN_URL
+        response = requests.get(URL,
                                 headers=admin_headers)
         # TODO: NOT IMPLEMENTED
         # https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Seafile/Development/Snapshot%20Labels/offer_snapshot_labels.pdf
-        print(response.text)
-
+        log(URL, admin_headers, response.text)
 
         ###################################################################
-        print('''List of tagged items for users''')
+        logging.debug('''List of tagged items for users''')
         for i in range(0, 2):
             response = requests.get(ADMIN_URL+
                                     '?user=' + users[i]['name'],
                                     headers=admin_headers)
-            print('user:{}\nitems:{}\n'.format(users[i]['name'], response.text))
+            logging.debug('user:{}\nitems:{}\n'.format(users[i]['name'], response.text))
             assert json.loads('["test_tag1_{}","test_tag2_{}","test_tag3_{}"]'.format(i,i,i)) == \
                 sorted([e['tag'] for e in response.json()])
-        ###################################################################
 
-        print('''Snapshots for the tag''')
-        response = requests.get(ADMIN_URL+
-                                '?tag_name=test_tag1_0',
+        ###################################################################
+        logging.debug('''Snapshots for the tag''')
+        URL =  ADMIN_URL + '?tag_name=test_tag1_0'
+        response = requests.get(URL,
                                 headers=admin_headers)
         # TODO: NOT IMPLEMENTED
-        print(response.text)
+        log(URL, admin_headers, response.text)
+
+        ###################################################################
+        _l('''Get the snapshot of a label''', INFO)
+        URL = ADMIN_URL + '?tag_contains=test_'
+        response = requests.get(URL,
+                                headers=admin_headers)
+        log(URL, admin_headers, response.text, INFO)
+        assert response.status_code == 200
 
         ###################################################################
 
@@ -168,46 +192,42 @@ def test_snapshot_labels_api(get_admin_headers):
             repo_id = users[i]['repo_id']
 
             ###################################################################
-            print('''Labeled items for repo''')
-            response = requests.get(ADMIN_URL+
-                                    '?repo_id='+repo_id,
+            logging.debug('''Labeled items for repo''')
+            URL = ADMIN_URL+'?repo_id='+repo_id
+            response = requests.get(URL,
                                     headers=admin_headers)
 
-            print('repo:{}\nitems:{}'.format(repo_id, response.text))
+            log(URL, admin_headers, response.text, )
             assert len(response.json()) == 3
 
             ###################################################################
-
-            print('''Labeled items for repo by label''')
-
+            logging.debug('''Labeled items for repo by label''')
             for j in range(1, 3):
                 tag_name = 'test_tag{}_{}'.format(j, i)
                 response = requests.get(ADMIN_URL +
                                         '?repo_id={}&tag_name={}'.format(repo_id, tag_name),
                                         headers=admin_headers)
-                print('repo:{}\ntag_name={}\nitems:{}'.format(repo_id, tag_name, response.text))
+                logging.debug('repo:{}\ntag_name={}\nitems:{}'.format(repo_id, tag_name, response.text))
                 assert len(response.json())==1 and response.json()[0]['tag'] == tag_name
 
             ###################################################################
-
-            print('''Labeled items by label contains''')
+            logging.debug('''Labeled items by label contains''')
             response = requests.get(ADMIN_URL +
                                     '?repo_id='+repo_id+'&tag_contains=test_',
                                     headers=admin_headers)
-            print('repo:{}\ntag_contains=test_\nitems:{}'.format(repo_id, response.text))
+            logging.debug('repo:{}\ntag_contains=test_\nitems:{}'.format(repo_id, response.text))
             assert len(response.json()) == 3
 
 
-
         ###################################################################
-        print('''List of labels, where label contains "test_"''')
+        logging.debug('''List of labels, where label contains "test_"''')
         response = requests.get(ADMIN_URL+
                                 '?tag_contains=test_',
                                 headers=admin_headers)
-        print('\n{}'.format(response.text))
+        logging.debug('\n{}'.format(response.text))
         # TODO: NOT IMPLEMENTED
         # assert len(response.json()) == 6
-        print(response)
+        logging.debug(response)
 
 
 
@@ -217,24 +237,23 @@ def test_snapshot_labels_api(get_admin_headers):
         repo_id = users[0]['repo_id']
 
         #####################################################################################
-        print('''Get the snapshot labels of the current user''')
+        logging.debug('''Get the snapshot labels of the current user''')
         response = requests.get(BASE_URL+'/api/v2.1/revision-tags/tag-names/',
                                 headers=headers)
         assert len(response.json()) == 3
-        print(response.text)
+        logging.debug(response.text)
 
 
         #####################################################################################
-        print('''Get the snapshots for labels''')
+        logging.debug('''Get the snapshots for labels''')
         response = requests.get(BASE_URL+'/api/v2.1/revision-tags/tagged-items/',
                                 data={'repo_id':repo_id,'tag_names':'test_tag1_0'},
                                 headers=headers)
-        print(response.text)
-
+        logging.debug(response.text)
 
 
         #####################################################################################
-        print('''Update Snapshot Label''')
+        logging.debug('''Update Snapshot Label''')
         #get commit
         response = requests.get(ADMIN_URL +
                                 '?repo_id={}&tag_name=test_tag1_0'.format(repo_id),
@@ -247,7 +266,7 @@ def test_snapshot_labels_api(get_admin_headers):
                                 headers=headers)
 
         assert response.json()['revisionTags'][0]['tag'] == 'test_tag1_0_updated'
-        print(response.text)
+        logging.debug(response.text)
         #####################################################################################
 
 
@@ -257,10 +276,7 @@ def test_snapshot_labels_api(get_admin_headers):
                                 data={'repo_id':repo_id,'tag_names':'test_tag1_0_updated'},
                                 headers=headers)
         # TODO: NOT IMPLEMENTED
-        print(response.text)
-
-
-
+        logging.debug(response.text)
 
 
         # response = requests.delete(BASE_URL + '/api2/repos/' + repo_id + '/', headers=headers)
@@ -268,10 +284,11 @@ def test_snapshot_labels_api(get_admin_headers):
         # TODO: !!!! BUG: tag will not be deleted if repo is deleted!
         # Thus, there is no way to delete tags
 
-        # clean up users
+    # clean up users
     finally:
         for u in users:
             next(u['gen'])
+
 
 
 
