@@ -8,6 +8,9 @@ import StringIO
 
 import ConfigParser
 
+
+BACKUP_POSTFIX = '_orig'
+
 ########################
 ## Helper functions
 ########################
@@ -278,7 +281,8 @@ class EnvManager(object):
     '''System environment and directory layout'''
     def __init__(self):
         self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.install_path = os.path.realpath(os.path.join(self.install_path, 'seafile-server-latest'))
+        # self.install_path = os.path.realpath(os.path.join(self.install_path, 'seafile-server-latest'))
+        self.install_path = os.path.join(self.install_path, 'seafile-server-latest')
 
         self.top_dir = os.path.dirname(self.install_path)
         self.bin_dir = os.path.join(self.install_path, 'seafile', 'bin')
@@ -295,6 +299,15 @@ class EnvManager(object):
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
         self.seafile_dir = ''
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
+
+        # ADD HERE new mappings!!!
+        self.SEAF_EXT_DIR_MAPPING = {
+            'conf': self.top_dir + '/conf',
+            'seafile-server-latest': self.install_path,
+            'seahub-data': self.top_dir + '/seahub-data',
+            'scripts': self.top_dir + '/scripts',
+        }
+
 
     def read_seafile_conf_dir(self):
         '''Read seafile conf dir from ccnet/seafile.ini'''
@@ -334,7 +347,8 @@ fi
         self.keeper_config = ConfigParser.ConfigParser()
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
-        print(self.keeper_config.items('seafile'))
+        # for section in self.keeper_config.sections():
+            # print(self.keeper_config.items(section))
 
 
         # find file properties file
@@ -368,6 +382,49 @@ fi
 ## END helper functions
 ########################
 
+def expand_properties(content):
+    for section in env_mgr.keeper_config.sections():
+        for key, value in env_mgr.keeper_config.items(section):
+            content = content.replace(key, value)
+    return content
+
+def backup_file(path):
+    if os.path.exists(path + BACKUP_POSTFIX):
+        Utils.info("Backup already exists: {}, skipping!".format(path + BACKUP_POSTFIX))
+    else:
+        pass
+
+
+def deploy_file(path):
+
+    Utils.check_file(path)
+    p = path.strip('/').split('/')
+
+    if not p[0] in env_mgr.SEAF_EXT_DIR_MAPPING:
+        Utils.error("Cannot find dest directory mapping for " + path )
+
+    fin = open(path, 'r')
+    print(fin)
+    content = expand_properties(fin.read())
+    fin.close()
+    print(content)
+
+    dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[p[0]]
+    dest_path = dest_dir + '/' + '/'.join(p[1:])
+    if not os.path.isdir(dest_dir):
+        os.mkdir(dest_dir)
+    elif os.path.exists(dest_path):
+        backup_file(dest_path)
+
+    fout = open(dest_path + '_test.txt', 'w')
+    fout.write(content)
+    fout.close()
+
+
+    # Utils.info(dest_path)
+
+
+
 def do_deploy(args):
     '''
     Deploy conf/ directory
@@ -385,7 +442,12 @@ def do_deploy(args):
         pass
     else:
         env_mgr.read_keeper_conf()
+        for path in args.file:
+            deploy_file(path)
+
+        Utils.check_file(args.file[0])
         Utils.info('do deploy smth.')
+        # check file
 
 def do_restore(args):
     if args.seafile_src_to_ext:
