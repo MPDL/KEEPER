@@ -107,9 +107,9 @@ class Utils(object):
 
     @staticmethod
     def must_mkdir(path):
-        '''Create a directory, exit on failure'''
+        '''Create a directory recursively, exit on failure'''
         try:
-            os.mkdir(path)
+            os.mkdirs(path)
         except OSError, e:
             Utils.error('failed to create directory %s:%s' % (path, e))
 
@@ -226,17 +226,6 @@ class Utils(object):
                 else:
                     return answer
 
-    @staticmethod
-    def validate_port(port):
-        try:
-            port = int(port)
-        except ValueError:
-            raise InvalidAnswer('%s is not a valid port' % Utils.highlight(port))
-
-        if port <= 0 or port > 65535:
-            raise InvalidAnswer('%s is not a valid port' % Utils.highlight(port))
-
-        return port
 
     @staticmethod
     def get_python_executable():
@@ -276,12 +265,15 @@ class Utils(object):
         if not os.path.isfile(path):
             Utils.error("Cannot find file %s" % path)
 
+    @staticmethod
+    def check_dir(path):
+        if not os.path.isdir(path):
+            Utils.error("Cannot find dir %s" % path)
 
 class EnvManager(object):
     '''System environment and directory layout'''
     def __init__(self):
         self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        # self.install_path = os.path.realpath(os.path.join(self.install_path, 'seafile-server-latest'))
         self.install_path = os.path.join(self.install_path, 'seafile-server-latest')
 
         self.top_dir = os.path.dirname(self.install_path)
@@ -299,14 +291,6 @@ class EnvManager(object):
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
         self.seafile_dir = ''
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
-
-        # ADD HERE new mappings!!!
-        self.SEAF_EXT_DIR_MAPPING = {
-            'conf': self.top_dir + '/conf',
-            'seafile-server-latest': self.install_path,
-            'seahub-data': self.top_dir + '/seahub-data',
-            'scripts': self.top_dir + '/scripts',
-        }
 
 
     def read_seafile_conf_dir(self):
@@ -329,17 +313,7 @@ class EnvManager(object):
         return env
 
     def read_keeper_conf(self):
-        '''Read keeper config file'''
-        '''
-FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
-( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
-[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
-PROPERTIES_FILE="${FILES[0]}"
-source "${PROPERTIES_FILE}"
-if [ $? -ne 0  ]; then
-	err_and_exit "Cannot intitialize variables"
-fi
-        '''
+        '''Read keeper config file and set keeper related properties '''
         conf_files = glob.glob(self.top_dir + '/keeper*.ini')
         if not conf_files:
             Utils.error('Cannot find KEEPER config files')
@@ -347,14 +321,17 @@ fi
         self.keeper_config = ConfigParser.ConfigParser()
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
-        # for section in self.keeper_config.sections():
-            # print(self.keeper_config.items(section))
 
+        self.custom_link = os.path.join(self.install_path, '/seahub/media/custom')
+        self.custom_dir = os.path.join(self.seafile_dir, '/seahub-data/custom')
 
-        # find file properties file
-        # keeper_ini =
-        # get Config
-
+        self.SEAF_EXT_DIR_MAPPING = {
+            'conf': self.top_dir + '/conf',
+            'seafile-server-latest': self.install_path,
+            'seahub-data': self.top_dir + '/seahub-data',
+            'scripts': self.top_dir + '/scripts',
+            'http': self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__') + '/sites-available',
+        }
 
     def setup_python_path(self, env):
         '''And PYTHONPATH and CCNET_CONF_DIR/SEAFILE_CONF_DIR to env, which is
@@ -382,6 +359,22 @@ fi
 ## END helper functions
 ########################
 
+def create_custom_link():
+    """
+    Create link to custom directory for seafile customization,
+    see http://manual.seafile.com/config/seahub_customization.html
+    TO BE TESTED!!!!
+    """
+    if os.path.islink(env_mgr.custom_link):
+        Utils.info("Link {} already exists, skipping!".format(env_mgr.custom_link))
+    else:
+        if not os.path.isdir(env_mgr.custom_dir):
+            Utils.info("{} does not exist, creating".format(env.custom_dir))
+            Utils.must_mkdir(env_mgr.custom_dir)
+        os.symlink(env_mgr.custom_dir, env_mgr.custom_link)
+
+
+
 def expand_properties(content):
     for section in env_mgr.keeper_config.sections():
         for key, value in env_mgr.keeper_config.items(section):
@@ -389,64 +382,91 @@ def expand_properties(content):
     return content
 
 def backup_file(path):
-    if os.path.exists(path + BACKUP_POSTFIX):
+    back_path = path + BACKUP_POSTFIX
+    if os.path.exists(back_path):
         Utils.info("Backup already exists: {}, skipping!".format(path + BACKUP_POSTFIX))
     else:
-        pass
+        try:
+            Utils.info("Backup {} to {}".format(path, back_path))
+            os.rename(path, path + BACKUP_POSTFIX)
+        except Exception as e:
+            Utils.error("Cannot backup {}, error: {}".format(path, repr(e)))
 
 
-def deploy_file(path):
+
+def deploy_file(path, dest_dir=None):
 
     Utils.check_file(path)
+
     p = path.strip('/').split('/')
 
-    if not p[0] in env_mgr.SEAF_EXT_DIR_MAPPING:
-        Utils.error("Cannot find dest directory mapping for " + path )
+    if not dest_dir:
+        if not p[0] in env_mgr.SEAF_EXT_DIR_MAPPING:
+            Utils.error("Cannot find dest directory mapping for " + path )
+        dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[p[0]]
+
+    dest_path = dest_dir + '/' + '/'.join(p[1:])
+
+    if not os.path.isdir(dest_dir):
+        Utils.info("Create dir <{}>".format(dest_dir))
+        Utils.must_mkdir(dest_dir)
+    if os.path.exists(dest_path):
+        backup_file(dest_path)
+    else:
+        if not Utils.ask_question("Deploy file {} into {}?".format(path, dest_path),
+                                default="yes",
+                                yes_or_no=True):
+            return
 
     fin = open(path, 'r')
-    print(fin)
     content = expand_properties(fin.read())
     fin.close()
-    print(content)
 
-    dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[p[0]]
-    dest_path = dest_dir + '/' + '/'.join(p[1:])
-    if not os.path.isdir(dest_dir):
-        os.mkdir(dest_dir)
-    elif os.path.exists(dest_path):
-        backup_file(dest_path)
-
-    fout = open(dest_path + '_test.txt', 'w')
+    fout = open(dest_path, 'w')
     fout.write(content)
     fout.close()
-
+    Utils.info(Utils.highlight("{} has been deployed into {}".format(path, dest_path)))
 
     # Utils.info(dest_path)
 
+def deploy_dir(path):
+    Utils.check_dir(path)
+    for file in os.listdir(path):
+        deploy_file(path + '/' + file)
 
+def deploy_http_conf():
+    path = 'http'
+    Utils.check_dir(path)
+    opts = dict(env_mgr.keeper_config.items('http'))
+
+    for file in [opts['__MAINTENANCE_HTTP_CONF__'], opts['__HTTP_CONF__']]:
+        deploy_file('http/' + file)
+
+    deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'])
 
 def do_deploy(args):
-    '''
-    Deploy conf/ directory
-    function deploy_conf () {
-        check_file "$PROPERTIES_FILE" "Cannot find properties file $PROPERTIES_FILE for the instance"
-        for i in seahub_settings.py ccnet.conf seafile.conf seafevents.conf seafdav.conf; do
-            deploy_file "conf/$i" "-p" "$PROPERTIES_FILE"
-        done
-    }
-    '''
-    if args.all:
-        Utils.info('do deploy --all')
-    elif args.conf:
-        # Utils.check_file($PROPERTIES_FILE)
-        pass
-    else:
-        env_mgr.read_keeper_conf()
-        for path in args.file:
-            deploy_file(path)
 
-        Utils.check_file(args.file[0])
-        Utils.info('do deploy smth.')
+    if args.all:
+        # Utils.info('do deploy --all')
+        # for path in ['scripts', 'seahub-data', 'conf']:
+           # deploy_dir(path)
+        # create_custom_link()
+        # deploy_dir('seafile-server-latest')
+        do_generate(type('',(object,),{"i18n": True, "min_css": False})())
+        # deploy_http_conf()
+
+    elif args.conf:
+        deploy_dir('conf')
+    elif args.http_conf:
+        deploy_http_conf()
+    else:
+        if args.directory:
+            for path in args.directory:
+                deploy_dir(path)
+        if args.file:
+            for path in args.file:
+                deploy_file(path)
+
         # check file
 
 def do_restore(args):
@@ -465,6 +485,22 @@ def do_generate(args):
         Utils.run("yui-compressor -v seahub.css -o seahub.min.css", cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
         Utils.info('Done.')
 
+def do_migrate(args):
+    print('Migrate')
+
+    """
+
+    function copy_seaf_src_to_ext() {
+        pushd $EXT_DIR/seafile-server-latest
+        TARGET_FILES=( $(find -H . -type f -not \( -path "*/.rope*" -or -path "*/__pycache*" -or -path "*/.cache*" -or -path "*/.git*" -or -path "*/tags" -or -name "*.pyc" -or -path "*/keeper*" \) ) )
+        echo "$TARGET_FILES"
+        for i in "${TARGET_FILES[@]}"; do
+            local SRC_FILE="${SEAFILE_LATEST_DIR}/${i}"
+            [ -f "$SRC_FILE" ] && cp -v "$SRC_FILE" "${i}"
+        done
+        popd
+    }
+    """
 
 # def handle_virus_scan_commands(args):
     # env_mgr.read_seafile_conf_dir()
@@ -478,6 +514,7 @@ def do_generate(args):
 
 
 env_mgr = EnvManager()
+env_mgr.read_keeper_conf()
 
 def main():
     try:
@@ -497,20 +534,28 @@ def main():
     parser_deploy.add_argument('--conf', help='deploy KEEPER configurations', action='store_true')
     parser_deploy.add_argument('--http-conf', help='deploy http-conf', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
-    parser_deploy.add_argument('-d', '--directory', help='deploy directory', nargs=1)
+    parser_deploy.add_argument('-d', '--directory', help='deploy directory(s)', nargs='+')
 
     # restore
-    parser_restore = subparsers.add_parser('restore', help='Restore files')
-    parser_restore.set_defaults(func=do_restore)
-    parser_restore.add_argument('--seafile-src-to-ext', help='Restore all KEEPER files from overriden seafile src files', action='store_true')
+    # parser_restore = subparsers.add_parser('restore', help='Restore files')
+    # parser_restore.set_defaults(func=do_restore)
+    # parser_restore.add_argument('--seafile-src-to-ext', help='Restore all KEEPER files from overriden seafile src files', action='store_true')
+
+    # migrate
+    parser_migrate = subparsers.add_parser('migrate', help='Migrate files')
+    parser_migrate.set_defaults(func=do_migrate)
+    parser_migrate.add_argument('--seafile-src-to-ext', help="""Migrate seafile src files into ext.
+                                Migrated files should be merged with keeper code later!\n
+                                check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
+                                """, action='store_true')
 
     # generate
     parser_generate = subparsers.add_parser('generate', help='Generate components')
     parser_generate.set_defaults(func=do_generate)
     parser_generate.add_argument('--i18n', help='Compile i18n files', action='store_true')
-    parser_generate.add_argument('--min-css', help='Generate min.css file for seahub.css', action='store_true')
-
-
+    parser_generate.add_argument('--min-css', help='''Generate min.css file for seahub.css.
+                                 Please install yui-compressor: http://yui.github.io/yuicompressor in your system!
+                                 ''', action='store_true')
 
 
     if len(sys.argv) == 1:
@@ -518,115 +563,9 @@ def main():
         return
 
     args = parser.parse_args()
-
     print(args)
-
     args.func(args)
 
 
-# case "$1" in
-    # deploy-all)
-        # create_and_deploy_directories "scripts" "seahub-data"
-        # create_custom_link
-        # deploy_directories "seafile-server-latest"
-        # deploy_conf
-		# #TODO: create_server_script_links
-		# $0 compile-i18n
-		# deploy_http_conf
-        # migrate_avatars
-    # ;;
-
-    # deploy-conf)
-        # deploy_conf
-	# ;;
-
-    # deploy-http-conf)
-        # deploy_http_conf
-	# ;;
-
-    # deploy)
-        # [ -z "$2" ] && ($0 || exit 1 )
-        # deploy_file $2 $3 $4
-    # ;;
-
-    # deploy-dir)
-        # [ -z "$2" ] && ($0 || exit 1 )
-        # deploy_directories "${@:2}"
-    # ;;
-
-    # restore)
-        # restore_directories "seafile-server-latest"
-        # remove_custom_link
-    # ;;
-
-    # clean-all)
-        # $0 restore
-        # rm -rfv $SEAFILE_DIR/seahub-data
-    # ;;
-
-    # compile-i18n)
-        # pushd $SEAFILE_LATEST_DIR/seahub
-        # ./i18n.sh compile-all
-        # popd
-    # ;;
-
-    # copy-seafile-sources-in-ext)
-         # copy_seaf_src_to_ext
-    # ;;
-
-    # min.css)
-        # pushd $SEAFILE_LATEST_DIR/seahub/media/css
-        # yui-compressor -v seahub.css -o seahub.min.css
-        # popd
-    # ;;
-
-
-    # *)
-        # echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext|min.css}"
-        # exit 1
-     # ;;
-# esac
-
-
-
-    # parser = argparse.ArgumentParser()
-    # subparsers = parser.add_subparsers(title='subcommands', description='')
-
-    # # setup
-    # parser_setup = subparsers.add_parser('setup', help='Setup extra components of seafile pro')
-    # parser_setup.set_defaults(func=do_setup)
-    # parser_setup.add_argument('--migrate', help='migrate from community version', action='store_true')
-
-    # # for non-migreate setup
-    # parser_setup.add_argument('--mysql', help='use mysql', action='store_true')
-    # parser_setup.add_argument('--mysql_host')
-    # parser_setup.add_argument('--mysql_port')
-    # parser_setup.add_argument('--mysql_user')
-    # parser_setup.add_argument('--mysql_password')
-    # parser_setup.add_argument('--mysql_db')
-
-    # # search
-    # parser_search = subparsers.add_parser('search', help='search related utility commands')
-    # parser_search.add_argument('--update', help='update seafile search index', action='store_true')
-    # parser_search.add_argument('--clear', help='delete seafile search index', action='store_true')
-    # parser_search.set_defaults(func=handle_search_commands)
-
-    # # ldapsync
-    # parser_ldap_sync = subparsers.add_parser('ldapsync', help='ldap sync commands')
-    # parser_ldap_sync.add_argument('-t', '--test', help='test ldap sync', action='store_true')
-    # parser_ldap_sync.set_defaults(func=handle_ldap_sync_commands)
-
-    # # virus scan
-    # parser_virus_scan = subparsers.add_parser('virus_scan', help='virus scan commands')
-    # parser_virus_scan.set_defaults(func=handle_virus_scan_commands)
-
-    # if len(sys.argv) == 1:
-        # print parser.format_help()
-        # return
-
-    # args = parser.parse_args()
-    # args.func(args)
-
 if __name__ == '__main__':
     main()
-    print "test"
