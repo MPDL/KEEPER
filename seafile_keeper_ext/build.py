@@ -5,6 +5,7 @@ import sys
 import glob
 import subprocess
 import StringIO
+import shutil
 
 import ConfigParser
 
@@ -322,15 +323,17 @@ class EnvManager(object):
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
 
-        self.custom_link = os.path.join(self.install_path, '/seahub/media/custom')
-        self.custom_dir = os.path.join(self.seafile_dir, '/seahub-data/custom')
+        self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
+        self.custom_dir = os.path.join(self.seafile_dir, 'seahub-data', 'custom')
+
+        self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.SEAF_EXT_DIR_MAPPING = {
-            'conf': self.top_dir + '/conf',
+            'conf': os.path.join(self.top_dir, 'conf'),
             'seafile-server-latest': self.install_path,
-            'seahub-data': self.top_dir + '/seahub-data',
-            'scripts': self.top_dir + '/scripts',
-            'http': self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__') + '/sites-available',
+            'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
+            'scripts': os.path.join(self.top_dir, 'scripts'),
+            'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
         }
 
     def setup_python_path(self, env):
@@ -485,8 +488,23 @@ def do_generate(args):
         Utils.run("yui-compressor -v seahub.css -o seahub.min.css", cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
         Utils.info('Done.')
 
-def do_migrate(args):
-    print('Migrate')
+def do_upgrade(args):
+    print('Upgrade')
+
+    print env_mgr.keeper_ext_dir
+    # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
+    for root, dirs, files in os.walk('seafile-server-latest'):
+        if  files and \
+            not ('/keeper' in root
+                or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
+                or '/.git' in root or '/tags' in root
+            ):
+            for file in files:
+                if not (file.endswith('.pyc') or file.endswith('.png')):
+                    dest_path = os.path.join(root, file)
+                    src_path = os.path.join(env_mgr.top_dir, dest_path)
+                    print("Copy from {} to {}".format(src_path, dest_path))
+                    shutil.copy(src_path, dest_path)
 
     """
 
@@ -541,13 +559,14 @@ def main():
     # parser_restore.set_defaults(func=do_restore)
     # parser_restore.add_argument('--seafile-src-to-ext', help='Restore all KEEPER files from overriden seafile src files', action='store_true')
 
-    # migrate
-    parser_migrate = subparsers.add_parser('migrate', help='Migrate files')
-    parser_migrate.set_defaults(func=do_migrate)
-    parser_migrate.add_argument('--seafile-src-to-ext', help="""Migrate seafile src files into ext.
-                                Migrated files should be merged with keeper code later!\n
-                                check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
-                                """, action='store_true')
+    # upgrade
+    parser_upgrade = subparsers.add_parser('upgrade', help='Upgrade KEEPER')
+    parser_upgrade.set_defaults(func=do_upgrade)
+    parser_upgrade.add_argument('--seafile-src-to-ext', help='''Upgrade KEEPER ext files to current Seafile sources.
+                                Upgrade should be done BEFORE deploy-all command, on fresh untarred seafile-server files.
+                                Upgraded files should be merged with the current KEEPER code!
+                                Check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
+                                ''', action='store_true')
 
     # generate
     parser_generate = subparsers.add_parser('generate', help='Generate components')
