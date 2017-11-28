@@ -450,12 +450,13 @@ def deploy_http_conf():
 def do_deploy(args):
 
     if args.all:
+        # TODO
         # Utils.info('do deploy --all')
         # for path in ['scripts', 'seahub-data', 'conf']:
            # deploy_dir(path)
         # create_custom_link()
         # deploy_dir('seafile-server-latest')
-        do_generate(type('',(object,),{"i18n": True, "min_css": False})())
+        # do_generate(type('',(object,),{"i18n": True, "min_css": False})())
         # deploy_http_conf()
 
     elif args.conf:
@@ -485,8 +486,10 @@ def do_generate(args):
         Utils.info('Done.')
     if args.min_css:
         Utils.info('Generate seahub.min.css...')
-        Utils.run("yui-compressor -v seahub.css -o seahub.min.css", cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
-        Utils.info('Done.')
+        cmd = "yui-compressor -v seahub.css -o seahub.min.css"
+        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
+        if RC != 0:
+            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
     print('Upgrade')
@@ -519,16 +522,6 @@ def do_upgrade(args):
         popd
     }
     """
-
-# def handle_virus_scan_commands(args):
-    # env_mgr.read_seafile_conf_dir()
-    # argv = [
-        # Utils.get_python_executable(),
-        # '-m', 'seafevents.virus_scanner.run_virus_scan',
-        # '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
-    # ]
-
-    # Utils.run_argv(argv, env=env_mgr.get_seahub_env())
 
 
 env_mgr = EnvManager()
