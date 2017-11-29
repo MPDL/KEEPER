@@ -458,7 +458,7 @@ def do_deploy(args):
         # deploy_dir('seafile-server-latest')
         # do_generate(type('',(object,),{"i18n": True, "min_css": False})())
         # deploy_http_conf()
-
+        pass
     elif args.conf:
         deploy_dir('conf')
     elif args.http_conf:
@@ -509,23 +509,6 @@ def do_upgrade(args):
                     print("Copy from {} to {}".format(src_path, dest_path))
                     shutil.copy(src_path, dest_path)
 
-    """
-
-    function copy_seaf_src_to_ext() {
-        pushd $EXT_DIR/seafile-server-latest
-        TARGET_FILES=( $(find -H . -type f -not \( -path "*/.rope*" -or -path "*/__pycache*" -or -path "*/.cache*" -or -path "*/.git*" -or -path "*/tags" -or -name "*.pyc" -or -path "*/keeper*" \) ) )
-        echo "$TARGET_FILES"
-        for i in "${TARGET_FILES[@]}"; do
-            local SRC_FILE="${SEAFILE_LATEST_DIR}/${i}"
-            [ -f "$SRC_FILE" ] && cp -v "$SRC_FILE" "${i}"
-        done
-        popd
-    }
-    """
-
-
-env_mgr = EnvManager()
-env_mgr.read_keeper_conf()
 
 def main():
     try:
@@ -533,6 +516,9 @@ def main():
     except ImportError:
         sys.path.insert(0, glob.glob(os.path.join(env_mgr.pro_pylibs_dir, 'argparse*.egg'))[0])
         import argparse
+
+    env_mgr = EnvManager()
+    env_mgr.read_keeper_conf()
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(title='subcommands', description='')
