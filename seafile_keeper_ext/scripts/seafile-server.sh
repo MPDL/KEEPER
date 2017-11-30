@@ -36,7 +36,7 @@ fi
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
-    [ ! -d "/keeper/${__GPFS_FILESET__}/" ] &&  err_and_exit "Cannot access /keeper/${__GPFS_FILESET__}"
+    [ ! -d "/keeper" ] &&  err_and_exit "Cannot access /keeper"
     echo_green "/dev/gpfs_keeper is OK"
 }
 

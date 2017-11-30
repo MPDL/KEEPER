@@ -19,7 +19,7 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
-DB_BACKUP_DIR=/keeper/${__GPFS_FILESET__}/db-backup
+DB_BACKUP_DIR=/keeper/db-backup
 
 
 function shutdown_seafile () {
@@ -87,7 +87,7 @@ function asynchronous_backup () {
 
 	# 1. Backup GPFS-Config
     echo "Save GPFS backup config..."
-    GPFS_BACKUP_CONF="/keeper/${__GPFS_FILESET__}/gpfs.config"
+    GPFS_BACKUP_CONF="/keeper/gpfs.config"
     # remove old one if exists
     [[ -e $GPFS_BACKUP_CONF ]] && rm -v $GPFS_BACKUP_CONF
     # save current
@@ -99,10 +99,10 @@ function asynchronous_backup () {
 
     # 2. Create filesystem snapshot
     echo "Create snapshot..."
-    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT -j ${__GPFS_FILESET__}
+    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
-	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT for fileset ${__GPFS_FILESET__}" 
+	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
     fi 
 	echo_green "OK"
 
@@ -147,16 +147,9 @@ fi
 
 # Check for old GPFS snapshot
 # If there is one, the last backup didn't finish -> something is wrong: ONLY WARNING!
-RESULT=$(mmlssnapshot $GPFS_DEVICE -j ${__GPFS_FILESET__}) 
+RESULT=$(mmlssnapshot $GPFS_DEVICE) 
 if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
-    # The way to find at least one snapshot for the fileset. This is not implemented directly in mmlssnapshot, 
-    # see https://www.ibm.com/support/knowledgecenter/STXKQY_4.2.0/com.ibm.spectrum.scale.v4r2.adm.doc/bl1adm_mmlssnapshot.htm
-    RESULT=$(echo -e "$RESULT" | grep -vwE "^(Snapshots|Directory)" | rev | grep -Eo '^\s*[^ ]+' | rev) 
-    if [[ "$RESULT" =~ "${__GPFS_FILESET__}" ]]; then
-        # Old snapshot still exists, something is wrong
-        #err_and_exit "Old snapshots still exist" 
-        warn "Old snapshots still exist! Please clean them up!"
-    fi
+    warn "Old snapshots still exist! Please clean them up!"
 fi
 
 ##### END CHECK
