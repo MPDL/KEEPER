@@ -74,7 +74,7 @@ def update_file(repo_id, headers, content):
                              headers=headers)
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_snapshot_labels_api(get_admin_headers):
 
     users = []
