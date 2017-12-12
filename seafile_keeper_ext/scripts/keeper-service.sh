@@ -140,14 +140,8 @@ case "$1" in
             check_seahub_running "CRITICAL"
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
-            # TODO: check fileserver process: probably it is an old stuff, seaf-server makes the job
-        #			check_component_running "fileserver" "fileserver.*-c ${default_ccnet_conf_dir}"
-    #		check_component_running "seafdav" "wsgidav.server.run_server"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
-
             check_component_running "memcached" "memcached" "CRITICAL"
-            #check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"  "CRITICAL"
-            #check_component_running "office/pdf preview" "soffice.bin.*StarOffice.ComponentContext"  "CRITICAL"
             check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC
