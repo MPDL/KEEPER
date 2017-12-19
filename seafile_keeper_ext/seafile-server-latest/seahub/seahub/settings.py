@@ -389,9 +389,7 @@ SITE_NAME = 'KEEPER'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
-# FAVICON_PATH = 'img/favicon.ico'
-FAVICON_PATH = 'img/favicon.png'
-
+FAVICON_PATH = 'img/favicon.ico'
 
 # Path to the Logo Imagefile (relative to the media path)
 # !!!MERGE!!!
@@ -418,7 +416,7 @@ ENABLE_SIGNUP = True
 ALLOWED_HOSTS = ['*']
 
 # Logging
-LOGGING = {
+LOGGING_BAK = {
     'version': 1,
     'disable_existing_loggers': True,
     'formatters': {
