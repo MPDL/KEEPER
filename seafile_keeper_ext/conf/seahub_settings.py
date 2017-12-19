@@ -40,6 +40,80 @@ CACHES = {
     }
 }
 
+# Logging
+import os
+LOG_DIR = os.environ.get('SEAHUB_LOG_DIR', '/tmp')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+        },
+        'syslog-django_request': {
+            'format': '__SYSLOG_IDENT__ django_request: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+        },
+        'syslog-seahub': {
+            'format': '__SYSLOG_IDENT__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+         }
+     },
+    'handlers': {
+        'default': {
+            'level':'INFO',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'seahub.log'),
+            'maxBytes': 1024*1024*10, # 10 MB
+            'backupCount': 52,
+            'formatter':'standard',
+        },
+        'request_handler': {
+                'level':'INFO',
+                'class':'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
+                'maxBytes': 1024*1024*10, # 10 MB
+                'backupCount': 52,
+                'formatter':'standard',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'syslog-django_request': {
+            'level': 'INFO',
+            'class': 'logging.handlers.SysLogHandler',
+            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            'facility': '__SYSLOG_FACILITY__',
+            'formatter': 'syslog-django_request'
+        },
+        'syslog-seahub': {
+            'level': 'INFO',
+            'class': 'logging.handlers.SysLogHandler',
+            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            'facility': '__SYSLOG_FACILITY__',
+            'formatter': 'syslog-seahub'
+        },
+     },
+    'loggers': {
+        '': {
+            'handlers': ['default', 'syslog-seahub'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'django.request': {
+            'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
+            'level': 'INFO',
+            'propagate': False
+        },
+    }
+}
+# 'address': 'syslog-mpcdf.mpdl.mpg.de',
+# 'address': '/dev/log',
 AVATAR_FILE_STORAGE = 'seahub.base.database_storage.DatabaseStorage'
 
 COMPRESS_CACHE_BACKEND = 'django.core.cache.backends.locmem.LocMemCache'
@@ -54,6 +128,8 @@ FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 BRANDING_CSS = 'custom/keeper.css'
 
 LOGO_PATH = 'custom/__LOGO_IMG__'
+
+FAVICON_PATH = 'img/favicon.png'
 
 # Whether to show the used traffic in user's profile popup dialog. Default is True
 SHOW_TRAFFIC = True
@@ -101,7 +177,7 @@ TEST_SERVER="__TEST_SERVER__"
 TEST_SERVER_ADMIN="__TEST_SERVER_ADMIN__"
 TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
 
-OFFICE_CONVERTOR_ROOT = 'http://app-bg-qa-keeper.mpdl.mpg.de'
+OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
 
 # Enable LibreOffice Online
 ENABLE_OFFICE_WEB_APP = False

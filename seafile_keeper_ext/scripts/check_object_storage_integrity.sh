@@ -4,9 +4,12 @@
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 
-GPFS_DEVICE="/dev/gpfs_keeper"
+GPFS_DEVICE="app-qa-keeper"
 
 RC=0
+
+exec > >(tee /var/log/keeper/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
+exec 2>&1 
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -18,7 +21,7 @@ fi
 # check seafile object storage integrity
 function check_object_storage_integrity () {
     pushd $SEAFILE_LATEST_DIR
-    RESULT="$(./seaf-fsck.sh)"
+    RESULT="$(sudo -u seafile ./seaf-fsck.sh)"
     echo "${RESULT}"
     if [[ "$RESULT" =~ "is corrupted" ]]; then
         RC=1
