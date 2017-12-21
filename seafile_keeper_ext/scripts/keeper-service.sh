@@ -55,6 +55,12 @@ function check_en_dis_nginx () {
         err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
     fi
 }
+function check_mysql () {
+    RESULT=$(systemctl status mysql.service)
+    if [ $? -ne 0 ] ; then
+        warn "mysql is not running, please check!"
+    fi
+}
 
 # switch HTTP configurations between default and maintenance
 function switch_maintenance_mode () {
@@ -136,6 +142,7 @@ case "$1" in
         ;;
         status)
             RC=0
+            check_mysql
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
