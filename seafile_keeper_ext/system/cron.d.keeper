@@ -1,11 +1,20 @@
-# keeper backup
-#5 5 * * * root . /etc/profile; bash -c "/opt/seafile/scripts/keeper_backup.sh > /var/log/keeper/keeper_backup.`date '+\%Y-\%m-\%d'`.log 2>&1"
-#5 5 * * * root . /etc/profile; bash -c "/opt/seafile/scripts/keeper_backup.sh 2>&1 | tee >(logger -t 'keeper_backup' -s -n syslog-mpcdf.mpdl.mpg.de)"
-# keeper seaf_fsck check
-30 0  * * 1 root . /etc/profile; bash -c "/opt/seafile/scripts/check_object_storage_integrity.sh 2>&1 | tee >(logger -t 'check_object_storage_integrity' -s -n syslog-mpcdf.mpdl.mpg.de)"
+RSYSLOG="logger -s -n syslog-mpcdf.mpdl.mpg.de -t"
+DATE=`date '+%Y-%m-%d'`
 
+# keeper backup
+#5 5 * * * root . /etc/profile; bash -c "/opt/seafile/scripts/keeper_backup.sh 2>&1 | tee >($RSYSLOG 'keeper_backup')"
+
+# keeper seaf_fsck check
+30 0  * * 1 root . /etc/profile; bash -c "/opt/seafile/scripts/check_object_storage_integrity.sh 2>&1 | tee >($RSYSLOG 'check_object_storage_integrity')"
+
+# keeper garbage collector 
+30 0  * * 6 root . /etc/profile; bash -c "/opt/seafile/seafile-server-latest/seaf-gc.sh 2>&1 | tee /var/log/keeper/keeper_gc.$DATE.log >($RSYSLOG 'gc') >/dev/null"
 
 #rotate keeper object storage integrity logs, weekly before object storage integrity check. remove logs older than 180 days  
 0 0 * * 1 root ( find /var/log/keeper -name keeper_object_sorage_integrity.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+
+#rotate gc logs, weekly before gc. remove logs older than 180 days  
+0 0 * * 6 root ( find /var/log/keeper -name keeper_gc.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+
 #rotate local server backup logs, daily before backup. remove logs older than 30 days  
 5 4 * * * root ( find /var/log/keeper -name keeper_backup.\*.log -mtime +30 -delete; >/dev/null 2>&1 )
