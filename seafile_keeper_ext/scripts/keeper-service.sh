@@ -21,6 +21,7 @@ seafile_dir=/opt/seafile
 script_path=${seafile_dir}/seafile-server-latest
 seafile_init_log=${seafile_dir}/logs/seafile.init.log
 seahub_init_log=${seafile_dir}/logs/seahub.init.log
+background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
 # Change the value of fastcgi to true if fastcgi is to be used
@@ -125,7 +126,7 @@ case "$1" in
                     sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             fi
             ${seafile_dir}/scripts/catalog-service.sh ${1}
-            service nginx ${1}
+            systemctl ${1} nginx.service
         ;;
         stop)
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
@@ -133,7 +134,17 @@ case "$1" in
             ${seafile_dir}/scripts/catalog-service.sh ${1}
             systemctl ${1} memcached.service
         ;;
-        restart-gpfs)
+        start-background)
+            sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
+            sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+            sudo -u ${user} ${script_path}/seafile-background-tasks.sh start >> ${background_init_log}
+        ;;
+        stop-background)
+            sudo -u ${user} ${script_path}/seafile-background-tasks.sh stop >> ${background_init_log}
+            sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+            sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+        ;;
+         restart-gpfs)
             restart_gpfs
         ;;
        switch-maintenance-mode)
@@ -154,7 +165,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|start-background|stop-background|status|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac
