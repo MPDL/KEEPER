@@ -4,7 +4,6 @@
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 
-GPFS_DEVICE="app-qa-keeper"
 
 RC=0
 
@@ -38,7 +37,7 @@ fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
-if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
+if [[ ! "$RESULT" =~ "${__GPFS_DEVICE__} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
