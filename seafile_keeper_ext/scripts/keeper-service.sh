@@ -21,6 +21,7 @@ seafile_dir=/opt/seafile
 script_path=${seafile_dir}/seafile-server-latest
 seafile_init_log=${seafile_dir}/logs/seafile.init.log
 seahub_init_log=${seafile_dir}/logs/seahub.init.log
+background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
 # Change the value of fastcgi to true if fastcgi is to be used
@@ -53,6 +54,12 @@ function check_en_dis_nginx () {
     RESULT=$(type "nginx_ensite" 2>/dev/null)
     if [ $? -ne 0 ] ; then
         err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
+    fi
+}
+function check_mysql () {
+    RESULT=$(systemctl status mysql.service)
+    if [ $? -ne 0 ] ; then
+        warn "mysql is not running, please check!"
     fi
 }
 
@@ -119,7 +126,7 @@ case "$1" in
                     sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             fi
             ${seafile_dir}/scripts/catalog-service.sh ${1}
-            service nginx ${1}
+            systemctl ${1} nginx.service
         ;;
         stop)
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
@@ -127,27 +134,44 @@ case "$1" in
             ${seafile_dir}/scripts/catalog-service.sh ${1}
             systemctl ${1} memcached.service
         ;;
-        restart-gpfs)
+        start-background)
+            systemctl start memcached.service
+            sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
+            sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+        ;;
+        stop-background)
+            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+            sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+            sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+            systemctl stop memcached.service
+        ;;
+         restart-gpfs)
             restart_gpfs
         ;;
        switch-maintenance-mode)
             check_en_dis_nginx
             switch_maintenance_mode
         ;;
-        status)
+        status|status-background)
             RC=0
+            check_mysql
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
+            if [ "$1" == "status-background" ]; then
+                check_component_running "background_task" "seafevents.background_task" "CRITICAL"
+            else
+                check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
+            fi
             check_component_running "memcached" "memcached" "CRITICAL"
-            check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC
         ;;
         *)
-            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: ./keeper-service.sh {start[-background]|stop[-background]|restart|status[-background]|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac
