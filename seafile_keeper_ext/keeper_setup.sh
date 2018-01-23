@@ -5,7 +5,6 @@ SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 CUSTOM_DIR=${SEAFILE_DIR}/seahub-data/custom
 CUSTOM_LINK=${SEAFILE_LATEST_DIR}/seahub/media/custom
-AVATARS_LINK=${SEAFILE_LATEST_DIR}/seahub/media/avatars
 BACKUP_POSTFIX="_orig"
 EXT_DIR=$(dirname $(readlink -f $0))
 
@@ -45,30 +44,6 @@ function create_custom_link () {
 			err_and_exit "Cannot create link to $CUSTOM_DIR"
 		fi
 	fi
-}
-
-# 
-# /migrate avatars storage See http://manual.seafile.com/faq.html:
-# Q: Avatar pictures vanished after upgrading the server, what can I do? 
-
-function migrate_avatars () {
-    # check default installation
-    local D=${SEAFILE_LATEST_DIR}/seahub/media/avatars
-    if [ -d "$D" ]; then
-        #if $D is directory, i.e. installation keeper from scratch 
-        #1) create dir backup
-        mv -v $D ${D}${BACKUP_POSTFIX}
-        if [ $? -ne 0  ]; then
-            err_and_exit "Cannot backup $D"
-        fi
-        #2) create link to CUSTOM avatar link
-        #ln -s $D $AVATARS_LINK 
-        ln -s $CUSTOM_DIR/../avatars $AVATARS_LINK
-        if [ $? -ne 0  ]; then
-            err_and_exit "Cannot create $AVATARS_LINK"
-        fi
-		#TODO: check||create link to avatar in gpfs_keeper fileset
-    fi
 }
 
 
@@ -283,7 +258,6 @@ case "$1" in
 	    #TODO: create_server_script_links 	
 		$0 compile-i18n
 		deploy_http_conf
-        migrate_avatars
     ;;
 
     deploy-conf)

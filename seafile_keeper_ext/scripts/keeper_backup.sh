@@ -12,6 +12,11 @@ GPFS_DEVICE="/dev/gpfs_keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 NO_REMOTE_BACKUP=0
 
+
+exec > >(tee /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
+exec 2>&1 
+
+
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
