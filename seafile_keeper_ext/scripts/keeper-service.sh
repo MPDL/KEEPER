@@ -135,14 +135,16 @@ case "$1" in
             systemctl ${1} memcached.service
         ;;
         start-background)
+            systemctl start memcached.service
             sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
             sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-            sudo -u ${user} ${script_path}/seafile-background-tasks.sh start >> ${background_init_log}
+            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
         ;;
         stop-background)
-            sudo -u ${user} ${script_path}/seafile-background-tasks.sh stop >> ${background_init_log}
+            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
             sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+            systemctl stop memcached.service
         ;;
          restart-gpfs)
             restart_gpfs
@@ -151,7 +153,7 @@ case "$1" in
             check_en_dis_nginx
             switch_maintenance_mode
         ;;
-        status)
+        status|status-background)
             RC=0
             check_mysql
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
@@ -159,13 +161,17 @@ case "$1" in
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
+            if [ "$1" == "status-background" ]; then
+                check_component_running "background_task" "seafevents.background_task" "CRITICAL"
+            else
+                check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
+            fi
             check_component_running "memcached" "memcached" "CRITICAL"
-            check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC
         ;;
         *)
-            echo "Usage: /etc/init.d/seafile-server {start|stop|restart|start-background|stop-background|status|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: ./keeper-service.sh {start[-background]|stop[-background]|restart|status[-background]|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac
