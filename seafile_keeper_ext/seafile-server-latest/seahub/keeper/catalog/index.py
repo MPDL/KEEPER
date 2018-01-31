@@ -83,13 +83,13 @@ def application(env, start_response):
         # test for valid IP
         is_valid_user = 0 # default 0 not valid
         for allowed_ip_prefix in allowed_ip_prefixes:
-            if (env['REMOTE_ADDR'].startswith(allowed_ip_prefix)):
+            if (env['HTTP_X_FORWARDED_FOR'].startswith(allowed_ip_prefix)):
                 errmsg = ''
                 is_valid_user = 1
                 break
         # change this or add code to support sigle-sign-on or session based authentification
 
-        if is_valid_user == 0 and is_in_mpg_ip_range(env['REMOTE_ADDR']):
+        if is_valid_user == 0 and is_in_mpg_ip_range(env['HTTP_X_FORWARDED_FOR']):
             errmsg = ''
             is_valid_user = 1
 
