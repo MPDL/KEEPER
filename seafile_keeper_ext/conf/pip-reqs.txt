@@ -14,7 +14,6 @@ enum34==1.1.6
 funcsigs==1.0.2
 html5lib==0.999999999
 idna==2.5
-iotop==0.6
 ipaddress==1.0.18
 mistune==0.7.4
 mock==2.0.0
@@ -32,16 +31,16 @@ pycparser==2.17
 pycrypto==2.6.1
 Pygments==2.2.0
 pylibmc==1.5.2
-pylint==1.6.5
 pyOpenSSL==16.2.0
 pyparsing==2.2.0
+Pyrex==0.9.8.5
 PySimpleSOAP==1.16
 pytest==3.0.7
 pytest-mock==1.6.0
 python-apt==0.9.3.12
 python-debian==0.1.28
-python-debianbts==2.6.1
-python-ldap==2.4.32
+python-debianbts==1.11
+python-ldap==2.4.10
 python-memcached==1.58
 reportbug==6.6.3
 requests==2.13.0
@@ -52,7 +51,7 @@ SOAPpy==0.12.22
 sqlparse==0.2.3
 templayer==1.5.1
 urllib3==1.20
-uWSGI==2.0.14
+uWSGI==2.0.15
 webencodings==0.5
 wrapt==1.10.10
 wstools==0.4.5
