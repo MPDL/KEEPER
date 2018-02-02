@@ -10,8 +10,6 @@ import re
 import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
-import django
-django.setup()
 
 from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
