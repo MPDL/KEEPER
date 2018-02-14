@@ -33,9 +33,9 @@ CACHES = {
         'LOCATION': ['__MEMCACHED_SERVER__'],
         'OPTIONS': {
             'ketama': True,
-            'remove_failed': 1,
-            'retry_timeout': 3600,
-            'dead_timeout': 3600
+            'remove_failed': 0,
+            'retry_timeout': 1,
+            'dead_timeout': 60
         }
     }
 }
