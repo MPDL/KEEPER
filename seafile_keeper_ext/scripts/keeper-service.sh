@@ -119,8 +119,11 @@ echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seah
 
 case "$1" in
         start|restart)
-            #systemctl ${1} memcached.service
-            echo "Starting keeper..."
+            if [ "$1" == "restart" ]; then
+                echo "Restarting keeper..."
+            else
+                echo "Starting keeper..."
+            fi
             sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
             sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
             ${seafile_dir}/scripts/catalog-service.sh ${1}
