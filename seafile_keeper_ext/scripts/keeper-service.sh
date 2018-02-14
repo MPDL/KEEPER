@@ -59,7 +59,7 @@ function check_mysql () {
 }
 
 function check_memcached () {
-    RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__} 11211 2>/dev/null | grep -Eq "STAT pid [0-9]+")
+    RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__%:*} 11211 2>/dev/null | grep -Eq "STAT pid [0-9]+")
     if [ $? -ne 0 ] ; then
         warn "memcached is not running on ${__MEMCACHED_SERVER__}:11211, please check!"
     fi
