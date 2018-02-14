@@ -63,6 +63,13 @@ function check_mysql () {
     fi
 }
 
+function check_memcached () {
+    RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__} 11211 2>/dev/null | grep -Eq "STAT pid [0-9]+")
+    if [ $? -ne 0 ] ; then
+        warn "memcached is not running on ${__MEMCACHED_SERVER__}:11211, please check!"
+    fi
+}
+
 # switch HTTP configurations between default and maintenance
 function switch_maintenance_mode () {
 	local TO_DIS="${__MAINTENANCE_HTTP_CONF__}"
@@ -166,7 +173,8 @@ case "$1" in
             else
                 check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             fi
-            check_component_running "memcached" "memcached" "CRITICAL"
+            check_memcached
+            #check_component_running "memcached" "memcached" "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC
         ;;
