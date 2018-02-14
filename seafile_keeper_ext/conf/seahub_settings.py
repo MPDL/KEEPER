@@ -30,13 +30,7 @@ DATABASE_ROUTERS = ['keeper.dbrouter.DbRouter',]
 CACHES = {
     'default': {
         'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
-        'LOCATION': ['__MEMCACHED_SERVER__'],
-        'OPTIONS': {
-            'ketama': True,
-            'remove_failed': 0,
-            'retry_timeout': 1,
-            'dead_timeout': 60
-        }
+        'LOCATION': '__MEMCACHED_SERVER__',
     }
 }
 
