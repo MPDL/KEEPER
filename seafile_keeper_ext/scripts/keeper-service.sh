@@ -57,11 +57,28 @@ function check_mysql () {
         warn "mysql is not running, please check!"
     fi
 }
+function check_puppet () {
+    RESULT=$(type "puppet" 2>/dev/null)
+    if [ $? -eq 0 ] ; then
+        RESULT=$(cat $(puppet config print vardir)/state/agent_disabled.lock 2>&1)
+        [[ $RESULT == *"No such file or directory"* ]] && warn "puppet agent is runnig"
+    fi
+
+}
 
 function check_memcached () {
+# for the cluster the memcached runs in single instance mode 
     RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__%:*} 11211 2>/dev/null | grep -Eq "STAT pid [0-9]+")
     if [ $? -ne 0 ] ; then
         warn "memcached is not running on ${__MEMCACHED_SERVER__}:11211, please check!"
+    fi
+}
+
+function check_keepalived () {
+    RESULT=$(type "keepalived" 2>/dev/null)
+    if [ $? -eq 0 ] ; then
+        RESULT=$(systemctl is-active keepalived.service)
+        [[ $RESULT != "active" ]] && warn "keepalived is not runnig on the node"
     fi
 }
 
@@ -166,6 +183,7 @@ case "$1" in
         ;;
         status|status-background)
             RC=0
+            check_puppet
             check_mysql
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
@@ -175,6 +193,7 @@ case "$1" in
             if [ "$1" == "status-background" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
             else
+                check_keepalived
                 check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             fi
             check_memcached
