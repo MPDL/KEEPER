@@ -18,7 +18,7 @@ django.setup()
 # @pytest.mark.skip
 def test_is_in_mpg_ip_range():
     is_in_mpg = is_in_mpg_ip_range('192.129.78.1')
-    assert is_in_mpg == False
+    assert not is_in_mpg
 
 # @pytest.mark.skip
 def test_catalog():
