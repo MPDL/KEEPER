@@ -10,7 +10,7 @@ django.setup()
 
 from seahub.views.sysadmin import send_user_add_mail
 from seahub.utils import send_html_email
-from seahub.settings import SERVER_EMAIL
+from seahub.settings import SERVER_EMAIL, SERVICE_URL
 from seahub.base.accounts import User
 from seahub.profile.models import Profile
 
@@ -35,9 +35,10 @@ def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
 def test_account_auto_activation(mocker):
     """ Test auto activation for MPG signed up users,
         see https://github.com/MPDL/KEEPER/issues/133
-        NOTES: 
-            'activate after registration' checkbox in admin panel should be unchecked
-            'send activation email' should be checked
+        NOTES:
+            'allow new user registrations'checkbox in admin panel should be checked
+            'activate after registration' should be unchecked
+            'send activation email' should be unchecked
     """
 
     # create mocks to go tests through
@@ -63,8 +64,8 @@ def test_account_auto_activation(mocker):
     try:
         send_mail_mock = mocker.patch('seahub.utils.EmailMessage')
         new_user = reg.register(request_mock, email=EMAIL, password1='FAKE_PASSWORD')
-        assert send_mail_mock.called, 'email should be sent'
-        assert not new_user.is_active, 'user should not be active'
+        assert not send_mail_mock.called, 'email should NOT be sent, \'Send activation Email after user registration.\' in {}/sys/settings should be unchecked!'.format(SERVICE_URL)
+        assert not new_user.is_active, 'user should NOT be active'
     finally:
         User.objects.get(EMAIL).delete()
 
