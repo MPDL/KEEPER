@@ -33,13 +33,6 @@ function warn () {
 	fi
 }
 
-function up_err_and_exit () {
-	startup_seafile
-	err_and_exit "$1"
-}
-
-
-
 function check_file () {
     if [ ! -f "$1" ]; then
 		if [ -n "$2" ]; then
