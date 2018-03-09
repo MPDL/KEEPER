@@ -14,11 +14,19 @@ DAYOFMONTH=`date '+%d'`
 GPFS_DEVICE="app-keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 CLEANUP_SNAPSHOTS=1
+SHADOW_DB_REBUILD_DAY=7
+DB_BACKUP_DIR=/keeper/db-backup
 
+MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
+#remove PID on EXIT
+trap "rm -f -- '$MY_BACKUP_PID_FILE'" EXIT
 
-exec > >(tee -a /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
-exec 2>&1 
+DEBUG=0
 
+if [ $DEBUG -ne 1 ]; then
+    exec > >(tee -a /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
+    exec 2>&1 
+fi
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -26,8 +34,6 @@ if [ $? -ne 0  ]; then
 	echo "Cannot run inject_keeper_env.sh"
     exit 1
 fi
-
-DB_BACKUP_DIR=/keeper/db-backup
 
 
 function backup_databases () {
@@ -101,7 +107,7 @@ function backup_object_storage () {
     #mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 $LOGLEVEL -m 8 -S $GPFS_SNAPSHOT 
 
     # on Sunday
-    if [ "$WEEKDAY" = 7 ]; then
+    if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
       # Rebuild the shadow database on Sundays
         mmbackup /keeper --noquote -s /var/tmp -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
         [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
@@ -118,11 +124,19 @@ function backup_object_storage () {
 		
 }
 
+#sleep 600
+#exit 0
+
 ##### START
 echo_green "Backup started at $(date)"
 START=$(timestamp)
 
 ###### CHECK 
+#keeper is already running!
+if [  $(find "${SEAFILE_LATEST_DIR}/runtime" -name "backup.*.pid" )  ]; then
+    err_and_exit "Keeper backup process is already running, please check!"
+fi
+
 if [ ! -d "$DB_BACKUP_DIR"  ]; then
     err_and_exit "Cannot find backup directory: $DB_BACKUP_DIR"
 fi
@@ -147,9 +161,10 @@ RESULT=$(mmlssnapshot ${GPFS_DEVICE} | tail -n +3 | cut -d' ' -f1 | grep ${GPFS_
 if [ $? -eq 0 ]; then
     err_and_exit "Cannot create snapshot $GPFS_SNAPSHOT: the snapshot exists already." 
 fi 
-
-
 ##### END CHECK
+
+#create PID file
+echo $$ > "$MY_BACKUP_PID_FILE"
 
 backup_databases
 
