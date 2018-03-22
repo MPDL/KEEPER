@@ -1,0 +1,63 @@
+# keepalived logs
+if $syslogtag startswith 'Keepalived' then {
+        # QA keepalived/haproxy 
+        if $fromhost contains 'qa-keeper' and $fromhost startswith 'proxy' then {
+                local1.* /var/log/keeper/qa-keepalived.log
+                stop
+        }
+        # QA keepalived/memcached
+        if $fromhost contains 'qa-keeper' and $fromhost startswith 'app' then {
+                local1.* /var/log/keeper/qa-keepalived-memcached.log
+                stop
+        }
+        # PROD keepalived/haproxy 
+        if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'proxy' then {
+                local1.* /var/log/keeper/keepalived.log
+                stop
+        }
+        # PROD keepalived/memcached
+        if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'app' then {
+                local1.* /var/log/keeper/keepalived-memcached.log
+                stop
+        }
+}
+
+
+# QA logs
+if $fromhost contains 'qa-keeper' then {
+        # nginx access
+        if $syslogtag == 'nginxaccess:'  then {
+            local1.* /var/log/keeper/qa-nginx_access.log
+            stop
+        }
+        # nginx error
+        if $syslogtag == 'nginxerror:'  then {
+            local1.* /var/log/keeper/qa-nginx_error.log
+            stop
+        }
+        # all other keeper logs 
+        if $syslogtag startswith 'qakeeper' then {
+            local1.* /var/log/keeper/qa-keeper.log
+            stop
+        }
+}
+
+# PROD logs
+if $fromhost contains 'app-bg-keeper' or re_match($fromhost, "app0[123]-keeper") then {
+        # nginx access
+        if $syslogtag == 'nginxaccess:'  then {
+            local1.* /var/log/keeper/nginx_access.log
+            stop
+        }
+        # nginx error
+        if $syslogtag == 'nginxerror:'  then {
+            local1.* /var/log/keeper/nginx_error.log
+            stop
+        }
+        # all other keeper logs 
+        if $syslogtag startswith 'keeper' then {
+            local1.* /var/log/keeper/keeper.log
+            stop
+        }
+}
+
