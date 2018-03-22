@@ -15,10 +15,9 @@ def get_db(db_name):
     return MySQLdb.connect(host=DATABASES['default']['HOST'],
          user=DATABASES['default']['USER'],
          passwd=DATABASES['default']['PASSWORD'],
+         port=DATABASES['defaul']['PORT'],
          db=db_name,
          charset='utf8')
-
-
 
 """Get non handled viruses"""
 
