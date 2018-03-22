@@ -5,26 +5,13 @@ import sys
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
-from seahub.settings import DATABASES
-
-import MySQLdb
-
-
-def get_db(db_name):
-    """Get DB connection"""
-    return MySQLdb.connect(host=DATABASES['default']['HOST'],
-         user=DATABASES['default']['USER'],
-         passwd=DATABASES['default']['PASSWORD'],
-         port=DATABASES['defaul']['PORT'],
-         db=db_name,
-         charset='utf8')
+from django.db import connection
 
 """Get non handled viruses"""
 
 RC = 0
 
-db = get_db('seahub-db')
-cur = db.cursor(MySQLdb.cursors.DictCursor)
+cur = connection.cursor()
 
 cur.execute("SELECT * FROM `VirusFile` WHERE `has_handle`=0")
 rows = cur.fetchall()
