@@ -510,6 +510,8 @@ def do_upgrade(args):
                     shutil.copy(src_path, dest_path)
 
 
+env_mgr = EnvManager()
+
 def main():
     try:
         import argparse
@@ -517,7 +519,6 @@ def main():
         sys.path.insert(0, glob.glob(os.path.join(env_mgr.pro_pylibs_dir, 'argparse*.egg'))[0])
         import argparse
 
-    env_mgr = EnvManager()
     env_mgr.read_keeper_conf()
 
     parser = argparse.ArgumentParser()
