@@ -7,15 +7,26 @@ BACKUP_POSTFIX="_orig"
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
+TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
 TODAY=`date '+%Y%m%d'`
-GPFS_DEVICE="/dev/gpfs_keeper"
+WEEKDAY=`date '+%u'`
+DAYOFMONTH=`date '+%d'`
+GPFS_DEVICE="app-keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
-NO_REMOTE_BACKUP=0
+CLEANUP_SNAPSHOTS=1
+SHADOW_DB_REBUILD_DAY=7
+DB_BACKUP_DIR=/keeper/db-backup
 
+MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
+#remove PID on EXIT
+trap "rm -f -- '$MY_BACKUP_PID_FILE'" EXIT
 
-exec > >(tee /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
-exec 2>&1 
+DEBUG=0
 
+if [ $DEBUG -ne 1 ]; then
+    exec > >(tee -a /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
+    exec 2>&1 
+fi
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -24,71 +35,48 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
-DB_BACKUP_DIR=/keeper/db-backup
-
-
-function shutdown_seafile () {
-    pushd ${SEAFILE_DIR}/scripts
-    
-    echo -e "Swicht keeper to maintenance mode...\n"
-    ./seafile-server.sh switch-maintenance-mode
-    if [ $? -ne 0  ]; then
-        err_and_exit "Cannot switch keeper to maintenance mode"
-    fi
-    echo_green "OK"
-    
-    echo -e "Shutdown seafile...\n"
-    ./seafile-server.sh stop
-    if [ $? -ne 0  ]; then
-        err_and_exit "Cannot stop seafile"
-    fi
-    echo_green "OK"
-    
-    popd
-}
-
-function startup_seafile () {
-    pushd ${SEAFILE_DIR}/scripts
-
-    echo -e "Startup seafile...\n"
-    ./seafile-server.sh start
-    if [ $? -ne 0  ]; then
-        err_and_exit "Cannot start seafile"
-    fi
-    echo_green "OK"
-    
-    echo -e "Swicht keeper to normal mode...\n"
-    ./seafile-server.sh switch-maintenance-mode
-    if [ $? -ne 0  ]; then
-        err_and_exit "Cannot switch keeper to normal mode"
-    fi
-    echo_green "OK"
-
-    popd
-}
 
 function backup_databases () {
 
     echo -e "Backup seafile databases...\n"
 
-    # clean up old databases
+    # clean up old database dumps
     if [ "$(ls -A $DB_BACKUP_DIR)" ]; then
         echo "Clean ${DB_BACKUP_DIR}..."
         rm -v ${DB_BACKUP_DIR}/*
-        [ $? -ne 0 ] && up_err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
+        [ $? -ne 0 ] && err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
     fi
-    local TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
     for i in ccnet seafile seahub keeper; do
-        mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
-        [ $? -ne 0  ] && up_err_and_exit "Cannot dump ${i}-db"
+        mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
+        [ $? -ne 0  ] && err_and_exit "Cannot dump ${i}-db"
     done
     echo_green "Databases backup is OK"
 
 }
 
-function asynchronous_backup () {
+function cleanup_old_snapshots () {
+   
+    # Clean up old snapshots, leave at least LATEST_SN_COUNT latest snapshots 
+    LATEST_SN_COUNT=3
+    if [ $CLEANUP_SNAPSHOTS -eq 1 ]; then
+        echo -e "Clean up old snapshots...\n"
+        SNAPSHOTS=($(mmlssnapshot $GPFS_DEVICE | tail -n +3 | cut -d' ' -f1 | sort -r))
+        if [ -n "$SNAPSHOTS" ]; then
+            for SN in "${SNAPSHOTS[@]:$LATEST_SN_COUNT}"; do
+                CMD="mmdelsnapshot $GPFS_DEVICE $SN"
+                #echo $CMD
+                eval "$CMD"
+            done
+        else 
+            warn "No snapshots on $GPFS_DEVICE"
+        fi
+        echo_green "Clean up of old snapshots is OK"
+    fi
+}
+
+function backup_object_storage () {
 	
-    echo -e "Start asynchronous backup...\n"
+    echo -e "Start Object Storage backup...\n"
 
 	# 1. Backup GPFS-Config
     echo "Save GPFS backup config..."
@@ -98,7 +86,7 @@ function asynchronous_backup () {
     # save current
     mmbackupconfig $GPFS_DEVICE -o $GPFS_BACKUP_CONF  
     if [ $? -ne 0 ]; then
-	    up_err_and_exit "Could not save GPFS backup config" 
+	    err_and_exit "Could not save GPFS backup config" 
     fi 
 	echo_green "OK"
 
@@ -107,30 +95,48 @@ function asynchronous_backup () {
     mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
-	    up_err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
+	    err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
     fi 
 	echo_green "OK"
 
-    if [ $NO_REMOTE_BACKUP -ne 1 ]; then
-        # 3. TSM-Agent on lta03 will backup snapshot data asynchronously and delete snapshot after it is finished	
-        echo "Start remote backup..."
-        # TODO: generate log on remote !!!!
-        ssh lta03-mpdl "nohup ${__REMOTE_BACKUP_SCRIPT__} $GPFS_SNAPSHOT </dev/null >${__REMOTE_LOG__} 2>&1 &"
-        if [ $? -ne 0 ]; then
-            up_err_and_exit "Could not start remote backup" 
-        fi 
-        echo_green "OK"
+    echo "Start TSM  backup..."
+    LOGLEVEL="-L 2"
+    export MMBACKUP_DSMC_BACKUP="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
+    export MMBACKUP_DSMC_EXPIRE="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
+    # Full backup the first time:
+    #mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 $LOGLEVEL -m 8 -S $GPFS_SNAPSHOT 
+
+    # on Sunday
+    if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
+      # Rebuild the shadow database on Sundays
+        mmbackup /keeper --noquote -s /var/tmp -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+        [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
+
+    else
+      # Normal incremental backup on other days
+        mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+        [ $? -ne 0 ] && warn "Incremental TSM backup is failed" || echo_green "OK"
     fi
 
-    echo -e "Asynchronous backup is OK\n"
+    cleanup_old_snapshots
+
+    echo_green "Object Storage backup is OK\n"
 		
 }
+
+#sleep 600
+#exit 0
 
 ##### START
 echo_green "Backup started at $(date)"
 START=$(timestamp)
 
 ###### CHECK 
+#keeper is already running!
+if [  $(find "${SEAFILE_LATEST_DIR}/runtime" -name "backup.*.pid" )  ]; then
+    err_and_exit "Keeper backup process is already running, please check!"
+fi
+
 if [ ! -d "$DB_BACKUP_DIR"  ]; then
     err_and_exit "Cannot find backup directory: $DB_BACKUP_DIR"
 fi
@@ -150,25 +156,20 @@ if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
-# Check for old GPFS snapshot
-# If there is one, the last backup didn't finish -> something is wrong: ONLY WARNING!
-RESULT=$(mmlssnapshot $GPFS_DEVICE) 
-if [[ ! "$RESULT" =~ "No snapshots in file system" ]]; then
-    warn "Old snapshots still exist! Please clean them up!"
-fi
-
+# Exit if there is a snapshot today. 
+RESULT=$(mmlssnapshot ${GPFS_DEVICE} | tail -n +3 | cut -d' ' -f1 | grep ${GPFS_SNAPSHOT} -q)
+if [ $? -eq 0 ]; then
+    err_and_exit "Cannot create snapshot $GPFS_SNAPSHOT: the snapshot exists already." 
+fi 
 ##### END CHECK
 
-shutdown_seafile
+#create PID file
+echo $$ > "$MY_BACKUP_PID_FILE"
 
 backup_databases
 
-#rsync -aLPWz ${SEAFILE_DIR}/seafile-data ${BACKUP_DIR}
-#echo_green "Seafile object storage backup is OK"
+backup_object_storage
 
-asynchronous_backup
-
-startup_seafile
 
 echo_green "Backup ended at $(date)"
 echo_green "Elapsed time: $(elapsed_time ${START})\n"
