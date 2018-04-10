@@ -177,13 +177,14 @@ OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__
 OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
 
 # Enable LibreOffice Online
-ENABLE_OFFICE_WEB_APP = False
+ENABLE_OFFICE_WEB_APP = True
 
 # Url of LibreOffice Online's discovery page
 # The discovery page tells Seafile how to interact with LibreOffice Online when view file online
 # You should change `https://collabora.mpdl.mpg.de/hosting/discovery` to your actual LibreOffice Online server address
 #OFFICE_WEB_APP_BASE_URL = 'https://collabora.mpdl.mpg.de/hosting/discovery'
-OFFICE_WEB_APP_BASE_URL = 'https://share.mpdl.mpg.de/hosting/discovery'
+# OFFICE_WEB_APP_BASE_URL = 'https://share.mpdl.mpg.de/hosting/discovery'
+OFFICE_WEB_APP_BASE_URL = 'http://doc-qa-keeper.mpdl.mpg.de/hosting/discovery'
 
 # Expiration of WOPI access token
 # WOPI access token is a string used by Seafile to determine the file's
