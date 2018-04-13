@@ -172,7 +172,7 @@ TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
 # TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
 
 # Settings for background node
-OFFICE_CONVERTOR_NODE = '__IS_OFFICE_CONVERTOR_NODE__'
+OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__
 
 OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
 
@@ -184,7 +184,7 @@ ENABLE_OFFICE_WEB_APP = True
 # You should change `https://collabora.mpdl.mpg.de/hosting/discovery` to your actual LibreOffice Online server address
 #OFFICE_WEB_APP_BASE_URL = 'https://collabora.mpdl.mpg.de/hosting/discovery'
 # OFFICE_WEB_APP_BASE_URL = 'https://share.mpdl.mpg.de/hosting/discovery'
-OFFICE_WEB_APP_BASE_URL = 'http://doc-qa-keeper.mpdl.mpg.de/hosting/discovery'
+OFFICE_WEB_APP_BASE_URL = 'https://doc-qa-keeper.mpdl.mpg.de/hosting/discovery'
 
 # Expiration of WOPI access token
 # WOPI access token is a string used by Seafile to determine the file's
