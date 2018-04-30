@@ -6,7 +6,7 @@ import glob
 import subprocess
 import StringIO
 import shutil
-
+import re
 import ConfigParser
 
 
@@ -382,6 +382,12 @@ def expand_properties(content):
     for section in env_mgr.keeper_config.sections():
         for key, value in env_mgr.keeper_config.items(section):
             content = content.replace(key, value)
+
+    if env_mgr.keeper_config.get('backup', '__IS_BACKUP_SERVER__') == 'True':
+        content = re.sub("backup_url.*?\n", "", content)
+    else:
+        content = re.sub("primary_url.*?\n", "", content)
+
     return content
 
 def backup_file(path):
@@ -434,7 +440,7 @@ def deploy_file(path, dest_dir=None):
 
 def deploy_dir(path):
     Utils.check_dir(path)
-    for file in os.listdir(path):
+    for file in [p for p in os.listdir(path) if p not in ['.ropeproject']]:
         deploy_file(path + '/' + file)
 
 def deploy_http_conf():
