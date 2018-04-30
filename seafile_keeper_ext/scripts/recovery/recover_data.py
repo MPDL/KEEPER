@@ -98,7 +98,8 @@ def recover_data():
     # QUERY CONDITIONS
     # Searc in FileUpdate Table
     # timestamp between '2018-02-02 05:05' and '2018-02-02 16:00'
-    q = session.query(FileUpdate).filter(FileUpdate.timestamp.between('2018-02-02 05:05','2018-02-02 16:00'))
+    # q = session.query(FileUpdate).filter(FileUpdate.timestamp.between('2018-02-02 05:05','2018-02-02 16:00'))
+    q = session.query(FileUpdate).filter(FileUpdate.timestamp.between('2018-03-31 05:05:08','2018-03-31 05:05:42'))
     # order by creation, desc
     q = q.order_by(desc(FileUpdate.eid))
     events = q.all()
@@ -141,8 +142,8 @@ def recover_data():
 
     changed_files = defaultdict(dict)
     # for the moment we save modified and new files in separate dirs
-    # change = 'modified'
-    change = 'new'
+    change = 'modified'
+    # change = 'new'
 
     for key, events in users.iteritems():
 
@@ -167,7 +168,7 @@ def recover_data():
 
 
     # path in filesystem where the recovered files will be stored
-    STORAGE_PATH = '/keeper/tmp/recovery/added/'
+    STORAGE_PATH = '/keeper/tmp/recovery/' + change + '/'
     # gnerate packages of changed files
     for u in changed_files:
         path = STORAGE_PATH + u
