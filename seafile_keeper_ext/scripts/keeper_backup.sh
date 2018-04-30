@@ -7,15 +7,17 @@ BACKUP_POSTFIX="_orig"
 
 PATH=$PATH:/usr/lpp/mmfs/bin
 export PATH
-TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
 TODAY=`date '+%Y%m%d'`
 WEEKDAY=`date '+%u'`
 DAYOFMONTH=`date '+%d'`
-GPFS_DEVICE="app-keeper"
+GPFS_DEVICE="app-qa-keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
-CLEANUP_SNAPSHOTS=1
+CLEANUP_SNAPSHOTS=0
+SKIP_TSM_BACKUP=1
 SHADOW_DB_REBUILD_DAY=7
 DB_BACKUP_DIR=/keeper/db-backup
+
+RECOVERY_COMMANDS=()
 
 MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
 #remove PID on EXIT
@@ -36,6 +38,10 @@ if [ $? -ne 0  ]; then
 fi
 
 
+function get_timestamp() {
+    echo $(date +"%Y-%m-%d %H:%M:%S")
+}
+
 function backup_databases () {
 
     echo -e "Backup seafile databases...\n"
@@ -46,9 +52,13 @@ function backup_databases () {
         rm -v ${DB_BACKUP_DIR}/*
         [ $? -ne 0 ] && err_and_exit "Cannot clean up ${DB_BACKUP_DIR}"
     fi
+    MYSQLDUMP_START_TIME=$(get_timestamp)
+    echo "Start time of first mysqldump: ${MYSQLDUMP_START_TIME}"
     for i in ccnet seafile seahub keeper; do
+        TIMESTAMP=$(get_timestamp | tr ' ' '_')
         mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
         [ $? -ne 0  ] && err_and_exit "Cannot dump ${i}-db"
+        RECOVERY_COMMANDS+=(echo "mysql -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} ${i} < ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz")
     done
     echo_green "Databases backup is OK"
 
@@ -74,6 +84,35 @@ function cleanup_old_snapshots () {
     fi
 }
 
+
+function do_tsm_backup () {
+
+    if [ $SKIP_TSM_BACKUP -ne 1 ]; then
+        echo "Start TSM  backup..."
+        LOGLEVEL="-L 2"
+        export MMBACKUP_DSMC_BACKUP="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
+        export MMBACKUP_DSMC_EXPIRE="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
+        # Full backup the first time:
+        #mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 $LOGLEVEL -m 8 -S $GPFS_SNAPSHOT 
+
+        # on Sunday
+        if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
+          # Rebuild the shadow database on Sundays
+            mmbackup /keeper --noquote -s /var/tmp -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+            [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
+
+        else
+          # Normal incremental backup on other days
+            mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+            [ $? -ne 0 ] && warn "Incremental TSM backup is failed" || echo_green "OK"
+        fi
+        echo_green "OK"
+    else    
+        echo_green "Skipping TSM backup"
+    fi
+
+}
+
 function backup_object_storage () {
 	
     echo -e "Start Object Storage backup...\n"
@@ -92,6 +131,10 @@ function backup_object_storage () {
 
     # 2. Create filesystem snapshot
     echo "Create snapshot..."
+    
+    #check GPFS status before 
+    mmdf $GPFS_DEVICE 
+    
     mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
@@ -99,24 +142,20 @@ function backup_object_storage () {
     fi 
 	echo_green "OK"
 
-    echo "Start TSM  backup..."
-    LOGLEVEL="-L 2"
-    export MMBACKUP_DSMC_BACKUP="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
-    export MMBACKUP_DSMC_EXPIRE="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
-    # Full backup the first time:
-    #mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 $LOGLEVEL -m 8 -S $GPFS_SNAPSHOT 
 
-    # on Sunday
-    if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
-      # Rebuild the shadow database on Sundays
-        mmbackup /keeper --noquote -s /var/tmp -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
-        [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
+    SNAPSHOT_CREATION_END_TIME=$(get_timestamp)
+    echo "Snapshot creation time: $SNAPSHOTS_CREATION_TIME"
+    
+    #Generate DB recovery commands 
+    BIN_LOGS_DIR="/keeper/.snapshots/${GPFS_SNAPSHOT}/mysql/logs"
+    NEWEST_BIN_FILE=$(find $BIN_LOGS_DIR -type f -name "*.[0-9]*" -printf "%T@ %p\n" | sort -n | tail -1 | cut -f 2 -d ' ')
+    RECOVERY_COMMANDS+=("mysql --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" ${BIN_LOGS_DIR}/${NEWEST_BIN_FILE} |  mysql -u root -p")
+    RECOVERY_COMMANDS+=("CHECK CONTENT: mysqlbinlog --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" --base64-output=decode-rows --verbose ${BIN_LOGS_DIR}/${NEWEST_BIN_FILE} > decoded.txt")
 
-    else
-      # Normal incremental backup on other days
-        mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
-        [ $? -ne 0 ] && warn "Incremental TSM backup is failed" || echo_green "OK"
-    fi
+    #check GPFS status after 
+    mmdf $GPFS_DEVICE 
+
+    do_tsm_backup
 
     cleanup_old_snapshots
 
@@ -129,7 +168,7 @@ function backup_object_storage () {
 
 ##### START
 echo_green "Backup started at $(date)"
-START=$(timestamp)
+START=$(imestamp)
 
 ###### CHECK 
 #keeper is already running!
@@ -170,9 +209,15 @@ backup_databases
 
 backup_object_storage
 
-
 echo_green "Backup ended at $(date)"
 echo_green "Elapsed time: $(elapsed_time ${START})\n"
+
+echo "########################################"
+echo "### Recovery commands:\n"
+printf '%s\n' "${RECOVERY_COMMANDS[@]}"
+echo "########################################"
+
+
 
 echo_green "Backup is successful!"
 
