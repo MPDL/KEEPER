@@ -131,6 +131,12 @@ function check_seahub_running () {
 #
 # Write a polite log message with date and time
 #
+
+function get_instance_type () {
+
+
+}
+
 echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
 echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 

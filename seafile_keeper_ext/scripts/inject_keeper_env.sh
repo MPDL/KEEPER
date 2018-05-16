@@ -58,11 +58,12 @@ function elapsed_time() {
 SEAFILE_DIR=/opt/seafile
 ### GET INSTANCE PROPERTIES FILE
 # KEEPER instance properties file should be located in SEAFILE_DIR!!!
-FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
+FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.ini") )
 ( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
 [[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
 PROPERTIES_FILE="${FILES[0]}"
-source "${PROPERTIES_FILE}"
+source <(grep -v "^[[#]" ${PROPERTIES_FILE})
+#source 1.txt
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi

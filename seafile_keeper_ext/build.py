@@ -379,11 +379,14 @@ def create_custom_link():
 
 
 def expand_properties(content):
-    for section in env_mgr.keeper_config.sections():
-        for key, value in env_mgr.keeper_config.items(section):
+    kc = env_mgr.keeper_config
+    for section in kc.sections():
+        for key, value in kc.items(section):
+            if key == '__EXTERNAL_ES_SERVER__':
+                value = value.lower()
             content = content.replace(key, value)
 
-    if env_mgr.keeper_config.get('backup', '__IS_BACKUP_SERVER__') == 'True':
+    if kc.get('backup', '__IS_BACKUP_SERVER__') == 'True':
         content = re.sub("backup_url.*?\n", "", content)
     else:
         content = re.sub("primary_url.*?\n", "", content)
