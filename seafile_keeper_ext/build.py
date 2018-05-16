@@ -406,7 +406,7 @@ def backup_file(path):
 
 
 
-def deploy_file(path, dest_dir=None):
+def deploy_file(path, expand=False, dest_dir=None):
 
     Utils.check_file(path)
 
@@ -431,8 +431,11 @@ def deploy_file(path, dest_dir=None):
             return
 
     fin = open(path, 'r')
-    content = expand_properties(fin.read())
+    content = fin.read()
     fin.close()
+
+    if expand:
+        content = expand_properties(content)
 
     fout = open(dest_path, 'w')
     fout.write(content)
@@ -441,10 +444,10 @@ def deploy_file(path, dest_dir=None):
 
     # Utils.info(dest_path)
 
-def deploy_dir(path):
+def deploy_dir(path, expand=False):
     Utils.check_dir(path)
     for file in [p for p in os.listdir(path) if p not in ['.ropeproject']]:
-        deploy_file(path + '/' + file)
+        deploy_file(path + '/' + file, expand)
 
 def deploy_http_conf():
     path = 'http'
@@ -452,9 +455,9 @@ def deploy_http_conf():
     opts = dict(env_mgr.keeper_config.items('http'))
 
     for file in [opts['__MAINTENANCE_HTTP_CONF__'], opts['__HTTP_CONF__']]:
-        deploy_file('http/' + file)
+        deploy_file('http/' + file, expand=True)
 
-    deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'])
+    deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'], expand=True)
 
 def do_deploy(args):
 
@@ -469,7 +472,7 @@ def do_deploy(args):
         # deploy_http_conf()
         pass
     elif args.conf:
-        deploy_dir('conf')
+        deploy_dir('conf', expand=True)
     elif args.http_conf:
         deploy_http_conf()
     else:
@@ -571,7 +574,7 @@ def main():
         return
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
     args.func(args)
 
 
