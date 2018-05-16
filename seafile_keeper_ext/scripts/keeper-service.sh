@@ -225,6 +225,7 @@ case "$1" in
             #if [ "$1" == "status-background" ]; then
             if [ $TYPE == "BACKGROUND" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
+                check_component_running "office_converter" "soffice.bin" "CRITICAL"
             else
                 check_keepalived
                 check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
@@ -235,7 +236,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: ./keeper-service.sh {start[-background]|stop[-background]|restart[-background]|status[-background]|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: ./keeper-service.sh {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac
