@@ -133,53 +133,79 @@ function check_seahub_running () {
 #
 
 function get_instance_type () {
-
-
+    local TYPE="APP"
+    if [ ${__IS_OFFICE_CONVERTOR_NODE__} == "True" ]; then
+        TYPE="BACKGROUND"
+    elif [ ${__IS_BACKUP_SERVER__} == "True" ]; then
+        TYPE="BACKUP"
+    fi
+    echo $TYPE
 }
 
-echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
-echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
+#echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
+#echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
+
+
+TYPE=$(get_instance_type)
+
+echo "Keeper $TYPE node ${__SYSLOG_IDENT__}"
 
 case "$1" in
         start|restart)
             if [ "$1" == "restart" ]; then
-                echo "Restarting keeper..."
+                echo "Restarting..."
             else
-                echo "Starting keeper..."
+                echo "Starting..."
             fi
-            sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-            sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-            ${seafile_dir}/scripts/catalog-service.sh ${1}
-            systemctl ${1} nginx.service
+            
+            if [ $TYPE == "APP" ]; then
+                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+                ${seafile_dir}/scripts/catalog-service.sh ${1}
+                systemctl ${1} nginx.service
+            elif [ $TYPE == "BACKGROUND" ]; then
+                if [ "$1" == "restart" ]; then
+                    $0 stop
+                fi
+                sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+            fi
             echo "Done"
         ;;
         stop)
-            echo "Stopping keeper..."
-            sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-            sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-            ${seafile_dir}/scripts/catalog-service.sh ${1}
+            echo "Stopping..."
+            if [ $TYPE == "APP" ]; then
+                sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${seafile_dir}/scripts/catalog-service.sh ${1}
+            elif [ $TYPE == "BACKGROUND" ]; then
+                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+            fi
             echo "Done"
             #systemctl ${1} memcached.service
         ;;
-        start-background|restart-background)
-            if [ "$1" == "restart-background" ]; then
-                $0 stop-background
-            fi
-            #systemctl start memcached.service
-            echo "Starting background tasks..."
-            sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
-            sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-            echo "Done"
-        ;;
-        stop-background)
-            echo "Stopping background tasks..."
-            sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-            sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-            sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-            echo "Done"
-            #systemctl stop memcached.service
-        ;;
+        #start-background|restart-background)
+            #if [ "$1" == "restart-background" ]; then
+                #$0 stop-background
+            #fi
+            ##systemctl start memcached.service
+            #echo "Starting background tasks..."
+            #sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
+            #sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+            #sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+            #echo "Done"
+        #;;
+        #stop-background)
+            #echo "Stopping background tasks..."
+            #sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+            #sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+            #sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+            #echo "Done"
+            ##systemctl stop memcached.service
+        #;;
          restart-gpfs)
             restart_gpfs
         ;;
@@ -196,7 +222,8 @@ case "$1" in
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
-            if [ "$1" == "status-background" ]; then
+            #if [ "$1" == "status-background" ]; then
+            if [ $TYPE == "BACKGROUND" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
             else
                 check_keepalived
