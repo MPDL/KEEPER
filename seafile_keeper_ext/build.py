@@ -110,7 +110,7 @@ class Utils(object):
     def must_mkdir(path):
         '''Create a directory recursively, exit on failure'''
         try:
-            os.mkdirs(path)
+            os.makedirs(path)
         except OSError, e:
             Utils.error('failed to create directory %s:%s' % (path, e))
 
@@ -419,9 +419,9 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     dest_path = dest_dir + '/' + '/'.join(p[1:])
 
-    if not os.path.isdir(dest_dir):
-        Utils.info("Create dir <{}>".format(dest_dir))
-        Utils.must_mkdir(dest_dir)
+    dest_dir = os.path.dirname(dest_path)
+    print dest_dir
+
     if os.path.exists(dest_path):
         backup_file(dest_path)
     else:
@@ -429,6 +429,9 @@ def deploy_file(path, expand=False, dest_dir=None):
                                 default="yes",
                                 yes_or_no=True):
             return
+        if not os.path.isdir(dest_dir):
+            Utils.info("Create dir <{}>".format(dest_dir))
+            Utils.must_mkdir(dest_dir)
 
     fin = open(path, 'r')
     content = fin.read()
@@ -436,6 +439,7 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     if expand:
         content = expand_properties(content)
+
 
     fout = open(dest_path, 'w')
     fout.write(content)
