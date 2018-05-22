@@ -449,7 +449,7 @@ def deploy_file(path, expand=False, dest_dir=None):
 
 def deploy_dir(path, expand=False):
     Utils.check_dir(path)
-    for file in [p for p in os.listdir(path) if p not in ['.ropeproject']]:
+    for file in [p for p in os.listdir(path) if not ( p == '.ropeproject' or p.endswith('.swp') ) ]:
         deploy_file(path + '/' + file, expand)
 
 def deploy_http_conf():
@@ -481,10 +481,10 @@ def do_deploy(args):
     else:
         if args.directory:
             for path in args.directory:
-                deploy_dir(path)
+                deploy_dir(path, expand=args.expand)
         if args.file:
             for path in args.file:
-                deploy_file(path)
+                deploy_file(path, expand=args.expand)
 
         # check file
 
@@ -541,6 +541,7 @@ def main():
 
     # deploy
     parser_deploy = subparsers.add_parser('deploy', help='Deploy KEEPER components')
+    parser_deploy.add_argument('-e', '--expand', help='expand properties', action='store_true')
     parser_deploy = parser_deploy.add_mutually_exclusive_group()
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
