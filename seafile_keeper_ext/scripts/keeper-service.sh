@@ -15,20 +15,22 @@
 # Change the value of "user" to linux user name who runs seafile
 user=seafile
 
+CURR_DIR=$(dirname $(readlink -f $0))
+source "${CURR_DIR}/inject_keeper_env.sh"
+if [ $? -ne 0  ]; then
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
+fi
+
 # Change the value of "seafile_dir" to your path of seafile installation
 # usually the home directory of $user
-seafile_dir=/opt/seafile
+seafile_dir=${__SEAFILE_DIR__}
 script_path=${seafile_dir}/seafile-server-latest
 seafile_init_log=${seafile_dir}/logs/seafile.init.log
 seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
-source "${seafile_dir}/scripts/inject_keeper_env.sh"
-if [ $? -ne 0  ]; then
-	echo "Cannot run inject_keeper_env.sh"
-    exit 1
-fi
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -68,7 +70,7 @@ function check_puppet () {
 
 function check_memcached () {
 # for the cluster the memcached runs in single instance mode 
-    RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__%:*} 11211 2>/dev/null | grep -Eq "STAT pid [0-9]+")
+    RESULT=$(echo stats | nc -q 2 ${__MEMCACHED_SERVER__%:*} ${__MEMCACHED_SERVER__#*:} 2>/dev/null | grep -Eq "STAT pid [0-9]+")
     if [ $? -ne 0 ] ; then
         warn "memcached is not running on ${__MEMCACHED_SERVER__}, please check!"
     fi
@@ -128,27 +130,12 @@ function check_seahub_running () {
         [[ $1 == "CRITICAL" ]] && RC=1
     fi
 }
-#
-# Write a polite log message with date and time
-#
-
-function get_instance_type () {
-    local TYPE="APP"
-    if [ ${__IS_OFFICE_CONVERTOR_NODE__} == "True" ]; then
-        TYPE="BACKGROUND"
-    elif [ ${__IS_BACKUP_SERVER__} == "True" ]; then
-        TYPE="BACKUP"
-    fi
-    echo $TYPE
-}
 
 #echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
 #echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 
 
-TYPE=$(get_instance_type)
-
-echo "Keeper $TYPE node ${__SYSLOG_IDENT__}"
+echo "Keeper ${__NODE_TYPE__} node ${__SYSLOG_IDENT__}"
 
 case "$1" in
         start|restart)
@@ -158,12 +145,13 @@ case "$1" in
                 echo "Starting..."
             fi
             
-            if [ $TYPE == "APP" ]; then
+            if [ ${__NODE_TYPE__} == "APP" ]; then
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+                #sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi 8000 >> ${seahub_init_log}
                 ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} nginx.service
-            elif [ $TYPE == "BACKGROUND" ]; then
+            elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop
                 fi
@@ -176,11 +164,11 @@ case "$1" in
         ;;
         stop)
             echo "Stopping..."
-            if [ $TYPE == "APP" ]; then
+            if [ ${__NODE_TYPE__} == "APP" ]; then
                 sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 ${seafile_dir}/scripts/catalog-service.sh ${1}
-            elif [ $TYPE == "BACKGROUND" ]; then
+            elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
@@ -188,33 +176,14 @@ case "$1" in
             echo "Done"
             #systemctl ${1} memcached.service
         ;;
-        #start-background|restart-background)
-            #if [ "$1" == "restart-background" ]; then
-                #$0 stop-background
-            #fi
-            ##systemctl start memcached.service
-            #echo "Starting background tasks..."
-            #sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
-            #sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-            #sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-            #echo "Done"
-        #;;
-        #stop-background)
-            #echo "Stopping background tasks..."
-            #sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-            #sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-            #sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-            #echo "Done"
-            ##systemctl stop memcached.service
-        #;;
-         restart-gpfs)
+       restart-gpfs)
             restart_gpfs
         ;;
        switch-maintenance-mode)
             check_en_dis_nginx
             switch_maintenance_mode
         ;;
-        status|status-background)
+        status)
             RC=0
             check_puppet
             check_mysql
@@ -223,8 +192,10 @@ case "$1" in
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
+            #for single node !!!
+            check_component_running "office_converter" "soffice.bin" "CRITICAL"
             #if [ "$1" == "status-background" ]; then
-            if [ $TYPE == "BACKGROUND" ]; then
+            if [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
                 check_component_running "office_converter" "soffice.bin" "CRITICAL"
             else
@@ -237,7 +208,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: ./keeper-service.sh {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: ./$(basename $(readlink -f $0)) {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac
