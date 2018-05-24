@@ -5,21 +5,23 @@ import settings
 from seaserv import seafile_api
 logger = logging.getLogger(__name__)
 
-
+# KEEPER
 from keeper.default_library_manager import copy_keeper_default_library
 
 if not hasattr(settings, 'EVENTS_CONFIG_FILE'):
     def repo_created_cb(sender, **kwargs):
-        pass
+        
 
     def repo_deleted_cb(sender, **kwargs):
         pass
+
+    def clean_up_repo_trash_cb(sender, **kwargs):
+        pass
+
 else:
 
     import seafevents
     from utils import SeafEventsSession
-
-    import traceback
 
     def repo_created_cb(sender, **kwargs):
         org_id  = kwargs['org_id']
@@ -38,28 +40,32 @@ else:
 
         session = SeafEventsSession()
         if org_id > 0:
-            seafevents.save_org_user_events (session, org_id, etype, detail, users, None)
+            seafevents.save_org_user_events(session, org_id, etype, detail, users, None)
         else:
-            seafevents.save_user_events (session, etype, detail, users, None)
+            seafevents.save_user_events(session, etype, detail, users, None)
+        session.close()
 
         LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
         library_template = kwargs['library_template']
-        if isinstance(library_template, unicode):
-            library_template = library_template.encode('utf-8')
-        try:
-            dir_path_list = LIBRARY_TEMPLATES[library_template]
-            for dir_path in dir_path_list:
-                seafile_api.mkdir_with_parents(repo_id, '/',
-                        dir_path.strip('/'), creator)
-        except Exception as e:
-            logger.error(e)
-            logging.error(traceback.format_exc())
+
+        if LIBRARY_TEMPLATES and library_template:
+            if isinstance(library_template, unicode):
+                library_template = library_template.encode('utf-8')
+
+            try:
+                dir_path_list = LIBRARY_TEMPLATES[library_template]
+                for dir_path in dir_path_list:
+                    seafile_api.mkdir_with_parents(repo_id, '/',
+                            dir_path.strip('/'), creator)
+            except Exception as e:
+                logger.error(e)
+                logging.error(traceback.format_exc())
+
         session.close()
 
         # KEEPER
         logging.info("REPO CREATE EVENT repo_name: %s, repo_id: %s" % (repo_name, repo_id))
         copy_keeper_default_library(repo_id)
-
 
     def repo_deleted_cb(sender, **kwargs):
         """When a repo is deleted, an event would be added to every user in all
@@ -84,9 +90,9 @@ else:
 
         session = SeafEventsSession()
         if org_id > 0:
-            seafevents.save_org_user_events (session, org_id, etype, detail, users, None)
+            seafevents.save_org_user_events(session, org_id, etype, detail, users, None)
         else:
-            seafevents.save_user_events (session, etype, detail, users, None)
+            seafevents.save_user_events(session, etype, detail, users, None)
         session.close()
 
         # KEEPER

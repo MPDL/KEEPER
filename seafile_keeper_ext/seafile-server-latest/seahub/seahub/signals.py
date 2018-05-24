@@ -4,6 +4,10 @@ import django.dispatch
 # Use org_id = -1 if it's not an org repo
 repo_created = django.dispatch.Signal(providing_args=["org_id", "creator", "repo_id", "repo_name", "library_template"])
 repo_deleted = django.dispatch.Signal(providing_args=["org_id", "usernames", "repo_owner", "repo_id", "repo_name"])
+clean_up_repo_trash = django.dispatch.Signal(providing_args=["org_id", "operator", "repo_id", "repo_name", "days"])
 upload_file_successful = django.dispatch.Signal(providing_args=["repo_id", "file_path", "owner"])
 comment_file_successful = django.dispatch.Signal(providing_args=["repo", "file_path", "comment", "author", "notify_users"])
-file_modified = django.dispatch.Signal(providing_args=["repo", "parent_dir", "filename", "username", "head_id"])
+rename_dirent_successful = django.dispatch.Signal(providing_args=["src_repo_id", "src_parent_dir",
+                                                                  "src_filename", "dst_repo_id",
+                                                                  "dst_parent_dir", "dst_filename", "is_dir"])
+institution_deleted = django.dispatch.Signal(providing_args=["inst_name"])

@@ -1,4 +1,3 @@
-# !!!MERGE MANUALLY!!!
 # Copyright (c) 2012-2016 Seafile Ltd.
 # -*- coding: utf-8 -*-
 # Django settings for seahub project.
@@ -13,6 +12,8 @@ PROJECT_ROOT = os.path.join(os.path.dirname(__file__), os.pardir)
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
+
+CLOUD_MODE = False
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -119,7 +120,10 @@ MIDDLEWARE_CLASSES = (
     'seahub.base.middleware.InfobarMiddleware',
     'seahub.password_session.middleware.CheckPasswordHash',
     'seahub.base.middleware.ForcePasswdChangeMiddleware',
+    'seahub.base.middleware.UserPermissionMiddleware',
     'termsandconditions.middleware.TermsAndConditionsRedirectMiddleware',
+    'seahub.two_factor.middleware.OTPMiddleware',
+    'seahub.trusted_ip.middleware.LimitIpMiddleware',
 )
 
 SITE_ROOT_URLCONF = 'seahub.urls'
@@ -137,21 +141,19 @@ TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT, 'seahub/templates'),
 )
 
-# This is defined here as a do-nothing function because we can't import
-# django.utils.translation -- that module depends on the settings.
-gettext_noop = lambda s: s
-# !!!MERGE!!!
 LANGUAGES = (
     ('de', gettext_noop(u'Deutsch')),
     ('en', gettext_noop('English')),
 )
+
 LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, 'locale'),
+    os.path.join(PROJECT_ROOT, 'seahub/trusted_ip/locale'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
+    'seahub.base.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
@@ -194,19 +196,33 @@ INSTALLED_APPS = (
     'seahub.password_session',
     'seahub.admin_log',
     'seahub.wopi',
-
+    'seahub.tags',
+    'seahub.revision_tag',
+    'seahub.two_factor',
+    'seahub.role_permissions',
+    'seahub.trusted_ip',
     'keeper',
-
 )
 
-# Enabled or disable constance(web settings).
+# Enable or disable multiple storage backends.
+ENABLE_STORAGE_CLASSES = False
+
+# `USER_SELECT` or `ROLE_BASED` or `REPO_ID_MAPPING`
+STORAGE_CLASS_MAPPING_POLICY = 'USER_SELECT'
+
+# Enable or disable constance(web settings).
 ENABLE_SETTINGS_VIA_WEB = True
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 CONSTANCE_DATABASE_CACHE_BACKEND = 'default'
 
 AUTHENTICATION_BACKENDS = (
     'seahub.base.accounts.AuthBackend',
+    'seahub.oauth.backends.OauthRemoteUserBackend',
+
 )
+
+ENABLE_OAUTH = False
+
 LOGIN_REDIRECT_URL = '/profile/'
 LOGIN_URL = SITE_ROOT + 'accounts/login'
 LOGOUT_REDIRECT_URL = None
@@ -252,6 +268,13 @@ SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 # enable or disable share link audit
 ENABLE_SHARE_LINK_AUDIT = False
 
+# share link audit code timeout
+SHARE_LINK_AUDIT_CODE_TIMEOUT = 60 * 60
+
+# enable or disable limit ip 
+ENABLE_LIMIT_IPADDRESS = False
+TRUSTED_IP_LIST = ['127.0.0.1']
+
 # Control the language that send email. Default to user's current language.
 SHARE_LINK_EMAIL_LANGUAGE = ''
 
@@ -273,8 +296,8 @@ USER_STRONG_PASSWORD_REQUIRED = False
 # Force user to change password when admin add/reset a user.
 FORCE_PASSWORD_CHANGE = True
 
-# Using server side crypto by default, otherwise, let user choose crypto method.
-FORCE_SERVER_CRYPTO = True
+# Enable a user to change password in 'settings' page.
+ENABLE_CHANGE_PASSWORD = True
 
 # Enable or disable repo history setting
 ENABLE_REPO_HISTORY_SETTING = True
@@ -286,6 +309,18 @@ DISABLE_SYNC_WITH_ANY_FOLDER = False
 
 ENABLE_TERMS_AND_CONDITIONS = False
 
+# Enable or disable sharing to all groups
+ENABLE_SHARE_TO_ALL_GROUPS = False
+
+# interval for request unread notifications
+UNREAD_NOTIFICATIONS_REQUEST_INTERVAL = 3 * 60 # seconds
+
+# Enable group discussion
+ENABLE_GROUP_DISCUSSION = True
+
+# Enable file comments
+ENABLE_FILE_COMMENT = True
+
 # File preview
 FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
 OFFICE_PREVIEW_MAX_SIZE = 2 * 1024 * 1024
@@ -294,10 +329,7 @@ FILE_ENCODING_LIST = ['auto', 'utf-8', 'gbk', 'ISO-8859-1', 'ISO-8859-5']
 FILE_ENCODING_TRY_LIST = ['utf-8', 'gbk']
 HIGHLIGHT_KEYWORD = False # If True, highlight the keywords in the file when the visit is via clicking a link in 'search result' page.
 # extensions of previewed files
-TEXT_PREVIEW_EXT = """ac, am, bat, c, cc, cmake, cpp, cs, css, diff, el, h, html,
-htm, java, js, json, less, make, org, php, pl, properties, py, rb,
-scala, script, sh, sql, txt, text, tex, vi, vim, xhtml, xml, log, csv,
-groovy, rst, patch, go"""
+TEXT_PREVIEW_EXT = """ac, am, bat, c, cc, cmake, cpp, cs, css, diff, el, h, html, htm, java, js, json, less, make, org, php, pl, properties, py, rb, scala, script, sh, sql, txt, text, tex, vi, vim, xhtml, xml, log, csv, groovy, rst, patch, go"""
 
 # Common settings(file extension, storage) for avatar and group avatar.
 AVATAR_FILE_STORAGE = '' # Replace with 'seahub.base.database_storage.DatabaseStorage' if save avatar files to database
@@ -347,9 +379,9 @@ CACHES = {
 # rest_framwork
 REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
-        'ping': '600/minute',
-        'anon': '5/minute',
-        'user': '300/minute',
+        'ping': '3000/minute',
+        'anon': '60/minute',
+        'user': '3000/minute',
     },
     # https://github.com/tomchristie/django-rest-framework/issues/2891
     'UNICODE_JSON': False,
@@ -357,6 +389,7 @@ REST_FRAMEWORK = {
 REST_FRAMEWORK_THROTTING_WHITELIST = []
 
 # file and path
+GET_FILE_HISTORY_TIMEOUT = 10 * 60 # seconds
 MAX_UPLOAD_FILE_NAME_LEN    = 255
 MAX_FILE_NAME 		    = MAX_UPLOAD_FILE_NAME_LEN
 MAX_PATH 		    = 4096
@@ -370,6 +403,13 @@ ACTIVATE_AFTER_REGISTRATION = True
 # This option will be ignored if ``ACTIVATE_AFTER_REGISTRATION`` set to ``True``.
 REGISTRATION_SEND_MAIL = False
 
+# Whether or not send notify email to sytem admins when user registered or
+# first login through Shibboleth.
+NOTIFY_ADMIN_AFTER_REGISTRATION = False
+
+# Whether or not activate inactive user on first login. Mainly used in LDAP user sync.
+ACTIVATE_AFTER_FIRST_LOGIN = False
+
 REQUIRE_DETAIL_ON_REGISTRATION = False
 
 # Account initial password, for password resetting.
@@ -380,28 +420,28 @@ def genpassword():
 INIT_PASSWD = genpassword
 
 # browser tab title
-# !!!MERGE!!!
 SITE_TITLE = 'KEEPER'
 
 # Base name used in email sending
-# !!!MERGE!!!
 SITE_NAME = 'KEEPER'
+
+# Path to the license file(relative to the media path)
+LICENSE_PATH = os.path.join(PROJECT_ROOT, '../../seafile-license.txt')
+
+# Path to the background image file of login page(relative to the media path)
+LOGIN_BG_IMAGE_PATH = 'img/login-bg.jpg'
 
 # Path to the favicon file (relative to the media path)
 # tip: use a different name when modify it.
 FAVICON_PATH = 'img/favicon.ico'
 
 # Path to the Logo Imagefile (relative to the media path)
-# !!!MERGE!!!
 LOGO_PATH = 'custom/KeeperLogo.svg'
 # logo size. the unit is 'px'
-# !!!MERGE!!!
 LOGO_WIDTH = 140
-# !!!MERGE!!!
 LOGO_HEIGHT = 40
 
 # css to modify the seafile css (e.g. css/my_site.css)
-# !!!MERGE!!!
 BRANDING_CSS = 'custom/keeper.css'
 
 # Using Django to server static file. Set to `False` if deployed behide a web
@@ -416,9 +456,15 @@ ENABLE_SIGNUP = True
 ALLOWED_HOSTS = ['*']
 
 # Logging
-LOGGING_BAK = {
+LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
+
+    # Enable existing loggers so that gunicorn errors will be bubbled up when
+    # server side error page "Internal Server Error" occurs.
+    # ref: https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+    'disable_existing_loggers': False,
+
     'formatters': {
         'standard': {
             'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
@@ -427,16 +473,25 @@ LOGGING_BAK = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-         }
-     },
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
+        },
+    },
     'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
         'default': {
-            'level':'INFO',
-            'class':'logging.handlers.RotatingFileHandler',
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
-            'maxBytes': 1024*1024*10, # 10 MB
+            'maxBytes': 1024*1024*10,  # 10 MB
             'backupCount': 52,
-            'formatter':'standard',
+            'formatter': 'standard',
         },
         'request_handler': {
                 'level':'INFO',
@@ -446,7 +501,7 @@ LOGGING_BAK = {
                 'backupCount': 52,
                 'formatter':'standard',
         },
-        'mail_admins': {
+         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
@@ -459,7 +514,12 @@ LOGGING_BAK = {
             'propagate': True
         },
         'django.request': {
-            'handlers': ['request_handler', 'mail_admins'],
+            'handlers': ['default', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'py.warnings': {
+            'handlers': ['console', ],
             'level': 'INFO',
             'propagate': False
         },
@@ -467,7 +527,7 @@ LOGGING_BAK = {
 }
 
 #Login Attempt
-LOGIN_ATTEMPT_LIMIT = 3
+LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_ATTEMPT_TIMEOUT = 15 * 60 # in seconds (default: 15 minutes)
 FREEZE_USER_ON_LOGIN_FAILED = False # deactivate user account when login attempts exceed limit
 
@@ -510,7 +570,7 @@ THUMBNAIL_SIZE_FOR_GRID = 192
 THUMBNAIL_SIZE_FOR_ORIGINAL = 1024
 
 # size(MB) limit for generate thumbnail
-THUMBNAIL_IMAGE_SIZE_LIMIT = 20
+THUMBNAIL_IMAGE_SIZE_LIMIT = 30
 THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT = 256
 
 # video thumbnails
@@ -524,6 +584,7 @@ OFFICE_TEMPLATE_ROOT = os.path.join(MEDIA_ROOT, 'office-template')
 # Global AddressBook #
 #####################
 ENABLE_GLOBAL_ADDRESSBOOK = True
+ENABLE_ADDRESSBOOK_OPT_IN = False
 
 #####################
 # Folder Permission #
@@ -564,13 +625,18 @@ REPLACE_FROM_EMAIL = False
 # Add ``Reply-to`` header, see RFC #822.
 ADD_REPLY_TO_HEADER = False
 
+ENABLE_DEMO_USER = False
 CLOUD_DEMO_USER = 'demo@seafile.com'
 
 ENABLE_TWO_FACTOR_AUTH = False
 OTP_LOGIN_URL = '/profile/two_factor_authentication/setup/'
+TWO_FACTOR_DEVICE_REMEMBER_DAYS = 90
 
 # Enable personal wiki, group wiki
 ENABLE_WIKI = True
+
+# Enable 'repo snapshot label' feature
+ENABLE_REPO_SNAPSHOT_LABEL = True
 
 #####################
 # External settings #
@@ -674,6 +740,7 @@ CONSTANCE_CONFIG = {
     'ENABLE_TWO_FACTOR_AUTH': (ENABLE_TWO_FACTOR_AUTH,''),
 
     'TEXT_PREVIEW_EXT': (TEXT_PREVIEW_EXT, ''),
+    'ENABLE_SHARE_TO_ALL_GROUPS': (ENABLE_SHARE_TO_ALL_GROUPS, ''),
 }
 
-SEAFILE_VERSION = "6.1.3"
+SEAFILE_VERSION = "6.2.13"
