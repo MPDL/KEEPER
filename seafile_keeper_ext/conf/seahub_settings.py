@@ -156,13 +156,88 @@ MULTI_INSTITUTION = True
 
 EXTRA_MIDDLEWARE_CLASSES = (
     'seahub.institutions.middleware.InstitutionMiddleware',
+    'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
 )
+
+EXTRA_AUTHENTICATION_BACKENDS = (
+    'shibboleth.backends.ShibbolethRemoteUserBackend',
+)
+
+ENABLE_SHIB_LOGIN = __ENABLE_SHIB_LOGIN__
+
+SHIBBOLETH_ATTRIBUTE_MAP = {
+            # Change eppn to mail if you use mail attribute for REMOTE_USER
+                "eppn": (False, "username"),
+}
+SHIBBOLETH_ATTRIBUTE_MAP = {
+    "eppn": (False, "username"),
+    "givenName": (False, "givenname"),
+    "sn": (False, "surname"),
+    #"surname": (False, "surname"),
+    "mail": (False, "contact_email"),
+    "ou": (False, "institution"),
+    #"o": (False, "institution"),
+    #"institution": (False, "institution"),
+    "affiliation": (False, "affiliation"),
+}
+
+SHIBBOLETH_AFFILIATION_ROLE_MAP = {
+    'employee@mpdl.mpg.de': 'staff',
+    'member@mpdl.mpg.de': 'staff',
+    'student@mpdl.mpg.de': 'student',
+    'employee@hu-berlin.de': 'guest'
+}
+
+ENABLED_ROLE_PERMISSIONS = {
+    'default': {
+        'can_add_repo': True,
+        'can_add_group': True,
+        'can_view_org': True,
+        'can_use_global_address_book': True,
+        'can_generate_share_link': True,
+        'can_generate_upload_link': True,
+        'can_invite_guest': False,
+        'can_connect_with_android_clients': True,
+        'can_connect_with_ios_clients': True,
+        'can_connect_with_desktop_clients': True,
+    #    'role_quota': '1g',
+    },
+    'guest': {
+        'can_add_repo': False,
+        'can_add_group': False,
+        'can_view_org': False,
+        'can_use_global_address_book': False,
+        'can_generate_share_link': False,
+        'can_generate_upload_link': False,
+        'can_invite_guest': False,
+        'can_connect_with_android_clients': False,
+        'can_connect_with_ios_clients': False,
+        'can_connect_with_desktop_clients': False,
+     #   'role_quota': '',
+    },
+    'staff': {
+        'can_add_repo': True,
+        'can_add_group': True,
+        'can_view_org': True,
+        'can_use_global_address_book': True,
+        'can_generate_share_link': True,
+        'can_generate_upload_link': True,
+        'can_invite_guest': True,
+        'can_connect_with_android_clients': True,
+        'can_connect_with_ios_clients': True,
+        'can_connect_with_desktop_clients': True,
+ #       'role_quota': '100m',
+    },
+}
 
 ENABLE_SETTINGS_VIA_WEB = True
 
 ENABLE_UPLOAD_FOLDER = True
 
 # KEEPER specific settings
+
+SEAFILE_DIR = '__SEAFILE_DIR__'
+
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 KEEPER_DB_NAME = 'keeper-db'
@@ -172,19 +247,16 @@ TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
 # TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
 
 # Settings for background node
-OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__
+# OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__
 
-OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
+# OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
 
 # Enable LibreOffice Online
-ENABLE_OFFICE_WEB_APP = __ENABLE_OFFICE_WEB_APP__
+# ENABLE_OFFICE_WEB_APP = __ENABLE_OFFICE_WEB_APP__
 
 # Url of LibreOffice Online's discovery page
 # The discovery page tells Seafile how to interact with LibreOffice Online when view file online
-# You should change `https://collabora.mpdl.mpg.de/hosting/discovery` to your actual LibreOffice Online server address
-#OFFICE_WEB_APP_BASE_URL = 'https://collabora.mpdl.mpg.de/hosting/discovery'
-# OFFICE_WEB_APP_BASE_URL = 'https://share.mpdl.mpg.de/hosting/discovery'
-OFFICE_WEB_APP_BASE_URL = '__OFFICE_WEB_APP_BASE_URL__'
+# OFFICE_WEB_APP_BASE_URL = '__OFFICE_WEB_APP_BASE_URL__'
 
 # Expiration of WOPI access token
 # WOPI access token is a string used by Seafile to determine the file's
