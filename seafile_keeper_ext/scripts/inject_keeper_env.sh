@@ -63,13 +63,14 @@ FILES=( $(find ${PROPS_DIR} -maxdepth 1 -type f -name "keeper*.ini") )
 ( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${PROPS_DIR}"
 [[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${PROPS_DIR}:\n ${FILES[*]}"
 PROPERTIES_FILE="${FILES[0]}"
-source <(grep -v "^[[#]" ${PROPERTIES_FILE})
+source <(grep -v "^[[#;]" ${PROPERTIES_FILE})
 #source 1.txt
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
 
-SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-latest-dir
+SEAFILE_DIR=${__SEAFILE_DIR__}
+SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 ### END
 
 
