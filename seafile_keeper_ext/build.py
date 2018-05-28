@@ -212,7 +212,7 @@ class Utils(object):
 
             # Have user input: validate answer
             if yes_or_no:
-                if answer not in ['yes', 'no']:
+                if answer not in ['yes', 'no', 'y', 'n']:
                     print Utils.highlight('\nPlease answer yes or no\n')
                     continue
                 else:
@@ -384,7 +384,8 @@ def expand_properties(content):
         for key, value in kc.items(section):
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
-            content = content.replace(key, value)
+            # expand  __PROP__ and not ${__PROP__}
+            content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
     if kc.get('backup', '__IS_BACKUP_SERVER__') == 'True':
         content = re.sub("backup_url.*?\n", "", content)
@@ -393,14 +394,17 @@ def expand_properties(content):
 
     return content
 
-def backup_file(path):
+def backup_file(path, rm=True):
     back_path = path + BACKUP_POSTFIX
     if os.path.exists(back_path):
         Utils.info("Backup already exists: {}, skipping!".format(path + BACKUP_POSTFIX))
     else:
         try:
             Utils.info("Backup {} to {}".format(path, back_path))
-            os.rename(path, path + BACKUP_POSTFIX)
+            if rm:
+                os.rename(path, path + BACKUP_POSTFIX)
+            else:
+                shutil.copyfile(path, path + BACKUP_POSTFIX)
         except Exception as e:
             Utils.error("Cannot backup {}, error: {}".format(path, repr(e)))
 
@@ -409,6 +413,12 @@ def backup_file(path):
 def deploy_file(path, expand=False, dest_dir=None):
 
     Utils.check_file(path)
+
+    # files to be ignored
+    ignore_list = ('.gitignore')
+    ignore_exts = ('.pyc', '.swp')
+    if os.path.basename(path) in ignore_list or path.endswith(ignore_exts):
+        return
 
     p = path.strip('/').split('/')
 
@@ -448,9 +458,20 @@ def deploy_file(path, expand=False, dest_dir=None):
     # Utils.info(dest_path)
 
 def deploy_dir(path, expand=False):
+
     Utils.check_dir(path)
-    for file in [p for p in os.listdir(path) if not ( p == '.ropeproject' or p.endswith('.swp') ) ]:
-        deploy_file(path + '/' + file, expand)
+
+    # dirs to be ignored
+    ignore_list = ('.rope', '.cache', '__pycache__', '.git', 'tags', '.ropeproject')
+    if os.path.basename(path) in ignore_list:
+        return
+
+    for p in [p for p in os.listdir(path) ]:
+        sub_path = os.path.join(path, p)
+        if os.path.isdir(sub_path):
+            deploy_dir(sub_path, expand)
+        else:
+            deploy_file(sub_path, expand)
 
 def deploy_http_conf():
     path = 'http'
@@ -466,12 +487,12 @@ def do_deploy(args):
 
     if args.all:
         # TODO
-        # Utils.info('do deploy --all')
+        Utils.info('do deploy --all')
         # for path in ['scripts', 'seahub-data', 'conf']:
            # deploy_dir(path)
         # create_custom_link()
-        # deploy_dir('seafile-server-latest')
-        # do_generate(type('',(object,),{"i18n": True, "min_css": False})())
+        deploy_dir('seafile-server-latest')
+        do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
         # deploy_http_conf()
         pass
     elif args.conf:
@@ -495,11 +516,17 @@ def do_restore(args):
         Utils.info('smth. else')
 
 def do_generate(args):
-    if args.i18n:
+    if args.msgen:
+        Utils.info('Generate English translation catalog...')
+        po_file = 'django.po'
+        en_django_po_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
+        backup_file(os.path.join(en_django_po_dir, po_file), rm=False)
+        Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir)
+    elif args.i18n:
         Utils.info('Generate i18n...')
         Utils.run("./i18n.sh compile-all", cwd=env_mgr.seahub_dir)
         Utils.info('Done.')
-    if args.min_css:
+    elif args.min_css:
         Utils.info('Generate seahub.min.css...')
         cmd = "yui-compressor -v seahub.css -o seahub.min.css"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
@@ -511,18 +538,24 @@ def do_upgrade(args):
 
     print env_mgr.keeper_ext_dir
     # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
-    for root, dirs, files in os.walk('seafile-server-latest'):
-        if  files and \
-            not ('/keeper' in root
-                or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
-                or '/.git' in root or '/tags' in root
-            ):
-            for file in files:
-                if not (file.endswith('.pyc') or file.endswith('.png')):
-                    dest_path = os.path.join(root, file)
-                    src_path = os.path.join(env_mgr.top_dir, dest_path)
-                    print("Copy from {} to {}".format(src_path, dest_path))
-                    shutil.copy(src_path, dest_path)
+    if args.seafile_src_to_ext:
+        Utils.info("Copy seafile src files to ext")
+        for root, dirs, files in os.walk('seafile-server-latest'):
+            print root, dirs, files
+            if  files and \
+                not ('/keeper' in root
+                    or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
+                    or '/.git' in root or '/tags' in root
+                ):
+                for file in files:
+                    if not (file.endswith(tuple('.pyc', '.png'))):
+                        dest_path = os.path.join(root, file)
+                        src_path = os.path.join(env_mgr.top_dir, dest_path)
+                        if not os.path.exists(src_path):
+                            Utils.info(Utils.highlight("File {} does not exist, please check".format(src_path)))
+                        else:
+                            Utils.info("Copy from {} to {}".format(src_path, dest_path))
+                            shutil.copy(src_path, dest_path)
 
 
 env_mgr = EnvManager()
@@ -567,6 +600,7 @@ def main():
     # generate
     parser_generate = subparsers.add_parser('generate', help='Generate components')
     parser_generate.set_defaults(func=do_generate)
+    parser_generate.add_argument('--msgen', help='Create English translation catalog (i.e. copy msgid to msgstr in en/LC_MESSAGES/django.po)', action='store_true')
     parser_generate.add_argument('--i18n', help='Compile i18n files', action='store_true')
     parser_generate.add_argument('--min-css', help='''Generate min.css file for seahub.css.
                                  Please install yui-compressor: http://yui.github.io/yuicompressor in your system!
