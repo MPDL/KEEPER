@@ -4,20 +4,23 @@
 import templayer
 import json
 import urllib2
-import urlparse
+from urlparse import parse_qs
 import math
 import cgi
 import sys
 import time
 import os
 import StringIO
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
-os.environ.setdefault("CCNET_CONF_DIR", "/opt/seafile/ccnet")
-os.environ.setdefault("SEAFILE_CONF_DIR", "/opt/seafile/seafile-data")
-os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "/opt/seafile/conf")
-os.environ.setdefault("SEAFES_DIR", "/opt/seafile/seafile-server-latest/pro/python/seafes")
 
-from seahub.settings import SERVICE_URL, LOGO_PATH
+import logging
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
+os.environ.setdefault("CCNET_CONF_DIR", "__SEAFILE_DIR__/ccnet")
+os.environ.setdefault("SEAFILE_CONF_DIR", "__SEAFILE_DIR__/seafile-data")
+os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "__SEAFILE_DIR__/conf")
+os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/python/seafes")
+
+from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 
 #########################
@@ -26,8 +29,11 @@ from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 #                       #
 #########################
 
+# cluster mode
+CLUSTER_MODE = False
+
 # local install path of this script and files
-install_path = '/opt/seafile/seafile-server-latest/seahub/keeper/catalog/'
+install_path =  SEAFILE_DIR + '/seafile-server-latest/seahub/keeper/catalog/'
 
 # all alloews ips or ip prefixes can be added here, empty string for all
 allowed_ip_prefixes = []
@@ -80,16 +86,19 @@ def application(env, start_response):
         errmsg = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
 
 
+        # remote address depends on cluster mode
+        remote_addr = env['HTTP_X_FORWARDED_FOR'] if CLUSTER_MODE else env['REMOTE_ADDR']
+
         # test for valid IP
         is_valid_user = 0 # default 0 not valid
         for allowed_ip_prefix in allowed_ip_prefixes:
-            if (env['HTTP_X_FORWARDED_FOR'].startswith(allowed_ip_prefix)):
+            if (remote_addr.startswith(allowed_ip_prefix)):
                 errmsg = ''
                 is_valid_user = 1
                 break
         # change this or add code to support sigle-sign-on or session based authentification
 
-        if is_valid_user == 0 and is_in_mpg_ip_range(env['HTTP_X_FORWARDED_FOR']):
+        if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
             errmsg = ''
             is_valid_user = 1
 
@@ -100,7 +109,23 @@ def application(env, start_response):
 
         results = []
         if (is_valid_user == 1 and len(errmsg) <= 0):
-            jsondata = get_catalog()
+
+            get_params = parse_qs(env['QUERY_STRING'])
+
+			# pars request params
+            try:
+                request_body_size = int(env.get('CONTENT_LENGTH', 0))
+            except (ValueError):
+                request_body_size = 0
+
+            logging.error(env)
+            request_body = env['wsgi.input'].read()
+            post_params = parse_qs(request_body)
+            logging.error(post_params)
+            scope = post_params['cat_scope'][0] if 'cat_scope' in post_params else get_params['scope'][0] if 'scope' in get_params else 'all'
+
+            # jsondata = get_catalog(filter=scope[0])
+            jsondata = get_catalog(scope)
             """
             # init var
             jsondata = ''
@@ -140,8 +165,10 @@ def application(env, start_response):
                 #form = cgi.FieldStorage()
                 #pagination_current = int(form.getvalue('page'))
                 try:
-                    if (env['QUERY_STRING'] and 'page' in urlparse.parse_qs(env['QUERY_STRING'])):
-                        pagination_current = int(urlparse.parse_qs(env['QUERY_STRING'])['page'][0])
+                    if 'cat_scope' in post_params:
+                        pagination_current = 0 # ignore error
+                    elif (env['QUERY_STRING'] and 'page' in parse_qs(env['QUERY_STRING'])):
+                        pagination_current = int(parse_qs(env['QUERY_STRING'])['page'][0])
                 except (RuntimeError, TypeError, NameError, ValueError):
                     pagination_current = 0 # ignore error
 
@@ -170,12 +197,14 @@ def application(env, start_response):
 
 
             # load template
-            tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
+            tmpl = templayer.HTMLTemplate(install_path + 'main.tpl')
             file_writer = tmpl.start_file(response)
             main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH)
 
-
-            main_layer.write_layer('data-nav')
+            slots = {}
+            slots['checked_' + scope] = 'checked'
+            logging.error(slots)
+            main_layer.write_layer('data-nav', **slots)
 
 
             # load pagination into template
@@ -254,6 +283,8 @@ def application(env, start_response):
                 if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
                     slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
 
+
+
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)
                 else:
@@ -261,21 +292,19 @@ def application(env, start_response):
 
 
 
-
-
             # load pagination into template
             main_layer.write_layer('pagination-start',style='margin-top:20px')
             if ( pagination_current > 0 ):
-                main_layer.write_layer('page-prev',page=str(pagination_current))
+                main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
             else:
                 main_layer.write_layer('page-prev-disabled')
             for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
                 if (i == pagination_current):
-                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
+                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active', scope=scope)
                 else:
-                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
+                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='', scope=scope)
             if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
-                main_layer.write_layer('page-next',page=str(pagination_current+2))
+                main_layer.write_layer('page-next',page=str(pagination_current+2), scope=scope)
             else:
                 main_layer.write_layer('page-next-disabled')
             main_layer.write_layer('pagination-end')

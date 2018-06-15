@@ -58,13 +58,34 @@
 
 	#header {
    		background: #f4f4f7 !important;
-    		width: 100% !important;
-    		height: 32px !important;
-   		font-size: 14px !important;
-    		border-bottom: 1px solid #e8e8e8 !important;
-    		padding-bottom: 4px !important;
-    		z-index: 1 !important;
+        width: 100% !important;
+        height: 32px !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid #e8e8e8 !important;
+        padding-bottom: 4px !important;
+        z-index: 1 !important;
 	}
+
+    #right-panel {
+        padding-top: 0px;
+    }
+    .side-tabnav h3 {
+        margin-top: 70px !important;
+        color: #57a5b8 !important;
+    }
+    .side-tabnav label {
+        margin-top: 0px;
+    }
+
+    /*.side-tabnav-tabs .tab-cur a {*/
+    /*background-color: #57a5b8 !important;*/
+    /*}*/
+
+    .side-tabnav span.vam {
+        margin-left: 5px;
+
+    }
+
 
 	#logo{position: absolute; top: 13px !important; left: 16px !important;}
 </style>
@@ -75,56 +96,71 @@
 
         <div id="header">
             <div id="header-inner">
-                
+
                 <a href="/" id="logo" class="fleft">
-                    
+
                     <img src="/media/%logo_path%" title="Catalog" alt="logo" width="140" height="40" />
-                    
+
                 </a>
-                
-                 
-                <!--<div class="fright" id="lang">
-                    <a href="#" id="lang-context" data-lang="en">English <span class="icon-caret-down"></span></a>
-                    <ul id="lang-context-selector" class="hide">
-                        
-                        <li><a href="https://keeper.mpdl.mpg.de/i18n/?lang=de">Deutsch</a></li>
-                        
-                        <li><a href="https://keeper.mpdl.mpg.de/i18n/?lang=en">English</a></li>
-                        
-                    </ul>
-                </div>
-                -->
-                
+
+
+                <!--<div class="fright" id="lang">-->
+                    <!--<a href="#" id="lang-context" data-lang="en">English <span class="icon-caret-down"></span></a>-->
+                    <!--<ul id="lang-context-selector" class="hide">-->
+
+                        <!--<li><a href="https://keeper.mpdl.mpg.de/i18n/?lang=de">Deutsch</a></li>-->
+
+                        <!--<li><a href="https://keeper.mpdl.mpg.de/i18n/?lang=en">English</a></li>-->
+
+                    <!--</ul>-->
+                <!--</div>-->
+
+
             </div>
         </div>
 
         <div id="main" class="clear">
             <div id="title-panel" class="w100 ovhd">
             </div>
-            
+
             {contents}
-			{data-nav}
-            <!--<div id="left-panel" class="side-tabnav hide" role="navigation" style="display: block;">-->
-                
-                <!--<h3 class="hd">Institute</h3>-->
-                <!--<ul class="side-tabnav-tabs">-->
-                    <!--<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>-->
-                    <!--<li class="tab"><a href="#" class="lib">Institut A</a></li>-->
-                    <!--<li class="tab"><a href="#" class="lib">Institut B</a></li>-->
-                    <!--<li class="tab"><a href="#" class="lib">Institut C</a></li>-->
-                    <!--<li class="tab"><a href="#" class="lib">Institut D</a></li>-->
-                    <!--<li class="tab"><a href="#" class="lib">Institut E</a></li>-->
-                <!--</ul>-->
-                
-            <!--</div>-->
-            <div id="right-panel">
-            	    <div class="hd ovhd">
-						<h3 class="fleft">Project Catalog</h3>
-						<!--<button class="repo-create btn-white fright"><span aria-hidden="true" class="icon-plus-square add vam"></span><span class="vam">New Library</span></button>-->
-					</div>
-			{/data-nav}
-					
-					
+                    {data-nav}
+                    <div id="left-panel" class="side-tabnav" style="display: block;">
+
+                        <h3 class="hd">Show Projects</h3>
+                        <form method="post">
+                            <label class="radio-item">
+                                <input class="vam" type="radio" name="cat_scope" value="with_metadata" %checked_with_metadata%/><span class="vam">with metadata</span>
+                            </label>
+                            <br>
+                            <label class="radio-button">
+                                <input class="vam" type="radio" name="cat_scope" value="with_certificate" %checked_with_certificate%/><span class="vam">with certificate</span>
+                            </label>
+                            <br>
+                            <label class="radio-button">
+                                <input class="vam" type="radio" name="cat_scope" value="all" %checked_all%/><span class="vam">all</span>
+                            </label>
+                            <br>
+                            <input type="submit" value="Filter" class="submit">
+                        </form>
+                        <!--<ul class="side-tabnav-tabs">-->
+                            <!--<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>-->
+                            <!--<li class="tab"><a href="#" class="lib">Institut A</a></li>-->
+                            <!--<li class="tab"><a href="#" class="lib">Institut B</a></li>-->
+                            <!--<li class="tab"><a href="#" class="lib">Institut C</a></li>-->
+                            <!--<li class="tab"><a href="#" class="lib">Institut D</a></li>-->
+                            <!--<li class="tab"><a href="#" class="lib">Institut E</a></li>-->
+                        <!--</ul>-->
+
+                    </div>
+                    <div id="right-panel">
+                            <div class="hd ovhd">
+                                <h3 class="fleft">The Keeper Project Catalog of Max Planck Society</h3>
+                                <!--<button class="repo-create btn-white fright"><span aria-hidden="true" class="icon-plus-square add vam"></span><span class="vam">New Library</span></button>-->
+                            </div>
+                    {/data-nav}
+
+
 					{dataset}
 						<div class="item-block">
 							<h3>%title%</h3>
@@ -144,42 +180,42 @@
 							<p>Contact: %contact%</p>
 						</div>
 					{/dataset_certified}
-                    
-                    {fyear} 
+
+                    {fyear}
                         <p>Year: %year%</p>
                     {/fyear}
-					
+
 					{pagination-start}
 						<p style="text-align:center;%style%">
 					{/pagination-start}
-					
+
 					{page-prev}
-						<a class="pagination" href="index.py?page=%page%">Previous</a>
+						<a class="pagination" href="index.py?page=%page%&scope=%scope%">Previous</a>
 					{/page-prev}
 					{page-prev-disabled}
 						<span class="disabled">Previous</span>
 					{/page-prev-disabled}
-					
+
 					{pagination}
-						<a class="pagination %cssclass%" href="index.py?page=%page%">%page%</a>
+						<a class="pagination %cssclass%" href="index.py?page=%page%&scope=%scope%">%page%</a>
 					{/pagination}
-					
+
 					{page-next}
-						<a class="pagination" href="index.py?page=%page%">Next</a>
+						<a class="pagination" href="index.py?page=%page%&scope=%scope%">Next</a>
 					{/page-next}
 					{page-next-disabled}
 						<span class="disabled">Next</span>
 					{/page-next-disabled}
-					
+
 					{pagination-end}
 						</p>
 					{/pagination-end}
-				
+
 			{data-nav-end}
             </div>
 			{/data-nav-end}
 			{/contents}
-			
+
             <div id="main-panel" class="clear w100 ovhd">
 				<h3 class="errmsg" style="max-width:450px;text-align:center;margin:auto;padding:50px 0;">%errmsg%</h3>
             </div>
@@ -202,7 +238,7 @@ function ajaxErrorHandler(xhr, textStatus, errorThrown) {
         feedback("Failed. Please check the network.", 'error');
     }
 }
- 
+
 (function() {
     var lang_context = $('#lang-context'),
         lang_selector = $('#lang-context-selector');
@@ -234,7 +270,7 @@ function ajaxErrorHandler(xhr, textStatus, errorThrown) {
 		<a class="normal" style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
 		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
 		<a style="color: #B7B7B7; font-weight: lighter;" href="/catalog" target="_blank">Project Catalog</a></br>
-		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a></br></br></br></br>	
+		<a style="color: #B7B7B7; font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a></br></br></br></br>
 	</div>
 	<div style="height:80%; width: 20%; position: absolute; left:27%; top: 10%;">
 		<h4 style="color: #57a5b8;">Desktop client </h4>
@@ -245,13 +281,14 @@ function ajaxErrorHandler(xhr, textStatus, errorThrown) {
 		<h4 style="color: #57a5b8;">The software behind Keeper</h4>
 		<img id="seafile-logo" style="height: 30px; width: auto;"
 		     src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a></br></br></br></br>		
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://www.seafile.com/en/home/" target="_blank">© 2018 Seafile</a></br></br></br></br>
 	</div>
 	<div style="height:80%; width: 20%; position: absolute; right:0%; top: 10%;">
 		<h4 style="color: #57a5b8;" >A service by</h4>
 		<img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
 		<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
+        <a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a></br>
+        <a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/bf2c8a977f70428587eb/" target="_blank">Privacy Policy</a>
 	</div>
 </div>
 
