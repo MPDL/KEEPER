@@ -29,6 +29,19 @@ class CatalogManager(models.Manager):
             mds.append(c.md)
         return mds
 
+    def get_with_metadata(self):
+        """
+        get all items with at least one filled md
+        """
+        return [c for c in self.get_all_mds_ordered() if 'is_certified' in c]
+
+    def get_certified(self):
+        """
+        get all certified item
+        """
+        return [c for c in self.get_with_metadata() if c['is_certified']]
+
+
     def update_md_by_repo_id(self, repo_id, proj_md):
         catalog = self.get_by_repo_id(repo_id)
         catalog.md = proj_md
