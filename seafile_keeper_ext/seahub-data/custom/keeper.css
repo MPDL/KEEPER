@@ -129,21 +129,41 @@
             font-size: 1.35em;
         }
 
+
+        /* Login panel */
 		#login_panel {
             float: none;
-            margin: 0 0 0 87px;
+            width: 345px;
+            margin: 0 0 0 115px;
 			transition: top 0.8s; 
 			transition: right 0.8s; 
-			background: rgba(255, 255, 255, 1) !important; 
+			background: rgba(255, 255, 255, 1) !important;
+            box-shadow: none;
 			z-index: 1;            
 		}
-       
 
+        #login_panel .input {
+            font-size: 14px;
+            margin: 5px 0 10px;
+        } 
+        
+        #login_panel .remember {
+            margin-top: 10px;
+        }
 
         #login_panel_parent {
             padding: 0 0 0 0;
         }
 
+        #login_panel .con {
+            padding: 20px 0 20px;
+            width: 268px;
+            margin: 0 auto;
+        }
+
+        #login_panel .con.auth {
+            padding-top: 5px;
+        }
 
         
         /* FOOTER */
@@ -174,6 +194,19 @@
             color: #57a5b8; 
         }
 
+        #lg_footer img {
+            height: 30px;
+            width: auto;
+        }
+
+        /*footer on inner pages*/
+        #footer-ctn a{ 
+            color: #B7B7B7;
+        }
+
+        #footer-ctn h4{ 
+            color: #57a5b8 !important;  
+        }
 /*
  ********************************************************************************
  ********************************************************************************	
