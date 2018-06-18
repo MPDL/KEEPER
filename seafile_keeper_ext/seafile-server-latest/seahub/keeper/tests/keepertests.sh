@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SEAFILE_DIR=/opt/seafile
+SEAFILE_DIR=__SEAFILE_DIR__
 INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
 default_ccnet_conf_dir=${SEAFILE_DIR}/ccnet
 central_config_dir=${SEAFILE_DIR}/conf
