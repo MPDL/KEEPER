@@ -49,7 +49,7 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 25 # per page
+pagination_items = 9 # per page
 
 #########################
 #                       #
@@ -105,6 +105,12 @@ def application(env, start_response):
         # allow all
         #is_valid_user = 1
         #errmsg = ''
+
+        # read footer
+        f = open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r')
+        keeper_footer = unicode(f.read(), 'utf-8')
+        # keeper_footer = unicode('hallhallooo', 'utf-8')
+        f.close()
 
 
         results = []
@@ -199,11 +205,11 @@ def application(env, start_response):
             # load template
             tmpl = templayer.HTMLTemplate(install_path + 'main.tpl')
             file_writer = tmpl.start_file(response)
-            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH)
+            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH, footer=templayer.RawHTML(keeper_footer))
+
 
             slots = {}
             slots['checked_' + scope] = 'checked'
-            logging.error(slots)
             main_layer.write_layer('data-nav', **slots)
 
 
@@ -293,21 +299,22 @@ def application(env, start_response):
 
 
             # load pagination into template
-            main_layer.write_layer('pagination-start',style='margin-top:20px')
-            if ( pagination_current > 0 ):
-                main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
-            else:
-                main_layer.write_layer('page-prev-disabled')
-            for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
-                if (i == pagination_current):
-                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active', scope=scope)
+            if totalitemscount > pagination_items:
+                main_layer.write_layer('pagination-start',style='margin-top:20px')
+                if ( pagination_current > 0 ):
+                    main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
                 else:
-                    main_layer.write_layer('pagination',page=[str(i+1)], cssclass='', scope=scope)
-            if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
-                main_layer.write_layer('page-next',page=str(pagination_current+2), scope=scope)
-            else:
-                main_layer.write_layer('page-next-disabled')
-            main_layer.write_layer('pagination-end')
+                    main_layer.write_layer('page-prev-disabled')
+                for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
+                    if (i == pagination_current):
+                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active', scope=scope)
+                    else:
+                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='', scope=scope)
+                if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
+                    main_layer.write_layer('page-next',page=str(pagination_current+2), scope=scope)
+                else:
+                    main_layer.write_layer('page-next-disabled')
+                main_layer.write_layer('pagination-end')
 
             main_layer.write_layer('data-nav-end')
 
@@ -319,7 +326,8 @@ def application(env, start_response):
             # load template with error message
             tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
             file_writer = tmpl.start_file(response)
-            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH)
+            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH, footer=templayer.RawHTML(keeper_footer))
+
             file_writer.close()
 
 
