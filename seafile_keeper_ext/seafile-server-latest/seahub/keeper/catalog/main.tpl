@@ -37,7 +37,7 @@
 	}
 	a.pagination.active {
 		background-color:#57a5b8;
-		color:#ffffff;
+		color:#ffffff !important;
 	}
 	a.pagination:hover {
 		background-color:#f4efde;
