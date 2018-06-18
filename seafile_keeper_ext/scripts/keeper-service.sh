@@ -15,6 +15,8 @@
 # Change the value of "user" to linux user name who runs seafile
 user=seafile
 
+WEB_SERVER=__HTTP_SERVER__
+
 CURR_DIR=$(dirname $(readlink -f $0))
 source "${CURR_DIR}/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
@@ -150,7 +152,7 @@ case "$1" in
                 #sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
                 sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi 8000 >> ${seahub_init_log}
                 ${seafile_dir}/scripts/catalog-service.sh ${1}
-                systemctl ${1} nginx.service
+                systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop
