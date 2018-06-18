@@ -10,7 +10,7 @@ from seaserv import FILE_SERVER_ROOT, FILE_SERVER_PORT, SERVICE_URL
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__), os.pardir)
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 CLOUD_MODE = False
@@ -142,8 +142,8 @@ TEMPLATE_DIRS = (
 )
 
 LANGUAGES = (
-    ('de', gettext_noop(u'Deutsch')),
-    ('en', gettext_noop('English')),
+    ('de', 'Deutsch'),
+    ('en', 'English'),
 )
 
 LOCALE_PATHS = (
@@ -251,7 +251,7 @@ ENABLE_UPLOAD_FOLDER = False
 ENABLE_RESUMABLE_FILEUPLOAD = False
 
 ## maxNumberOfFiles for fileupload
-MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 500
+MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 1000
 
 # enable encrypt library
 ENABLE_ENCRYPTED_LIBRARY = True
@@ -271,7 +271,7 @@ ENABLE_SHARE_LINK_AUDIT = False
 # share link audit code timeout
 SHARE_LINK_AUDIT_CODE_TIMEOUT = 60 * 60
 
-# enable or disable limit ip 
+# enable or disable limit ip
 ENABLE_LIMIT_IPADDRESS = False
 TRUSTED_IP_LIST = ['127.0.0.1']
 
@@ -441,6 +441,9 @@ LOGO_PATH = 'custom/KeeperLogo.svg'
 LOGO_WIDTH = 140
 LOGO_HEIGHT = 40
 
+CUSTOM_LOGO_PATH = 'custom/mylogo.png'
+CUSTOM_FAVICON_PATH = 'custom/favicon.ico'
+
 # css to modify the seafile css (e.g. css/my_site.css)
 BRANDING_CSS = 'custom/keeper.css'
 
@@ -451,6 +454,9 @@ SERVE_STATIC = True
 # Enable or disable registration on web.
 ENABLE_SIGNUP = True
 
+# show 'log out' icon in top-bar or not.
+SHOW_LOGOUT_ICON = False
+
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
 ALLOWED_HOSTS = ['*']
@@ -458,7 +464,6 @@ ALLOWED_HOSTS = ['*']
 # Logging
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
 
     # Enable existing loggers so that gunicorn errors will be bubbled up when
     # server side error page "Internal Server Error" occurs.
