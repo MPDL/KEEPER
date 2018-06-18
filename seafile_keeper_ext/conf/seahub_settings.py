@@ -122,8 +122,10 @@ FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 BRANDING_CSS = 'custom/keeper.css'
 
 LOGO_PATH = 'custom/__LOGO_IMG__'
+CUSTOM_LOGO_PATH = 'custom/__LOGO_IMG__'
 
 FAVICON_PATH = 'img/favicon.png'
+CUSTOM_FAVICON_PATH = 'img/favicon.png'
 
 # Whether to show the used traffic in user's profile popup dialog. Default is True
 SHOW_TRAFFIC = True
@@ -200,7 +202,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
-    #    'role_quota': '1g',
+        'role_quota': '1g',
     },
     'guest': {
         'can_add_repo': False,
@@ -226,7 +228,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
- #       'role_quota': '100m',
+        'role_quota': '100m',
     },
 }
 
@@ -234,9 +236,26 @@ ENABLE_SETTINGS_VIA_WEB = True
 
 ENABLE_UPLOAD_FOLDER = True
 
+# Turn on this option to let users to add a label to a library snapshot.
+# Default is `False`
+ENABLE_REPO_SNAPSHOT_LABEL = True
+
+
+# Enable or disable library history setting
+ENABLE_REPO_HISTORY_SETTING = False
+
+# Enable or disable user share library to any group
+# Since version 6.2.0
+ENABLE_SHARE_TO_ALL_GROUPS = True
+
+
+####################################################################
 # KEEPER specific settings
 
+
+# Keeper root dir
 SEAFILE_DIR = '__SEAFILE_DIR__'
+
 
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
@@ -244,6 +263,15 @@ KEEPER_DB_NAME = 'keeper-db'
 
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
+
+
+
+# Enable cloude mode and hide `Organization` tab.
+CLOUD_MODE = True
+
+# use  pdf.js instead of pdf2html
+USE_PDFJS = True
+
 # TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
 
 # Settings for background node
