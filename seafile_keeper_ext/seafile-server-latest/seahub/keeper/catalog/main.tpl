@@ -190,23 +190,23 @@
                     {/pagination-start}
 
                     {page-prev}
-                    <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Previous</a>
+                        <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Previous</a>
                     {/page-prev}
-                    {page-prev-disabled}
-                    <span class="disabled">Previous</span>
-                    {/page-prev-disabled}
+                    {group-prev}
+                        <a class="group-prev" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
+                    {/group-prev}
 
                     {pagination}
-                    <a class="pagination %cssclass%" href="/catalog/index.py?page=%page%&scope=%scope%">%page%</a>
+                        <a class="pagination %cssclass%" href="/catalog/index.py?page=%page%&scope=%scope%">%page%</a>
                     {/pagination}
 
+                    {group-next}
+                        <a class="group-next" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
+                    {/group-next}
                     {page-next}
-                    <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Next</a>
+                        <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Next</a>
                     {/page-next}
-                    {page-next-disabled}
-                    <span class="disabled">Next</span>
-                    {/page-next-disabled}
-                    {pagination-end}
+                   {pagination-end}
                 </p>
                 {/pagination-end}
 
