@@ -12,6 +12,7 @@ import time
 import os
 import StringIO
 
+
 import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
@@ -19,6 +20,8 @@ os.environ.setdefault("CCNET_CONF_DIR", "__SEAFILE_DIR__/ccnet")
 os.environ.setdefault("SEAFILE_CONF_DIR", "__SEAFILE_DIR__/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "__SEAFILE_DIR__/conf")
 os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/python/seafes")
+
+from django.core.cache import cache
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
@@ -49,13 +52,30 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 9 # per page
+pagination_items = 4 # per page
+
+# max pages in paginator
+max_pages_in_paginator = 3 # links
+
 
 #########################
 #                       #
 #    end config vars    #
 #                       #
 #########################
+
+def get_keeper_footer():
+    """Get keeper_footer from cache
+    """
+    CACHE_KEY = 'KEEPER_FOOTER_HTML'
+    keeper_footer = cache.get(CACHE_KEY)
+    if keeper_footer is None:
+        # read footer
+        f = open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r')
+        keeper_footer = unicode(f.read(), 'utf-8')
+        f.close()
+        cache.set(CACHE_KEY, keeper_footer, 0)
+    return keeper_footer
 
 
 def application(env, start_response):
@@ -105,12 +125,6 @@ def application(env, start_response):
         # allow all
         #is_valid_user = 1
         #errmsg = ''
-
-        # read footer
-        f = open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r')
-        keeper_footer = unicode(f.read(), 'utf-8')
-        # keeper_footer = unicode('hallhallooo', 'utf-8')
-        f.close()
 
 
         results = []
@@ -183,7 +197,7 @@ def application(env, start_response):
                 else:
                     pagination_current = 0
             except (RuntimeError, TypeError, NameError, ValueError):
-                '' # ignore error
+                pass  # ignore error
 
 
             # TODO load institute parameter
@@ -205,7 +219,7 @@ def application(env, start_response):
             # load template
             tmpl = templayer.HTMLTemplate(install_path + 'main.tpl')
             file_writer = tmpl.start_file(response)
-            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH, footer=templayer.RawHTML(keeper_footer))
+            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH, footer=templayer.RawHTML(get_keeper_footer()))
 
 
             slots = {}
@@ -300,20 +314,32 @@ def application(env, start_response):
 
             # load pagination into template
             if totalitemscount > pagination_items:
-                main_layer.write_layer('pagination-start',style='margin-top:20px')
+
+                # max number of pages
+                max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount % pagination_items > 0 else 0
+
+                pagination_group = (pagination_current + 1) / (max_pages_in_paginator + 1) + 1
+                start_page = (pagination_group - 1) * max_pages_in_paginator + 1
+                end_page = start_page + max_pages_in_paginator - 1
+                end_page = min(end_page, max_pages_count)
+
+                main_layer.write_layer('pagination-start',style='margin-top:20px',
+                                       # debug="start_page=" + str(start_page) + ";end_page=" + str(end_page) + ";pagination_current=" + str(pagination_current) + ";totalitemscount=" + str(totalitemscount) +
+                                       # ";max_pages_count=" + str(max_pages_count) + ";pagination_group=" +str(pagination_group)
+                                       )
                 if ( pagination_current > 0 ):
                     main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
-                else:
-                    main_layer.write_layer('page-prev-disabled')
-                for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
-                    if (i == pagination_current):
-                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active', scope=scope)
-                    else:
-                        main_layer.write_layer('pagination',page=[str(i+1)], cssclass='', scope=scope)
-                if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
+                if ( pagination_group > 1 ):
+                    main_layer.write_layer('group-prev', page=str((pagination_group - 2) * max_pages_in_paginator + 1 ), scope=scope)
+                for i in range( start_page, end_page + 1 ):
+                    main_layer.write_layer('pagination', page=str(i),
+                                           cssclass='active' if i - 1 == pagination_current else '',
+                                           scope=scope)
+                next_group_first_page = pagination_group * max_pages_in_paginator + 1
+                if ( next_group_first_page < max_pages_count ):
+                    main_layer.write_layer('group-next', page=str(next_group_first_page), scope=scope)
+                if ( pagination_current + 1 < max_pages_count):
                     main_layer.write_layer('page-next',page=str(pagination_current+2), scope=scope)
-                else:
-                    main_layer.write_layer('page-next-disabled')
                 main_layer.write_layer('pagination-end')
 
             main_layer.write_layer('data-nav-end')
@@ -326,7 +352,7 @@ def application(env, start_response):
             # load template with error message
             tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
             file_writer = tmpl.start_file(response)
-            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH, footer=templayer.RawHTML(keeper_footer))
+            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH, footer=templayer.RawHTML(get_keeper_footer()))
 
             file_writer.close()
 
