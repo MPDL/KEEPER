@@ -10,9 +10,60 @@
 <![endif]-->
 <link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
 <link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1465786517" />
-<link rel="stylesheet" type="text/css" href="/media/custom/catalog.css" />
 <link rel="stylesheet" type="text/css" href="/media/custom/keeper.css" />
 <style>
+    
+    #header {
+        padding-top: 16px;
+        margin-bottom: 20px;
+   		background: #f4f4f7 !important;
+        width: 100% !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid #e8e8e8 !important;
+        padding-bottom: 4px !important;
+        z-index: 1 !important;
+	}
+	#header-inner {
+		height: 48px;
+		width: 950px;
+		margin: 0 auto;
+	}
+	#logo{
+        position: absolute; 
+        top: 13px !important; 
+        left: 16px !important;
+        margin-top: -5px;
+    }
+
+	#main {
+        min-height: 400px;
+        margin: 0 auto;
+
+    }
+    #main, #footer  {
+        width: 950px;
+    }
+    #left-panel {
+        float: left;
+        width: 200px;
+    }
+    .side-tabnav h3 {
+        margin-top: 65px !important;
+        color: #57a5b8 !important;
+    }
+    .side-tabnav label {
+        margin-top: 0px;
+    }
+    .side-tabnav span.vam {
+        margin-left: 5px;
+    }
+
+     #right-panel {
+        padding-top: 0px;
+        float: right;
+        width: 710px;
+    }
+
 	.item-block {
 		box-sizing:border-box;
 		border-bottom:1px solid #dddddd;
@@ -20,6 +71,7 @@
 		width:100%;
 		padding:10px 10px 10px 45px;
 	}
+
 	.item-block img {
 		float:left;
 		margin-top:4px;
@@ -57,32 +109,7 @@
 		color:#cccccc;
 		font-weight: bold;
 	}
-
-	#header {
-   		background: #f4f4f7 !important;
-        width: 100% !important;
-        font-size: 14px !important;
-        border-bottom: 1px solid #e8e8e8 !important;
-        padding-bottom: 4px !important;
-        z-index: 1 !important;
-	}
-
-    #right-panel {
-        padding-top: 0px;
-    }
-    .side-tabnav h3 {
-        margin-top: 65px !important;
-        color: #57a5b8 !important;
-    }
-    .side-tabnav label {
-        margin-top: 0px;
-    }
-    .side-tabnav span.vam {
-        margin-left: 5px;
-    }
-
-        
-	#logo{position: absolute; top: 13px !important; left: 16px !important;}
+       
 </style>
 </head>
 
@@ -98,9 +125,6 @@
         </div>
 
         <div id="main" class="clear">
-            <div id="title-panel" class="w100 ovhd">
-            </div>
-
 
             {contents}
             {data-nav}
@@ -182,7 +206,6 @@
                     {page-next-disabled}
                     <span class="disabled">Next</span>
                     {/page-next-disabled}
-
                     {pagination-end}
                 </p>
                 {/pagination-end}
