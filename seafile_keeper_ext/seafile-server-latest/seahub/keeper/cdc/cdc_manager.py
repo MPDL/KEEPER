@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import os
 import traceback
@@ -10,6 +9,9 @@ import re
 import logging
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
+import django
+django.setup()
+
 
 from seaserv import seafile_api, get_repo
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
@@ -25,9 +27,12 @@ from keeper.common import parse_markdown, get_user_name, get_logger
 from django.core.mail import EmailMessage
 from django.template import Context, loader
 
-from keeper.models import CDC
 
 import tempfile
+import json
+
+from keeper.models import CDC
+from seahub.notifications.models import UserNotification
 
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 
@@ -38,6 +43,8 @@ CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
 CDC_LOG = '/var/log/keeper/keeper.cdc.log'
+
+MSG_TYPE_KEEPER_CDC_MSG = 'keeper_cdc_msg'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -78,7 +85,7 @@ def get_cdc_id_by_repo(repo_id):
 def is_certified_by_repo_id(repo_id):
     return CDC.objects.is_certified(repo_id)
 
-DEBUG_MESSAGE = []
+CDC_MSG = []
 
 def validate_author(txt):
     """Author/Affiliations checking, format:
@@ -93,13 +100,11 @@ def validate_author(txt):
             if not re.match(pattern, line.decode('utf-8')):
                 valid = False
                 msg = 'Wrong Author/Affiliation string: ' + line
-                DEBUG_MESSAGE.append(msg)
-                LOGGER.error(msg)
+                CDC_MSG.append(msg)
     else:
         valid = False
         msg = 'Authors are empty'
-        DEBUG_MESSAGE.append(msg)
-        LOGGER.info(msg)
+        CDC_MSG.append(msg)
     return valid
 
 def validate_institute(txt):
@@ -113,13 +118,11 @@ def validate_institute(txt):
         if not re.match(pattern, txt.decode('utf-8')):
             valid = False
             msg = 'Wrong Institution string: ' + txt
-            DEBUG_MESSAGE.append(msg)
-            LOGGER.error(msg)
+            CDC_MSG.append(msg)
     else:
         valid = False
         msg = 'Institute is empty'
-        DEBUG_MESSAGE.append(msg)
-        LOGGER.info(msg)
+        CDC_MSG.append(msg)
     return valid
 
 def validate_year(txt):
@@ -132,38 +135,34 @@ def validate_year(txt):
         except Exception:
             valid = False
             msg = 'Wrong year: ' + txt
-            DEBUG_MESSAGE.append(msg)
-            LOGGER.error(msg)
+            CDC_MSG.append(msg)
     else:
         valid = False
         msg = 'Year is empty'
-        DEBUG_MESSAGE.append(msg)
-        LOGGER.info(msg)
+        CDC_MSG.append(msg)
     return valid
 
 
 def validate(cdc_dict):
     LOGGER.info("""Validate the CDC mandatory fields and content...""")
-    global DEBUG_MESSAGE
+
+    global CDC_MSG
+    CDC_MSG = []
+
     # 1. check mandatory fields
     s1 = set(cdc_dict.keys())
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     if not valid:
         msg =  'CDC mandatory fields are not filled: ' + ', '.join(s2.difference(s1))
-        DEBUG_MESSAGE.append(msg)
-        LOGGER.info(msg)
+        CDC_MSG.append(msg)
 
     # 2. check content"
 
     valid = validate_year(cdc_dict.get('Year')) and valid
     valid = validate_author(cdc_dict.get('Author')) and valid
     valid = validate_institute(cdc_dict.get('Institute')) and valid
-
-    LOGGER.info('valid' if valid else 'not valid')
-    print 'Validation errors: ' + '<br>'.join(DEBUG_MESSAGE)
-    DEBUG_MESSAGE = []
-
+    LOGGER.info('Catalog metadata are {}:\n{}'.format('valid' if valid else 'not valid', '\n'.join(CDC_MSG)))
     return valid
 
 def get_repo_share_url(repo_id, owner):
@@ -205,6 +204,7 @@ def send_email(to, msg_ctx):
         raise err
 
     LOGGER.info("Sucessfully sent")
+
 
 def has_at_least_one_creative_dirent(dir):
 
@@ -309,7 +309,12 @@ def generate_certificate(repo, commit):
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
         cdc_dict = parse_markdown(file.get_content())
+
+        status = 'metadata are not valid'
+
         if validate(cdc_dict):
+
+            status = 'metadata are valid'
 
             if event == EVENT.pdf_delete:
                 # only modified update
@@ -365,19 +370,35 @@ def generate_certificate(repo, commit):
                 if dir.lookup(cdc_pdf):
                     seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
                     LOGGER.info("Sucessfully updated")
+                    status = 'updated'
+                    CDC_MSG.append("Certificate has been updated")
                 # post otherwise
                 else:
                     seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
                     LOGGER.info("Sucessfully recreated")
+                    status = 'recreated'
+                    CDC_MSG.append("Certificate has been recreated")
                 logging.info("CDC has been successfully updated for repo %s, id: %s" % (repo.id, cdc_id) )
             else:
                 seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
                 LOGGER.info("Sucessfully created")
+                status = 'created'
+                CDC_MSG.append("Certificate has been sucessfully created")
                 # if not DEBUG:
                 send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
                     'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
                     'AUTHOR_LIST': get_authors_for_email(cdc_dict['Author']), 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
+
+        #send user notification
+        UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
+            json.dumps({
+            'status': status,
+            'message':('; '.join(CDC_MSG)),
+            'msg_from': SERVER_EMAIL,
+            'lib': repo.id,
+            'lib_name': repo.name
+        }))
 
 
 
