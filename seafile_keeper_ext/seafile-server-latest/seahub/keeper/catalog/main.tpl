@@ -156,7 +156,7 @@
             </div>
             <div id="right-panel">
                 <div class="hd ovhd">
-                    <h3 class="fleft">The Keeper Project Catalog of Max Planck Society</h3>
+                    <h3 class="fleft">The Keeper Project Catalog of the Max Planck Society</h3>
                 </div>
                 {/data-nav}
 

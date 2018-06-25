@@ -142,7 +142,7 @@ def application(env, start_response):
             request_body = env['wsgi.input'].read()
             post_params = parse_qs(request_body)
             logging.error(post_params)
-            scope = post_params['cat_scope'][0] if 'cat_scope' in post_params else get_params['scope'][0] if 'scope' in get_params else 'all'
+            scope = post_params['cat_scope'][0] if 'cat_scope' in post_params else get_params['scope'][0] if 'scope' in get_params else 'with_metadata'
 
             # jsondata = get_catalog(filter=scope[0])
             jsondata = get_catalog(scope)
