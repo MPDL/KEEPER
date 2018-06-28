@@ -40,13 +40,6 @@
         margin: 0 auto;
 
     }
-    #main, #footer  {
-        width: 950px;
-    }
-    #left-panel {
-        float: left;
-        width: 200px;
-    }
     .side-tabnav h3 {
         margin-top: 65px !important;
         color: #57a5b8 !important;
@@ -57,13 +50,6 @@
     .side-tabnav span.vam {
         margin-left: 5px;
     }
-
-     #right-panel {
-        padding-top: 0px;
-        float: right;
-        width: 710px;
-    }
-
 	.item-block {
 		box-sizing:border-box;
 		border-bottom:1px solid #dddddd;
@@ -123,100 +109,102 @@
                 </a>
             </div>
         </div>
+        
+        <div class="container">
+            <div id="main" class="raw clear">
 
-        <div id="main" class="clear">
+                {contents}
+                {data-nav}
+                <div id="left-panel" class="col-md-3 side-tabnav">
 
-            {contents}
-            {data-nav}
-            <div id="left-panel" class="side-tabnav" style="display: block;">
+                    <h3 class="hd">Show Projects</h3>
+                    <form id="scope-selector" method="post">
+                        <label class="radio-item">
+                            <input class="vam" type="radio" name="cat_scope" value="with_metadata" %checked_with_metadata%/><span class="vam">with metadata</span>
+                        </label>
+                        <br>
+                        <label class="radio-button">
+                            <input class="vam" type="radio" name="cat_scope" value="with_certificate" %checked_with_certificate%/><span class="vam">with certificate</span>
+                        </label>
+                        <br>
+                        <label class="radio-button">
+                            <input class="vam" type="radio" name="cat_scope" value="all" %checked_all%/><span class="vam">all</span>
+                        </label>
+                    </form>
+                    <!--<ul class="side-tabnav-tabs">-->
+                    <!--<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut A</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut B</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut C</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut D</a></li>-->
+                    <!--<li class="tab"><a href="#" class="lib">Institut E</a></li>-->
+                    <!--</ul>-->
 
-                <h3 class="hd">Show Projects</h3>
-                <form id="scope-selector" method="post">
-                    <label class="radio-item">
-                        <input class="vam" type="radio" name="cat_scope" value="with_metadata" %checked_with_metadata%/><span class="vam">with metadata</span>
-                    </label>
-                    <br>
-                    <label class="radio-button">
-                        <input class="vam" type="radio" name="cat_scope" value="with_certificate" %checked_with_certificate%/><span class="vam">with certificate</span>
-                    </label>
-                    <br>
-                    <label class="radio-button">
-                        <input class="vam" type="radio" name="cat_scope" value="all" %checked_all%/><span class="vam">all</span>
-                    </label>
-                </form>
-                <!--<ul class="side-tabnav-tabs">-->
-                <!--<li class="tab tab-cur"><a href="#" class="lib">Alle</a></li>-->
-                <!--<li class="tab"><a href="#" class="lib">Institut A</a></li>-->
-                <!--<li class="tab"><a href="#" class="lib">Institut B</a></li>-->
-                <!--<li class="tab"><a href="#" class="lib">Institut C</a></li>-->
-                <!--<li class="tab"><a href="#" class="lib">Institut D</a></li>-->
-                <!--<li class="tab"><a href="#" class="lib">Institut E</a></li>-->
-                <!--</ul>-->
-
-            </div>
-            <div id="right-panel">
-                <div class="hd ovhd">
-                    <h3 class="fleft">The Keeper Project Catalog of the Max Planck Society</h3>
                 </div>
-                {/data-nav}
+                <div class="col-md-9" id="right-panel">
+                    <div class="hd ovhd">
+                        <h3 class="fleft">The Keeper Project Catalog of the Max Planck Society</h3>
+                    </div>
+                    {/data-nav}
 
 
-                {dataset}
-                <div class="item-block">
-                    <h3>%title%</h3>
-                    <p>%smalltext%</p>
-                    <p>%author%</p>
-                    %year%
-                    <p>Contact: %contact%</p>
+                    {dataset}
+                    <div class="item-block">
+                        <h3>%title%</h3>
+                        <p>%smalltext%</p>
+                        <p>%author%</p>
+                        %year%
+                        <p>Contact: %contact%</p>
+                    </div>
+                    {/dataset}
+                    {dataset_certified}
+                    <div class="item-block">
+                        <img src="/catalog/static/certified.png" />
+                        <h3>%title%</h3>
+                        <p>%smalltext%</p>
+                        <p>%author%</p>
+                        %year%
+                        <p>Contact: %contact%</p>
+                    </div>
+                    {/dataset_certified}
+
+                    {fyear}
+                    <p>Year: %year%</p>
+                    {/fyear}
+
+                    {pagination-start}
+                    <p style="text-align:center;%style%">
+                        {/pagination-start}
+
+                        {page-prev}
+                            <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Previous</a>
+                        {/page-prev}
+                        {group-prev}
+                            <a class="group-prev" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
+                        {/group-prev}
+
+                        {pagination}
+                            <a class="pagination %cssclass%" href="/catalog/index.py?page=%page%&scope=%scope%">%page%</a>
+                        {/pagination}
+
+                        {group-next}
+                            <a class="group-next" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
+                        {/group-next}
+                        {page-next}
+                            <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Next</a>
+                        {/page-next}
+                       {pagination-end}
+                    </p>
+                    {/pagination-end}
+
+                    {data-nav-end}
                 </div>
-                {/dataset}
-                {dataset_certified}
-                <div class="item-block">
-                    <img src="/catalog/static/certified.png" />
-                    <h3>%title%</h3>
-                    <p>%smalltext%</p>
-                    <p>%author%</p>
-                    %year%
-                    <p>Contact: %contact%</p>
+                {/data-nav-end}
+                {/contents}
+
+                <div id="main-panel" class="clear w100 ovhd">
+                    <h3 class="errmsg" style="max-width:450px;text-align:center;margin:auto;padding:50px 0;">%errmsg%</h3>
                 </div>
-                {/dataset_certified}
-
-                {fyear}
-                <p>Year: %year%</p>
-                {/fyear}
-
-                {pagination-start}
-                <p style="text-align:center;%style%">
-                    {/pagination-start}
-
-                    {page-prev}
-                        <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Previous</a>
-                    {/page-prev}
-                    {group-prev}
-                        <a class="group-prev" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
-                    {/group-prev}
-
-                    {pagination}
-                        <a class="pagination %cssclass%" href="/catalog/index.py?page=%page%&scope=%scope%">%page%</a>
-                    {/pagination}
-
-                    {group-next}
-                        <a class="group-next" href="/catalog/index.py?page=%page%&scope=%scope%">...</a>
-                    {/group-next}
-                    {page-next}
-                        <a class="pagination" href="/catalog/index.py?page=%page%&scope=%scope%">Next</a>
-                    {/page-next}
-                   {pagination-end}
-                </p>
-                {/pagination-end}
-
-                {data-nav-end}
-            </div>
-            {/data-nav-end}
-            {/contents}
-
-            <div id="main-panel" class="clear w100 ovhd">
-                <h3 class="errmsg" style="max-width:450px;text-align:center;margin:auto;padding:50px 0;">%errmsg%</h3>
             </div>
         </div>
 
