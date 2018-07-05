@@ -58,11 +58,18 @@ DEBUG = False
 cdc_headers_mandatory =  ['Title', 'Author', 'Year', 'Description', 'Institute']
 err_list = []
 
+EVENT_PATTERNS = {
+    'CDC_PDF_DELETED': re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$'),
+    'ARCHIVE_METADATA_TARGET_MODIFIED': re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
+}
+
+
 from enum import Enum
 class EVENT(Enum):
     db_create = 1
     db_update = 2
     pdf_delete = 3
+    md_modified = 4
 
 
 
@@ -267,23 +274,23 @@ def generate_certificate(repo, commit):
 
     # exit if cdc pdf is deleted
     # see https://github.com/MPDL/KEEPER/issues/41
-    pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
-    if re.match(pattern, commit.desc):
+    if re.match(EVENT_PATTERNS['CDC_PDF_DELETED'], commit.desc):
         return False
 
+    if re.match(EVENT_PATTERNS['ARCHIVE_METADATA_TARGET_MODIFIED'], commit.desc):
+        event = EVENT.md_modified
+
     try:
+        LOGGER.info("PATT {}".format(EVENT_PATTERNS))
 
         cdc_id = get_cdc_id_by_repo(repo.id)
         if cdc_id is not None:
-            pattern = re.compile(r'Deleted\s+\"' + CDC_PDF_PREFIX + r'\d+\.pdf\"$')
-            if re.match(pattern, commit.desc):
+            if re.match(EVENT_PATTERNS['CDC_PDF_DELETED'], commit.desc):
                 # if cdc pdf is deleted, add pdf again!
                 event = EVENT.pdf_delete
-            else:
-                pattern = re.compile(r'Modified\s+\"' + ARCHIVE_METADATA_TARGET + r'\"$')
-                if not re.match(pattern, commit.desc):
-                    # exit if already certified and MD has not been changed
-                    return False
+            elif event != EVENT.md_modified:
+                # exit if already certified and MD has not been changed
+                return False
 
 
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
@@ -391,14 +398,17 @@ def generate_certificate(repo, commit):
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
 
         #send user notification
-        UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
-            json.dumps({
-            'status': status,
-            'message':('; '.join(CDC_MSG)),
-            'msg_from': SERVER_EMAIL,
-            'lib': repo.id,
-            'lib_name': repo.name
-        }))
+        LOGGER.info("Commit desc: " + commit.desc)
+        LOGGER.info("event: {}".format(event))
+        if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
+            UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
+                json.dumps({
+                'status': status,
+                'message':('; '.join(CDC_MSG)),
+                'msg_from': SERVER_EMAIL,
+                'lib': repo.id,
+                'lib_name': repo.name
+            }))
 
 
 
@@ -407,7 +417,7 @@ def generate_certificate(repo, commit):
         logging.error("CDC generation for repo %s has been failed, check %s for details. \nTraceback:" % (repo.id, CDC_LOG) )
         logging.error(traceback.format_exc())
     finally:
-       # other final stuff
+        # other final stuff
         if not DEBUG:
             if 'tmp_path' in vars() and os.path.exists(tmp_path):
                 os.remove(tmp_path)
