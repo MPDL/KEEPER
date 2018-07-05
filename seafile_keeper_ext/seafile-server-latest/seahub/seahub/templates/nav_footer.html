@@ -76,15 +76,21 @@
 	var img = document.getElementById('footer-img');
 	var x = 0;
 	function triangle_onclick(){	
-		/* mobile version */
-		if(width<=1300){
-			if(x===0){footer.style.bottom="0%";img.style.transform = 'rotate(180deg)';x=1;}
-			else{footer.style.bottom="-85%";img.style.transform = 'rotate(0deg)';x=0;}}
-		/* wide screen version */
-		else{
-			if(x===0){footer.style.bottom="0%";img.style.transform = 'rotate(180deg)';x=1;}
-			else{footer.style.bottom="-32%";img.style.transform = 'rotate(0deg)';x=0;}}}
-
-	var pop_up = ""+"<tr>c</td><td>d</td></tr></table>";
-
+        /* mobile version */
+        if(width<=1300){
+            if(x===0){
+                footer.style.bottom="0%";
+                img.style.transform = 'rotate(180deg)';x=1;
+            } else {
+                footer.style.bottom="-85%";img.style.transform = 'rotate(0deg)';x=0;
+            }
+            /* wide screen version */
+        } else {
+            if(x===0) { 
+                footer.style.bottom="0%";img.style.transform = 'rotate(180deg)';x=1;
+            } else {
+                footer.style.bottom="-32%";img.style.transform = 'rotate(0deg)';x=0;
+            }
+        }
+    }
 </script>
