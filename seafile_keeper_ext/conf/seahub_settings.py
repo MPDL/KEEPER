@@ -272,7 +272,7 @@ THUMBNAIL_SIZE_FOR_ORIGINAL = 1024
 #### Cloud Mode
 
 # Enable cloude mode and hide `Organization` tab.
-CLOUD_MODE = False
+CLOUD_MODE = True
 
 # Disable global address book
 ENABLE_GLOBAL_ADDRESSBOOK = True
@@ -509,11 +509,11 @@ EXTRA_MIDDLEWARE_CLASSES = (
 # OFFICE_CONVERTOR_ROOT = '__BACKGROUND_SERVER__'
 
 # Enable LibreOffice Online
-# ENABLE_OFFICE_WEB_APP = __ENABLE_OFFICE_WEB_APP__
+ENABLE_OFFICE_WEB_APP = __ENABLE_OFFICE_WEB_APP__
 
 # Url of LibreOffice Online's discovery page
 # The discovery page tells Seafile how to interact with LibreOffice Online when view file online
-# OFFICE_WEB_APP_BASE_URL = '__OFFICE_WEB_APP_BASE_URL__'
+OFFICE_WEB_APP_BASE_URL = '__OFFICE_WEB_APP_BASE_URL__'
 
 # Expiration of WOPI access token
 # WOPI access token is a string used by Seafile to determine the file's
