@@ -178,6 +178,11 @@ case "$1" in
             echo "Done"
             #systemctl ${1} memcached.service
         ;;
+        cluster-restart|cluster-status)
+            for i in __CLUSTER_NODES__; do
+                ssh ${i} "keeper-service ${1#cluster-}"
+            done
+       ;;
        restart-gpfs)
             restart_gpfs
         ;;
