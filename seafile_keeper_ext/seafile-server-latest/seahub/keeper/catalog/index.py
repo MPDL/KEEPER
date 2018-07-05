@@ -32,6 +32,8 @@ from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 #                       #
 #########################
 
+DEBUG = True
+
 # cluster mode
 CLUSTER_MODE = False
 
@@ -69,7 +71,7 @@ def get_keeper_footer():
     """
     CACHE_KEY = 'KEEPER_FOOTER_HTML'
     keeper_footer = cache.get(CACHE_KEY)
-    if keeper_footer is None:
+    if DEBUG or keeper_footer is None:
         # read footer
         f = open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r')
         keeper_footer = unicode(f.read(), 'utf-8')
@@ -316,7 +318,7 @@ def application(env, start_response):
             if totalitemscount > pagination_items:
 
                 # max number of pages
-                max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount % pagination_items > 0 else 0
+                max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount > pagination_items else 0
 
                 pagination_group = (pagination_current + 1) / (max_pages_in_paginator + 1) + 1
                 start_page = (pagination_group - 1) * max_pages_in_paginator + 1

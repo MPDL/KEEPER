@@ -95,13 +95,22 @@
 		color:#cccccc;
 		font-weight: bold;
 	}
+    #lg_footer h4 {
+        color: #57a5b8 !important;
+    }
+    #keeper-links {
+        margin-top: 10px;
+    }
+    #seafile-credits {
+        margin-top: 5px;
+        text-align: center;
+    }
        
 </style>
 </head>
 
 <body>
     <div id="wrapper" class="en">
-
         <div id="header">
             <div id="header-inner">
                 <a href="/" id="logo" class="fleft">
@@ -173,6 +182,7 @@
                     {/fyear}
 
                     {pagination-start}
+
                     <p style="text-align:center;%style%">
                         {/pagination-start}
 
