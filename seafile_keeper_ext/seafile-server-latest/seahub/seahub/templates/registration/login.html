@@ -4,34 +4,115 @@
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
 {% block header_css_class %}{% endblock %}
 {% block main_css_class %}{% endblock %}
+
 {% block extra_style %}
 <style type="text/css">
-html, body, #wrapper { height:100%; }
-#wrapper {
-    background: url('{{ MEDIA_URL }}{{login_bg_image_path}}') center top no-repeat scroll;
-    background-size: cover;
-    padding-top:1px;
+
+html, body, #wrapper { 
+    height:100%; 
 }
+
+#wrapper {
+    background: url('/media/custom/keeper-login-page-background_1600px.svg') center top no-repeat scroll;
+    background-size: cover;
+}
+
+
 #main {
     min-height:0;
 }
-#lang {
-    margin:0;
+
+.navbar {
+    border-radius: 0;
+}       
+
+
+#header {
+    border-bottom: 0;
 }
-#lang-context {
-    font-weight:normal;
+
+.row {
+    background-color: rgba(244,243,245,0.9);
 }
-#lang-context-selector {
-    text-align:left;
+
+#mpdl-flag {
+    position: relative;
+    top: -1px;
+    padding: 0 0 100px 40px;
 }
+
+#info_panel {
+    padding: 0 0 150px 40px;
+
+}
+
+
+#login_panel h2 { 
+    padding-left: 20px;
+}
+
+
+#login_panel .input.name-input, #login_panel .input.passwd-input, #login_panel input:-webkit-autofill {
+    background-color: #f8dc9b !important;
+    -webkit-box-shadow: 0 0 0px 1000px #f8dc9b  inset;
+    -webkit-text-fill-color: black !important;
+    -moz-appearance: none !important;
+}
+
+#login_panel .input.name-input, #login_panel .input.passwd-input {
+    background-color: #f8dc9b !important;
+}
+
+.new-narrow-panel {
+    margin: 20px 0px 20px 0px !important;
+    width: 95% !important;
+}
+
+#lg_footer #keeper-links {
+    background-color: #f8dc9b;
+    padding: 10px 40px 10px 40px;
+}
+
+#lg_footer #keeper-links h4 {
+    margin-bottom: 0.3em;
+}
+
+
+#seafile-credits {
+    background-color: #d48074;
+    text-align: right;
+}
+
+#seafile-credits div {
+    line-height: 46px;
+}
+ 
+@media (max-width: 991px) {
+    #login_panel_parent {
+        width: 380px;
+        margin-left: 12px;
+    }
+    #lg_footer #keeper-links h4 {
+        margin-bottom: 0.2em;
+        margin-top: 0.6em;
+    }
+  }
+
+
+
 </style>
 {% endblock %}
 
 {% block main_content %}
-<!--<div class="login-panel-outer-container vh">-->
 <div class="container">
     <div class="row">
-        <div class="col-lg-7">
+        <div id="mpdl-flag" class="col-lg-12 hidden-md-down">
+            <img src="/media/custom/mpdl-flag-grey.svg" alt=""/>
+        </div>
+
+    </div>
+    <div id="central-wrapper" class="row">
+        <div class="col-xl-7 col-lg-7 hidden-md-down">
             <div id="info_panel">
                 <h3>Archive the way you work</h3>
                 <div id="intro_en">
@@ -44,92 +125,88 @@ html, body, #wrapper { height:100%; }
                     <p>Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können Sie sicher sein, die Archivierungsvorschriften der Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur Sicherung "guter wissenschaftlicher Praxis" einzuhalten.</p>
                     <p>Übersicht aller Forschungsprojekte in KEEPER<span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
                 </div>
-         </div>
+            </div>
         </div>
         
 
 
-<div id="login_panel_parent" class="col-lg-5">
-    {#<div class="login-panel">#}
-    <div id="login_panel" class="new-narrow-panel">
-        {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
-        <h2 class="hd">{% trans "Log In" %}</h2>
-        <form action="" method="post" class="con">{% csrf_token %}
-            <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
-            <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
+        <div id="login_panel_parent" class="col-xl-4 col-xl-offset-1 col-lg-5 col-md-6 col-sm-7 col-xs-10">
+            {#<div class="login-panel">#}
+                <div id="login_panel" class="new-narrow-panel">
+                    {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
+                    <h2 class="hd">{% trans "Log In" %}</h2>
+                    <form action="" method="post" class="con">{% csrf_token %}
+                        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
+                        <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
 
-            {% if form.captcha %}
-            <div class="ovhd">
-                <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
-                {{ form.captcha }}
+                        {% if form.captcha %}
+                        <div class="ovhd">
+                            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
+                            {{ form.captcha }}
+                        </div>
+                        {% endif %}
+
+                        <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+                        {% if form.errors %}
+                        {% if form.captcha.errors %}
+                        {{ form.captcha.errors}}
+                        {% elif form.errors.freeze_account %}
+                        <p class="error">{{ form.errors.freeze_account }}</p>
+                        {% elif form.errors.inactive %}
+                        <p class="error">{{ form.errors.inactive }}</p>
+                        {% else %}
+                        <p class="error">{% trans "Incorrect email or password" %}</p>
+                        {% endif %}
+                        {% else %}
+                        <p class="error hide"></p>
+                        {% endif %}
+
+                        <label class="checkbox-label remember">
+                            <input type="checkbox" name="remember_me" class="vam remember-input" />
+                            <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+                        </label>
+                        <button type="submit" class="submit">{% trans "Log In" %}</button>
+
+                        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
+                    </form>
+
+                    <div class="con auth">
+                        {% if enable_oauth %}
+                        <a href="{% url 'oauth_login' %}" class="normal">{% trans "Single Sign-On" %}</a>
+                        {% endif %}
+
+                        {% if enable_adfs_login %}
+                        <a id="adfs-login" href="#" class="normal">ADFS</a>
+                        {% endif %}
+
+                        {% if enable_krb5_login %}
+                        <a id="krb5-login" href="#" class="normal">{% trans "Kerberos" %}</a>
+                        {% endif %}
+
+                        {% if enable_signup %}
+                        <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
+                        {% endif %}
+
+                        {% if enable_shib_login %}
+                        <a id="shib-login" href="#" class="normal fright">{% trans "Shibboleth" %}</a>
+                        {% endif %}
+
+                    </div> 
+                </div>
             </div>
-            {% endif %}
 
-            <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-            {% if form.errors %}
-            {% if form.captcha.errors %}
-            {{ form.captcha.errors}}
-            {% elif form.errors.freeze_account %}
-            <p class="error">{{ form.errors.freeze_account }}</p>
-            {% elif form.errors.inactive %}
-            <p class="error">{{ form.errors.inactive }}</p>
-            {% else %}
-            <p class="error">{% trans "Incorrect email or password" %}</p>
-            {% endif %}
-             {% else %}
-            <p class="error hide"></p>
-            {% endif %}
+        </div>
 
-            <label class="checkbox-label remember">
-                <input type="checkbox" name="remember_me" class="vam remember-input" />
-                <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
-            </label>
-            <button type="submit" class="submit">{% trans "Log In" %}</button>
+        {% include "keeper_footer.html" %}
 
-            <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
-        </form>
-
-        <div class="con auth">
-            {% if enable_oauth %}
-            <a href="{% url 'oauth_login' %}" class="normal">{% trans "Single Sign-On" %}</a>
-            {% endif %}
-
-            {% if enable_adfs_login %}
-            <a id="adfs-login" href="#" class="normal">ADFS</a>
-            {% endif %}
-
-            {% if enable_shib_login %}
-            <a id="shib-login" href="#" class="normal">{% trans "Shibboleth" %}</a>
-            {% endif %}
-
-            {% if enable_krb5_login %}
-            <a id="krb5-login" href="#" class="normal">{% trans "Kerberos" %}</a>
-            {% endif %}
-
-            <div class="login-panel-bottom-container">
-                {% if enable_signup %}
-                <a href="{{ signup_url }}" class="normal fleft" id="sign-up">{% trans "Signup" %}</a>
-                {% endif %}
-            </div>
-        </div> 
-    </div>
-</div>
 
     </div>
-
-
-</div>
-
-
-    {% include "keeper_footer.html" %}
-
 
 {% endblock %}
 
 {% block extra_script %}
 <script type="text/javascript">
 $('.login-panel-outer-container').prepend($($('#logo').html()).attr({'width': 160, 'height':40}).addClass('login-panel-logo'));
-$('.login-panel-bottom-container').append($('#lang').removeClass('fright'));
 
 var $el = $('.login-panel-outer-container');
 var elHeight = $el.outerHeight();
@@ -137,16 +214,8 @@ var wdHeight = $(window).height();
 if (wdHeight > elHeight) {
     $el.css({'margin-top': (wdHeight - elHeight)/2});
 }
-$('#lang').css({'margin-left': $('#sign-up').outerWidth() + 10});
 $el.removeClass('vh');
 
-$('#lang-context-selector').css({
-    'top': '-' + ($('#lang').offset().top - 5) + 'px',
-    'right': 0
-});
-$('#lang-context-selector .sf-popover-con').css({
-    'max-height': $('#lang').offset().top - 10
-});
 
 $('[name="login"]').focus();
 
