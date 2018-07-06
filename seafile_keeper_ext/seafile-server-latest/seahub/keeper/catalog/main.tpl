@@ -182,7 +182,6 @@
                     {/fyear}
 
                     {pagination-start}
-
                     <p style="text-align:center;%style%">
                         {/pagination-start}
 
@@ -233,7 +232,7 @@
         $('#scope-selector').click(function( event ) {
             var form = $( this ),
                 target = $( event.target )
-            if ( target.is('input') ) {
+            if ( target.is('input') && !target.attr('checked') ) {
                 $.post("/catalog", form.serialize(), function(){
                     form.submit();
                 });
