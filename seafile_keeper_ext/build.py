@@ -24,6 +24,9 @@ class InvalidAnswer(Exception):
         return self.msg
 
 class Utils(object):
+
+    all = False
+
     '''Groups all helper functions here'''
     @staticmethod
     def highlight(content):
@@ -148,8 +151,9 @@ class Utils(object):
         with open(fn, 'w') as fp:
             cp.write(fp)
 
-    @staticmethod
-    def ask_question(desc,
+    @classmethod
+    def ask_question(self,
+                     desc,
                      key=None,
                      note=None,
                      default=None,
@@ -188,7 +192,7 @@ class Utils(object):
 
         desc += '\n'
         if yes_or_no:
-            desc += '[ yes or no ]'
+            desc += '[ yes, no or all ]'
         else:
             if default:
                 desc += '[ default "%s" ]' % default
@@ -196,36 +200,41 @@ class Utils(object):
                 desc += '[ %s ]' % key
 
         desc += ' '
-        while True:
-            # prompt for user input
-            if password:
-                answer = getpass.getpass(desc).strip()
-            else:
-                answer = raw_input(desc).strip()
-
-            # No user input: use default
-            if not answer:
-                if default:
-                    answer = default
+        if self.all:
+            return True
+        else:
+            while True:
+                # prompt for user input
+                if password:
+                    answer = getpass.getpass(desc).strip()
                 else:
-                    continue
+                    answer = raw_input(desc).strip()
 
-            # Have user input: validate answer
-            if yes_or_no:
-                if answer not in ['yes', 'no', 'y', 'n']:
-                    print Utils.highlight('\nPlease answer yes or no\n')
-                    continue
-                else:
-                    return answer == 'yes'
-            else:
-                if validate:
-                    try:
-                        return validate(answer)
-                    except InvalidAnswer, e:
-                        print Utils.highlight('\n%s\n' % e)
+                # No user input: use default
+                if not answer:
+                    if default:
+                        answer = default
+                    else:
                         continue
+
+                # Have user input: validate answer
+                if yes_or_no:
+                    if answer not in ['yes', 'no', 'y', 'n', 'all']:
+                        print Utils.highlight('\nPlease answer yes, no or all\n')
+                        continue
+                    else:
+                        if answer == 'all':
+                            self.all = True
+                        return answer in ('yes', 'y', 'all')
                 else:
-                    return answer
+                    if validate:
+                        try:
+                            return validate(answer)
+                        except InvalidAnswer, e:
+                            print Utils.highlight('\n%s\n' % e)
+                            continue
+                    else:
+                        return answer
 
 
     @staticmethod
@@ -488,10 +497,10 @@ def do_deploy(args):
     if args.all:
         # TODO
         Utils.info('do deploy --all')
-        # for path in ['scripts', 'seahub-data', 'conf']:
-           # deploy_dir(path)
-        # create_custom_link()
-        deploy_dir('seafile-server-latest')
+        for path in ['scripts', 'seahub-data', 'conf']:
+           deploy_dir(path, expand=True)
+        create_custom_link()
+        deploy_dir('seafile-server-latest', expand=True)
         do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
         # deploy_http_conf()
         pass
