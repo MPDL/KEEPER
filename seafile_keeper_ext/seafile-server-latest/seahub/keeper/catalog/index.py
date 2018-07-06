@@ -54,10 +54,10 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 4 # per page
+pagination_items = 20 # per page
 
 # max pages in paginator
-max_pages_in_paginator = 3 # links
+max_pages_in_paginator = 5 # links
 
 
 #########################
@@ -320,8 +320,9 @@ def application(env, start_response):
                 # max number of pages
                 max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount > pagination_items else 0
 
-                pagination_group = (pagination_current + 1) / (max_pages_in_paginator + 1) + 1
-                start_page = (pagination_group - 1) * max_pages_in_paginator + 1
+                # pagination_group = int(math.ceil( 1.0 * (pagination_current + 1) / (max_pages_in_paginator + 1) + 1) )
+                pagination_group = pagination_current / max_pages_in_paginator
+                start_page = pagination_group * max_pages_in_paginator + 1
                 end_page = start_page + max_pages_in_paginator - 1
                 end_page = min(end_page, max_pages_count)
 
@@ -332,12 +333,12 @@ def application(env, start_response):
                 if ( pagination_current > 0 ):
                     main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
                 if ( pagination_group > 1 ):
-                    main_layer.write_layer('group-prev', page=str((pagination_group - 2) * max_pages_in_paginator + 1 ), scope=scope)
+                    main_layer.write_layer('group-prev', page=str((pagination_group - 1) * max_pages_in_paginator + 1 ), scope=scope)
                 for i in range( start_page, end_page + 1 ):
                     main_layer.write_layer('pagination', page=str(i),
                                            cssclass='active' if i - 1 == pagination_current else '',
                                            scope=scope)
-                next_group_first_page = pagination_group * max_pages_in_paginator + 1
+                next_group_first_page = (pagination_group + 1) * max_pages_in_paginator + 1
                 if ( next_group_first_page < max_pages_count ):
                     main_layer.write_layer('group-next', page=str(next_group_first_page), scope=scope)
                 if ( pagination_current + 1 < max_pages_count):
