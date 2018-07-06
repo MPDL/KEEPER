@@ -137,7 +137,7 @@ function check_seahub_running () {
 #echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 
 
-echo "Keeper ${__NODE_TYPE__} node ${__SYSLOG_IDENT__}"
+echo "Keeper ${__NODE_TYPE__} node ${__SYSLOG_IDENT__}, cmd: $1"
 
 case "$1" in
         start|restart)
@@ -149,8 +149,8 @@ case "$1" in
             
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                #sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi 8000 >> ${seahub_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                #sudo -u ${user} ${script_path}/seahub.sh ${1}-fastcgi 8000 >> ${seahub_init_log}
                 ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
@@ -179,7 +179,8 @@ case "$1" in
             #systemctl ${1} memcached.service
         ;;
         cluster-restart|cluster-status)
-            for i in __CLUSTER_NODES__; do
+            nodes=($(echo ${__CLUSTER_NODES__}))
+            for i in "${nodes[@]}"; do
                 ssh ${i} "keeper-service ${1#cluster-}"
             done
        ;;
@@ -199,8 +200,6 @@ case "$1" in
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
-            #for single node !!!
-            check_component_running "office_converter" "soffice.bin" "CRITICAL"
             #if [ "$1" == "status-background" ]; then
             if [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
