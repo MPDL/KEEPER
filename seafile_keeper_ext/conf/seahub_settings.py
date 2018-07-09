@@ -41,9 +41,13 @@ CACHES = {
     'default': {
         'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
         'LOCATION': '__MEMCACHED_SERVER__',
-    }
+    },
+    'locmem': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
 }
-
+COMPRESS_CACHE_BACKEND = 'locmem'
+# COMPRESS_CACHE_BACKEND = 'django.core.cache.backends.locmem.LocMemCache'
 ##########################################################################
 ####  Logging
 
@@ -132,8 +136,6 @@ FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 #### Cluster settings
 
 AVATAR_FILE_STORAGE = 'seahub.base.database_storage.DatabaseStorage'
-
-COMPRESS_CACHE_BACKEND = 'django.core.cache.backends.locmem.LocMemCache'
 
 ##########################################################################
 #### User management options
