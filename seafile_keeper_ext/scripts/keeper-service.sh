@@ -156,8 +156,8 @@ case "$1" in
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop
+                    echo "Starting..."
                 fi
-                echo "Starting..."
                 sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
                 sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
                 sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
