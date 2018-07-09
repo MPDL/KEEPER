@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Catalog - KEEPER</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
@@ -233,7 +232,7 @@
             var form = $( this ),
                 target = $( event.target )
             if ( target.is('input') && !target.attr('checked') ) {
-                $.post("/catalog", form.serialize(), function(){
+                $.post("/catalog/", form.serialize(), function(){
                     form.submit();
                 });
             }
