@@ -581,13 +581,17 @@ INSTALLED_APPS = (
     'seahub.role_permissions',
     'seahub.trusted_ip',
 
+    'seahub_extra.search',
+    'seahub_extra.sysadmin_extra',
+    'seahub_extra.organizations',
+    'seahub_extra.krb5_auth',
+
     'keeper',
 
 )
 
 # Keeper root dir
 SEAFILE_DIR = '__SEAFILE_DIR__'
-
 
 # default filename for CDC metadata
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
@@ -598,5 +602,3 @@ KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 # TEST_SERVER='__TEST_SERVER__'
 # TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
 # TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
-
-
