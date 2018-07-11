@@ -8,7 +8,8 @@ import StringIO
 import shutil
 import re
 import ConfigParser
-
+import pwd, grp
+import getpass
 
 BACKUP_POSTFIX = '_orig'
 
@@ -280,6 +281,21 @@ class Utils(object):
         if not os.path.isdir(path):
             Utils.error("Cannot find dir %s" % path)
 
+    @staticmethod
+    def set_chown(dirs, group, user):
+        """
+        Chown for dirs recursively
+        """
+        gid = grp.getgrnam(group).gr_gid
+        uid = pwd.getpwnam(user).pw_uid
+        for dir in dirs:
+            for root, ds, fs in os.walk(dir):
+                for d in ds:
+                    os.chown(os.path.join(root, d), gid, uid)
+                for f in fs:
+                    os.chown(os.path.join(root, f), gid, uid)
+
+
 class EnvManager(object):
     '''System environment and directory layout'''
     def __init__(self):
@@ -381,7 +397,7 @@ def create_custom_link():
         Utils.info("Link {} already exists, skipping!".format(env_mgr.custom_link))
     else:
         if not os.path.isdir(env_mgr.custom_dir):
-            Utils.info("{} does not exist, creating".format(env.custom_dir))
+            Utils.info("{} does not exist, creating".format(env_mgr.custom_dir))
             Utils.must_mkdir(env_mgr.custom_dir)
         os.symlink(env_mgr.custom_dir, env_mgr.custom_link)
 
@@ -495,15 +511,25 @@ def deploy_http_conf():
 def do_deploy(args):
 
     if args.all:
-        # TODO
+        # Deploy whole keeper stuff
         Utils.info('do deploy --all')
+        # deploy dirs
         for path in ['scripts', 'seahub-data', 'conf']:
            deploy_dir(path, expand=True)
+        # create custom link seafile-serverl-latest
         create_custom_link()
+        # deploy seafile-serverl-latest
         deploy_dir('seafile-server-latest', expand=True)
+        # generate i18n
         do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
+        # set chown for target dirs: chown -R seafile-server-latest conf seahub-data
+        Utils.set_chown(dirs=(
+            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            env_mgr.install_path),
+            group='seafile',
+            user='seafile')
         # deploy_http_conf()
-        pass
     elif args.conf:
         deploy_dir('conf', expand=True)
     elif args.http_conf:
