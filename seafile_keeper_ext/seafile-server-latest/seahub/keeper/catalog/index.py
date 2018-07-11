@@ -23,7 +23,7 @@ os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/p
 
 from django.core.cache import cache
 
-from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR
+from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 
 #########################
@@ -32,10 +32,8 @@ from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 #                       #
 #########################
 
-DEBUG = True
-
 # cluster mode
-CLUSTER_MODE = False
+CLUSTER_MODE = True
 
 # local install path of this script and files
 install_path =  SEAFILE_DIR + '/seafile-server-latest/seahub/keeper/catalog/'
