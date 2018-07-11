@@ -152,7 +152,6 @@ def generate_catalog_entry(repo):
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
-                logging.error(proj)
                 # Year
                 y = strip_uni(md.get("Year"))
                 if y:
