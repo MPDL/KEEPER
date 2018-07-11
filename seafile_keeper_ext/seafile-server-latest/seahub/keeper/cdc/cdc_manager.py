@@ -24,6 +24,8 @@ import subprocess
 from keeper.default_library_manager import get_keeper_default_library
 from keeper.common import parse_markdown, get_user_name, get_logger
 
+from keeper.models import Catalog
+
 from django.core.mail import EmailMessage
 from django.template import Context, loader
 
@@ -272,18 +274,20 @@ def generate_certificate(repo, commit):
     if repo.rep_desc == TEMPLATE_DESC:
         return False
 
-    # exit if cdc pdf is deleted
+    # TODO: if cdc pdf is deleted: set cert status to False and exit
     # see https://github.com/MPDL/KEEPER/issues/41
     if re.match(EVENT_PATTERNS['CDC_PDF_DELETED'], commit.desc):
+        event = EVENT.pdf_delete
+        Catalog.objects.update_cert_status_by_repo_id(repo.id, False)
         return False
 
     if re.match(EVENT_PATTERNS['ARCHIVE_METADATA_TARGET_MODIFIED'], commit.desc):
         event = EVENT.md_modified
 
     try:
-        LOGGER.info("PATT {}".format(EVENT_PATTERNS))
 
         cdc_id = get_cdc_id_by_repo(repo.id)
+
         if cdc_id is not None:
             if re.match(EVENT_PATTERNS['CDC_PDF_DELETED'], commit.desc):
                 # if cdc pdf is deleted, add pdf again!
@@ -291,7 +295,6 @@ def generate_certificate(repo, commit):
             elif event != EVENT.md_modified:
                 # exit if already certified and MD has not been changed
                 return False
-
 
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
 
@@ -398,17 +401,17 @@ def generate_certificate(repo, commit):
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
 
         #send user notification
-        LOGGER.info("Commit desc: " + commit.desc)
-        LOGGER.info("event: {}".format(event))
-        if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
-            UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
-                json.dumps({
-                'status': status,
-                'message':('; '.join(CDC_MSG)),
-                'msg_from': SERVER_EMAIL,
-                'lib': repo.id,
-                'lib_name': repo.name
-            }))
+        # LOGGER.info("Commit desc: " + commit.desc)
+        # LOGGER.info("event: {}".format(event))
+        # if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
+            # UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
+                # json.dumps({
+                # 'status': status,
+                # 'message':('; '.join(CDC_MSG)),
+                # 'msg_from': SERVER_EMAIL,
+                # 'lib': repo.id,
+                # 'lib_name': repo.name
+            # }))
 
 
 
