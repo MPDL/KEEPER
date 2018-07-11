@@ -41,12 +41,26 @@ class CatalogManager(models.Manager):
         """
         return [c for c in self.get_with_metadata() if c['is_certified']]
 
-
     def update_md_by_repo_id(self, repo_id, proj_md):
         catalog = self.get_by_repo_id(repo_id)
         catalog.md = proj_md
         catalog.save()
         return proj_md
+
+    def update_cert_status_by_repo_id(self, repo_id, status):
+        """
+        Set certification status:
+            True if CDC has been issued,
+            False if not,
+            None if MD is not yet validated
+        """
+        catalog = self.get_by_repo_id(repo_id)
+        if 'is_certified' in catalog.md:
+            catalog.md['is_certified'] = status
+            catalog.save()
+            return status
+        else:
+            return None
 
     def add_or_update_by_repo_id(self, repo_id, owner, proj_md):
         try:
@@ -56,13 +70,12 @@ class CatalogManager(models.Manager):
         except Catalog.DoesNotExist:
             catalog = self.model(repo_id=repo_id, owner=owner, md=proj_md)
         catalog.save()
-
         return catalog
 
 
 class Catalog(models.Model):
 
-    """ Keeper Catalog DB model"""
+    """ Keeper Catalog DB model """
 
     repo_id = models.CharField(max_length=37, unique=True, null=False)
     # catalog_id = models.PositiveIntegerField()
@@ -72,7 +85,6 @@ class Catalog(models.Model):
     modified = models.DateTimeField(auto_now=True)
     md = PickledObjectField()
     objects = CatalogManager()
-
 
 
 class CDCManager(models.Manager):
