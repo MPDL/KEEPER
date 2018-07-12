@@ -282,18 +282,23 @@ class Utils(object):
             Utils.error("Cannot find dir %s" % path)
 
     @staticmethod
-    def set_chown(dirs, group, user):
+    def set_perms(dirs, group, user):
         """
-        Chown for dirs recursively
+        Set permissions for dirs recursively
         """
         gid = grp.getgrnam(group).gr_gid
         uid = pwd.getpwnam(user).pw_uid
         for dir in dirs:
             for root, ds, fs in os.walk(dir):
                 for d in ds:
-                    os.chown(os.path.join(root, d), gid, uid)
+                    p = os.path.join(root, d)
+                    os.chown(p, gid, uid)
+                    os.chmod(p, 0755)
                 for f in fs:
-                    os.chown(os.path.join(root, f), gid, uid)
+                    p = os.path.join(root, f)
+                    os.chown(p, gid, uid)
+                    if p.endswith(('py', 'sh')):
+                        os.chmod(p, 0755)
 
 
 class EnvManager(object):
@@ -523,13 +528,20 @@ def do_deploy(args):
         # generate i18n
         do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
         # set chown for target dirs: chown -R seafile-server-latest conf seahub-data
-        Utils.set_chown(dirs=(
+        Utils.set_perms(dirs=(
             env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
             env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
             env_mgr.install_path),
             group='seafile',
             user='seafile')
         # deploy_http_conf()
+    elif args.perms:
+        Utils.set_perms(dirs=(
+            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            env_mgr.install_path),
+            group='seafile',
+            user='seafile')
     elif args.conf:
         deploy_dir('conf', expand=True)
     elif args.http_conf:
@@ -614,6 +626,7 @@ def main():
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
     parser_deploy.add_argument('--conf', help='deploy KEEPER configurations', action='store_true')
+    parser_deploy.add_argument('--perms', help='set perms', action='store_true')
     parser_deploy.add_argument('--http-conf', help='deploy http-conf', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
     parser_deploy.add_argument('-d', '--directory', help='deploy directory(s)', nargs='+')
