@@ -281,6 +281,16 @@ class Utils(object):
         if not os.path.isdir(path):
             Utils.error("Cannot find dir %s" % path)
 
+
+    @staticmethod
+    def chown_symlink(path, group, user):
+        """
+        Chown symlink
+        """
+        gid = grp.getgrnam(group).gr_gid
+        uid = pwd.getpwnam(user).pw_uid
+        os.lchown(path, uid, gid)
+
     @staticmethod
     def set_perms(dirs, group, user):
         """
@@ -300,6 +310,20 @@ class Utils(object):
                     if p.endswith(('py', 'sh')):
                         os.chmod(p, 0755)
 
+
+    @staticmethod
+    def check_link(link, target):
+        """
+        True if link and target exist and link points to target
+        """
+        if os.path.islink(link) and os.path.realpath(link) == target:
+            Utils.info("Link {} already exists, exiting!".format(link))
+            return False
+        else:
+            if not os.path.isdir(target):
+                Utils.info("Target {} does not exist, exiting!".format(target))
+                return False
+        return True
 
 class EnvManager(object):
     '''System environment and directory layout'''
@@ -354,7 +378,10 @@ class EnvManager(object):
         self.keeper_config.readfp(open(conf_files[0]))
 
         self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
-        self.custom_dir = os.path.join(self.seafile_dir, 'seahub-data', 'custom')
+        self.custom_dir = os.path.join(self.top_dir, 'seahub-data', 'custom')
+
+        self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
+        self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
 
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
@@ -392,20 +419,30 @@ class EnvManager(object):
 ## END helper functions
 ########################
 
-def create_custom_link():
-    """
-    Create link to custom directory for seafile customization,
-    see http://manual.seafile.com/config/seahub_customization.html
-    TO BE TESTED!!!!
-    """
-    if os.path.islink(env_mgr.custom_link):
-        Utils.info("Link {} already exists, skipping!".format(env_mgr.custom_link))
-    else:
-        if not os.path.isdir(env_mgr.custom_dir):
-            Utils.info("{} does not exist, creating".format(env_mgr.custom_dir))
-            Utils.must_mkdir(env_mgr.custom_dir)
-        os.symlink(env_mgr.custom_dir, env_mgr.custom_link)
+def check_latest_link():
+    """TODO: Docstring for check_latest_link.
+    :returns: TODO
 
+    """
+    # Utils.check_link(env_mgr.install_path,  )
+    pass
+
+
+def create_links():
+    """
+    Create links:
+        * to custom directory for seafile customization,
+          see http://manual.seafile.com/config/seahub_customization.html
+        * to avatars
+    """
+    print "----------------"
+    print "Create links"
+    for (link, target) in ((env_mgr.custom_link, env_mgr.custom_dir),
+                           (env_mgr.avatars_link, env_mgr.avatars_dir)):
+        if Utils.check_link(link, target):
+            os.symlink(target, link)
+            Utils.chown_symlink(link, 'seafile', 'seafile')
+            Utils.info(Utils.highlight("Created symlink {} -> {}".format(link, target)))
 
 
 def expand_properties(content):
@@ -516,32 +553,34 @@ def deploy_http_conf():
 def do_deploy(args):
 
     if args.all:
-        # Deploy whole keeper stuff
+        ### Deploy whole keeper stuff
         Utils.info('do deploy --all')
-        # deploy dirs
-        for path in ['scripts', 'seahub-data', 'conf']:
+
+        # check_latest_link()
+
+        ### deploy dirs
+        for path in ('scripts', 'seahub-data', 'conf'):
            deploy_dir(path, expand=True)
-        # create custom link seafile-serverl-latest
-        create_custom_link()
-        # deploy seafile-serverl-latest
-        deploy_dir('seafile-server-latest', expand=True)
-        # generate i18n
-        do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
-        # set chown for target dirs: chown -R seafile-server-latest conf seahub-data
-        Utils.set_perms(dirs=(
-            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
-            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
-            env_mgr.install_path),
-            group='seafile',
-            user='seafile')
+
+        ### create links
+        create_links()
+
+        ### deploy seafile-serverl-latest
+        # deploy_dir('seafile-server-latest', expand=True)
+
+        ### generate i18n
+        # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
+
+        ### set chown and permissions for target dires
+        # Utils.set_perms(dirs=(
+            # env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+            # env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            # env_mgr.install_path),
+            # group='seafile',
+            # user='seafile')
+
         # deploy_http_conf()
-    elif args.perms:
-        Utils.set_perms(dirs=(
-            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
-            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
-            env_mgr.install_path),
-            group='seafile',
-            user='seafile')
+
     elif args.conf:
         deploy_dir('conf', expand=True)
     elif args.http_conf:
@@ -626,7 +665,6 @@ def main():
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
     parser_deploy.add_argument('--conf', help='deploy KEEPER configurations', action='store_true')
-    parser_deploy.add_argument('--perms', help='set perms', action='store_true')
     parser_deploy.add_argument('--http-conf', help='deploy http-conf', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
     parser_deploy.add_argument('-d', '--directory', help='deploy directory(s)', nargs='+')
