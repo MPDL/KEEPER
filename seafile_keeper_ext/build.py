@@ -563,7 +563,7 @@ def do_deploy(args):
            deploy_dir(path, expand=True)
 
         ### create links
-        create_links()
+        # create_links()
 
         ### deploy seafile-serverl-latest
         # deploy_dir('seafile-server-latest', expand=True)
@@ -572,12 +572,12 @@ def do_deploy(args):
         # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
 
         ### set chown and permissions for target dires
-        # Utils.set_perms(dirs=(
-            # env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
-            # env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
-            # env_mgr.install_path),
-            # group='seafile',
-            # user='seafile')
+        Utils.set_perms(dirs=(
+            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            env_mgr.install_path),
+            group='seafile',
+            user='seafile')
 
         # deploy_http_conf()
 
