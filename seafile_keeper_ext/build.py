@@ -35,6 +35,11 @@ class Utils(object):
         return '\x1b[33m%s\x1b[m' % content
 
     @staticmethod
+    def red(content):
+        '''Print red on terminal'''
+        return '\x1b[31m%s\x1b[m' % content
+
+    @staticmethod
     def info(msg, newline=True):
         sys.stdout.write(msg)
         if newline:
@@ -44,7 +49,7 @@ class Utils(object):
     def error(msg):
         '''Print error and exit'''
         print
-        print 'Error: ' + msg
+        print Utils.red('Error: ' + msg)
         sys.exit(1)
 
     @staticmethod
@@ -314,16 +319,12 @@ class Utils(object):
     @staticmethod
     def check_link(link, target):
         """
-        True if link and target exist and link points to target
+        True if link does not exist link and target exisist
         """
-        if os.path.islink(link) and os.path.realpath(link) == target:
-            Utils.info("Link {} already exists, exiting!".format(link))
-            return False
-        else:
-            if not os.path.isdir(target):
-                Utils.info("Target {} does not exist, exiting!".format(target))
-                return False
-        return True
+        return not os.path.islink(link) and os.path.exists(target)
+
+
+        # return False
 
 class EnvManager(object):
     '''System environment and directory layout'''
@@ -377,11 +378,16 @@ class EnvManager(object):
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
 
+        self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
+
         self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
         self.custom_dir = os.path.join(self.top_dir, 'seahub-data', 'custom')
 
         self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
         self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
+
+        self.django_admin_link = '/usr/local/bin/django-admin'
+        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
 
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
@@ -424,8 +430,12 @@ def check_latest_link():
     :returns: TODO
 
     """
-    # Utils.check_link(env_mgr.install_path,  )
-    pass
+    if not os.path.islink(env_mgr.install_path):
+        Utils.error("Link {} does not exist!".format(env_mgr.install_path))
+
+    if not os.path.exists(env_mgr.seafile_server_latest_target):
+        Utils.error("seafile-server-latest target dir {} does not exist!".format(env_mgr.seafile_server_latest_target))
+
 
 
 def create_links():
@@ -435,10 +445,10 @@ def create_links():
           see http://manual.seafile.com/config/seahub_customization.html
         * to avatars
     """
-    print "----------------"
-    print "Create links"
     for (link, target) in ((env_mgr.custom_link, env_mgr.custom_dir),
-                           (env_mgr.avatars_link, env_mgr.avatars_dir)):
+                           (env_mgr.avatars_link, env_mgr.avatars_dir),
+                           (env_mgr.django_admin_link, env_mgr.django_admin_path),
+                           ):
         if Utils.check_link(link, target):
             os.symlink(target, link)
             Utils.chown_symlink(link, 'seafile', 'seafile')
@@ -513,7 +523,9 @@ def deploy_file(path, expand=False, dest_dir=None):
     content = fin.read()
     fin.close()
 
-    if expand:
+    # file types not to be expanded
+    expand_ignore_exts = ('.jar', '.png', '.zip', '.svg', '.pdf')
+    if expand and not path.endswith(expand_ignore_exts):
         content = expand_properties(content)
 
 
@@ -550,13 +562,16 @@ def deploy_http_conf():
 
     deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'], expand=True)
 
+    Utils.info(Utils.red("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details").format(opts['__HTTP_CONF__']))
+
+
 def do_deploy(args):
 
     if args.all:
         ### Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
-        # check_latest_link()
+        check_latest_link()
 
         ### deploy dirs
         for path in ('scripts', 'seahub-data', 'conf'):
@@ -566,10 +581,10 @@ def do_deploy(args):
         # create_links()
 
         ### deploy seafile-serverl-latest
-        # deploy_dir('seafile-server-latest', expand=True)
+        deploy_dir('seafile-server-latest', expand=True)
 
         ### generate i18n
-        # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
+        do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
 
         ### set chown and permissions for target dires
         Utils.set_perms(dirs=(
