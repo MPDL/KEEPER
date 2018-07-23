@@ -442,13 +442,16 @@ def check_latest_link():
 
 
 
-def create_links():
+def do_links():
     """
     Create links:
         * to custom directory for seafile customization,
           see http://manual.seafile.com/config/seahub_customization.html
         * to avatars
     """
+
+    check_latest_link()
+
     for (link, target) in ((env_mgr.custom_link, env_mgr.custom_dir),
                            (env_mgr.avatars_link, env_mgr.avatars_dir),
                            (env_mgr.django_admin_link, env_mgr.django_admin_path),
@@ -585,16 +588,18 @@ def do_deploy(args):
         ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
-        check_latest_link()
+
+        ## check and create links
+        do_links()
 
         ### deploy dirs
         for path in ('scripts', 'seahub-data', 'conf'):
            deploy_dir(path, expand=True)
 
-        ### deploy seafile-serverl-latest
+         ### deploy seafile-serverl-latest
         deploy_dir('seafile-server-latest', expand=True)
 
-        ### generate i18n
+       ### generate i18n
         do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
 
         ### set chown and permissions for target dires
@@ -605,10 +610,7 @@ def do_deploy(args):
             group='seafile',
             user='seafile')
 
-        ## create links
-        create_links()
-
-        ## deploy http confs
+            ## deploy http confs
         deploy_http_conf()
 
     elif args.conf:
