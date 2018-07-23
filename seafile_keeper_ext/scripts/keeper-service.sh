@@ -137,7 +137,7 @@ function check_seahub_running () {
 #echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 
 
-echo "Keeper ${__NODE_TYPE__} node ${__SYSLOG_IDENT__}, cmd: $1"
+echo "Keeper ${__NODE_TYPE__} node ${__NODE_FQDN__}, cmd: $1"
 
 case "$1" in
         start|restart)

@@ -1,0 +1,1 @@
+clamav gettext python-dev libmemcached-dev zlib1g-dev python-netaddr python-templayer python-pyrex python-chardet python-urllib3 python-wstools

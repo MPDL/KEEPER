@@ -61,10 +61,10 @@ LOGGING = {
             'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         },
         'syslog-django_request': {
-            'format': '__SYSLOG_IDENT__ django_request: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+            'format': '__NODE_FQDN__ django_request: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         },
         'syslog-seahub': {
-            'format': '__SYSLOG_IDENT__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+            'format': '__NODE_FQDN__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         },
     },
     'filters': {
