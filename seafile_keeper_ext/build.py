@@ -10,6 +10,7 @@ import re
 import ConfigParser
 import pwd, grp
 import getpass
+import traceback
 
 BACKUP_POSTFIX = '_orig'
 
@@ -389,6 +390,9 @@ class EnvManager(object):
         self.django_admin_link = '/usr/local/bin/django-admin'
         self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
 
+        self.keeper_service_link = '/usr/local/bin/keeper-service'
+        self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
+
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.SEAF_EXT_DIR_MAPPING = {
@@ -448,9 +452,19 @@ def create_links():
     for (link, target) in ((env_mgr.custom_link, env_mgr.custom_dir),
                            (env_mgr.avatars_link, env_mgr.avatars_dir),
                            (env_mgr.django_admin_link, env_mgr.django_admin_path),
+                           (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
                            ):
         if Utils.check_link(link, target):
-            os.symlink(target, link)
+            # case for avatar link: link has same name as existed target dir
+            # --> backup the dir
+            if os.path.isdir(link):
+                backup(link)
+
+            try:
+                os.symlink(target, link)
+            except Exception:
+                Utils.error("Cannot create link {} to target {}\n{}".format(link, target, traceback.format_exc()))
+
             Utils.chown_symlink(link, 'seafile', 'seafile')
             Utils.info(Utils.highlight("Created symlink {} -> {}".format(link, target)))
 
@@ -471,14 +485,14 @@ def expand_properties(content):
 
     return content
 
-def backup_file(path, rm=True):
+def backup(path, mv=True):
     back_path = path + BACKUP_POSTFIX
     if os.path.exists(back_path):
         Utils.info("Backup already exists: {}, skipping!".format(path + BACKUP_POSTFIX))
     else:
         try:
             Utils.info("Backup {} to {}".format(path, back_path))
-            if rm:
+            if mv:
                 os.rename(path, path + BACKUP_POSTFIX)
             else:
                 shutil.copyfile(path, path + BACKUP_POSTFIX)
@@ -509,7 +523,7 @@ def deploy_file(path, expand=False, dest_dir=None):
     dest_dir = os.path.dirname(dest_path)
 
     if os.path.exists(dest_path):
-        backup_file(dest_path)
+        backup(dest_path)
     else:
         if not Utils.ask_question("Deploy file {} into {}?".format(path, dest_path),
                                 default="yes",
@@ -568,7 +582,7 @@ def deploy_http_conf():
 def do_deploy(args):
 
     if args.all:
-        ### Deploy whole keeper stuff
+        ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
         check_latest_link()
@@ -576,9 +590,6 @@ def do_deploy(args):
         ### deploy dirs
         for path in ('scripts', 'seahub-data', 'conf'):
            deploy_dir(path, expand=True)
-
-        ### create links
-        # create_links()
 
         ### deploy seafile-serverl-latest
         deploy_dir('seafile-server-latest', expand=True)
@@ -594,7 +605,11 @@ def do_deploy(args):
             group='seafile',
             user='seafile')
 
-        # deploy_http_conf()
+        ## create links
+        create_links()
+
+        ## deploy http confs
+        deploy_http_conf()
 
     elif args.conf:
         deploy_dir('conf', expand=True)
@@ -621,7 +636,7 @@ def do_generate(args):
         Utils.info('Generate English translation catalog...')
         po_file = 'django.po'
         en_django_po_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
-        backup_file(os.path.join(en_django_po_dir, po_file), rm=False)
+        backup(os.path.join(en_django_po_dir, po_file), mv=False)
         Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir)
     elif args.i18n:
         Utils.info('Generate i18n...')
