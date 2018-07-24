@@ -251,7 +251,8 @@ function ajaxErrorHandler(xhr, textStatus, errorThrown) {
 		<h4 style="color: #57a5b8;" >A service by</h4>
 		<img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
 		<a style="color: #B7B7B7;  font-weight: lighter;" href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
-		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>	
+        <a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a></br>	
+		<a style="color: #B7B7B7;  font-weight: lighter;" href="https://keeper.mpdl.mpg.de/f/bf2c8a977f70428587eb/" target="_blank">Privacy Policy</a>	
 	</div>
 </div>
 

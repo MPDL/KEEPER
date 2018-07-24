@@ -16,6 +16,7 @@ GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 CLEANUP_SNAPSHOTS=1
 SHADOW_DB_REBUILD_DAY=7
 DB_BACKUP_DIR=/keeper/db-backup
+BACKUP_LOGS_DIR=/keeper/backup-logs
 
 MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
 #remove PID on EXIT
@@ -24,7 +25,7 @@ trap "rm -f -- '$MY_BACKUP_PID_FILE'" EXIT
 DEBUG=0
 
 if [ $DEBUG -ne 1 ]; then
-    exec > >(tee -a /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
+    exec > >(tee -a ${BACKUP_LOGS_DIR}/keeper_backup.`date '+%Y-%m-%d'`.log)
     exec 2>&1 
 fi
 
@@ -92,12 +93,20 @@ function backup_object_storage () {
 
     # 2. Create filesystem snapshot
     echo "Create snapshot..."
+    
+    #check GPFS status before 
+    mmdf $GPFS_DEVICE 
+
     mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
 	    err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
     fi 
+    echo "Snapshot creation time: $(date +"%Y-%m-%d %H:%M:%S")"
 	echo_green "OK"
+
+    #check GPFS status after 
+    mmdf $GPFS_DEVICE 
 
     echo "Start TSM  backup..."
     LOGLEVEL="-L 2"
