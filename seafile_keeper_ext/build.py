@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import sys
 import glob
@@ -396,11 +395,14 @@ class EnvManager(object):
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.SEAF_EXT_DIR_MAPPING = {
+            # dir -> dir mappings
             'conf': os.path.join(self.top_dir, 'conf'),
             'seafile-server-latest': self.install_path,
             'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
             'scripts': os.path.join(self.top_dir, 'scripts'),
             'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
+            # file -> file mappings
+            'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
         }
 
     def setup_python_path(self, env):
@@ -516,12 +518,17 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     p = path.strip('/').split('/')
 
-    if not dest_dir:
-        if not p[0] in env_mgr.SEAF_EXT_DIR_MAPPING:
-            Utils.error("Cannot find dest directory mapping for " + path )
-        dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[p[0]]
-
-    dest_path = dest_dir + '/' + '/'.join(p[1:])
+    # file is in mapping
+    if os.path.isfile(path) and path in env_mgr.SEAF_EXT_DIR_MAPPING:
+        dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[path]
+        dest_path = dest_dir
+    else:
+        # directory is in mapping
+        if not dest_dir:
+            if not p[0] in env_mgr.SEAF_EXT_DIR_MAPPING:
+                Utils.error("Cannot find dest directory mapping for " + path)
+            dest_dir = env_mgr.SEAF_EXT_DIR_MAPPING[p[0]]
+        dest_path = dest_dir + '/' + '/'.join(p[1:])
 
     dest_dir = os.path.dirname(dest_path)
 
@@ -549,7 +556,7 @@ def deploy_file(path, expand=False, dest_dir=None):
     fout = open(dest_path, 'w')
     fout.write(content)
     fout.close()
-    Utils.info(Utils.highlight("{} has been deployed into {}".format(path, dest_path)))
+    Utils.info(Utils.highlight("{} has been deployed into {}{}".format(path, dest_path, " (expanded)" if expand else "")))
 
     # Utils.info(dest_path)
 
@@ -610,8 +617,11 @@ def do_deploy(args):
             group='seafile',
             user='seafile')
 
-            ## deploy http confs
+        ## deploy http confs
         deploy_http_conf()
+
+        # deploy memcahced keepalived
+        deploy_file('system/keepalived.conf', expand=True)
 
     elif args.conf:
         deploy_dir('conf', expand=True)
