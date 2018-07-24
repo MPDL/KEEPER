@@ -342,7 +342,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
-        'role_quota': '1g',
+        'role_quota': '1t',
     },
     'guest': {
         'can_add_repo': False,
@@ -368,7 +368,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
-        'role_quota': '100m',
+        'role_quota': '1t',
     },
 }
 
