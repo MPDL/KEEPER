@@ -1,7 +1,7 @@
 #!/bin/bash
 #set -x
 # Set seafile root directory
-SEAFILE_DIR=/opt/seafile
+SEAFILE_DIR=__SEAFILE_DIR__
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 BACKUP_POSTFIX="_orig"
 
@@ -10,10 +10,8 @@ export PATH
 TODAY=`date '+%Y%m%d'`
 WEEKDAY=`date '+%u'`
 DAYOFMONTH=`date '+%d'`
-GPFS_DEVICE="app-qa-keeper"
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
-CLEANUP_SNAPSHOTS=0
-SKIP_TSM_BACKUP=1
+CLEANUP_SNAPSHOTS=1
 SHADOW_DB_REBUILD_DAY=7
 DB_BACKUP_DIR=/keeper/db-backup
 
@@ -70,15 +68,15 @@ function cleanup_old_snapshots () {
     LATEST_SN_COUNT=3
     if [ $CLEANUP_SNAPSHOTS -eq 1 ]; then
         echo -e "Clean up old snapshots...\n"
-        SNAPSHOTS=($(mmlssnapshot $GPFS_DEVICE | tail -n +3 | cut -d' ' -f1 | sort -r))
+        SNAPSHOTS=($(mmlssnapshot ${__GPFS_DEVICE__} | tail -n +3 | cut -d' ' -f1 | sort -r))
         if [ -n "$SNAPSHOTS" ]; then
             for SN in "${SNAPSHOTS[@]:$LATEST_SN_COUNT}"; do
-                CMD="mmdelsnapshot $GPFS_DEVICE $SN"
+                CMD="mmdelsnapshot ${__GPFS_DEVICE__} $SN"
                 #echo $CMD
                 eval "$CMD"
             done
         else 
-            warn "No snapshots on $GPFS_DEVICE"
+            warn "No snapshots on ${__GPFS_DEVICE__}"
         fi
         echo_green "Clean up of old snapshots is OK"
     fi
@@ -87,7 +85,7 @@ function cleanup_old_snapshots () {
 
 function do_tsm_backup () {
 
-    if [ $SKIP_TSM_BACKUP -ne 1 ]; then
+    if [ "${__SKIP_TSM_BACKUP__}" != "True" ]; then
         echo "Start TSM  backup..."
         LOGLEVEL="-L 2"
         export MMBACKUP_DSMC_BACKUP="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
@@ -123,7 +121,7 @@ function backup_object_storage () {
     # remove old one if exists
     [[ -e $GPFS_BACKUP_CONF ]] && rm -v $GPFS_BACKUP_CONF
     # save current
-    mmbackupconfig $GPFS_DEVICE -o $GPFS_BACKUP_CONF  
+    mmbackupconfig ${__GPFS_DEVICE__} -o $GPFS_BACKUP_CONF  
     if [ $? -ne 0 ]; then
 	    err_and_exit "Could not save GPFS backup config" 
     fi 
@@ -133,9 +131,9 @@ function backup_object_storage () {
     echo "Create snapshot..."
     
     #check GPFS status before 
-    mmdf $GPFS_DEVICE 
+    mmdf ${__GPFS_DEVICE__} 
     
-    mmcrsnapshot $GPFS_DEVICE $GPFS_SNAPSHOT 
+    mmcrsnapshot ${__GPFS_DEVICE__} $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
 	    err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
@@ -153,7 +151,7 @@ function backup_object_storage () {
     RECOVERY_COMMANDS+=("CHECK CONTENT: mysqlbinlog --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" --base64-output=decode-rows --verbose ${BIN_LOGS_DIR}/${NEWEST_BIN_FILE} > decoded.txt")
 
     #check GPFS status after 
-    mmdf $GPFS_DEVICE 
+    mmdf ${__GPFS_DEVICE__} 
 
     do_tsm_backup
 
@@ -168,7 +166,7 @@ function backup_object_storage () {
 
 ##### START
 echo_green "Backup started at $(date)"
-START=$(imestamp)
+START=$(timestamp)
 
 ###### CHECK 
 #keeper is already running!
@@ -191,12 +189,12 @@ fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
-if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
+if [[ ! "$RESULT" =~ "${__GPFS_DEVICE__} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
 # Exit if there is a snapshot today. 
-RESULT=$(mmlssnapshot ${GPFS_DEVICE} | tail -n +3 | cut -d' ' -f1 | grep ${GPFS_SNAPSHOT} -q)
+RESULT=$(mmlssnapshot ${__GPFS_DEVICE__} | tail -n +3 | cut -d' ' -f1 | grep ${GPFS_SNAPSHOT} -q)
 if [ $? -eq 0 ]; then
     err_and_exit "Cannot create snapshot $GPFS_SNAPSHOT: the snapshot exists already." 
 fi 
