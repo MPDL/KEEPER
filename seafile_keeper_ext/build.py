@@ -403,6 +403,7 @@ class EnvManager(object):
             'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
             # file -> file mappings
             'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
+            'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
         }
 
     def setup_python_path(self, env):
@@ -622,6 +623,12 @@ def do_deploy(args):
 
         # deploy memcahced keepalived
         deploy_file('system/keepalived.conf', expand=True)
+
+        # deploy cron.d conf
+        cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
+        if cron_node == 'True':
+            deploy_file('system/cron.d.keeper', expand=True)
+
 
     elif args.conf:
         deploy_dir('conf', expand=True)
