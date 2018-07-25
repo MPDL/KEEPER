@@ -621,8 +621,10 @@ def do_deploy(args):
         ## deploy http confs
         deploy_http_conf()
 
-        # deploy memcahced keepalived
-        deploy_file('system/keepalived.conf', expand=True)
+        # deploy memcahced keepalived, only for APP nodes!
+        node_type = env_mgr.keeper_config.get('global', '__NODE_TYPE__')
+        if node_type == 'APP':
+            deploy_file('system/keepalived.conf', expand=True)
 
         # deploy cron.d conf
         cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
