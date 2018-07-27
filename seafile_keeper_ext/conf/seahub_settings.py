@@ -214,7 +214,7 @@ SHARE_LINK_PASSWORD_MIN_LENGTH = 8
 
 # Disable sync with any folder. Default is `False`
 # NOTE: since version 4.2.4
-DISABLE_SYNC_WITH_ANY_FOLDER = True
+DISABLE_SYNC_WITH_ANY_FOLDER = False
 
 # Enable or disable library history setting
 ENABLE_REPO_HISTORY_SETTING = True
