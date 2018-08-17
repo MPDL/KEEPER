@@ -203,7 +203,8 @@ case "$1" in
             #if [ "$1" == "status-background" ]; then
             if [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
-                check_component_running "office_converter" "soffice.bin" "CRITICAL"
+                #check_component_running "office_converter" "soffice.bin" "CRITICAL"
+                check_component_running "office_converter" "soffice.*--invisible --nocrashreport"
             else
                 check_keepalived
                 check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
