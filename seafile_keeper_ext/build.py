@@ -386,10 +386,10 @@ class EnvManager(object):
         self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
         self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
 
-        self.django_admin_link = '/usr/local/bin/django-admin'
+        self.django_admin_link = os.path.join('usr', 'local', 'bin', 'django-admin')
         self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
 
-        self.keeper_service_link = '/usr/local/bin/keeper-service'
+        self.keeper_service_link = os.path.join('usr', 'local', 'bin', 'keeper-service')
         self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
 
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
@@ -404,6 +404,7 @@ class EnvManager(object):
             # file -> file mappings
             'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
             'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
+            'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
         }
 
     def setup_python_path(self, env):
@@ -593,9 +594,13 @@ def deploy_http_conf():
 def do_deploy(args):
 
     if args.all:
+
         ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
+        # global "yes" for all questions
+        if args.yes:
+            Utils.all = True
 
         ## check and create links
         do_links()
@@ -614,6 +619,7 @@ def do_deploy(args):
         Utils.set_perms(dirs=(
             env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
             env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
             env_mgr.install_path),
             group='seafile',
             user='seafile')
@@ -621,12 +627,13 @@ def do_deploy(args):
         ## deploy http confs
         deploy_http_conf()
 
-        # deploy memcahced keepalived, only for APP nodes!
+        # deploy APP node related confs
         node_type = env_mgr.keeper_config.get('global', '__NODE_TYPE__')
         if node_type == 'APP':
+            deploy_file('system/memcached.conf')
             deploy_file('system/keepalived.conf', expand=True)
 
-        # deploy cron.d conf
+        # deploy CRON node conf
         cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
         if cron_node == 'True':
             deploy_file('system/cron.d.keeper', expand=True)
@@ -661,7 +668,7 @@ def do_generate(args):
         Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir)
     elif args.i18n:
         Utils.info('Generate i18n...')
-        Utils.run("./i18n.sh compile-all", cwd=env_mgr.seahub_dir)
+        Utils.run("./i18n.sh compile-all", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
         Utils.info('Done.')
     elif args.min_css:
         Utils.info('Generate seahub.min.css...')
@@ -712,6 +719,7 @@ def main():
     # deploy
     parser_deploy = subparsers.add_parser('deploy', help='Deploy KEEPER components')
     parser_deploy.add_argument('-e', '--expand', help='expand properties', action='store_true')
+    parser_deploy.add_argument('-y', '--yes', help='say yes to all', action='store_true')
     parser_deploy = parser_deploy.add_mutually_exclusive_group()
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
