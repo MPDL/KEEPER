@@ -119,7 +119,8 @@ class Utils(object):
     def must_mkdir(path):
         '''Create a directory recursively, exit on failure'''
         try:
-            os.makedirs(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
         except OSError, e:
             Utils.error('failed to create directory %s:%s' % (path, e))
 
@@ -304,6 +305,8 @@ class Utils(object):
         gid = grp.getgrnam(group).gr_gid
         uid = pwd.getpwnam(user).pw_uid
         for dir in dirs:
+            os.chown(dir, gid, uid)
+            os.chmod(dir, 0755)
             for root, ds, fs in os.walk(dir):
                 for d in ds:
                     p = os.path.join(root, d)
@@ -378,22 +381,6 @@ class EnvManager(object):
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
 
-        self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
-
-        self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
-        self.custom_dir = os.path.join(self.top_dir, 'seahub-data', 'custom')
-
-        self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
-        self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
-
-        self.django_admin_link = os.path.join('usr', 'local', 'bin', 'django-admin')
-        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
-
-        self.keeper_service_link = os.path.join('usr', 'local', 'bin', 'keeper-service')
-        self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
-
-        self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
-
         self.SEAF_EXT_DIR_MAPPING = {
             # dir -> dir mappings
             'conf': os.path.join(self.top_dir, 'conf'),
@@ -405,7 +392,34 @@ class EnvManager(object):
             'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
             'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
             'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
+            'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+            'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
+            'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
         }
+
+        self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
+
+        self.seafile_logs_dir = os.path.join(self.top_dir, 'logs')
+
+        self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
+        self.custom_dir = os.path.join(self.top_dir, 'seahub-data', 'custom')
+
+        self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
+        self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
+
+        self.django_admin_link = os.path.join('/usr', 'local', 'bin', 'django-admin')
+        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
+
+        self.keeper_service_link = os.path.join('/usr', 'local', 'bin', 'keeper-service')
+        self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
+
+        self.keeper_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper.service')
+        self.keeper_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper.service']
+
+        self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
+
+        self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
+
 
     def setup_python_path(self, env):
         '''And PYTHONPATH and CCNET_CONF_DIR/SEAFILE_CONF_DIR to env, which is
@@ -460,6 +474,7 @@ def do_links():
                            (env_mgr.avatars_link, env_mgr.avatars_dir),
                            (env_mgr.django_admin_link, env_mgr.django_admin_path),
                            (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
+                           (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
                            ):
         if Utils.check_link(link, target):
             # case for avatar link: link has same name as existed target dir
@@ -588,7 +603,7 @@ def deploy_http_conf():
 
     deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'], expand=True)
 
-    Utils.info(Utils.red("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details").format(opts['__HTTP_CONF__']))
+    Utils.info("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details".format(opts['__HTTP_CONF__']))
 
 
 def do_deploy(args):
@@ -601,6 +616,10 @@ def do_deploy(args):
         # global "yes" for all questions
         if args.yes:
             Utils.all = True
+
+        # deploy keeper.service systemd
+        deploy_file('system/keeper.service')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
 
         ## check and create links
         do_links()
@@ -615,17 +634,32 @@ def do_deploy(args):
        ### generate i18n
         do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
 
+        # create logging dirs
+        Utils.must_mkdir(env_mgr.seafile_logs_dir)
+        Utils.must_mkdir(env_mgr.keeper_var_log_dir)
+
         ### set chown and permissions for target dires
+        env_mgr.read_seafile_conf_dir()
         Utils.set_perms(dirs=(
+            env_mgr.seafile_dir,
+            env_mgr.ccnet_dir,
             env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
-            env_mgr.SEAF_EXT_DIR_MAPPING['conf'],
+            env_mgr.central_config_dir,
             env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
-            env_mgr.install_path),
+            env_mgr.pro_data_dir,
+            env_mgr.seafile_logs_dir,
+            env_mgr.keeper_var_log_dir,
+            env_mgr.install_path,
+            ),
             group='seafile',
             user='seafile')
 
         ## deploy http confs
         deploy_http_conf()
+
+        # deploy common confs
+        deploy_file('system/rsyslog.conf', expand=True)
+        deploy_file('system/my.cnf', expand=True)
 
         # deploy APP node related confs
         node_type = env_mgr.keeper_config.get('global', '__NODE_TYPE__')
@@ -637,6 +671,8 @@ def do_deploy(args):
         cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
         if cron_node == 'True':
             deploy_file('system/cron.d.keeper', expand=True)
+
+
 
 
     elif args.conf:
@@ -665,7 +701,7 @@ def do_generate(args):
         po_file = 'django.po'
         en_django_po_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
         backup(os.path.join(en_django_po_dir, po_file), mv=False)
-        Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir)
+        Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
         Utils.info('Generate i18n...')
         Utils.run("./i18n.sh compile-all", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
