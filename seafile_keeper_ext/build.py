@@ -498,9 +498,12 @@ def expand_properties(content):
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
             # expand  __PROP__ and not ${__PROP__}
+            if value.lower() in ('false', 'true'):
+                value = value.capitalize()
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
-    if kc.get('backup', '__IS_BACKUP_SERVER__') == 'True':
+
+    if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
         content = re.sub("backup_url.*?\n", "", content)
     else:
         content = re.sub("primary_url.*?\n", "", content)
