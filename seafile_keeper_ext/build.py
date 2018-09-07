@@ -395,6 +395,7 @@ class EnvManager(object):
             'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
             'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
+            'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -663,6 +664,7 @@ def do_deploy(args):
         # deploy common confs
         deploy_file('system/rsyslog.conf', expand=True)
         deploy_file('system/my.cnf', expand=True)
+        deploy_file('system/nagios.keeper.cfg')
 
         # deploy APP node related confs
         node_type = env_mgr.keeper_config.get('global', '__NODE_TYPE__')
