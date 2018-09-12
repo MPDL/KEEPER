@@ -391,6 +391,7 @@ class EnvManager(object):
             # file -> file mappings
             'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
             'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
+            'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
             'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
             'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
             'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
@@ -671,6 +672,8 @@ def do_deploy(args):
         if node_type == 'APP':
             deploy_file('system/memcached.conf')
             deploy_file('system/keepalived.conf', expand=True)
+        elif node_type == 'BACKGROUND':
+            deploy_file('system/cron.d.keeper@background', expand=True)
 
         # deploy CRON node conf
         cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
