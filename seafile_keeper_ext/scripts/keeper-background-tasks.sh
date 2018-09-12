@@ -12,6 +12,7 @@ pro_pylibs_dir=${INSTALLPATH}/pro/python
 
 seafevents_conf=${TOPDIR}/conf/seafevents.conf
 seafile_background_tasks_log=${logdir}/seafile-background-tasks.log
+seafile_background_tasks_init_log=${logdir}/seafile-background-tasks.init.log
 
 seahub_dir=${INSTALLPATH}/seahub
 central_config_dir=${TOPDIR}/conf
@@ -131,8 +132,10 @@ function before_start() {
 function start_seafile_background_tasks () {
     before_start;
     echo "Starting seafile background tasks ..."
+    #$PYTHON -m seafevents.background_tasks --config-file "${seafevents_conf}" \
+        #--loglevel debug --logfile "${seafile_background_tasks_log}" -P "${pidfile}" 2>/dev/null 1>&2 &
     $PYTHON -m seafevents.background_tasks --config-file "${seafevents_conf}" \
-        --loglevel debug --logfile "${seafile_background_tasks_log}" -P "${pidfile}" 2>/dev/null 1>&2 &
+            --loglevel debug --logfile "${seafile_background_tasks_log}" -P "${pidfile}" 2>&1 | tee -a ${seafile_background_tasks_init_log} &
 
     # Ensure started successfully
     sleep 5
