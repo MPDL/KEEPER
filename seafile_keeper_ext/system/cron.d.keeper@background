@@ -1,0 +1,7 @@
+RSYSLOG="logger -s -n syslog-mpcdf.mpdl.mpg.de -t"                                                                                                                                                                                    
+DATE=`date '+%Y-%m-%d'`
+
+# keeper-background-tasks-daemon 
+*/3 * * * * root . /etc/profile; bash -c "sudo -u seafile /opt/seafile/scripts/keeper-background-tasks-daemon.sh 2>&1 | tee -a /var/log/keeper/keeper-background-tasks-daemon.log"
+
+
