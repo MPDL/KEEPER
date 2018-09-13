@@ -12,17 +12,17 @@
 
 #set -x
 
-# Change the value of "user" to linux user name who runs seafile
-user=seafile
-
-WEB_SERVER=__HTTP_SERVER__
-
 CURR_DIR=$(dirname $(readlink -f $0))
 source "${CURR_DIR}/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
 	echo "Cannot run inject_keeper_env.sh"
     exit 1
 fi
+
+# Change the value of "user" to linux user name who runs seafile
+user=${__OS_USER__}
+
+WEB_SERVER=${__HTTP_SERVER__}
 
 # Change the value of "seafile_dir" to your path of seafile installation
 # usually the home directory of $user

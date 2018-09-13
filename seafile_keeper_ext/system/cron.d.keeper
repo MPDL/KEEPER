@@ -8,14 +8,14 @@ DATE=`date '+%Y-%m-%d'`
 30 0  * * 1 root . /etc/profile; bash -c "__SEAFILE_DIR__/scripts/check_object_storage_integrity.sh 2>&1"
 
 # keeper garbage collector 
-30 0  * * 6 root . /etc/profile; bash -c "sudo -u seafile __SEAFILE_DIR__/seafile-server-latest/seaf-gc.sh -t 10 2>&1 | tee /var/log/keeper/keeper_gc.$DATE.log"
+30 0  * * 6 root . /etc/profile; bash -c "sudo -u __OS_USER__ __SEAFILE_DIR__/seafile-server-latest/seaf-gc.sh -t 10 2>&1 | tee __KEEPER_LOG_DIR___/keeper_gc.$DATE.log"
 
 #rotate keeper object storage integrity logs, weekly before object storage integrity check. remove logs older than 180 days  
-0 0 * * 1 root ( find /var/log/keeper -name keeper_object_sorage_integrity.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+0 0 * * 1 root ( find __KEEPER_LOG_DIR___ -name keeper_object_sorage_integrity.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
 
 #rotate gc logs, weekly before gc. remove logs older than 180 days  
-0 0 * * 6 root ( find /var/log/keeper -name keeper_gc.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+0 0 * * 6 root ( find __KEEPER_LOG_DIR___ -name keeper_gc.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
 
 #rotate local server backup logs, daily before backup. remove logs older than 30 days  
-#5 4 * * * root ( find /var/log/keeper -name keeper_backup.\*.log -mtime +30 -delete; >/dev/null 2>&1 )
+#5 4 * * * root ( find __KEEPER_LOG_DIR___ -name keeper_backup.\*.log -mtime +30 -delete; >/dev/null 2>&1 )
 
