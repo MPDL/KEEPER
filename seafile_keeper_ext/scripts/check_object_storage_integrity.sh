@@ -7,15 +7,16 @@ SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 
 RC=0
 
-exec > >(tee /var/log/keeper/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
-exec 2>&1 
-
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
 	echo "Cannot run inject_keeper_env.sh"
     exit 1
 fi
+
+exec > >(tee ${__KEEPER_LOG_DIR__}/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
+exec 2>&1 
+
 
 # check seafile object storage integrity
 function check_object_storage_integrity () {
