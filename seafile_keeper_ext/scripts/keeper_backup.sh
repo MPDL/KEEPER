@@ -21,12 +21,6 @@ MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
 #remove PID on EXIT
 trap "rm -f -- '$MY_BACKUP_PID_FILE'" EXIT
 
-DEBUG=0
-
-if [ $DEBUG -ne 1 ]; then
-    exec > >(tee -a /var/log/keeper/keeper_backup.`date '+%Y-%m-%d'`.log)
-    exec 2>&1 
-fi
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -35,6 +29,12 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
+DEBUG=0
+
+if [ $DEBUG -ne 1 ]; then
+    exec > >(tee -a ${__KEEPER_LOG_DIR__}/keeper_backup.`date '+%Y-%m-%d'`.log)
+    exec 2>&1 
+fi
 
 function get_timestamp() {
     echo $(date +"%Y-%m-%d %H:%M:%S")

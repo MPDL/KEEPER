@@ -2,22 +2,22 @@
 if $syslogtag startswith 'Keepalived' then {
         # QA keepalived/haproxy 
         if $fromhost contains 'qa-keeper' and $fromhost startswith 'proxy' then {
-                local1.* /var/log/keeper/qa-keepalived.log
+                local1.* __KEEPER_LOG_DIR__/qa-keepalived.log
                 stop
         }
         # QA keepalived/memcached
         if $fromhost contains 'qa-keeper' and $fromhost startswith 'app' then {
-                local1.* /var/log/keeper/qa-keepalived-memcached.log
+                local1.* __KEEPER_LOG_DIR__/qa-keepalived-memcached.log
                 stop
         }
         # PROD keepalived/haproxy 
         if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'proxy' then {
-                local1.* /var/log/keeper/keepalived.log
+                local1.* __KEEPER_LOG_DIR__/keepalived.log
                 stop
         }
         # PROD keepalived/memcached
         if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'app' then {
-                local1.* /var/log/keeper/keepalived-memcached.log
+                local1.* __KEEPER_LOG_DIR__/keepalived-memcached.log
                 stop
         }
 }
@@ -27,17 +27,17 @@ if $syslogtag startswith 'Keepalived' then {
 if $fromhost contains 'qa-keeper' then {
         # nginx access
         if $syslogtag == 'nginxaccess:'  then {
-            local1.* /var/log/keeper/qa-nginx_access.log
+            local1.* __KEEPER_LOG_DIR__/qa-nginx_access.log
             stop
         }
         # nginx error
         if $syslogtag == 'nginxerror:'  then {
-            local1.* /var/log/keeper/qa-nginx_error.log
+            local1.* __KEEPER_LOG_DIR__/qa-nginx_error.log
             stop
         }
         # all other keeper logs 
         if $syslogtag startswith 'qakeeper' then {
-            local1.* /var/log/keeper/qa-keeper.log
+            local1.* __KEEPER_LOG_DIR__/qa-keeper.log
             stop
         }
 }
@@ -46,17 +46,17 @@ if $fromhost contains 'qa-keeper' then {
 if $fromhost contains 'app-bg-keeper' or re_match($fromhost, "app0[123]-keeper") then {
         # nginx access
         if $syslogtag == 'nginxaccess:'  then {
-            local1.* /var/log/keeper/nginx_access.log
+            local1.* __KEEPER_LOG_DIR__/nginx_access.log
             stop
         }
         # nginx error
         if $syslogtag == 'nginxerror:'  then {
-            local1.* /var/log/keeper/nginx_error.log
+            local1.* __KEEPER_LOG_DIR__/nginx_error.log
             stop
         }
         # all other keeper logs 
         if $syslogtag startswith 'keeper' then {
-            local1.* /var/log/keeper/keeper.log
+            local1.* __KEEPER_LOG_DIR__/keeper.log
             stop
         }
 }
