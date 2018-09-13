@@ -44,7 +44,7 @@ CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
 CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
-CDC_LOG = '/var/log/keeper/keeper.cdc.log'
+CDC_LOG = '__KEEPER_LOG_DIR__/keeper.cdc.log'
 
 MSG_TYPE_KEEPER_CDC_MSG = 'keeper_cdc_msg'
 
