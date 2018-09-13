@@ -499,9 +499,10 @@ def expand_properties(content):
         for key, value in kc.items(section):
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
-            # expand  __PROP__ and not ${__PROP__}
+            # capitalize bools
             if value.lower() in ('false', 'true'):
                 value = value.capitalize()
+            # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
 
@@ -622,6 +623,8 @@ def do_deploy(args):
         if args.yes:
             Utils.all = True
 
+        keep_ini = env_mgr.keeper_config
+
         # deploy keeper.service systemd
         deploy_file('system/keeper.service')
         os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
@@ -656,8 +659,8 @@ def do_deploy(args):
             env_mgr.keeper_var_log_dir,
             env_mgr.install_path,
             ),
-            group='seafile',
-            user='seafile')
+            group=keep_ini.get('system', '__OS_GROUP__'),
+            user=keep_ini.get('system', '__OS_USER__'),)
 
         ## deploy http confs
         deploy_http_conf()
@@ -668,7 +671,7 @@ def do_deploy(args):
         deploy_file('system/nagios.keeper.cfg')
 
         # deploy APP node related confs
-        node_type = env_mgr.keeper_config.get('global', '__NODE_TYPE__')
+        node_type = keep_ini.get('global', '__NODE_TYPE__')
         if node_type == 'APP':
             deploy_file('system/memcached.conf')
             deploy_file('system/keepalived.conf', expand=True)
@@ -676,7 +679,7 @@ def do_deploy(args):
             deploy_file('system/cron.d.keeper@background', expand=True)
 
         # deploy CRON node conf
-        cron_node = env_mgr.keeper_config.get('global', '__IS_CRON_JOBS_NODE__')
+        cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
         if cron_node == 'True':
             deploy_file('system/cron.d.keeper', expand=True)
 
