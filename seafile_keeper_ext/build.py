@@ -397,6 +397,7 @@ class EnvManager(object):
             'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
+            'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -662,13 +663,14 @@ def do_deploy(args):
             group=keep_ini.get('system', '__OS_GROUP__'),
             user=keep_ini.get('system', '__OS_USER__'),)
 
-        ## deploy http confs
-        deploy_http_conf()
-
         # deploy common confs
+        deploy_file('system/nginx.conf', expand=True)
         deploy_file('system/rsyslog.conf', expand=True)
         deploy_file('system/my.cnf', expand=True)
         deploy_file('system/nagios.keeper.cfg')
+
+        # deploy http confs
+        deploy_http_conf()
 
         # deploy APP node related confs
         node_type = keep_ini.get('global', '__NODE_TYPE__')
@@ -682,7 +684,6 @@ def do_deploy(args):
         cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
         if cron_node == 'True':
             deploy_file('system/cron.d.keeper', expand=True)
-
 
 
 
