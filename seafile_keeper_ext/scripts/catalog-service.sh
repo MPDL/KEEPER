@@ -12,6 +12,7 @@ GATALOG_PID_FILE=${SEAFILE_LATEST_DIR}/runtime/catalog.pid
 
 
 function start_catalog () {
+    export PYTHON_EGG_CACHE=$(echo ~${__OS_USER__})/.cache/Python-Eggs
     uwsgi --pidfile $GATALOG_PID_FILE --ini ${SEAFILE_LATEST_DIR}/seahub/keeper/catalog/catalog.ini 2>/dev/null & 
     sleep 2
     if [ ! -f "$GATALOG_PID_FILE" ]; then
