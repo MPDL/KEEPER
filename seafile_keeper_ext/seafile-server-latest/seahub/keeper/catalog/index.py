@@ -32,9 +32,6 @@ from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 #                       #
 #########################
 
-# cluster mode
-CLUSTER_MODE = True
-
 # local install path of this script and files
 install_path =  SEAFILE_DIR + '/seafile-server-latest/seahub/keeper/catalog/'
 
@@ -106,8 +103,8 @@ def application(env, start_response):
         errmsg = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
 
 
-        # remote address depends on cluster mode
-        remote_addr = env['HTTP_X_FORWARDED_FOR'] if CLUSTER_MODE else env['REMOTE_ADDR']
+        # get HTTP_X_FORWARDED_FOR (i.e. servier is clustered), otherwise remote address
+        remote_addr = env['HTTP_X_FORWARDED_FOR'] if 'HTTP_X_FORWARDED_FOR' in env else env['REMOTE_ADDR']
 
         # test for valid IP
         is_valid_user = 0 # default 0 not valid
