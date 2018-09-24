@@ -324,6 +324,8 @@ class Utils(object):
         """
         True if link does not exist link and target exisist
         """
+        print ("Check {}->{} ({},{})".format(link, target, not os.path.islink(link), os.path.exists(target)))
+
         return not os.path.islink(link) and os.path.exists(target)
 
 
@@ -465,10 +467,7 @@ def check_latest_link():
 
 def do_links():
     """
-    Create links:
-        * to custom directory for seafile customization,
-          see http://manual.seafile.com/config/seahub_customization.html
-        * to avatars
+    Create keeper related links
     """
 
     check_latest_link()
@@ -630,14 +629,14 @@ def do_deploy(args):
         deploy_file('system/keeper.service')
         os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
 
-        ## check and create links
-        do_links()
-
         ### deploy dirs
         for path in ('scripts', 'seahub-data', 'conf'):
            deploy_dir(path, expand=True)
 
-         ### deploy seafile-serverl-latest
+        ## check and create links.
+        do_links()
+
+        ### deploy seafile-serverl-latest
         deploy_dir('seafile-server-latest', expand=True)
 
        ### generate i18n
@@ -661,7 +660,8 @@ def do_deploy(args):
             env_mgr.install_path,
             ),
             group=keep_ini.get('system', '__OS_GROUP__'),
-            user=keep_ini.get('system', '__OS_USER__'),)
+            user=keep_ini.get('system', '__OS_USER__'),
+        )
 
         # deploy common confs
         deploy_file('system/nginx.conf', expand=True)
@@ -677,7 +677,7 @@ def do_deploy(args):
         if node_type == 'APP':
             deploy_file('system/memcached.conf')
             deploy_file('system/keepalived.conf', expand=True)
-        elif node_type == 'BACKGROUND':
+        if node_type in ('BACKGROUND', 'SINGLE'):
             deploy_file('system/cron.d.keeper@background', expand=True)
 
         # deploy CRON node conf
