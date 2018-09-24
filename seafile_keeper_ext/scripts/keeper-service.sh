@@ -161,19 +161,33 @@ case "$1" in
                 sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
                 sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
                 sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+            elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
+                if [ "$1" == "restart" ]; then
+                    $0 stop
+                    echo "Starting..."
+                fi
+                sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
         ;;
         stop)
             echo "Stopping..."
             if [ ${__NODE_TYPE__} == "APP" ]; then
-                sudo -u ${user} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
-                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                ${seafile_dir}/scripts/catalog-service.sh ${1}
+                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${seafile_dir}/scripts/catalog-service.sh stop 
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+            elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
+                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${seafile_dir}/scripts/catalog-service.sh stop
             fi
             echo "Done"
             #systemctl ${1} memcached.service
@@ -200,12 +214,12 @@ case "$1" in
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
-            #if [ "$1" == "status-background" ]; then
-            if [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
+            if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
                 #check_component_running "office_converter" "soffice.bin" "CRITICAL"
                 check_component_running "office_converter" "soffice.*--invisible --nocrashreport"
-            else
+            fi    
+            if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
                 check_keepalived
                 check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             fi
