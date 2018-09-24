@@ -130,7 +130,7 @@ TEMPLATE_DEBUG = DEBUG
 ##########################################################################
 #### Web server <-> file server
 
-FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
+FILE_SERVER_ROOT = '__SERVICE_URL__:__HOST_PORT__/seafhttp'
 
 ##########################################################################
 #### Cluster settings
