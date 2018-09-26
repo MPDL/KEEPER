@@ -8,8 +8,7 @@ from django.core.mail import send_mail
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from django.contrib.sites.models import RequestSite
-from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
 import seaserv
 from seaserv import ccnet_threaded_rpc, unset_repo_passwd, is_passwd_set, \
     seafile_api, ccnet_api
@@ -21,8 +20,8 @@ from seahub.profile.models import Profile, DetailedProfile
 from seahub.role_permissions.models import AdminRole
 from seahub.role_permissions.utils import get_enabled_role_permissions_by_role, \
         get_enabled_admin_role_permissions_by_role
-from seahub.utils import is_user_password_strong, \
-    clear_token, get_system_admins, is_pro_version
+from seahub.utils import is_user_password_strong, get_site_name, \
+    clear_token, get_system_admins, is_pro_version, IS_EMAIL_CONFIGURED
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 from seahub.utils.licenseparse import user_number_over_limit
 from seahub.share.models import ExtraSharePermission
@@ -38,6 +37,8 @@ except ImportError:
     MULTI_TENANCY = False
 
 logger = logging.getLogger(__name__)
+
+ANONYMOUS_EMAIL = 'Anonymous'
 
 UNUSABLE_PASSWORD = '!' # This will never be a valid hash
 
@@ -148,6 +149,21 @@ class UserPermissions(object):
 
         return get_enabled_role_permissions_by_role(self.user.role)['can_view_org']
 
+    def can_add_public_repo(self):
+        """ Check if user can create public repo or share existed repo to public.
+
+        Used when MULTI_TENANCY feature is NOT enabled.
+        """
+
+        if CLOUD_MODE:
+            return False
+        elif self.user.is_staff:
+            return True
+        elif get_enabled_role_permissions_by_role(self.user.role)['can_add_public_repo']:
+            return True
+        else:
+            return bool(config.ENABLE_USER_CREATE_ORG_REPO)
+
     def can_drag_drop_folder_to_sync(self):
         return get_enabled_role_permissions_by_role(self.user.role)['can_drag_drop_folder_to_sync']
 
@@ -172,6 +188,10 @@ class UserPermissions(object):
         return get_enabled_role_permissions_by_role(self.user.role).get('role_quota', '')
 
     def can_send_share_link_mail(self):
+
+        if not IS_EMAIL_CONFIGURED:
+            return False
+
         return get_enabled_role_permissions_by_role(self.user.role).get('can_send_share_link_mail', True)
 
     def storage_ids(self):
@@ -325,13 +345,18 @@ class User(object):
 
         # remove current user from joined groups
         ccnet_api.remove_group_user(username)
-        ccnet_api.remove_emailuser(source, username)
-        Profile.objects.delete_profile_by_user(username)
 
-        if settings.ENABLE_TERMS_AND_CONDITIONS:
+        ccnet_api.remove_emailuser(source, username)
+        signals.user_deleted.send(sender=self.__class__, username=username)
+
+        Profile.objects.delete_profile_by_user(username)
+        if config.ENABLE_TERMS_AND_CONDITIONS:
             from termsandconditions.models import UserTermsAndConditions
             UserTermsAndConditions.objects.filter(username=username).delete()
         self.delete_user_options(username)
+
+    def get_username(self):
+        return self.username
 
     def delete_user_options(self, username):
         """Remove user's all options.
@@ -396,7 +421,7 @@ class User(object):
                     u.email, dj_template='sysadmin/user_freeze_email.html',
                     subject=_('Account %(account)s froze on %(site)s.') % {
                         "account": self.email,
-                        "site": settings.SITE_NAME,
+                        "site": get_site_name(),
                     },
                     context={'user': self.email},
                     priority=MAIL_PRIORITY.now
@@ -564,10 +589,7 @@ class RegistrationBackend(object):
         """
         email, password = kwargs['email'], kwargs['password1']
         username = email
-        if Site._meta.installed:
-            site = Site.objects.get_current()
-        else:
-            site = RequestSite(request)
+        site = get_current_site(request)
 
         from registration.models import RegistrationProfile
 

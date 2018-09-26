@@ -39,18 +39,22 @@
 
                 {% elif notice.is_guest_invitation_accepted_msg %}
                 <p class="brief">{{ notice.format_guest_invitation_accepted_msg|safe }}</p>
+
                 {% elif notice.msg_type  == "keeper_cdc_msg" %}
-                    <p class="brief">CDC processed for library <a id="cdc_{{notice.id}}_link" target="_blank"></a></p>
-                    <p class="detail" id="cdc_{{notice.id}}_det"></p>
-                    <script charset="utf-8">
-                        var obj = jQuery.parseJSON('{{ notice.detail|safe }}'),
+                <p class="brief">CDC processed for library <a id="cdc_{{notice.id}}_link" target="_blank"></a></p>
+                <p class="detail" id="cdc_{{notice.id}}_det"></p>
+                <script charset="utf-8">
+                    var obj = jQuery.parseJSON('{{ notice.detail|safe }}'),
                             link = $("a#cdc_{{notice.id}}_link")
                         link.prop('href', '/#my-libs/lib/'+ obj['lib'])
                         link.text(obj['lib_name'])
                         $("#cdc_{{notice.id}}_det").text(obj['message'])
-                    </script>
-                {% endif %}
+                </script>
 
+                {% elif notice.is_add_user_to_group %}
+                <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>
+
+                {% endif %}
             </td>
             <td>{{ notice.timestamp|translate_seahub_time }}</td>
         </tr>

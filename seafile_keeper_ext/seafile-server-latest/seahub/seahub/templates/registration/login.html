@@ -169,26 +169,15 @@ html, body, #wrapper {
                     </form>
 
                     <div class="con auth">
-                        {% if enable_oauth %}
-                        <a href="{% url 'oauth_login' %}" class="normal">{% trans "Single Sign-On" %}</a>
-                        {% endif %}
-
-                        {% if enable_adfs_login %}
-                        <a id="adfs-login" href="#" class="normal">ADFS</a>
-                        {% endif %}
-
-                        {% if enable_krb5_login %}
-                        <a id="krb5-login" href="#" class="normal">{% trans "Kerberos" %}</a>
-                        {% endif %}
 
                         {% if enable_signup %}
                         <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
                         {% endif %}
 
-                        {% if enable_shib_login %}
-                        <a id="shib-login" href="#" class="normal fright">{% trans "Shibboleth" %}</a>
+                        {% if enable_sso %}
+                        <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
                         {% endif %}
-
+                        
                     </div> 
                 </div>
             </div>
@@ -215,14 +204,14 @@ if (wdHeight > elHeight) {
 $el.removeClass('vh');
 
 
-$('[name="login"]').focus();
+$('[name="login"]').trigger('focus');
 
 function setCaptchaInputWidth() {
     $('#id_captcha_1').outerWidth($('.input').outerWidth() - $('.captcha').width() - $('#refresh-captcha').outerWidth(true) - 10);
 }
-$(window).load(setCaptchaInputWidth);
-$('.captcha').load(setCaptchaInputWidth);
-$('#refresh-captcha').click(function() {
+$(window).on('load', setCaptchaInputWidth);
+$('.captcha').on('load', setCaptchaInputWidth);
+$('#refresh-captcha').on('click', function() {
     $.ajax({
         url: '{% url 'captcha-refresh' %}',
         dataType:'json',
@@ -238,6 +227,7 @@ $('#refresh-captcha').click(function() {
     return false;
 });
 
+// TODO: $('#login-form').on('submit', function(){
 $('input[type="submit"]').click(function(){
     if (!$.trim($('input[name="login"]').val())) {
         $('.error').removeClass('hide').html("{% trans "Email or username cannot be blank" %}");
@@ -255,28 +245,10 @@ $(function() {
     });
 });
 
-{% if enable_shib_login %}
+{% if enable_sso %}
 $(function() {
-    $('#shib-login').click(function() {
-        window.location = "{% url 'shib_login' %}{% if next %}?next={{ next|escape }}{% endif %}" + encodeURIComponent(document.location.hash);
-        return false;
-    });
-});
-{% endif %}
-
-{% if enable_krb5_login %}
-$(function() {
-    $('#krb5-login').click(function() {
-        window.location = "{% url 'krb5_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
-        return false;
-    });
-});
-{% endif %}
-
-{% if enable_adfs_login %}
-$(function() {
-    $('#adfs-login').click(function() {
-        window.location = "{% url 'saml2_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
+    $('#sso').on('click', function() {
+        window.location = "{% url 'sso' %}{% if next %}?next={{ next|escape }}{% endif %}" + encodeURIComponent(document.location.hash);
         return false;
     });
 });

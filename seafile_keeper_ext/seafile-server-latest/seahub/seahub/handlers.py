@@ -21,7 +21,6 @@ if not hasattr(settings, 'EVENTS_CONFIG_FILE'):
 else:
 
     import seafevents
-    from utils import SeafEventsSession
 
     def repo_created_cb(sender, **kwargs):
         org_id  = kwargs['org_id']
@@ -37,6 +36,10 @@ else:
         }
 
         users = [creator]
+
+        # Move here to avoid model import during Django setup.
+        # TODO: Don't register signal/hanlders during Seahub start.
+        from utils import SeafEventsSession
 
         session = SeafEventsSession()
         if org_id > 0:
@@ -60,12 +63,10 @@ else:
             except Exception as e:
                 logger.error(e)
                 logging.error(traceback.format_exc())
-
-        session.close()
-
         # KEEPER
         logging.info("REPO CREATE EVENT repo_name: %s, repo_id: %s" % (repo_name, repo_id))
         copy_keeper_default_library(repo_id)
+
 
     def repo_deleted_cb(sender, **kwargs):
         """When a repo is deleted, an event would be added to every user in all
@@ -88,6 +89,7 @@ else:
 
         users = usernames
 
+        from utils import SeafEventsSession
         session = SeafEventsSession()
         if org_id > 0:
             seafevents.save_org_user_events(session, org_id, etype, detail, users, None)
@@ -122,10 +124,11 @@ else:
         }
 
         users = [operator]
+
+        from utils import SeafEventsSession
         session = SeafEventsSession()
         if org_id > 0:
             seafevents.save_org_user_events(session, org_id, etype, detail, users, None)
         else:
             seafevents.save_user_events(session, etype, detail, users, None)
         session.close()
-
