@@ -740,7 +740,7 @@ def do_upgrade(args):
                     or '/.git' in root or '/tags' in root
                 ):
                 for file in files:
-                    if not (file.endswith(tuple('.pyc', '.png'))):
+                    if not (file.endswith(('.pyc', '.png'))):
                         dest_path = os.path.join(root, file)
                         src_path = os.path.join(env_mgr.top_dir, dest_path)
                         if not os.path.exists(src_path):
