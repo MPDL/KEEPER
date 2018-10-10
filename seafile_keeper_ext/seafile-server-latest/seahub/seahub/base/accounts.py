@@ -695,7 +695,7 @@ class RegistrationBackend(object):
         return (
             'registration_mpg_complete' if self.mpg_user
                 else 'registration_complete',
-            (), {}
+            (), { }
         )
 
     def post_activation_redirect(self, request, user):
