@@ -413,7 +413,7 @@ class EnvManager(object):
         self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
 
         self.django_admin_link = os.path.join('/usr', 'local', 'bin', 'django-admin')
-        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'django-admin')
+        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'bin', 'django-admin')
 
         self.keeper_service_link = os.path.join('/usr', 'local', 'bin', 'keeper-service')
         self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
