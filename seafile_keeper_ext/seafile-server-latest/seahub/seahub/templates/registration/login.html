@@ -17,7 +17,6 @@ html, body, #wrapper {
     background-size: cover;
 }
 
-
 #main {
     min-height:0;
 }
@@ -75,7 +74,6 @@ html, body, #wrapper {
     margin-bottom: 0.3em;
 }
 
-
 #seafile-credits {
     background-color: #d48074;
     text-align: right;
@@ -84,7 +82,7 @@ html, body, #wrapper {
 #seafile-credits div {
     line-height: 46px;
 }
- 
+
 @media (max-width: 991px) {
     #login_panel_parent {
         width: 380px;
@@ -179,6 +177,13 @@ html, body, #wrapper {
                         {% endif %}
                         
                     </div> 
+                    <div id="labcam-banner">
+                        <a href="https://play.google.com/store/apps/details?id=de.mpg.mpdl.labcam&hl=de" target="_new">
+                            <img id="labcam" src="/media/custom/LabCam_banner_330px.png" alt="" />
+                            <p>Get the LabCam Android Add</p>
+                        </a>
+                    </div>
+
                 </div>
             </div>
 
@@ -255,7 +260,7 @@ $(function() {
 {% endif %}
 
 {# KEEPER #}
-
+$('#lang').addClass('fright');
 var lang=$('#lang-context').attr('data-lang');
 lang.onchange=translate();
 function translate(){
