@@ -11,7 +11,12 @@
 <link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1465786517" />
 <link rel="stylesheet" type="text/css" href="/media/custom/keeper.css" />
 <style>
-    
+
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
     #header {
         padding-top: 16px;
         margin-bottom: 20px;

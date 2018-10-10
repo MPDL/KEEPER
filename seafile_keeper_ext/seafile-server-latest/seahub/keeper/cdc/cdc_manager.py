@@ -204,7 +204,7 @@ def send_email(to, msg_ctx):
     LOGGER.info("Send CDC email and keeper notification...")
     try:
         t = loader.get_template(CDC_EMAIL_TEMPLATE)
-        msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(Context(msg_ctx)), SERVER_EMAIL, [to, SERVER_EMAIL] )
+        msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(msg_ctx), SERVER_EMAIL, [to, SERVER_EMAIL] )
         msg.content_subtype = "html"
         msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
         msg.send()
@@ -401,17 +401,17 @@ def generate_certificate(repo, commit):
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
 
         #send user notification
-        # LOGGER.info("Commit desc: " + commit.desc)
-        # LOGGER.info("event: {}".format(event))
-        # if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
-            # UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
-                # json.dumps({
-                # 'status': status,
-                # 'message':('; '.join(CDC_MSG)),
-                # 'msg_from': SERVER_EMAIL,
-                # 'lib': repo.id,
-                # 'lib_name': repo.name
-            # }))
+        LOGGER.info("Commit desc: " + commit.desc)
+        LOGGER.info("event: {}".format(event))
+        if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
+            UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
+                json.dumps({
+                'status': status,
+                'message':('; '.join(CDC_MSG)),
+                'msg_from': SERVER_EMAIL,
+                'lib': repo.id,
+                'lib_name': repo.name
+            }))
 
 
 
