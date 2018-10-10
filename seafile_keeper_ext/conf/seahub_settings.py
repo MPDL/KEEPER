@@ -330,6 +330,8 @@ SHIBBOLETH_AFFILIATION_ROLE_MAP = {
     'employee@hu-berlin.de': 'guest'
 }
 
+ENABLE_GUEST_INVITATION = True
+
 ENABLED_ROLE_PERMISSIONS = {
     'default': {
         'can_add_repo': True,
@@ -338,7 +340,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_use_global_address_book': True,
         'can_generate_share_link': True,
         'can_generate_upload_link': True,
-        'can_invite_guest': False,
+        'can_invite_guest': True,
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
@@ -502,8 +504,12 @@ MULTI_INSTITUTION = True
 EXTRA_MIDDLEWARE_CLASSES = (
     'seahub.institutions.middleware.InstitutionMiddleware',
     'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
+    'seahub_extra.organizations.middleware.RedirectMiddleware',
 )
 
+EXTRA_AUTHENTICATION_BACKENDS = (
+    'seahub_extra.django_cas_ng.backends.CASBackend',
+)
 
 # Settings for background node
 OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__
@@ -540,55 +546,6 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ('ods', 'xls', 'xlsb', 'xlsm', 'xlsx','ppsx
 
 ##########################################################################
 ####  KEEPER specific settings
-
-# add keeper to django apps list
-INSTALLED_APPS = (
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    'registration',
-    'captcha',
-    'compressor',
-    'statici18n',
-    'constance',
-    'constance.backends.database',
-    'post_office',
-    'termsandconditions',
-
-    'seahub.api2',
-    'seahub.avatar',
-    'seahub.base',
-    'seahub.contacts',
-    'seahub.institutions',
-    'seahub.invitations',
-    'seahub.wiki',
-    'seahub.group',
-    'seahub.notifications',
-    'seahub.options',
-    'seahub.onlyoffice',
-    'seahub.profile',
-    'seahub.share',
-    'seahub.help',
-    'seahub.thumbnail',
-    'seahub.password_session',
-    'seahub.admin_log',
-    'seahub.wopi',
-    'seahub.tags',
-    'seahub.revision_tag',
-    'seahub.two_factor',
-    'seahub.role_permissions',
-    'seahub.trusted_ip',
-
-    'seahub_extra.search',
-    'seahub_extra.sysadmin_extra',
-    'seahub_extra.organizations',
-    'seahub_extra.krb5_auth',
-
-    'keeper',
-
-)
 
 # Keeper root dir
 SEAFILE_DIR = '__SEAFILE_DIR__'
