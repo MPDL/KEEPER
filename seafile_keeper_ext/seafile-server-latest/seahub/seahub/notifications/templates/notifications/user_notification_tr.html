@@ -1,5 +1,4 @@
-{% load i18n seahub_tags avatar_tags %}
-    <script type="text/javascript" charset="utf-8"  src="/media/assets/scripts/lib/jquery.min.js"></script>
+{% load i18n seahub_tags avatar_tags keeper_tags %}
     {% for notice in notices %}
         {% if notice.seen %}
         <tr class="read">
@@ -41,15 +40,8 @@
                 <p class="brief">{{ notice.format_guest_invitation_accepted_msg|safe }}</p>
 
                 {% elif notice.msg_type  == "keeper_cdc_msg" %}
-                <p class="brief">CDC processed for library <a id="cdc_{{notice.id}}_link" target="_blank"></a></p>
-                <p class="detail" id="cdc_{{notice.id}}_det"></p>
-                <script charset="utf-8">
-                    var obj = jQuery.parseJSON('{{ notice.detail|safe }}'),
-                            link = $("a#cdc_{{notice.id}}_link")
-                        link.prop('href', '/#my-libs/lib/'+ obj['lib'])
-                        link.text(obj['lib_name'])
-                        $("#cdc_{{notice.id}}_det").text(obj['message'])
-                </script>
+                <p class="brief">CDC processed for library <a href="{{ url_base }}/#my-libs/lib/{{ notice.detail|get_value_from_json:"lib" }}" target="_blank">{{ notice.detail|get_value_from_json:"lib_name" }}</a></p>
+                <p class="detail">{{ notice.detail|get_value_from_json:"message" }}</p>
 
                 {% elif notice.is_add_user_to_group %}
                 <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>
