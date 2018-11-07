@@ -162,6 +162,10 @@
             margin-bottom: 0px;
         }
 
+        #labcam-banner a {
+            font-weight: normal;
+        }
+
         @media (min-width: 1200px), (max-width: 991px) {
             #labcam-banner img { width: 331px; }
         }
