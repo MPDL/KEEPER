@@ -125,7 +125,6 @@ LOGGING = {
 
 # Debug mode
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 ##########################################################################
 #### Web server <-> file server
