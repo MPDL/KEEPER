@@ -104,7 +104,7 @@ def validate_author(txt):
     """
     valid = True
     if txt:
-        pattern = re.compile("^\s*[\w-]+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
+        pattern = re.compile("^(\s*[\w-]+)+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
         for line in txt.splitlines():
             if not re.match(pattern, line.decode('utf-8')):
                 valid = False
