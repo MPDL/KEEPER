@@ -163,7 +163,7 @@ def validate(cdc_dict):
     s2 = set(cdc_headers_mandatory)
     valid = s2.issubset(s1)
     if not valid:
-        msg =  'CDC mandatory fields are not filled: ' + ', '.join(s2.difference(s1))
+        msg =  'Certificate mandatory fields are not filled: ' + ', '.join(s2.difference(s1))
         CDC_MSG.append(msg)
 
     # 2. check content"

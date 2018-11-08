@@ -40,8 +40,10 @@
                 <p class="brief">{{ notice.format_guest_invitation_accepted_msg|safe }}</p>
 
                 {% elif notice.msg_type  == "keeper_cdc_msg" %}
-                <p class="brief">CDC processed for library <a href="{{ url_base }}/#my-libs/lib/{{ notice.detail|get_value_from_json:"lib" }}" target="_blank">{{ notice.detail|get_value_from_json:"lib_name" }}</a></p>
-                <p class="detail">{{ notice.detail|get_value_from_json:"message" }}</p>
+                {% json_to_var notice.detail as cdc_msg %}
+                <p style="brief">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}" target="_new">{{ cdc_msg.lib_name }}</a><br/>
+                <span class="detail">{{ cdc_msg.message }}</span></p>
+                
 
                 {% elif notice.is_add_user_to_group %}
                 <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>

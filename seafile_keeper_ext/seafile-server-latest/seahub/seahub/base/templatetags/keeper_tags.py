@@ -15,3 +15,15 @@ def get_value_from_json(value, key):
     if key in json_dict:
         result = force_unicode(escape(json_dict[key]))
     return result
+
+@register.simple_tag
+def json_to_var(json_str):
+    """
+    convert json string to variable
+    """
+    json_var = {}
+    try:
+        json_var = json.loads(json_str)
+    except:
+        pass
+    return json_var

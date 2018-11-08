@@ -1,4 +1,4 @@
-{% load avatar_tags seahub_tags i18n %}
+{% load avatar_tags seahub_tags i18n keeper_tags %}
 
 {% for notice in notices %}
     {% if notice.seen %}
@@ -43,17 +43,9 @@
         <p class="brief">{{ notice.format_guest_invitation_accepted_msg|safe }}</p>
         
     {% elif notice.msg_type  == "keeper_cdc_msg" %}
-        <p class="brief">CDC processed for 
-            <a id="cdc_{{notice.id}}_link" target="_blank"></a>: <span id="cdc_{{notice.id}}_status"></span>
-        </p>
-        <p class="detail" id="cdc_{{notice.id}}_det"></p>
-        <script charset="utf-8">
-            var obj = jQuery.parseJSON('{{ notice.detail|safe }}'),
-                link = $("a#cdc_{{notice.id}}_link")
-            link.prop('href', '/#my-libs/lib/'+ obj['lib'])
-            link.text(obj['lib_name'])
-            $("#cdc_{{notice.id}}_status").text( obj["status"] )
-        </script>
+        {% json_to_var notice.detail as cdc_msg %}
+        <p style="brief">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}" target="_new">{{ cdc_msg.lib_name }}</a></p>
+
     {% endif %}
 
         <p class="time">{{ notice.timestamp|translate_seahub_time }}</p>
