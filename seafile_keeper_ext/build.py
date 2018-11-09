@@ -418,6 +418,8 @@ class EnvManager(object):
         self.assets_app_link = os.path.join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'app')
         self.assets_app_dir = os.path.join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'app')
 
+        self.assets_sysadmin_app_link = os.path.join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'sysadmin-app')
+        self.assets_sysadmin_app_dir = os.path.join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'sysadmin-app')
 
         self.keeper_service_link = os.path.join('/usr', 'local', 'bin', 'keeper-service')
         self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
@@ -482,6 +484,7 @@ def do_links():
                            (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
                            (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
                            (env_mgr.assets_app_link, env_mgr.assets_app_dir),
+                           (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
                            ):
         if Utils.check_link(link, target):
             # case for avatar link: link has same name as existed target dir
