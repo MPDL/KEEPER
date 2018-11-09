@@ -649,7 +649,6 @@ def do_deploy(args):
         ### set chown and permissions for target dires
         env_mgr.read_seafile_conf_dir()
         Utils.set_perms(dirs=(
-            env_mgr.seafile_dir,
             env_mgr.ccnet_dir,
             env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
             env_mgr.central_config_dir,
