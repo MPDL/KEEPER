@@ -415,6 +415,10 @@ class EnvManager(object):
         self.django_admin_link = os.path.join('/usr', 'local', 'bin', 'django-admin')
         self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'bin', 'django-admin')
 
+        self.assets_app_link = os.path.join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'app')
+        self.assets_app_dir = os.path.join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'app')
+
+
         self.keeper_service_link = os.path.join('/usr', 'local', 'bin', 'keeper-service')
         self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
 
@@ -477,6 +481,7 @@ def do_links():
                            (env_mgr.django_admin_link, env_mgr.django_admin_path),
                            (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
                            (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
+                           (env_mgr.assets_app_link, env_mgr.assets_app_dir),
                            ):
         if Utils.check_link(link, target):
             # case for avatar link: link has same name as existed target dir
