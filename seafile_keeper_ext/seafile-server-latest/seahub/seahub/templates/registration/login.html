@@ -2,113 +2,220 @@
 {% load i18n %}
 
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
+{% block header_css_class %}{% endblock %}
+{% block main_css_class %}{% endblock %}
+
+{% block extra_style %}
+<style type="text/css">
+
+html, body, #wrapper { 
+    height:100%; 
+}
+
+#wrapper {
+    background: url('/media/custom/keeper-login-page-background_1600px.svg') center top no-repeat scroll;
+    background-size: cover;
+}
+
+#main {
+    min-height:0;
+}
+
+.navbar {
+    border-radius: 0;
+}       
+
+
+#header {
+    border-bottom: 0;
+}
+
+.row {
+    background-color: rgba(244,243,245,0.9);
+}
+
+#mpdl-flag {
+    position: relative;
+    top: -1px;
+    padding: 0 0 100px 40px;
+}
+
+#info_panel {
+    padding: 0 0 150px 40px;
+
+}
+
+
+#login_panel h2 { 
+    padding-left: 20px;
+}
+
+
+#login_panel .input.name-input, #login_panel .input.passwd-input, #login_panel input:-webkit-autofill {
+    background-color: #f8dc9b !important;
+    -webkit-box-shadow: 0 0 0px 1000px #f8dc9b  inset;
+}
+
+#login_panel .input.name-input, #login_panel .input.passwd-input {
+    background-color: #f8dc9b !important;
+}
+
+.new-narrow-panel {
+    margin: 20px 0px 20px 0px !important;
+    width: 95% !important;
+}
+
+#lg_footer #keeper-links {
+    background-color: #f8dc9b;
+    padding: 10px 40px 10px 40px;
+}
+
+#lg_footer #keeper-links h4 {
+    margin-bottom: 0.3em;
+}
+
+#seafile-credits {
+    background-color: #d48074;
+    text-align: right;
+}
+
+#seafile-credits div {
+    line-height: 46px;
+}
+
+@media (max-width: 991px) {
+    #login_panel_parent {
+        width: 380px;
+        margin-left: 12px;
+    }
+    #lg_footer #keeper-links h4 {
+        margin-bottom: 0.2em;
+        margin-top: 0.6em;
+    }
+  }
+
+
+
+</style>
+{% endblock %}
 
 {% block main_content %}
- 
 <div class="container">
     <div class="row">
-        <div class="col-lg-7">
+        <div id="mpdl-flag" class="col-lg-12 hidden-md-down">
+            <img src="/media/custom/mpdl-flag-grey.svg" alt=""/>
+        </div>
+
+    </div>
+    <div id="central-wrapper" class="row">
+        <div class="col-xl-7 col-lg-7 hidden-md-down">
             <div id="info_panel">
                 <h3>Archive the way you work</h3>
-                <p><span id="intro1">A new free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</span></br></br>
-                    <span id="intro2">You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</span></p>
-                <p><span id="intro3">Browse all research projects in KEEPER</span><span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
+                <div id="intro_en">
+                    <p>A free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</p>
+                    <p>You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</p>
+                    <p>Browse all research projects in KEEPER<span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
+                </div>
+                <div id="intro_de">
+                    <p>Ein kostenloser Service für alle Max-Planck-Mitarbeiter und Projektpartner mit mehr als 1 TB Speicher pro Nutzer für Ihre Forschungsdaten. Profitieren Sie von einer sicheren Datenspeicherung, nahtlos integriert in Ihrem Forschungsprozess.</p>
+                    <p>Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können Sie sicher sein, die Archivierungsvorschriften der Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur Sicherung "guter wissenschaftlicher Praxis" einzuhalten.</p>
+                    <p>Übersicht aller Forschungsprojekte in KEEPER<span>&nbsp; &nbsp;</span><span><input type="button" title="Only accessible within the Max Planck Society" value="Project Catalog" onclick="window.location='/catalog';"></span></p>
+                </div>
             </div>
         </div>
-        <!--<div class="clearfix visible-lg-block"></div>-->
-        <div id="login_panel_parent" class="col-lg-5">
-            <div id="login_panel" class="new-narrow-panel">
-                <h2 class="hd" style="background: #57a5b8 !important;">{% trans "Log In" %}</h2>
-                <form id="form_login" action="" method="post" class="con">{% csrf_token %}
-                    <label for="login">{% trans "Email or Username" %}</label>
-                    <input type="text" name="login" id="login" value="" class="input" />
-                    <label for="password">{% trans "Password" %}</label></br>
-                    <a href="{{ SITE_ROOT }}accounts/password/reset/">{% trans "(forgot password)" %}</a>
-                    <input type="password" name="password" id="password" value="" class="input" autocomplete="off" />
-                    {% if form.captcha %}
-                    <label>{% trans "CAPTCHA" %}</label><br />
-                    {{ form.captcha }}
-                    <p class="clear"><a  style="position: relative; right: 0px;" href="#" id="refresh-captcha">{% trans "Not clear? Refresh it." %}</a></p>
-                    {% endif %}
-                    <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-                    {% if form.errors %}
-                    {% if form.captcha.errors %}
-                    <p class="error">{{ form.captcha.errors}}</p>
-                    {% elif form.errors.freeze_account %}
-                    <p class="error">{{ form.errors.freeze_account }}</p>
-                    {% elif form.errors.inactive %}
-                    <p class="error">{{ form.errors.inactive }}</p>
-                    {% else %}
-                    <p class="error">{% trans "Incorrect email or password" %}</p>
-                    {% endif %}
-                    {% else %}
-                    <p class="error hide"></p>
-                    {% endif %}
+        
 
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="remember_me" class="vam" />
-                        <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
-                    </label>
 
-                    <input type="submit" value="{% trans "Log In" %}" class="submit" />
-                    {% if enable_signup %}
-                    <a href="{{ signup_url }}">{% trans "Signup" %}</a>
-                    {% endif %}
-                    {% if enable_shib_login %}
-                    <button id="shib-login" class="submit fright">{% trans "Shibboleth" %}</button>
-                    {% endif %}
+        <div id="login_panel_parent" class="col-xl-4 col-xl-offset-1 col-lg-5 col-md-6 col-sm-7 col-xs-10">
+            {#<div class="login-panel">#}
+                <div id="login_panel" class="new-narrow-panel">
+                    {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
+                    <h2 class="hd">{% trans "Log In" %}</h2>
+                    <form action="" method="post" class="con">{% csrf_token %}
+                        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
+                        <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
 
-                    {% if enable_krb5_login %}
-                    <button id="krb5-login" class="submit fright">{% trans "Kerberos" %}</button>
-                    {% endif %}
-                </form>
+                        {% if form.captcha %}
+                        <div class="ovhd">
+                            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
+                            {{ form.captcha }}
+                        </div>
+                        {% endif %}
+
+                        <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+                        {% if form.errors %}
+                        {% if form.captcha.errors %}
+                        {{ form.captcha.errors}}
+                        {% elif form.errors.freeze_account %}
+                        <p class="error">{{ form.errors.freeze_account }}</p>
+                        {% elif form.errors.inactive %}
+                        <p class="error">{{ form.errors.inactive }}</p>
+                        {% else %}
+                        <p class="error">{% trans "Incorrect email or password" %}</p>
+                        {% endif %}
+                        {% else %}
+                        <p class="error hide"></p>
+                        {% endif %}
+
+                        <label class="checkbox-label remember">
+                            <input type="checkbox" name="remember_me" class="vam remember-input" />
+                            <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+                        </label>
+                        <button type="submit" class="submit">{% trans "Log In" %}</button>
+
+                        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
+                    </form>
+
+                    <div class="con auth">
+
+                        {% if enable_signup %}
+                        <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
+                        {% endif %}
+
+                        {% if enable_sso %}
+                        <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
+                        {% endif %}
+                        
+                    </div> 
+                    <div id="labcam-banner">
+                            <img id="labcam" src="/media/custom/LabCam_banner_330px.png" alt="" />
+                            <p>Get the LabCam <a href="https://play.google.com/store/apps/details?id=de.mpg.mpdl.labcam&hl=de" target="_new">Android</a> or 
+                                <a href="https://itunes.apple.com/de/app/labcam/id1433646232?mt=8">iOS</a> App</p>
+                    </div>
+
+                </div>
             </div>
+
         </div>
+
+        {% include "keeper_footer.html" %}
+
+
     </div>
-</div>
-<div id="lg_footer">
-    <div class="container">
-        <div class="raw">
-            <div class="col-md-3">
-                <h4>What you need to know</h4>
-                <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a></br>
-                <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a></br>
-                <a href="/catalog" target="_blank">Project Catalog</a></br>
-                <a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a>
-            </div>
-            <div class="col-md-3">
-                <h4>Desktop client</h4>
-                <a href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and Mac</a>
-            </div>
-            <div class="col-md-3">
-                <h4>The software behind Keeper</h4>
-                <img id="seafile-logo" style="height: 30px; width: auto;"
-                src="/media/custom/seafile_logo_footer.png" onclick="window.open('https://www.seafile.com/en/home/');"/></br>
-                <a href="https://www.seafile.com/en/home/" target="_blank">© 2017 Seafile</a>
-            </div>
-            <div class="col-md-3">
-                <h4>A service by</h4>
-                <img id="lg_ft" src="/media/custom/mpdl.png" style="height: 30px; width: auto;" onclick="window.open('https://www.mpdl.mpg.de/');"/></br>
-                <a href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a></br>
-                <a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a>    
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block extra_script %}
 <script type="text/javascript">
-$('[name="login"]').focus();
+$('.login-panel-outer-container').prepend($($('#logo').html()).attr({'width': 160, 'height':40}).addClass('login-panel-logo'));
+
+var $el = $('.login-panel-outer-container');
+var elHeight = $el.outerHeight();
+var wdHeight = $(window).height();
+if (wdHeight > elHeight) {
+    $el.css({'margin-top': (wdHeight - elHeight)/2});
+}
+$el.removeClass('vh');
+
+
+$('[name="login"]').trigger('focus');
 
 function setCaptchaInputWidth() {
-    $('#id_captcha_1').css({'width': $('.input').outerWidth() - $('.captcha').width() - 10});
+    $('#id_captcha_1').outerWidth($('.input').outerWidth() - $('.captcha').width() - $('#refresh-captcha').outerWidth(true) - 10);
 }
-$(window).load(setCaptchaInputWidth);
-$('.captcha').load(setCaptchaInputWidth);
-
-$('#refresh-captcha').parent().css({'text-align':'right', 'margin':0});
-$('#refresh-captcha').click(function() {
+$(window).on('load', setCaptchaInputWidth);
+$('.captcha').on('load', setCaptchaInputWidth);
+$('#refresh-captcha').on('click', function() {
     $.ajax({
         url: '{% url 'captcha-refresh' %}',
         dataType:'json',
@@ -123,6 +230,8 @@ $('#refresh-captcha').click(function() {
     });
     return false;
 });
+
+// TODO: $('#login-form').on('submit', function(){
 $('input[type="submit"]').click(function(){
     if (!$.trim($('input[name="login"]').val())) {
         $('.error').removeClass('hide').html("{% trans "Email or username cannot be blank" %}");
@@ -140,63 +249,28 @@ $(function() {
     });
 });
 
-{% if enable_shib_login %}
+{% if enable_sso %}
 $(function() {
-    $('#shib-login').click(function() {
-        window.location = "{% url 'shib_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
+    $('#sso').on('click', function() {
+        window.location = "{% url 'sso' %}{% if next %}?next={{ next|escape }}{% endif %}" + encodeURIComponent(document.location.hash);
         return false;
     });
 });
 {% endif %}
-</script>
 
-<script type="text/javascript">
-
-var language=document.getElementById('lang-context').innerText;
-var intro1=document.getElementById("intro1");
-var intro2=document.getElementById("intro2");
-var intro3=document.getElementById("intro3");
-
+{# KEEPER #}
+$('#lang').addClass('fright');
+var lang=$('#lang-context').attr('data-lang');
+lang.onchange=translate();
 function translate(){
-	if(language=="Deutsch "){
-		intro1.innerText='Ein kostenloser Service für alle Max-Planck-Mitarbeiter und Projektpartner'
-				+' mit mehr als 1 TB Speicher pro Nutzer für Ihre Forschungsdaten.'
-				+' Profitieren Sie von einer sicheren Datenspeicherung, nahtlos integriert' 
-				+' in Ihrem Forschungsprozess.';
-		intro2.innerText='Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können'
-				+' Sie sicher sein, die Archivierungsvorschriften der' 
-				+' Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur'
-   				+' Sicherung "guter wissenschaftlicher Praxis" einzuhalten.';
-		intro3.innerText='Übersicht aller Forschungsprojekte in KEEPER';	
-	}
-	else{
-		intro1.innerText='A new free service for all Max Planck employees and project partners'
-				+' with more than 1TB of storage per user for your researchdata. Profit from safe data storage,'
-				+' seamlessly integrated into your research workflow.';
-		intro2.innerText='You do the right thing - with storing your data in Keeper you can be sure to fulfil'
-				+' the archiving regulations of the Max Planck Society to ensure "good scientific practice".';
-		intro3.innerText='Browse all research projects in KEEPER';
-	}	
+    if(lang == "de"){
+        $('#intro_de').show()
+        $('#intro_en').hide()
+    }else{
+        $('#intro_en').show()
+        $('#intro_de').hide()
+    }	
 }
 
-language.onchange=translate();
-
-{% if enable_krb5_login %}
-$(function() {
-    $('#krb5-login').click(function() {
-        window.location = "{% url 'krb5_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
-        return false;
-    });
-});
-{% endif %}
-
-{% if enable_adfs_login %}
-$(function() {
-    $('#adfs-login').click(function() {
-        window.location = "{% url 'saml2_login' %}{% if next %}?next={{ next|escape }}{% endif %}";
-        return false;
-    });
-});
-{% endif %}
 </script>
 {% endblock %}

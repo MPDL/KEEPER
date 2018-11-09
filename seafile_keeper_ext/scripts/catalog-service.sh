@@ -2,13 +2,18 @@
 
 #set -x
 
-
-SEAFILE_DIR=/opt/seafile/seafile-server-latest
-GATALOG_PID_FILE=${SEAFILE_DIR}/runtime/catalog.pid
+CURR_DIR=$(dirname $(readlink -f $0))
+source "${CURR_DIR}/inject_keeper_env.sh"
+if [ $? -ne 0  ]; then
+	echo "Cannot run inject_keeper_env.sh"
+    exit 1
+fi
+GATALOG_PID_FILE=${SEAFILE_LATEST_DIR}/runtime/catalog.pid
 
 
 function start_catalog () {
-    uwsgi --pidfile $GATALOG_PID_FILE --ini ${SEAFILE_DIR}/seahub/keeper/catalog/catalog.ini 2>/dev/null & 
+    export PYTHON_EGG_CACHE=$(echo ~${__OS_USER__})/.cache/Python-Eggs
+    uwsgi --pidfile $GATALOG_PID_FILE --ini ${SEAFILE_LATEST_DIR}/seahub/keeper/catalog/catalog.ini 2>/dev/null & 
     sleep 2
     if [ ! -f "$GATALOG_PID_FILE" ]; then
         echo "Cannot find PID file, catalog is not started"
@@ -53,7 +58,7 @@ function stop_catalog () {
 }
 
 function run_catalog_manager() {
-    RESULT=$($SEAFILE_DIR/../scripts/run_keeper_script.sh $SEAFILE_DIR/seahub/keeper/catalog/catalog_manager.py $1)    
+    RESULT=$($SEAFILE_DIR/scripts/run_keeper_script.sh $SEAFILE_LATEST_DIR/seahub/keeper/catalog/catalog_manager.py $1)    
     echo $RESULT
 }
 

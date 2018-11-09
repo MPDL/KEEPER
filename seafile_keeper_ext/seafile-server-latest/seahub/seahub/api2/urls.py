@@ -1,11 +1,12 @@
 # Copyright (c) 2012-2016 Seafile Ltd.
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 
 from .views import *
 from .views_misc import ServerInfoView
 from .views_auth import LogoutDeviceView, ClientLoginTokenView
+from .endpoints.admin.two_factor_auth import TwoFactorAuthView
 from .endpoints.dir_shared_items import DirSharedItemsEndpoint
-from .endpoints.account import Account
+from .endpoints.admin.account import Account
 from .endpoints.shared_upload_links import SharedUploadLinksView
 from .endpoints.be_shared_repo import BeSharedRepo
 from .endpoints.file_comment import FileCommentView
@@ -19,13 +20,14 @@ from .endpoints.send_upload_link_email import SendUploadLinkView
 
 from .views_keeper import CatalogView
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
     url(r'^auth/ping/$', AuthPing.as_view()),
     url(r'^auth-token/', ObtainAuthToken.as_view()),
     url(r'^server-info/$', ServerInfoView.as_view()),
     url(r'^logout-device/$', LogoutDeviceView.as_view()),
     url(r'^client-login/$', ClientLoginTokenView.as_view()),
+    url(r'^two-factor-auth/(?P<email>\S+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/$', TwoFactorAuthView.as_view(), name="two-factor-auth-view"),
     url(r'^device-wiped/$', RemoteWipeReportView.as_view()),
     url(r'^wopi/', include('seahub.wopi.urls')),
 
@@ -82,7 +84,7 @@ urlpatterns = patterns('',
     url(r'^shared-upload-links/$', SharedUploadLinksView.as_view()),
     url(r'^repo-tokens/$', RepoTokensView.as_view(), name='api2-repo-tokens'),
 
-    url(r'^organization/$', OrganizationView.as_view()),
+    url(r'^organization/$', OrganizationView.as_view(), name='api2-org'),
 
     url(r'^f/(?P<token>[a-f0-9]+)/$', SharedFileView.as_view()),
     url(r'^f/(?P<token>[a-f0-9]+)/detail/$', SharedFileDetailView.as_view()),
@@ -111,18 +113,20 @@ urlpatterns = patterns('',
     # KEEPER
     url(r'^catalog/$', CatalogView.as_view()),
 
-)
+]
 
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER
 if HAS_OFFICE_CONVERTER:
     from seahub.utils import OFFICE_HTML_DIR
-    urlpatterns += patterns('',
-        url(r'^office-convert/static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': OFFICE_HTML_DIR}, name='api_office_convert_static'),
-    )
-    urlpatterns += patterns('',
+    from django.views.static import serve as static_view
+
+    urlpatterns += [
+        url(r'^office-convert/static/(?P<path>.*)$', static_view, {'document_root': OFFICE_HTML_DIR}, name='api_office_convert_static'),
+    ]
+    urlpatterns += [
         url(r'^office-convert/status/$', OfficeConvertQueryStatus.as_view()),
-    )
-    urlpatterns += patterns('',
+    ]
+    urlpatterns += [
         url(r'^office-convert/generate/repos/(?P<repo_id>[-0-9-a-f]{36})/$', OfficeGenerateView.as_view()),
-    )
+    ]

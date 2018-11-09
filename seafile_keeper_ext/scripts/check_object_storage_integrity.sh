@@ -4,7 +4,6 @@
 SEAFILE_DIR=/opt/seafile
 SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 
-GPFS_DEVICE="/dev/gpfs_keeper"
 
 RC=0
 
@@ -15,10 +14,14 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
+exec > >(tee ${__KEEPER_LOG_DIR__}/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
+exec 2>&1 
+
+
 # check seafile object storage integrity
 function check_object_storage_integrity () {
     pushd $SEAFILE_LATEST_DIR
-    RESULT="$(./seaf-fsck.sh)"
+    RESULT="$(sudo -u seafile ./seaf-fsck.sh)"
     echo "${RESULT}"
     if [[ "$RESULT" =~ "is corrupted" ]]; then
         RC=1
@@ -35,7 +38,7 @@ fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
-if [[ ! "$RESULT" =~ "${GPFS_DEVICE} on /keeper type gpfs" ]]; then
+if [[ ! "$RESULT" =~ "${__GPFS_DEVICE__} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 

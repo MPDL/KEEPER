@@ -33,13 +33,6 @@ function warn () {
 	fi
 }
 
-function up_err_and_exit () {
-	startup_seafile
-	err_and_exit "$1"
-}
-
-
-
 function check_file () {
     if [ ! -f "$1" ]; then
 		if [ -n "$2" ]; then
@@ -62,17 +55,22 @@ function elapsed_time() {
 
 ### INJECT KEEPER PROPERTIES
 
-SEAFILE_DIR=/opt/seafile
+PROPS_DIR=$(dirname $(dirname $(readlink -f $0)))
+
 ### GET INSTANCE PROPERTIES FILE
-# KEEPER instance properties file should be located in SEAFILE_DIR!!!
-FILES=( $(find ${SEAFILE_DIR} -maxdepth 1 -type f -name "keeper*.properties") )
-( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${SEAFILE_DIR}"
-[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${SEAFILE_DIR}:\n ${FILES[*]}"
+# KEEPER instance properties file should be located in PROPS_DIR!!!
+FILES=( $(find ${PROPS_DIR} -maxdepth 1 -type f -name "keeper*.ini") )
+( [[ $? -ne 0 ]] || [[ ${#FILES[@]} -eq 0 ]] ) && err_and_exit "Cannot find instance properties file in ${PROPS_DIR}"
+[[ ${#FILES[@]} -ne 1 ]] && err_and_exit "Too many instance properties files in ${PROPS_DIR}:\n ${FILES[*]}"
 PROPERTIES_FILE="${FILES[0]}"
-source "${PROPERTIES_FILE}"
+source <(grep -v "^[[#;]" ${PROPERTIES_FILE})
+#source 1.txt
 if [ $? -ne 0  ]; then
 	err_and_exit "Cannot intitialize variables"
 fi
+
+SEAFILE_DIR=${__SEAFILE_DIR__}
+SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 ### END
 
 

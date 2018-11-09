@@ -108,72 +108,105 @@
 
         /* Login page common css */
 
-		#main .container {
-			margin-top: 2%;
-            padding-bottom: 20px;
-		}
+		/*#main .container {*/
+			/*margin-top: 2%;*/
+            /*padding-bottom: 20px;*/
+		/*}*/
 
-        #info_panel {
-            transition: left 0.8s; 
-            background-image: url('/media/custom/background.svg'); 
-            background-repeat: no-repeat; 
-            background-size: 30%; 
-            background-position: 10px 0px;
-        }
         #info_panel h3 {
             font-size: 3em;
-            color: #57a5b8;
+            color: #b71a52;
         }
 
         #info_panel p {
             font-size: 1.35em;
         }
 
+
+        /* Login panel */
 		#login_panel {
             float: none;
-            margin: 0 0 0 87px;
+            width: 345px;
 			transition: top 0.8s; 
 			transition: right 0.8s; 
-			background: rgba(255, 255, 255, 1) !important; 
+			background: rgba(255, 255, 255, 1) !important;
+            box-shadow: none;
 			z-index: 1;            
 		}
-       
 
-
-        #login_panel_parent {
-            padding: 0 0 0 0;
-        }
-
-
+        #login_panel .input {
+            font-size: 14px;
+            margin: 5px 0 10px;
+        } 
         
-        /* FOOTER */
-        body {
-            margin-bottom: 150px;
+        #login_panel .remember {
+            margin-top: 10px;
         }
+
+        #login_panel .con {
+            padding: 20px 0 20px;
+            width: 268px;
+            margin: 0 auto;
+        }
+
+        /* LabCam banner  */
+        #login_panel .con.auth {
+            padding: 5px 0px 10px 0px; 
+            /*padding-bottom: 10px;*/
+        }
+
+        #labcam-banner p {
+            font: 13px/1.5 Arial,Helvetica,sans-serif;
+            text-align: center;
+            color: #333;
+            margin-bottom: 0px;
+        }
+
+        #labcam-banner a {
+            font-weight: normal;
+        }
+
+        @media (min-width: 1200px), (max-width: 991px) {
+            #labcam-banner img { width: 331px; }
+        }
+        @media (max-width: 1199px) and (min-width: 992px) {
+            #labcam-banner img { width: 343px; }
+        }
+       
+        /* FOOTER */
         #lg_footer {
-            /*position: absolute; */
             bottom: 0;
-            width: 100%; 
-            height: 150px;
+            padding-bottom: 0px;
        }
 
         #lg_footer .container {
             border-top: 1px solid #dcdcdc; 
         }
 
-       #lg_footer div {
-            top: 10px;
-        }
-        
+       
         #lg_footer div a {
-            color: #b7b7b7; 
+            color: #575859; 
             font-weight: lighter;
         }
 
         #lg_footer div h4 {
-            color: #57a5b8; 
+            color: #b71a52; 
         }
 
+        #lg_footer img {
+            height: 30px;
+            width: auto;
+        }
+
+        /*footer on inner pages*/
+        #footer-ctn a{ 
+            color: #B7B7B7;
+            font-weight: normal;
+        }
+
+        #footer-ctn h4{ 
+            color: #57a5b8 !important;  
+        }
 /*
  ********************************************************************************
  ********************************************************************************	
@@ -238,13 +271,16 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 #side-nav a#enable-mods:focus {
     color: #ccc !important
 }
-.nav-con-tabs-nav .ui-state-active a, .new-narrow-panel .hd, #notifications .num {
+.nav-con-tabs-nav .ui-state-active a {
     background: #57a5b8 !important
 }
-#notifications .num {
-    border-color: #57a5b8;
+li.tab.ui-state-active a {
+    color: #57a5b8 !important;
+    border-bottom-color: #57a5b8 !important;
 }
-
+.new-narrow-panel .hd, #notifications .num {
+    background: #b71a52 !important
+}
 .side-tabnav-tabs .tab-cur a {
     background-color: #57a5b8 !important;
 }
@@ -270,6 +306,10 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 
 div.fright.js-file-op > a:focus {
     color: white;
+}
+
+#guide-for-new .icon-lightbulb {
+    color: #57a5b8;
 }
 
 /*
@@ -304,7 +344,7 @@ div.fright.js-file-op > a:focus {
 	/*********************************************/
 
 	/* footer container */
-	.side-nav-footer.ovhd{
+	.side-nav-footer{
 		/* footer container is centered in the navigation sidebar */
 		width:80%;
 		position:absolute;
@@ -352,7 +392,7 @@ div.fright.js-file-op > a:focus {
 		/***** wide screen version ******************************************************/
 		/********************************************************************************/
 		@media (min-width:900px) {
-			.side-nav-footer.ovhd{height:35%;bottom: -32%;}
+			.side-nav-footer{height:35%;bottom: -32%;}
 			#img-ctn{left:2%;}
 			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;font-size: 0.65vw;}
 
@@ -373,53 +413,6 @@ div.fright.js-file-op > a:focus {
 
    		}
 
-		/********************************************************************************/
-		/***** mobile version ***********************************************************/
-		/********************************************************************************/
-		/*@media (max-width:900px) {*/
-		/*@media (max-width: @screen-sm-max) {*/
-
-		@media (max-width: 768px) {
-
-			.side-nav-footer, #info_panel {
-                display: none;
-            }
-
-            #login_panel_parent {
-                padding: 0;
-            }
-
-            #login_panel {
-                float: none;
-                clear: both;
-                margin: 0;
-            }
-
-            #lg_footer h4 {
-                margin-top: 20px;
-            }
-
-            #lg_footer div a {
-                color: black; 
-                font-weight: normal;
-
-            }
-            #lg_footer .container {
-                border-top: unset; 
-            }
-
- 
-        }
-		@media (min-width: 769px) and (max-width: 991px) {
-            #login_panel_parent {
-                padding-left: 15px;
-            }
-
-            #login_panel {
-                float: none;
-                clear: both;
-                margin: 0;
-            }
 
 
 /*
@@ -429,11 +422,6 @@ div.fright.js-file-op > a:focus {
 
 #top-search-form .search-submit{border: 1px solid #E5EAEA;}
 
-@media only screen and (max-device-width:400px) {
-	#info_panel, #lg_footer{display:none;}
-    #login_panel{width: 90% !important; top: 30% !important; left: 5% !important; font-size: 1em !important; margin: 4px !important; z-index: -1 !important;}
-
-}
 
 
 /* image preview */

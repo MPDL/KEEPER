@@ -2,29 +2,30 @@
 # encoding: utf-8
 
 import os
+from io import BytesIO
 from types import FunctionType
 import logging
 import json
 import re
 import datetime
-import csv, chardet, StringIO
 import time
 from constance import config
+from openpyxl import load_workbook
 
 from django.db.models import Q
 from django.conf import settings as dj_settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext
+from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.utils.http import urlquote
 
 import seaserv
 from seaserv import ccnet_threaded_rpc, seafserv_threaded_rpc, \
     seafile_api, get_group, get_group_members, ccnet_api, \
-    get_related_users_by_repo, get_related_users_by_org_repo
+    get_related_users_by_org_repo
 from pysearpc import SearpcError
 
 from seahub.base.accounts import User
@@ -34,16 +35,22 @@ from seahub.base.sudo_mode import update_sudo_mode_ts
 from seahub.base.templatetags.seahub_tags import tsstr_sec, email2nickname
 from seahub.auth import authenticate
 from seahub.auth.decorators import login_required, login_required_ajax
-from seahub.constants import GUEST_USER, DEFAULT_USER
+from seahub.constants import GUEST_USER, DEFAULT_USER, DEFAULT_ADMIN, \
+        SYSTEM_ADMIN, DAILY_ADMIN, AUDIT_ADMIN, HASH_URLS
 from seahub.institutions.models import (Institution, InstitutionAdmin,
                                         InstitutionQuota)
 from seahub.institutions.utils import get_institution_space_usage
 from seahub.invitations.models import Invitation
-from seahub.role_permissions.utils import get_available_roles
+from seahub.role_permissions.utils import get_available_roles, \
+        get_available_admin_roles
+from seahub.role_permissions.models import AdminRole
+from seahub.two_factor.models import default_device
 from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
     is_pro_version, send_html_email, get_user_traffic_list, get_server_id, \
-    clear_token, handle_virus_record, get_virus_record_by_id, \
-    get_virus_record, FILE_AUDIT_ENABLED, get_max_upload_file_size
+    handle_virus_record, get_virus_record_by_id, \
+    get_virus_record, FILE_AUDIT_ENABLED, get_max_upload_file_size, \
+    get_site_name
+from seahub.utils.ip import get_remote_ip
 from seahub.utils.file_size import get_file_size_unit
 from seahub.utils.ldap import get_ldap_info
 from seahub.utils.licenseparse import parse_license, user_number_over_limit
@@ -51,21 +58,24 @@ from seahub.utils.rpc import mute_seafile_api
 from seahub.utils.sysinfo import get_platform_name
 from seahub.utils.mail import send_html_email_with_dj_template
 from seahub.utils.ms_excel import write_xls
-from seahub.utils.user_permissions import (get_basic_user_roles,
-                                           get_user_role)
+from seahub.utils.user_permissions import get_basic_user_roles, \
+        get_user_role, get_basic_admin_roles
+from seahub.utils.auth import get_login_bg_image_path
+from seahub.utils.repo import get_related_users_by_repo, get_repo_owner
 from seahub.views import get_system_default_repo_id
 from seahub.forms import SetUserQuotaForm, AddUserForm, BatchAddUserForm, \
     TermsAndConditionsForm
 from seahub.options.models import UserOptions
 from seahub.profile.models import Profile, DetailedProfile
-from seahub.signals import repo_deleted
+from seahub.signals import repo_deleted, institution_deleted
 from seahub.share.models import FileShare, UploadLinkShare
 from seahub.admin_log.signals import admin_operation
 from seahub.admin_log.models import USER_DELETE, USER_ADD
 import seahub.settings as settings
-from seahub.settings import INIT_PASSWD, SITE_NAME, SITE_ROOT, \
+from seahub.settings import INIT_PASSWD, SITE_ROOT, \
     SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER, SEND_EMAIL_ON_RESETTING_USER_PASSWD, \
-    ENABLE_SYS_ADMIN_VIEW_REPO, ENABLE_GUEST_INVITATION
+    ENABLE_SYS_ADMIN_VIEW_REPO, ENABLE_GUEST_INVITATION, \
+    ENABLE_LIMIT_IPADDRESS
 try:
     from seahub.settings import ENABLE_TRIAL_ACCOUNT
 except:
@@ -76,7 +86,7 @@ try:
     from seahub.settings import MULTI_TENANCY
 except ImportError:
     MULTI_TENANCY = False
-from seahub.utils.two_factor_auth import HAS_TWO_FACTOR_AUTH
+from seahub.utils.two_factor_auth import has_two_factor_auth
 from termsandconditions.models import TermsAndConditions
 
 logger = logging.getLogger(__name__)
@@ -88,7 +98,13 @@ def sysadmin(request):
 
     folder_perm_enabled = True if is_pro_version() and settings.ENABLE_FOLDER_PERM else False
 
-    return render_to_response('sysadmin/sysadmin_backbone.html', {
+    try:
+        expire_days = seafile_api.get_server_config_int('library_trash', 'expire_days')
+    except Exception as e:
+        logger.error(e)
+        expire_days = -1
+
+    return render(request, 'sysadmin/sysadmin_backbone.html', {
             'enable_sys_admin_view_repo': ENABLE_SYS_ADMIN_VIEW_REPO,
             'enable_upload_folder': settings.ENABLE_UPLOAD_FOLDER,
             'enable_resumable_fileupload': settings.ENABLE_RESUMABLE_FILEUPLOAD,
@@ -101,8 +117,38 @@ def sysadmin(request):
             'max_upload_file_size': max_upload_file_size,
             'folder_perm_enabled': folder_perm_enabled,
             'is_pro': True if is_pro_version() else False,
-            'file_audit_enabled': FILE_AUDIT_ENABLED
-            }, context_instance=RequestContext(request))
+            'file_audit_enabled': FILE_AUDIT_ENABLED,
+            'enable_limit_ipaddress': ENABLE_LIMIT_IPADDRESS,
+            'trash_repos_expire_days': expire_days if expire_days > 0 else 30,
+            })
+
+@login_required
+@sys_staff_required
+def sys_statistic_file(request):
+
+    return render(request, 'sysadmin/sys_statistic_file.html', {
+            })
+
+@login_required
+@sys_staff_required
+def sys_statistic_storage(request):
+
+    return render(request, 'sysadmin/sys_statistic_storage.html', {
+            })
+
+@login_required
+@sys_staff_required
+def sys_statistic_user(request):
+
+    return render(request, 'sysadmin/sys_statistic_user.html', {
+            })
+
+@login_required
+@sys_staff_required
+def sys_statistic_traffic(request):
+
+    return render(request, 'sysadmin/sys_statistic_traffic.html', {
+            })
 
 def can_view_sys_admin_repo(repo):
     default_repo_id = get_system_default_repo_id()
@@ -154,10 +200,11 @@ def _populate_user_quota_usage(user):
 def sys_user_admin(request):
     """List all users from database.
     """
+
     try:
         from seahub_extra.plan.models import UserPlan
         enable_user_plan = True
-    except ImportError:
+    except Exception:
         enable_user_plan = False
 
     if enable_user_plan and request.GET.get('filter', '') == 'paid':
@@ -179,10 +226,10 @@ def sys_user_admin(request):
                 if e.username == u.username:
                     u.last_login = e.last_login
 
-        return render_to_response('sysadmin/sys_useradmin_paid.html', {
+        return render(request, 'sysadmin/sys_useradmin_paid.html', {
             'users': users,
             'enable_user_plan': enable_user_plan,
-        }, context_instance=RequestContext(request))
+        })
 
     ### List all users
     # Make sure page request is an int. If not, deliver first page.
@@ -234,7 +281,17 @@ def sys_user_admin(request):
     extra_user_roles = [x for x in get_available_roles()
                         if x not in get_basic_user_roles()]
 
-    return render_to_response(
+    multi_institution = getattr(dj_settings, 'MULTI_INSTITUTION', False)
+    show_institution = False
+    institutions = None
+    if multi_institution:
+        show_institution = True
+        institutions = [inst.name for inst in Institution.objects.all()]
+        for user in users:
+            profile = Profile.objects.get_profile_by_user(user.email)
+            user.institution =  profile.institution if profile else ''
+
+    return render(request, 
         'sysadmin/sys_useradmin.html', {
             'users': users,
             'current_page': current_page,
@@ -251,13 +308,16 @@ def sys_user_admin(request):
             'pro_server': pro_server,
             'enable_user_plan': enable_user_plan,
             'extra_user_roles': extra_user_roles,
-        }, context_instance=RequestContext(request))
+            'show_institution': show_institution,
+            'institutions': institutions,
+        })
 
 @login_required
 @sys_staff_required
 def sys_useradmin_export_excel(request):
     """ Export all users from database to excel
     """
+
     next = request.META.get('HTTP_REFERER', None)
     if not next:
         next = SITE_ROOT
@@ -284,69 +344,92 @@ def sys_useradmin_export_excel(request):
                 _("Space Usage") + "(MB)", _("Space Quota") + "(MB)",
                 _("Create At"), _("Last Login"), _("Admin"), _("LDAP(imported)"),]
 
+    # only operate 100 users for every `for` loop
+    looped = 0
+    limit = 100
     data_list = []
 
-    last_logins = UserLastLogin.objects.filter(username__in=[x.email for x in users])
-    for user in users:
+    while looped < len(users):
 
-        # populate name and contact email
-        populate_user_info(user)
+        current_users = users[looped:looped+limit]
 
-        # populate space usage and quota
-        MB = get_file_size_unit('MB')
+        last_logins = UserLastLogin.objects.filter(username__in=[x.email \
+                for x in current_users])
+        user_profiles = Profile.objects.filter(user__in=[x.email \
+                for x in current_users])
 
-        _populate_user_quota_usage(user)
-        if user.space_usage > 0:
-            try:
-                space_usage_MB = round(float(user.space_usage) / MB, 2)
-            except Exception as e:
-                logger.error(e)
-                space_usage_MB = '--'
-        else:
-            space_usage_MB = ''
+        for user in current_users:
+            # populate name and contact email
+            user.contact_email = ''
+            user.name = ''
+            for profile in user_profiles:
+                if profile.user == user.email:
+                    user.contact_email = profile.contact_email
+                    user.name = profile.nickname
 
-        if user.space_quota > 0:
-            try:
-                space_quota_MB = round(float(user.space_quota) / MB, 2)
-            except Exception as e:
-                logger.error(e)
-                space_quota_MB = '--'
-        else:
-            space_quota_MB = ''
+            # populate space usage and quota
+            MB = get_file_size_unit('MB')
 
-        # populate user last login time
-        user.last_login = None
-        for last_login in last_logins:
-            if last_login.username == user.email:
-                user.last_login = last_login.last_login
-
-        if user.is_active:
-            status = _('Active')
-        else:
-            status = _('Inactive')
-
-        create_at = tsstr_sec(user.ctime) if user.ctime else ''
-        last_login = user.last_login.strftime("%Y-%m-%d %H:%M:%S") if \
-            user.last_login else ''
-
-        is_admin = _('Yes') if user.is_staff else ''
-        ldap_import = _('Yes') if user.source == 'LDAPImport' else ''
-
-        if is_pro:
-            if user.role == GUEST_USER:
-                role = _('Guest')
+            _populate_user_quota_usage(user)
+            if user.space_usage > 0:
+                try:
+                    space_usage_MB = round(float(user.space_usage) / MB, 2)
+                except Exception as e:
+                    logger.error(e)
+                    space_usage_MB = '--'
             else:
-                role = _('Default')
+                space_usage_MB = ''
 
-            row = [user.email, user.name, user.contact_email, status, role,
-                    space_usage_MB, space_quota_MB, create_at,
-                    last_login, is_admin, ldap_import]
-        else:
-            row = [user.email, user.name, user.contact_email, status,
-                    space_usage_MB, space_quota_MB, create_at,
-                    last_login, is_admin, ldap_import]
+            if user.space_quota > 0:
+                try:
+                    space_quota_MB = round(float(user.space_quota) / MB, 2)
+                except Exception as e:
+                    logger.error(e)
+                    space_quota_MB = '--'
+            else:
+                space_quota_MB = ''
 
-        data_list.append(row)
+            # populate user last login time
+            user.last_login = None
+            for last_login in last_logins:
+                if last_login.username == user.email:
+                    user.last_login = last_login.last_login
+
+            if user.is_active:
+                status = _('Active')
+            else:
+                status = _('Inactive')
+
+            create_at = tsstr_sec(user.ctime) if user.ctime else ''
+            last_login = user.last_login.strftime("%Y-%m-%d %H:%M:%S") if \
+                user.last_login else ''
+
+            is_admin = _('Yes') if user.is_staff else ''
+            ldap_import = _('Yes') if user.source == 'LDAPImport' else ''
+
+            if is_pro:
+                if user.role:
+                    if user.role == GUEST_USER:
+                        role = _('Guest')
+                    elif user.role == DEFAULT_USER:
+                        role = _('Default')
+                    else:
+                        role = user.role
+                else:
+                    role = _('Default')
+
+                row = [user.email, user.name, user.contact_email, status, role,
+                        space_usage_MB, space_quota_MB, create_at,
+                        last_login, is_admin, ldap_import]
+            else:
+                row = [user.email, user.name, user.contact_email, status,
+                        space_usage_MB, space_quota_MB, create_at,
+                        last_login, is_admin, ldap_import]
+
+            data_list.append(row)
+
+        # update `looped` value when `for` loop finished
+        looped += limit
 
     wb = write_xls('users', head, data_list)
     if not wb:
@@ -363,6 +446,7 @@ def sys_useradmin_export_excel(request):
 def sys_user_admin_ldap_imported(request):
     """List all users from LDAP imported.
     """
+
     # Make sure page request is an int. If not, deliver first page.
     try:
         current_page = int(request.GET.get('page', '1'))
@@ -387,13 +471,30 @@ def sys_user_admin_ldap_imported(request):
         populate_user_info(user)
         _populate_user_quota_usage(user)
 
+        # check user's role
+        user.is_guest = True if get_user_role(user) == GUEST_USER else False
+        user.is_default = True if get_user_role(user) == DEFAULT_USER else False
+
         # populate user last login time
         user.last_login = None
         for last_login in last_logins:
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    return render_to_response(
+    extra_user_roles = [x for x in get_available_roles()
+                        if x not in get_basic_user_roles()]
+
+    multi_institution = getattr(dj_settings, 'MULTI_INSTITUTION', False)
+    show_institution = False
+    institutions = None
+    if multi_institution:
+        show_institution = True
+        institutions = [inst.name for inst in Institution.objects.all()]
+        for user in users:
+            profile = Profile.objects.get_profile_by_user(user.email)
+            user.institution =  profile.institution if profile else ''
+
+    return render(request, 
         'sysadmin/sys_user_admin_ldap_imported.html', {
             'users': users,
             'current_page': current_page,
@@ -402,13 +503,19 @@ def sys_user_admin_ldap_imported(request):
             'per_page': per_page,
             'page_next': page_next,
             'is_pro': is_pro_version(),
-        }, context_instance=RequestContext(request))
+            'extra_user_roles': extra_user_roles,
+            'default_user': DEFAULT_USER,
+            'guest_user': GUEST_USER,
+            'show_institution': show_institution,
+            'institutions': institutions,
+        })
 
 @login_required
 @sys_staff_required
 def sys_user_admin_ldap(request):
     """List all users from LDAP.
     """
+
     # Make sure page request is an int. If not, deliver first page.
     try:
         current_page = int(request.GET.get('page', '1'))
@@ -438,7 +545,7 @@ def sys_user_admin_ldap(request):
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_useradmin_ldap.html', {
             'users': users,
             'current_page': current_page,
@@ -447,21 +554,21 @@ def sys_user_admin_ldap(request):
             'per_page': per_page,
             'page_next': page_next,
             'is_pro': is_pro_version(),
-        },
-        context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
 def sys_user_admin_admins(request):
     """List all admins from database and ldap imported
     """
-    db_users = seaserv.get_emailusers('DB', -1, -1)
-    ldpa_imported_users = seaserv.get_emailusers('LDAPImport', -1, -1)
+
+    db_users = ccnet_api.get_emailusers('DB', -1, -1)
+    ldap_imported_users = ccnet_api.get_emailusers('LDAPImport', -1, -1)
 
     admin_users = []
     not_admin_users = []
 
-    for user in db_users + ldpa_imported_users:
+    for user in db_users + ldap_imported_users:
         if user.is_staff is True:
             admin_users.append(user)
         else:
@@ -488,15 +595,27 @@ def sys_user_admin_admins(request):
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    return render_to_response(
+        try:
+            admin_role = AdminRole.objects.get_admin_role(user.email)
+            user.admin_role = admin_role.role
+        except AdminRole.DoesNotExist:
+            user.admin_role = DEFAULT_ADMIN
+
+    extra_admin_roles = [x for x in get_available_admin_roles()
+                        if x not in get_basic_admin_roles()]
+
+    return render(request, 
         'sysadmin/sys_useradmin_admins.html', {
             'users': admin_users,
             'not_admin_users': not_admin_users,
             'have_ldap': get_ldap_info(),
-            'default_user': DEFAULT_USER,
-            'guest_user': GUEST_USER,
+            'extra_admin_roles': extra_admin_roles,
+            'default_admin': DEFAULT_ADMIN,
+            'system_admin': SYSTEM_ADMIN,
+            'daily_admin': DAILY_ADMIN,
+            'audit_admin': AUDIT_ADMIN,
             'is_pro': is_pro_version(),
-        }, context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
@@ -618,7 +737,15 @@ def user_info(request, email):
         else:
             g.role = _('Member')
 
-    return render_to_response(
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        raise Http404
+
+    reference_id = user.reference_id
+    user_default_device = default_device(user) if has_two_factor_auth() else False
+
+    return render(request, 
         'sysadmin/userinfo.html', {
             'owned_repos': owned_repos,
             'space_quota': space_quota,
@@ -631,7 +758,10 @@ def user_info(request, email):
             'user_shared_links': user_shared_links,
             'enable_sys_admin_view_repo': ENABLE_SYS_ADMIN_VIEW_REPO,
             'personal_groups': personal_groups,
-        }, context_instance=RequestContext(request))
+            'two_factor_auth_enabled': has_two_factor_auth(),
+            'default_device': user_default_device,
+            'reference_id': reference_id if reference_id else '',
+        })
 
 @login_required_ajax
 @sys_staff_required
@@ -819,7 +949,7 @@ def email_user_on_activation(user):
     c = {
         'username': user.email,
         }
-    send_html_email(_(u'Your account on %s is activated') % SITE_NAME,
+    send_html_email(_(u'Your account on %s is activated') % get_site_name(),
             'sysadmin/user_activation_email.html', c, None, [user.email])
 
 @login_required_ajax
@@ -856,10 +986,10 @@ def user_toggle_status(request, email):
             return HttpResponse(json.dumps({'success': True,
                                             'email_sent': email_sent,
                                             }), content_type=content_type)
-        else:
-            clear_token(user.email)
+
         return HttpResponse(json.dumps({'success': True}),
                             content_type=content_type)
+
     except User.DoesNotExist:
         return HttpResponse(json.dumps({'success': False}), status=500,
                             content_type=content_type)
@@ -902,7 +1032,7 @@ def send_user_reset_email(request, email, password):
         'email': email,
         'password': password,
         }
-    send_html_email(_(u'Password has been reset on %s') % SITE_NAME,
+    send_html_email(_(u'Password has been reset on %s') % get_site_name(),
             'sysadmin/user_reset_email.html', c, None, [email])
 
 @login_required
@@ -919,7 +1049,6 @@ def user_reset(request, email):
         user.set_password(new_password)
         user.save()
 
-        clear_token(user.username)
         if config.FORCE_PASSWORD_CHANGE:
             UserOptions.objects.set_force_passwd_change(user.username)
 
@@ -962,12 +1091,12 @@ def send_user_add_mail(request, email, password):
 
     # KEEPER
     try:
-		from keeper.common import get_user_name
-		c['user'] = get_user_name(c['user'])
+        from keeper.common import get_user_name
+        c['user'] = get_user_name(c['user'])
     except Exception as e:
         raise e
 
-    send_html_email(_(u'You are invited to join %s') % SITE_NAME,
+    send_html_email(_(u'You are invited to join %s') % get_site_name(),
             'sysadmin/user_add_email.html', c, None, [email])
 
 @login_required_ajax
@@ -1056,6 +1185,7 @@ def user_add(request):
 def sys_group_admin_export_excel(request):
     """ Export all groups to excel
     """
+
     next = request.META.get('HTTP_REFERER', None)
     if not next:
         next = SITE_ROOT
@@ -1115,12 +1245,12 @@ def sys_org_admin(request):
             o.is_expired = True if e.expire_date < timezone.now() else False
             orgs.append(o)
 
-        return render_to_response('sysadmin/sys_org_admin.html', {
+        return render(request, 'sysadmin/sys_org_admin.html', {
             'orgs': orgs,
             'enable_org_plan': enable_org_plan,
             'hide_paginator': True,
             'paid_page': True,
-            }, context_instance=RequestContext(request))
+            })
 
     orgs_plus_one = ccnet_threaded_rpc.get_all_orgs(per_page * (current_page - 1),
                                                     per_page + 1)
@@ -1157,7 +1287,7 @@ def sys_org_admin(request):
         else:
             org.is_expired = False
 
-    return render_to_response('sysadmin/sys_org_admin.html', {
+    return render(request, 'sysadmin/sys_org_admin.html', {
             'orgs': orgs,
             'current_page': current_page,
             'prev_page': current_page-1,
@@ -1166,7 +1296,7 @@ def sys_org_admin(request):
             'page_next': page_next,
             'enable_org_plan': enable_org_plan,
             'all_page': True,
-            }, context_instance=RequestContext(request))
+            })
 
 @login_required
 @sys_staff_required
@@ -1194,12 +1324,12 @@ def sys_org_search(request):
                 if creator in o.creator.lower():
                     orgs.append(o)
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_org_search.html', {
             'orgs': orgs,
             'name': org_name,
             'creator': creator,
-        }, context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
@@ -1311,6 +1441,9 @@ def sys_org_info_user(request, org_id):
 
     org_id = int(org_id)
 
+    if not ccnet_api.get_org_by_id(org_id):
+        raise Http404
+
     org_basic_info = sys_get_org_base_info(org_id)
     users = org_basic_info["users"]
     last_logins = UserLastLogin.objects.filter(username__in=[x.email for x in users])
@@ -1331,8 +1464,8 @@ def sys_org_info_user(request, org_id):
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    return render_to_response('sysadmin/sys_org_info_user.html',
-           org_basic_info, context_instance=RequestContext(request))
+    return render(request, 'sysadmin/sys_org_info_user.html',
+           org_basic_info)
 
 
 @login_required
@@ -1340,16 +1473,24 @@ def sys_org_info_user(request, org_id):
 def sys_org_info_group(request, org_id):
 
     org_id = int(org_id)
+
+    if not ccnet_api.get_org_by_id(org_id):
+        raise Http404
+
     org_basic_info = sys_get_org_base_info(org_id)
 
-    return render_to_response('sysadmin/sys_org_info_group.html',
-           org_basic_info, context_instance=RequestContext(request))
+    return render(request, 'sysadmin/sys_org_info_group.html',
+           org_basic_info)
 
 @login_required
 @sys_staff_required
 def sys_org_info_library(request, org_id):
 
     org_id = int(org_id)
+
+    if not ccnet_api.get_org_by_id(org_id):
+        raise Http404
+
     org_basic_info = sys_get_org_base_info(org_id)
 
     # library
@@ -1362,14 +1503,32 @@ def sys_org_info_library(request, org_id):
             repo.owner = None
 
     org_basic_info["org_repos"] = org_repos
-    return render_to_response('sysadmin/sys_org_info_library.html',
-           org_basic_info, context_instance=RequestContext(request))
+    return render(request, 'sysadmin/sys_org_info_library.html',
+           org_basic_info)
+
+@login_required
+@sys_staff_required
+def sys_org_info_traffic(request, org_id):
+
+    org_id = int(org_id)
+
+    if not ccnet_api.get_org_by_id(org_id):
+        raise Http404
+
+    org_basic_info = sys_get_org_base_info(org_id)
+
+    return render(request, 'sysadmin/sys_org_info_traffic.html',
+           org_basic_info)
 
 @login_required
 @sys_staff_required
 def sys_org_info_setting(request, org_id):
 
     org_id = int(org_id)
+
+    if not ccnet_api.get_org_by_id(org_id):
+        raise Http404
+
     org_basic_info = sys_get_org_base_info(org_id)
 
     if getattr(settings, 'ORG_MEMBER_QUOTA_ENABLED', False):
@@ -1378,9 +1537,8 @@ def sys_org_info_setting(request, org_id):
     else:
         org_basic_info['org_member_quota'] = None
 
-    return render_to_response('sysadmin/sys_org_info_setting.html',
-                              org_basic_info,
-                              context_instance=RequestContext(request))
+    return render(request, 'sysadmin/sys_org_info_setting.html',
+                              org_basic_info)
 
 @login_required
 @sys_staff_required
@@ -1417,7 +1575,7 @@ def sys_publink_admin(request):
         else:
             l.name = os.path.dirname(l.path)
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_publink_admin.html', {
             'publinks': publinks,
             'current_page': current_page,
@@ -1427,8 +1585,48 @@ def sys_publink_admin(request):
             'page_next': page_next,
             'per_page': per_page,
             'sort_by': sort_by,
-        },
-        context_instance=RequestContext(request))
+        })
+
+@login_required
+@sys_staff_required
+def sys_upload_link_admin(request):
+    # Make sure page request is an int. If not, deliver first page.
+    try:
+        current_page = int(request.GET.get('page', '1'))
+        per_page = int(request.GET.get('per_page', '100'))
+    except ValueError:
+        current_page = 1
+        per_page = 100
+
+    offset = per_page * (current_page -1)
+    limit = per_page + 1
+    sort_by = request.GET.get('sort_by', '-time')
+
+    if sort_by == 'time':
+        uploadlinks = UploadLinkShare.objects.all().order_by('ctime')[offset:offset+limit]
+    elif sort_by == '-count':
+        uploadlinks = UploadLinkShare.objects.all().order_by('-view_cnt')[offset:offset+limit]
+    elif sort_by == 'count':
+        uploadlinks = UploadLinkShare.objects.all().order_by('view_cnt')[offset:offset+limit]
+    else:
+        uploadlinks = UploadLinkShare.objects.all().order_by('-ctime')[offset:offset+limit]
+
+    if len(uploadlinks) == per_page + 1:
+        page_next = True
+    else:
+        page_next = False
+
+    return render(request, 
+        'sysadmin/sys_upload_link_admin.html', {
+            'uploadlinks': uploadlinks,
+            'current_page': current_page,
+            'prev_page': current_page-1,
+            'next_page': current_page+1,
+            'per_page': per_page,
+            'page_next': page_next,
+            'per_page': per_page,
+            'sort_by': sort_by
+        })
 
 @login_required_ajax
 @sys_staff_required
@@ -1465,6 +1663,28 @@ def sys_upload_link_remove(request):
     UploadLinkShare.objects.filter(token=token).delete()
     result = {'success': True}
     return HttpResponse(json.dumps(result), content_type=content_type)
+
+@login_required
+@sys_staff_required
+def sys_link_search(request):
+    token = request.GET.get('token', '')
+
+    if len(token) < 3:
+        publinks = []
+    else:
+        publinks = FileShare.objects.filter(token__startswith=token)
+
+    for l in publinks:
+        if l.is_file_share_link():
+            l.name = os.path.basename(l.path)
+        else:
+            l.name = os.path.dirname(l.path)
+
+    return render(request, 
+        'sysadmin/sys_link_search.html', {
+            'publinks': publinks,
+            'token': token
+        })
 
 @login_required
 @sys_staff_required
@@ -1529,105 +1749,14 @@ def user_search(request):
     extra_user_roles = [x for x in get_available_roles()
                         if x not in get_basic_user_roles()]
 
-    return render_to_response('sysadmin/user_search.html', {
+    return render(request, 'sysadmin/user_search.html', {
             'users': users,
             'email': email,
             'default_user': DEFAULT_USER,
             'guest_user': GUEST_USER,
             'is_pro': is_pro_version(),
             'extra_user_roles': extra_user_roles,
-            }, context_instance=RequestContext(request))
-
-@login_required
-@sys_staff_required
-@require_POST
-def sys_repo_transfer(request):
-    """Transfer a repo to others.
-    """
-    repo_id = request.POST.get('repo_id', None)
-    new_owner = request.POST.get('email', None)
-
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = reverse('sys_repo_admin')
-
-    if not (repo_id and new_owner):
-        messages.error(request, _(u'Failed to transfer, invalid arguments.'))
-        return HttpResponseRedirect(next)
-
-    repo = seafile_api.get_repo(repo_id)
-    if not repo:
-        messages.error(request, _(u'Library does not exist'))
-        return HttpResponseRedirect(next)
-
-    try:
-        User.objects.get(email=new_owner)
-    except User.DoesNotExist:
-        messages.error(request, _(u'Failed to transfer, user %s not found') % new_owner)
-        return HttpResponseRedirect(next)
-
-    if MULTI_TENANCY:
-        try:
-            if seafserv_threaded_rpc.get_org_id_by_repo_id(repo_id) > 0:
-                messages.error(request, _(u'Can not transfer organization library'))
-                return HttpResponseRedirect(next)
-
-            if ccnet_api.get_orgs_by_user(new_owner):
-                messages.error(request, _(u'Can not transfer library to organization user %s') % new_owner)
-                return HttpResponseRedirect(next)
-        except Exception as e:
-            logger.error(e)
-            messages.error(request, 'Internal Server Error')
-            return HttpResponseRedirect(next)
-
-    repo_owner = seafile_api.get_repo_owner(repo_id)
-
-    # get repo shared to user/group list
-    shared_users = seafile_api.list_repo_shared_to(
-            repo_owner, repo_id)
-    shared_groups = seafile_api.list_repo_shared_group_by_user(
-            repo_owner, repo_id)
-
-    # get all pub repos
-    pub_repos = []
-    if not request.cloud_mode:
-        pub_repos = seafile_api.list_inner_pub_repos_by_owner(repo_owner)
-
-    # transfer repo
-    seafile_api.set_repo_owner(repo_id, new_owner)
-
-    # reshare repo to user
-    for shared_user in shared_users:
-        shared_username = shared_user.user
-
-        if new_owner == shared_username:
-            continue
-
-        seafile_api.share_repo(repo_id, new_owner,
-                shared_username, shared_user.perm)
-
-    # reshare repo to group
-    for shared_group in shared_groups:
-        shared_group_id = shared_group.group_id
-
-        if not ccnet_api.is_group_user(shared_group_id, new_owner):
-            continue
-
-        seafile_api.set_group_repo(repo_id, shared_group_id,
-                new_owner, shared_group.perm)
-
-    # check if current repo is pub-repo
-    # if YES, reshare current repo to public
-    for pub_repo in pub_repos:
-        if repo_id != pub_repo.id:
-            continue
-
-        seafile_api.add_inner_pub_repo(repo_id, pub_repo.permission)
-
-        break
-
-    messages.success(request, _(u'Successfully transfered.'))
-    return HttpResponseRedirect(next)
+            })
 
 @login_required
 @sys_staff_required
@@ -1637,7 +1766,7 @@ def sys_repo_delete(request, repo_id):
     """
     next = request.META.get('HTTP_REFERER', None)
     if not next:
-        next = reverse('sys_repo_admin')
+        next = HASH_URLS['SYS_REPO_ADMIN']
 
     if get_system_default_repo_id() == repo_id:
         messages.error(request, _('System library can not be deleted.'))
@@ -1649,14 +1778,15 @@ def sys_repo_delete(request, repo_id):
     else:
         repo_name = ''
 
-    if MULTI_TENANCY:
-        org_id = seafserv_threaded_rpc.get_org_id_by_repo_id(repo_id)
-        usernames = get_related_users_by_org_repo(org_id, repo_id)
-        repo_owner = seafile_api.get_org_repo_owner(repo_id)
-    else:
+    repo_owner = get_repo_owner(request, repo_id)
+    try:
+        org_id = seafile_api.get_org_id_by_repo_id(repo_id)
+        usernames = get_related_users_by_repo(repo_id,
+                org_id if org_id > 0 else None)
+    except Exception as e:
+        logger.error(e)
         org_id = -1
-        usernames = get_related_users_by_repo(repo_id)
-        repo_owner = seafile_api.get_repo_owner(repo_id)
+        usernames = []
 
     seafile_api.remove_repo(repo_id)
     repo_deleted.send(sender=None, org_id=org_id, usernames=usernames,
@@ -1691,7 +1821,7 @@ def sys_traffic_admin(request):
     for info in traffic_info_list:
         info['total'] = info['file_view'] + info['file_download'] + info['dir_download']
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_trafficadmin.html', {
             'traffic_info_list': traffic_info_list,
             'month': month,
@@ -1700,8 +1830,7 @@ def sys_traffic_admin(request):
             'next_page': current_page+1,
             'per_page': per_page,
             'page_next': page_next,
-        },
-        context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
@@ -1737,7 +1866,7 @@ def sys_virus_scan_records(request):
         r.repo.owner = seafile_api.get_repo_owner(r.repo.repo_id)
         records.append(r)
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_virus_scan_records.html', {
             'records': records,
             'current_page': current_page,
@@ -1745,7 +1874,7 @@ def sys_virus_scan_records(request):
             'next_page': current_page + 1,
             'per_page': per_page,
             'page_next': page_next,
-        }, context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
@@ -1801,8 +1930,37 @@ def batch_user_make_admin(request):
 
 @login_required
 @sys_staff_required
+def batch_add_user_example(request):
+    """ get example file.
+    """
+    next = request.META.get('HTTP_REFERER', None)
+    if not next:
+        next = SITE_ROOT
+    data_list = []
+    head = [_('Email'), _('Password'), _('Name')+ '(' + _('Optional') + ')', 
+            _('Role') + '(' + _('Optional') + ')', _('Space Quota') + '(MB, ' + _('Optional') + ')']
+    for i in xrange(5):
+        username = "test" + str(i) +"@example.com"
+        password = "123456"
+        name = "test" + str(i)
+        role = "default"
+        quota = "1000"
+        data_list.append([username, password, name, role, quota])
+
+    wb = write_xls('sample', head, data_list)
+    if not wb:
+        messages.error(request, _(u'Failed to export Excel'))
+        return HttpResponseRedirect(next)
+
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=users.xlsx'
+    wb.save(response)
+    return response
+
+@login_required
+@sys_staff_required
 def batch_add_user(request):
-    """Batch add users. Import users from CSV file.
+    """  Batch add users. Import users from XLSX file.
     """
     if request.method != 'POST':
         raise Http404
@@ -1812,25 +1970,30 @@ def batch_add_user(request):
     form = BatchAddUserForm(request.POST, request.FILES)
     if form.is_valid():
         content = request.FILES['file'].read()
-        encoding = chardet.detect(content)['encoding']
-        if encoding != 'utf-8':
-            content = content.decode(encoding, 'replace').encode('utf-8')
+        if str(request.FILES['file']).split('.')[-1].lower() != 'xlsx':
+            messages.error(request, _(u'Please choose a .xlsx file.'))
+            return HttpResponseRedirect(next)
 
-        filestream = StringIO.StringIO(content)
-        reader = csv.reader(filestream)
-        new_users_count = len(list(reader))
-        if user_number_over_limit(new_users=new_users_count):
+        try:
+            fs = BytesIO(content)
+            wb = load_workbook(filename=fs, read_only=True)
+        except Exception as e:
+            logger.error(e)
+            messages.error(request, _('Internal Server Error'))
+            return HttpResponseRedirect(next)
+
+        rows = wb.worksheets[0].rows
+        records = []
+        # remove first row(head field).
+        rows.next()
+        for row in rows:
+            records.append([c.value for c in row])
+
+        if user_number_over_limit(new_users=len(records)):
             messages.error(request, _(u'The number of users exceeds the limit.'))
             return HttpResponseRedirect(next)
 
-        # return to the top of the file
-        filestream.seek(0)
-        reader = csv.reader(filestream)
-        for row in reader:
-
-            if not row:
-                continue
-
+        for row in records:
             try:
                 username = row[0].strip()
                 password = row[1].strip()
@@ -1858,22 +2021,14 @@ def batch_add_user(request):
                     logger.error(e)
 
                 try:
-                    department = row[3].strip()
-                    if len(department) <= 512:
-                        DetailedProfile.objects.add_or_update(username, department, '')
-                except Exception as e:
-                    logger.error(e)
-
-                try:
-                    role = row[4].strip()
+                    role = row[3].strip()
                     if is_pro_version() and role in get_available_roles():
                         User.objects.update_role(username, role)
                 except Exception as e:
                     logger.error(e)
 
                 try:
-                    space_quota_mb = row[5].strip()
-                    space_quota_mb = int(space_quota_mb)
+                    space_quota_mb = int(row[4])
                     if space_quota_mb >= 0:
                         space_quota = int(space_quota_mb) * get_file_size_unit('MB')
                         seafile_api.set_user_quota(username, space_quota)
@@ -1882,7 +2037,7 @@ def batch_add_user(request):
 
                 send_html_email_with_dj_template(
                     username, dj_template='sysadmin/user_batch_add_email.html',
-                    subject=_(u'You are invited to join %s') % SITE_NAME,
+                    subject=_(u'You are invited to join %s') % get_site_name(),
                     context={
                         'user': email2nickname(request.user.username),
                         'email': username,
@@ -1895,10 +2050,9 @@ def batch_add_user(request):
                 }
                 admin_operation.send(sender=None, admin_name=request.user.username,
                                      operation=USER_ADD, detail=admin_op_detail)
-
         messages.success(request, _('Import succeeded'))
     else:
-        messages.error(request, _(u'Please select a csv file first.'))
+        messages.error(request, _(u'Please choose a .xlsx file.'))
 
     return HttpResponseRedirect(next)
 
@@ -1911,24 +2065,41 @@ def sys_sudo_mode(request):
     if not request.user.is_staff:
         raise Http404
 
+    next = request.GET.get('next', reverse('sys_useradmin'))
     password_error = False
     if request.method == 'POST':
         password = request.POST.get('password')
+        username = request.user.username
+        ip = get_remote_ip(request)
         if password:
-            user = authenticate(username=request.user.username, password=password)
+            user = authenticate(username=username, password=password)
             if user:
                 update_sudo_mode_ts(request)
-                return HttpResponseRedirect(
-                    request.GET.get('next', reverse('sys_useradmin')))
+
+                from seahub.auth.utils import clear_login_failed_attempts
+                clear_login_failed_attempts(request, username)
+
+                return HttpResponseRedirect(next)
         password_error = True
 
+        from seahub.auth.utils import get_login_failed_attempts, incr_login_failed_attempts
+        failed_attempt = get_login_failed_attempts(username=username, ip=ip)
+        if failed_attempt >= config.LOGIN_ATTEMPT_LIMIT:
+            # logout user
+            from seahub.auth import logout
+            logout(request)
+            return HttpResponseRedirect(reverse('auth_login'))
+        else:
+            incr_login_failed_attempts(username=username, ip=ip)
+
     enable_shib_login = getattr(settings, 'ENABLE_SHIB_LOGIN', False)
-    return render_to_response(
+    enable_adfs_login = getattr(settings, 'ENABLE_ADFS_LOGIN', False)
+    return render(request, 
         'sysadmin/sudo_mode.html', {
             'password_error': password_error,
-            'enable_shib_login': enable_shib_login,
-        },
-        context_instance=RequestContext(request))
+            'enable_sso': enable_shib_login or enable_adfs_login,
+            'next': next,
+        })
 
 @login_required
 @sys_staff_required
@@ -1947,12 +2118,13 @@ def sys_settings(request):
         'USER_PASSWORD_STRENGTH_LEVEL', 'SHARE_LINK_PASSWORD_MIN_LENGTH',
         'ENABLE_USER_CREATE_ORG_REPO', 'FORCE_PASSWORD_CHANGE',
         'LOGIN_ATTEMPT_LIMIT', 'FREEZE_USER_ON_LOGIN_FAILED',
+        'ENABLE_SHARE_TO_ALL_GROUPS', 'ENABLE_TWO_FACTOR_AUTH',
+        'ENABLE_BRANDING_CSS', 'ENABLE_TERMS_AND_CONDITIONS',
+        'ENABLE_USER_CLEAN_TRASH'
     ]
 
-    if HAS_TWO_FACTOR_AUTH:
-        DIGIT_WEB_SETTINGS.append('ENABLE_TWO_FACTOR_AUTH')
-
-    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT', 'TEXT_PREVIEW_EXT')
+    STRING_WEB_SETTINGS = ('SERVICE_URL', 'FILE_SERVER_ROOT', 'TEXT_PREVIEW_EXT',
+                           'SITE_NAME', 'SITE_TITLE', 'CUSTOM_CSS')
 
     if request.is_ajax() and request.method == "POST":
         content_type = 'application/json; charset=utf-8'
@@ -1995,10 +2167,12 @@ def sys_settings(request):
         value = getattr(config, key)
         config_dict[key] = value
 
-    return render_to_response('sysadmin/settings.html', {
+    login_bg_image_path = get_login_bg_image_path()
+
+    return render(request, 'sysadmin/settings.html', {
         'config_dict': config_dict,
-        'has_two_factor_auth': HAS_TWO_FACTOR_AUTH,
-    }, context_instance=RequestContext(request))
+        'login_bg_image_path': login_bg_image_path,
+    })
 
 @login_required_ajax
 @sys_staff_required
@@ -2066,7 +2240,7 @@ def sys_inst_admin(request):
     else:
         page_next = False
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_inst_admin.html', {
             'insts': insts[:per_page],
             'current_page': current_page,
@@ -2074,7 +2248,45 @@ def sys_inst_admin(request):
             'next_page': current_page + 1,
             'per_page': per_page,
             'page_next': page_next,
-        }, context_instance=RequestContext(request))
+        })
+
+@login_required
+@sys_staff_required
+@require_POST
+def sys_inst_add_user(request, inst_id):
+    content_type = 'application/json; charset=utf-8'
+
+    emails = request.POST.get('emails', '')
+    email_list = [em.strip() for em in emails.split(',') if em.strip()]
+    if len(email_list) == 0:
+        return HttpResponse(json.dumps({'error': "Emails can't be empty"}),
+                status=400)
+    try:
+        inst = Institution.objects.get(pk=inst_id)
+    except Institution.DoesNotExist:
+        return HttpResponse(json.dumps({'error': "Institution does not exist"}),
+                status=400)
+
+    for email in email_list:
+        try:
+            User.objects.get(email=email)
+        except Exception as e:
+            messages.error(request, u'Failed to add %s to the institution: user does not exist.' % email)
+            continue
+
+        profile = Profile.objects.get_profile_by_user(email)
+        if not profile:
+            profile = Profile.objects.add_or_update(email, email)
+        if profile.institution:
+            messages.error(request, _(u"Failed to add %s to the institution: user already belongs to an institution") % email)
+            continue
+        else:
+            profile.institution = inst.name
+        profile.save()
+        messages.success(request, _(u'Successfully added %s to the institution.') % email)
+
+    return HttpResponse(json.dumps({'success': True}),
+            content_type=content_type)
 
 @login_required
 @sys_staff_required
@@ -2087,7 +2299,9 @@ def sys_inst_remove(request, inst_id):
     except Institution.DoesNotExist:
         raise Http404
 
+    inst_name = inst.name
     inst.delete()
+    institution_deleted.send(sender=None, inst_name = inst_name)
     messages.success(request, _('Success'))
 
     return HttpResponseRedirect(reverse('sys_inst_admin'))
@@ -2138,7 +2352,7 @@ def sys_inst_info_user(request, inst_id):
     space_quota = InstitutionQuota.objects.get_or_none(institution=inst)
     space_usage = get_institution_space_usage(inst)
 
-    return render_to_response('sysadmin/sys_inst_info_user.html', {
+    return render(request, 'sysadmin/sys_inst_info_user.html', {
         'inst': inst,
         'users': users,
         'users_count': users_count,
@@ -2149,7 +2363,7 @@ def sys_inst_info_user(request, inst_id):
         'page_next': page_next,
         'space_usage': space_usage,
         'space_quota': space_quota,
-    }, context_instance=RequestContext(request))
+    })
 
 @login_required
 @sys_staff_required
@@ -2187,12 +2401,12 @@ def sys_inst_search_user(request, inst_id):
 
     users_count = Profile.objects.filter(institution=inst.name).count()
 
-    return render_to_response('sysadmin/sys_inst_search_user.html', {
+    return render(request, 'sysadmin/sys_inst_search_user.html', {
         'q': q,
         'inst': inst,
         'users': users,
         'users_count': users_count,
-    }, context_instance=RequestContext(request))
+    })
 
 @login_required
 @sys_staff_required
@@ -2219,11 +2433,11 @@ def sys_inst_info_admins(request, inst_id):
 
     users_count = Profile.objects.filter(institution=inst.name).count()
 
-    return render_to_response('sysadmin/sys_inst_info_admins.html', {
+    return render(request, 'sysadmin/sys_inst_info_admins.html', {
         'inst': inst,
         'admins': admins,
         'users_count': users_count,
-    }, context_instance=RequestContext(request))
+    })
 
 @login_required
 @sys_staff_required
@@ -2313,7 +2527,7 @@ def sys_invitation_admin(request):
     else:
         page_next = False
 
-    return render_to_response(
+    return render(request, 
         'sysadmin/sys_invitations_admin.html', {
             'invitations': invitations,
             'current_page': current_page,
@@ -2321,8 +2535,7 @@ def sys_invitation_admin(request):
             'next_page': current_page+1,
             'per_page': per_page,
             'page_next': page_next,
-        },
-        context_instance=RequestContext(request))
+        })
 
 @login_required
 @sys_staff_required
@@ -2384,9 +2597,9 @@ def sys_terms_admin(request):
 
     tc_list = TermsAndConditions.objects.all().order_by('-date_created')
 
-    return render_to_response('sysadmin/sys_terms_admin.html', {
+    return render(request, 'sysadmin/sys_terms_admin.html', {
         'object_list': tc_list,
-    }, context_instance=RequestContext(request))
+    })
 
 @login_required
 @sys_staff_required

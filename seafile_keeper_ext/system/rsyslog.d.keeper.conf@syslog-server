@@ -1,0 +1,63 @@
+# keepalived logs
+if $syslogtag startswith 'Keepalived' then {
+        # QA keepalived/haproxy 
+        if $fromhost contains 'qa-keeper' and $fromhost startswith 'proxy' then {
+                local1.* __KEEPER_LOG_DIR__/qa-keepalived.log
+                stop
+        }
+        # QA keepalived/memcached
+        if $fromhost contains 'qa-keeper' and $fromhost startswith 'app' then {
+                local1.* __KEEPER_LOG_DIR__/qa-keepalived-memcached.log
+                stop
+        }
+        # PROD keepalived/haproxy 
+        if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'proxy' then {
+                local1.* __KEEPER_LOG_DIR__/keepalived.log
+                stop
+        }
+        # PROD keepalived/memcached
+        if not ($fromhost contains 'qa-keeper') and $fromhost startswith 'app' then {
+                local1.* __KEEPER_LOG_DIR__/keepalived-memcached.log
+                stop
+        }
+}
+
+
+# QA logs
+if $fromhost contains 'qa-keeper' then {
+        # nginx access
+        if $syslogtag == 'nginxaccess:'  then {
+            local1.* __KEEPER_LOG_DIR__/qa-nginx_access.log
+            stop
+        }
+        # nginx error
+        if $syslogtag == 'nginxerror:'  then {
+            local1.* __KEEPER_LOG_DIR__/qa-nginx_error.log
+            stop
+        }
+        # all other keeper logs 
+        if $syslogtag startswith 'qakeeper' then {
+            local1.* __KEEPER_LOG_DIR__/qa-keeper.log
+            stop
+        }
+}
+
+# PROD logs
+if $fromhost contains 'app-bg-keeper' or re_match($fromhost, "app0[123]-keeper") then {
+        # nginx access
+        if $syslogtag == 'nginxaccess:'  then {
+            local1.* __KEEPER_LOG_DIR__/nginx_access.log
+            stop
+        }
+        # nginx error
+        if $syslogtag == 'nginxerror:'  then {
+            local1.* __KEEPER_LOG_DIR__/nginx_error.log
+            stop
+        }
+        # all other keeper logs 
+        if $syslogtag startswith 'keeper' then {
+            local1.* __KEEPER_LOG_DIR__/keeper.log
+            stop
+        }
+}
+

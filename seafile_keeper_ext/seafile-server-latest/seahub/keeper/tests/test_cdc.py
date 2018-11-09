@@ -4,17 +4,19 @@ import pytest
 from time import sleep
 import tempfile
 import json
+
+import seahub.base
+import django
+django.setup()
+
 from seaserv import seafile_api
 from seafobj import commit_mgr, fs_mgr
 from common import get_user_name, parse_markdown
-from cdc.cdc_manager import quote_arg, validate, validate_institute, CDC_PDF_PREFIX
+from cdc.cdc_manager import quote_arg, validate, validate_institute, validate_author, CDC_PDF_PREFIX
 from default_library_manager import copy_keeper_default_library, get_keeper_default_library
 from seahub.settings import SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 
 from seahub.profile.models import Profile
-
-import django
-django.setup()
 
 from keepertestbase import create_tmp_user_with_profile, create_tmp_user, create_tmp_repo
 
@@ -77,6 +79,12 @@ def test_get_user_name(create_tmp_user):
 
     print json.dumps([nick_from_db], ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
 
+def test_validate_author():
+    """Lastname1, Firstname1; Affiliation11, Affiliation12, ...
+    """
+    assert validate_author("Makarenko, Vladislav; MPDL")
+    assert validate_author("Van der Hus, Vincent; MPG")
+    assert validate_author("Moreno Ortega, Silvana Anna; MPG")
 
 def test_validate_institute():
     assert validate_institute("MPG; MPE; Name, FirstName")

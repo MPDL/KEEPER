@@ -36,7 +36,7 @@ fi
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
-    [ ! -d "/keeper/${__GPFS_FILESET__}/" ] &&  err_and_exit "Cannot access /keeper/${__GPFS_FILESET__}"
+    [ ! -d "/keeper" ] &&  err_and_exit "Cannot access /keeper"
     echo_green "/dev/gpfs_keeper is OK"
 }
 
@@ -146,8 +146,8 @@ case "$1" in
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
 
             check_component_running "memcached" "memcached" "CRITICAL"
-            check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"  "CRITICAL"
-            check_component_running "office/pdf preview" "soffice.bin.*StarOffice.ComponentContext"  "CRITICAL"
+            #check_component_running "elastic" "org.elasticsearch.bootstrap.Elasticsearch"  "CRITICAL"
+            #check_component_running "office/pdf preview" "soffice.bin.*StarOffice.ComponentContext"  "CRITICAL"
             check_component_running "keeper-catalog" "uwsgi.*catalog.ini"  "CRITICAL"
             [ $RC -eq 0 ] && echo_green "Status is OK" || echo_red "Status is not OK" 
             exit $RC

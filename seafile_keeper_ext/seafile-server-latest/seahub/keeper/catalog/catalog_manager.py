@@ -152,7 +152,6 @@ def generate_catalog_entry(repo):
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
-
                 # Year
                 y = strip_uni(md.get("Year"))
                 if y:
@@ -180,12 +179,17 @@ def generate_catalog_entry_by_repo_id(repo_id):
     return generate_catalog_entry(seafile_api.get_repo(repo_id))
 
 
-def get_catalog():
+def get_catalog(filter='all'):
     """
     Get catalog metadata from pre-generated DB cache
     """
     reconnect_db()
-    return Catalog.objects.get_all_mds_ordered()
+    if filter == 'with_certificate':
+        return Catalog.objects.get_certified()
+    elif filter == 'with_metadata':
+        return Catalog.objects.get_with_metadata()
+    else:
+        return Catalog.objects.get_all_mds_ordered()
 
 
 def delete_catalog_entry_by_repo_id(repo_id):

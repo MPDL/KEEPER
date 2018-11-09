@@ -1,0 +1,7 @@
+RSYSLOG="logger -s -n __SYSLOG_SERVER__ -t"                                                                                                                                                                                    
+DATE=`date '+%Y-%m-%d'`
+
+# keeper-background-tasks-daemon 
+*/3 * * * * root . /etc/profile; bash -c "sudo -u __OS_USER__ __SEAFILE_DIR__/scripts/keeper-background-tasks-daemon.sh >>__KEEPER_LOG_DIR__/keeper-background-tasks-daemon.log" 2>&1
+
+

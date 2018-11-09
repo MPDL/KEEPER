@@ -21,7 +21,6 @@ def get_headers(username, password):
 
 
 
-
 # REMOTE with REST
 #https://manual.seafile.com/develop/web_api_v2.1html#admin-only-create-account
 # PUT https://cloud.seafile.com/api2/accounts/{email}/
