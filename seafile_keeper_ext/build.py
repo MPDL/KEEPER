@@ -501,18 +501,21 @@ def do_links():
             Utils.info(Utils.highlight("Created symlink {} -> {}".format(link, target)))
 
 
-def expand_properties(content):
+def expand_properties(content, path):
     kc = env_mgr.keeper_config
     for section in kc.sections():
         for key, value in kc.items(section):
+           # capitalize bools
+            if value.lower() in ('false', 'true') and path.endswith('.py'):
+                value = value.capitalize()
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
-            # capitalize bools
-            if value.lower() in ('false', 'true'):
-                value = value.capitalize()
-            # expand  __PROP__ and not ${__PROP__}
+             # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
+    #remove complete external_es_server setting complete from seafevents.conf on BACKGROUND node
+    if kc.get('global', '__NODE_TYPE__').lower() == 'background':
+        content = re.sub("external_es_server.*?\n", "", content)
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
         content = re.sub("backup_url.*?\n", "", content)
@@ -581,7 +584,7 @@ def deploy_file(path, expand=False, dest_dir=None):
     # file types not to be expanded
     expand_ignore_exts = ('.jar', '.png', '.zip', '.svg', '.pdf')
     if expand and not path.endswith(expand_ignore_exts):
-        content = expand_properties(content)
+        content = expand_properties(content, path)
 
 
     fout = open(dest_path, 'w')
