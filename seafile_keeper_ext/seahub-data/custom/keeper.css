@@ -274,10 +274,14 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 .nav-con-tabs-nav .ui-state-active a {
     background: #57a5b8 !important
 }
-li.tab.ui-state-active a {
+.main-panel-main li.tab.ui-state-active .a {
     color: #57a5b8 !important;
     border-bottom-color: #57a5b8 !important;
 }
+.main-panel-main li.tab .a:hover {
+    color: #57a5b8 !important;
+}
+
 .new-narrow-panel .hd, #notifications .num {
     background: #b71a52 !important
 }

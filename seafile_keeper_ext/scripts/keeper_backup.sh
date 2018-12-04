@@ -14,6 +14,7 @@ GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 CLEANUP_SNAPSHOTS=1
 SHADOW_DB_REBUILD_DAY=7
 DB_BACKUP_DIR=/keeper/db-backup
+TMP_DIR=/keeper/tmp
 
 RECOVERY_COMMANDS=()
 
@@ -21,11 +22,10 @@ MY_BACKUP_PID_FILE="${SEAFILE_LATEST_DIR}/runtime/backup.$$.pid"
 #remove PID on EXIT
 trap "rm -f -- '$MY_BACKUP_PID_FILE'" EXIT
 
-
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
-	echo "Cannot run inject_keeper_env.sh"
+    echo "Cannot run inject_keeper_env.sh"
     exit 1
 fi
 
@@ -33,8 +33,9 @@ DEBUG=0
 
 if [ $DEBUG -ne 1 ]; then
     exec > >(tee -a ${__KEEPER_LOG_DIR__}/keeper_backup.`date '+%Y-%m-%d'`.log)
-    exec 2>&1 
+    exec 2>&1
 fi
+
 
 function get_timestamp() {
     echo $(date +"%Y-%m-%d %H:%M:%S")
@@ -65,7 +66,7 @@ function backup_databases () {
 function cleanup_old_snapshots () {
    
     # Clean up old snapshots, leave at least LATEST_SN_COUNT latest snapshots 
-    LATEST_SN_COUNT=3
+    LATEST_SN_COUNT=30
     if [ $CLEANUP_SNAPSHOTS -eq 1 ]; then
         echo -e "Clean up old snapshots...\n"
         SNAPSHOTS=($(mmlssnapshot ${__GPFS_DEVICE__} | tail -n +3 | cut -d' ' -f1 | sort -r))
@@ -96,12 +97,12 @@ function do_tsm_backup () {
         # on Sunday
         if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
           # Rebuild the shadow database on Sundays
-            mmbackup /keeper --noquote -s /var/tmp -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+            mmbackup /keeper --noquote -s $TMP_DIR -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
             [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
 
         else
           # Normal incremental backup on other days
-            mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
+            mmbackup /keeper --scope inodespace --noquote -s $TMP_DIR -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
             [ $? -ne 0 ] && warn "Incremental TSM backup is failed" || echo_green "OK"
         fi
         echo_green "OK"
@@ -112,10 +113,10 @@ function do_tsm_backup () {
 }
 
 function backup_object_storage () {
-	
+    
     echo -e "Start Object Storage backup...\n"
 
-	# 1. Backup GPFS-Config
+    # 1. Backup GPFS-Config
     echo "Save GPFS backup config..."
     GPFS_BACKUP_CONF="/keeper/gpfs.config"
     # remove old one if exists
@@ -123,9 +124,9 @@ function backup_object_storage () {
     # save current
     mmbackupconfig ${__GPFS_DEVICE__} -o $GPFS_BACKUP_CONF  
     if [ $? -ne 0 ]; then
-	    err_and_exit "Could not save GPFS backup config" 
+        err_and_exit "Could not save GPFS backup config" 
     fi 
-	echo_green "OK"
+    echo_green "OK"
 
     # 2. Create filesystem snapshot
     echo "Create snapshot..."
@@ -136,9 +137,9 @@ function backup_object_storage () {
     mmcrsnapshot ${__GPFS_DEVICE__} $GPFS_SNAPSHOT 
     if [ $? -ne 0 ]; then
      # Could not create snapshot, something is wrong
-	    err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
+        err_and_exit "Could not create snapshot $GPFS_SNAPSHOT" 
     fi 
-	echo_green "OK"
+    echo_green "OK"
 
 
     SNAPSHOT_CREATION_END_TIME=$(get_timestamp)
@@ -158,7 +159,7 @@ function backup_object_storage () {
     cleanup_old_snapshots
 
     echo_green "Object Storage backup is OK\n"
-		
+        
 }
 
 #sleep 600
@@ -179,18 +180,18 @@ if [ ! -d "$DB_BACKUP_DIR"  ]; then
 fi
 
 if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
-	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
+    err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
 
 ###### GPFS stuff
 if [[ $(type mmcrsnapshot) =~ "not found" ]]; then
-	err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
+    err_and_exit "Cannot find GPFS executables: mmcrsnapshot"
 fi
 
 #TODO: check GPFS mount, probably more precise method! 
 RESULT=$(mount -t gpfs)
 if [[ ! "$RESULT" =~ "${__GPFS_DEVICE__} on /keeper type gpfs" ]]; then
-	err_and_exit "Cannot find mounted gpfs: $RESULT" 
+    err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
 
 # Exit if there is a snapshot today. 
@@ -220,5 +221,4 @@ echo "########################################"
 echo_green "Backup is successful!"
 
 exit 0
-
 

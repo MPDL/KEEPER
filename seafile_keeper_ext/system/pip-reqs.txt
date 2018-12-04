@@ -3,7 +3,6 @@ asn1crypto==0.22.0
 astroid==1.4.9
 backports.functools-lru-cache==1.5
 cffi==1.10.0
-chardet==2.3.0
 colorama==0.3.7
 configparser==3.5.0
 cryptography==1.8.1
