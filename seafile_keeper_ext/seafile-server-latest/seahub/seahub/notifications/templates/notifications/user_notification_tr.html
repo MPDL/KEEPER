@@ -44,6 +44,9 @@
                 <p style="brief">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}" target="_new">{{ cdc_msg.lib_name }}</a><br/>
                 <span class="detail">{{ cdc_msg.message }}</span></p>
                 
+                {% elif notice.msg_type  == "bloxberg_msg" %}
+                {% json_to_var notice.detail as bloxberg_msg %}
+                <p style="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://bloxberg.org/blockexplorer/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>
 
                 {% elif notice.is_add_user_to_group %}
                 <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>

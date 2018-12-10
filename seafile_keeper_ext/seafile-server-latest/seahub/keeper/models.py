@@ -154,3 +154,37 @@ def remove_catalog_and_cdc_entry(sender, **kwargs):
         CDC.objects.get(repo_id=repo_id).delete()
     except Exception:
         logging.error(traceback.format_exc())
+
+
+
+###### bloxberg certificate ######
+
+class BCertificateManager(models.Manager):
+
+    def add_bloxberg_certificate(self, transaction_id, repo_id, path, commit_id, created_time):
+        """
+        Add to DB a new Bloxberg certificate, modify currently is not needed
+        Returns Bloxberg certificate id and EVENT: db_create
+        """
+        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time)
+        b_certificate.save()
+        return b_certificate.obj_id
+
+    def has_bloxberg_certificate(self, repo_id, path, commit_id):
+        return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count() 
+
+class BCertificate(models.Model):
+
+    """ Bloxberg Certificate model """
+
+    class Meta:
+        db_table = 'bloxberg_certificate'
+
+    transaction_id = models.CharField(max_length=255, null=False)
+    repo_id = models.CharField(max_length=37, unique=True, null=False)
+    commit_id =  models.CharField(max_length=255, null=False)
+    path = models.CharField(max_length=255, null=False)
+    obj_id = models.AutoField(primary_key=True)
+    created = models.DateTimeField()
+
+    objects = BCertificateManager()
