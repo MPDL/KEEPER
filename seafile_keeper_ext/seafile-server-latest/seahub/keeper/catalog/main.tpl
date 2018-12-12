@@ -227,11 +227,7 @@
     %footer%   
 
 
-    <script type="text/javascript" src="https://keeper.mpdl.mpg.de/media/js/jquery-1.12.1.min.js"></script>
-    <script type="text/javascript" src="https://keeper.mpdl.mpg.de/media/assets/scripts/lib/jquery.simplemodal.67fb20a63282.js"></script>
-    <script type="text/javascript" src="https://keeper.mpdl.mpg.de/media/assets/scripts/lib/jquery.ui.tabs.7406a3c5d2e3.js"></script>
-    <script type="text/javascript" src="https://keeper.mpdl.mpg.de/media/js/jq.min.js"></script>
-    <script type="text/javascript" src="https://keeper.mpdl.mpg.de/media/js/base.js?t=1465786517"></script>
+    <script type="text/javascript" src="/media/assets/scripts/lib/jquery.min.js" id="jquery"></script>
     <script type="text/javascript">
         $('#scope-selector').click(function( event ) {
             var form = $( this ),
