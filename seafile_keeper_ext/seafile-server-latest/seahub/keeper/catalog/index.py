@@ -115,13 +115,13 @@ def application(env, start_response):
                 break
         # change this or add code to support sigle-sign-on or session based authentification
 
-        if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
-            errmsg = ''
-            is_valid_user = 1
+        #if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
+        #    errmsg = ''
+        #    is_valid_user = 1
 
         # allow all
-        #is_valid_user = 1
-        #errmsg = ''
+        is_valid_user = 1
+        errmsg = ''
 
 
         results = []
@@ -300,7 +300,10 @@ def application(env, start_response):
                 if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
                     slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
 
-
+                slots['repo_id']=''
+                print(tmpresult);
+                if ( 'id' in tmpresult and len(tmpresult['id']) > 0 ):
+                    slots['repo_id'] = tmpresult['id']
 
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)
