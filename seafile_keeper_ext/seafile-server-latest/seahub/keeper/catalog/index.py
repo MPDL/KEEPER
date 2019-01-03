@@ -247,8 +247,11 @@ def application(env, start_response):
 
                 slots = {}
                 result_id = '#'
+                repo_id = ''
                 if ( 'id' in tmpresult):
                     result_id = '/f/'+tmpresult['id']
+                    repo_id = tmpresult['id']
+                slots['repo_id'] = repo_id
 
                 result_title = "Project archive no. %s" % tmpresult['catalog_id']
                 if ( 'title' in tmpresult and len(tmpresult['title']) > 0 ):
@@ -295,12 +298,9 @@ def application(env, start_response):
                         result_description = tmpresult['description']
                 slots['smalltext'] = result_description
 
-
                 slots['year']=''
                 if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
                     slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
-
-
 
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)

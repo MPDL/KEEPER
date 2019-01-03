@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<link href="{{MEDIA_URL}}css/landing_page.css" rel="stylesheet" type="text/css" />
+	</head>
+
+	<body>
+		
+		
+		<!-- HEADER -->
+		<div id="header">
+			<img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" />
+			{% comment %} <div id="languages"><a href="./landing_page_de.html">DE</a>  |  <a href="#"><b>EN</b></a></div> {% endcomment %}
+			
+		</div>
+
+		<table id="title_ctn">
+			<tr><td align="center">{{repo.name}}</tr></td>
+		</table>
+
+		<!-- TABLE -->
+		<table id="content_table">
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title" width="20%" cellpadding="5">Authors:</td><td align="left" valign="top">{{owner_name}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Description:</b></td><td align="left" valign="top">{{repo.desc}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Year:</b></td><td align="left" valign="top">{{year}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Number of files:</td><td align="left" valign="top">{{repo.file_count}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Data size:</td><td align="left" valign="top">{{size}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Access:</td><td align="left" valign="top"></td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">DOI:</td><td align="left" valign="top">{{cdc}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+			<tr><td align="left" valign="top" class="table_title">Contact:</td><td align="left" valign="top">{{owner_contact_email}}</td></tr>
+			<tr><td class="separator" colspan="2" height="0"></td></tr>
+		</table>
+
+		{% if cdc == True %}
+		<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" display = none />
+		{% endif %}
+		<img id="open_access" src="{{MEDIA_URL}}img/catalog/open_access_logo.png" />
+
+		<!-- FOOTER -->
+		<div id="footer">
+			<img id="logos" src="{{MEDIA_URL}}img/catalog/logos.png"/>	
+		</div>
+	</body>
+
+</html>
