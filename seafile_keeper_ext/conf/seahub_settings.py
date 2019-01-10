@@ -450,7 +450,7 @@ ENABLE_TERMS_AND_CONDITIONS = True
 
 # Enable two factor authentication for accounts. Defaults to `False`.
 # Since version 6.0
-ENABLE_TWO_FACTOR_AUTH = False
+ENABLE_TWO_FACTOR_AUTH = True
 
 # Enable user select a template when he/she creates library.
 # When user select a template, Seafile will create folders releated to the pattern automaticly.
