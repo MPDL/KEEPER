@@ -4,6 +4,8 @@ from __future__ import print_function
 import logging
 import re
 
+from seahub.invitations.models import Invitation
+
 # List from http://colab.mpdl.mpg.de/mediawiki/Max_Planck_email_domains
 # Format: Institutsname<Tab>Ort<Tab>eMail domain<Tab>Kommentar
 EMAIL_DOMAIN_LIST = '''Bibliotheca Hertziana - Max-Planck-Institut für Kunstgeschichte	Rom	biblhertz.it
@@ -132,15 +134,38 @@ ACCOUNT_ACTIVATION_PATTERN = '^.*@(' + "|".join(
 ) + ')$'
 COMPILED_PATTERN = re.compile(ACCOUNT_ACTIVATION_PATTERN)
 
+def email_in_mpg_domain_list(email):
+    flag = False
+    try:
+        flag = re.match(COMPILED_PATTERN, email)
+    except Exception as e:
+        logging.error("Cannot match pattern: {}".format(e))
+
+    return flag
 
 def account_can_be_auto_activated(email):
-    activate = False
-    try:
-        activate = re.match(COMPILED_PATTERN, email)
-    except Exception as e:
-        logging.error("Cannot match pattern: %s" % e)
+    """
+    account can be auto activated via activation token
+    """
+    # can if the uname in mpg domain
+    yes_you_can =  email_in_mpg_domain_list(email)
+    if not yes_you_can:
+        try:
+            invitations = Invitation.objects.filter(accepter=email)
+            # can if at least one inviter in mpg domain
+            for inv in invitations:
+                if email_in_mpg_domain_list(inv.inviter):
+                    return True
+        except Exception as e:
+            logging.error("Cannot lookup inviter: {}".format(e))
 
-    return activate
+    return yes_you_can
+
+def user_can_invite(email):
+    """
+    user can invite if he/she is in the mpg domain
+    """
+    return email_in_mpg_domain_list(email)
 
 if __name__ == "__main__":
     print(ACCOUNT_ACTIVATION_PATTERN)
