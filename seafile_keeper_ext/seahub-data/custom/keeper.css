@@ -500,11 +500,11 @@ textarea{resize: none;}
 .bloxberg-tooltip .tooltiptext {
     visibility: hidden;
     width: 320px;
-    background-color: grey;
+    background-color: #f1f1f1;
     font-size: 12px;
     text-align: center;
-    border-radius: 6px;
-    padding: 10px 10px;
+    border: 2px solid gray;
+    padding: 6px 6px;
 
     /* Position the tooltip */
     position: absolute;

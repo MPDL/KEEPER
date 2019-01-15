@@ -418,11 +418,6 @@ define([
       this.hideMobileMenu();
       var dir = this.dir;
       var path = this.model.getPath();
-      console.log(dir.repo_id);
-      console.log(path);
-      console.log(this.model.get("is_file"));
-      console.log(this.model.get("file_size"));
-      console.log(this.model.get("perm"));
 
       $.ajax({
         url: "/api2/ajax/certify/",
@@ -465,10 +460,11 @@ define([
                   }
                 });
               },
-              failure: function(errMsg) {
+              error: function(errMsg) {
                 Common.ajaxErrorHandler(errMsg);
               }
             });
+            Common.feedback("Certify the file through Bloxberg...", "success");
           }
         }
       });

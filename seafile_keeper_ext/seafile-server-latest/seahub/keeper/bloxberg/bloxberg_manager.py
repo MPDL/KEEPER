@@ -15,6 +15,7 @@ import datetime
 from keeper.models import BCertificate
 from seahub.notifications.models import UserNotification
 import json
+from seahub.base.templatetags.seahub_tags import email2nickname
 
 MSG_TYPE_KEEPER_BLOXBERG_MSG = 'bloxberg_msg'
 
@@ -77,4 +78,5 @@ def send_notification(repo_id, transaction_id):
       json.dumps({
       'message':('; '.join(BLOXBERG_MSG)),
       'transaction_id': transaction_id,
+      'author_name': email2nickname(get_repo_owner(repo_id)),
     }))

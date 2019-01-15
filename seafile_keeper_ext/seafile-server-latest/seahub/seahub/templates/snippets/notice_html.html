@@ -9,7 +9,7 @@
 
     {% if notice.msg_from %}
         <a href="{% url 'user_profile' notice.msg_from %}">{% avatar notice.msg_from 32 %}</a>
-    {% elif notice.msg_type  == "keeper_cdc_msg" %}
+    {% elif notice.msg_type  == "keeper_cdc_msg" or notice.msg_type  == "bloxberg_msg" %}
         <img src="/media/custom/KeeperAvatar.png" width="32" height="32" class="avatar"/>
     {% else %}
         <img src={{notice.default_avatar_url}} width="32" height="32" class="avatar" />
@@ -48,7 +48,7 @@
 
     {% elif notice.msg_type  == "bloxberg_msg" %}
         {% json_to_var notice.detail as bloxberg_msg %}
-        <p style="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://bloxberg.org/blockexplorer/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>    
+        <p style="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>    
 
     {% endif %}
 
