@@ -27,6 +27,10 @@ from seahub.utils.licenseparse import user_number_over_limit
 from seahub.share.models import ExtraSharePermission
 from seahub.constants import DEFAULT_ADMIN
 
+# KEEPER
+from keeper.utils import account_can_be_auto_activated, user_can_invite
+
+
 try:
     from seahub.settings import CLOUD_MODE
 except ImportError:
@@ -177,7 +181,8 @@ class UserPermissions(object):
         return get_enabled_role_permissions_by_role(self.user.role)['can_connect_with_desktop_clients']
 
     def can_invite_guest(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_invite_guest']
+        # KEEPER
+        return get_enabled_role_permissions_by_role(self.user.role)['can_invite_guest'] and user_can_invite(self.user.email)
 
     def can_export_files_via_mobile_client(self):
         return get_enabled_role_permissions_by_role(self.user.role)['can_export_files_via_mobile_client']
@@ -593,9 +598,6 @@ class RegistrationBackend(object):
 
         from registration.models import RegistrationProfile
 
-        # KEEPER
-        from keeper.utils import account_can_be_auto_activated
-
         if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
@@ -610,7 +612,7 @@ class RegistrationBackend(object):
         #KEEPER: send activation email to MPG users
         elif account_can_be_auto_activated(email):
             self.mpg_user = True
-            # create inactive user, user can be activated by admin, or through activated email
+            # create inactive user, user can be activated by admin, or through activation email
             new_user = RegistrationProfile.objects.create_inactive_user(username, email,
                                                                         password, site,
                                                                         send_email=True)
