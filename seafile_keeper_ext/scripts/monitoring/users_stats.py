@@ -20,13 +20,13 @@ def get_user_stats():
         print ('Error: {}'.format(e))
         return
 
-    active_users = [u for u in users if u.is_active]
-    mpg_active_users = [u for u in active_users if email_in_mpg_domain_list(u.email)]
-    external_active_users = [u for u in active_users if not email_in_mpg_domain_list(u.email)]
+    users_activated = [u for u in users if u.is_active]
+    mpg_users_activated = [u for u in users_activated if email_in_mpg_domain_list(u.email)]
+    external_users_activated = [u for u in users_activated if not email_in_mpg_domain_list(u.email)]
 
 
-    print("KEEPER users \n --total: {}\n --active: {}\n --MPG active: {}\n --external active: {}".
-          format(len(users), len(active_users), len(mpg_active_users), len(external_active_users)))
+    print("KEEPER users \n --total: {}\n --activated: {}\n   --MPG activated: {}\n   --external activated: {}".
+          format(len(users), len(users_activated), len(mpg_users_activated), len(external_users_activated)))
 
 
 if __name__ == "__main__":
