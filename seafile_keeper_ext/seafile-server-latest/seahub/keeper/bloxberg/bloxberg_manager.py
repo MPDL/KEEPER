@@ -57,7 +57,8 @@ def get_repo_owner(repo_id):
 
 def create_bloxberg_certificate(repo_id, path, transaction_id, created_time):
     commit_id = get_commit_root_id(repo_id)
-    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time)
+    owner = get_repo_owner(repo_id)
+    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, owner)
     data = {
         'msg': obj_id,
     }
