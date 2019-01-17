@@ -181,9 +181,9 @@ class BCertificate(models.Model):
         db_table = 'bloxberg_certificate'
 
     transaction_id = models.CharField(max_length=255, null=False)
-    repo_id = models.CharField(max_length=37, unique=True, null=False)
-    commit_id =  models.CharField(max_length=255, null=False)
-    path = models.CharField(max_length=255, null=False)
+    repo_id = models.CharField(max_length=37, null=False)
+    commit_id =  models.CharField(max_length=41, null=False)
+    path = models.TextField(null=False)
     obj_id = models.AutoField(primary_key=True)
     created = models.DateTimeField()
     owner = models.CharField(max_length=255, null=False)
