@@ -1,5 +1,8 @@
 PROJECT=seahub
 
+RUN_KEEPER=__SEAFILE_DIR__/scripts/run_keeper_script.sh
+DJANGO_ADMIN=__SEAFILE_DIR__/__SEAFILE_SERVER_LATEST_DIR__/seahub/thirdpart/bin/django-admin.py 
+
 develop: setup-git
 
 setup-git:
@@ -7,10 +10,19 @@ setup-git:
 
 dist: locale uglify statici18n collectstatic
 
+dist-keeper: locale-keeper uglify statici18n collectstatic
+
 locale:
 	@echo "--> Compile locales"
-	django-admin.py compilemessages
+	$(RUN_KEEPER) $(DJANGO_ADMIN) compilemessages 
 	@echo ""
+
+locale-keeper:
+	@echo "--> Compile locales"
+	$(RUN_KEEPER)  $(DJANGO_ADMIN) compilemessages -l en 
+	$(RUN_KEEPER) $(DJANGO_ADMIN) compilemessages -l de 
+	@echo ""
+
 
 uglify:
 	@echo "--> Uglify JS files to static/scripts/dist"
@@ -19,17 +31,17 @@ uglify:
 
 statici18n:
 	@echo "--> Generate JS locale files in static/scripts/i18n"
-	__SEAFILE_DIR__/scripts/run_keeper_script.sh manage.py compilejsi18n
+	$(RUN_KEEPER) manage.py compilejsi18n
 
 collectstatic:
 	@echo "--> Collect django static files to media/assets"
 	rm -rf media/assets 2> /dev/null
-	__SEAFILE_DIR__/scripts/run_keeper_script.sh manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
+	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
 
 compressstatic:
 	@echo "--> Compress static files(css) to media/CACHE"
 	rm -rf media/CACHE 2> /dev/null
-	__SEAFILE_DIR__/scripts/run_keeper_script.sh manage.py compress
+	$(RUN_KEEPER) manage.py compress
 
 clean:
 	@echo '--> Cleaning media/static cache & dist'
@@ -43,4 +55,4 @@ cleanpyc:
 	find . -name \*.pyc -exec rm -f {} \;
 	@echo ""
 
-.PHONY: develop setup-git dist locale uglify statici18n collectstatic compressstatic clean
+.PHONY: develop setup-git dist dist-keeper locale uglify statici18n collectstatic compressstatic clean
