@@ -21,7 +21,11 @@ You've got {{num}} new notices on {{ site_name }}:
         </tr>
         {% for notice in notices %}
         <tr>
+            {% if notice.msg_type  == 'bloxberg_msg' %}
+            <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            {% else %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:top;"><img src="{{notice.avatar_src}}" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            {% endif %}
             <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">
                 {% if notice.is_group_msg %}
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{% blocktrans with user=notice.notice_from grp_url=notice.group_url grp_name=notice.group_name%}{{user}} posted a new discussion in <a href="{{url_base}}{{grp_url}}">{{grp_name}}</a>{% endblocktrans %}</p>
@@ -71,8 +75,14 @@ You've got {{num}} new notices on {{ site_name }}:
                 {% elif notice.msg_type  == 'keeper_cdc_msg' %}
                 {% json_to_var notice.detail as cdc_msg %}
                 <p style="line-height:1.5; margin:.2em 10px .2em 0;">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}">{{ cdc_msg.lib_name }}</a>: {{ cdc_msg.message }}
+
+                {% elif notice.msg_type  == 'bloxberg_msg' %}
+                {% json_to_var notice.detail as bloxberg_msg %}
+                <p style="brief">
+                This notice verifies that <b>{{bloxberg_msg.author_name}}</b> uploaded a data hash that proves authenticity of the corresponding data matching the hash.
+                It was authenticated in the following transaction on the bloxberg blockchain <a href="https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions">{{bloxberg_msg.transaction_id}}</a></p>
                 {% endif %}
-            </td>
+            </td>           
             <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">{{ notice.timestamp|date:"Y-m-d G:i:s"}}</td>
         </tr>
         {% endfor %}

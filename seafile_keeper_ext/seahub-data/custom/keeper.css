@@ -486,5 +486,47 @@ textarea{resize: none;}
 #seafile-logo:hover{cursor: pointer;}
 
 
+/*
+ ********************************************************************************
+ ********************************************************************************
+*/
 
+/* bloxberg tooltip*/
+.bloxberg-tooltip {
+    position: relative;
+	display: inline-block;
+}
+
+.bloxberg-tooltip .tooltiptext {
+    visibility: hidden;
+    width: 320px;
+    background-color: #f1f1f1;
+    font-size: 12px;
+    text-align: center;
+    border: 2px solid gray;
+    padding: 6px 6px;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+	margin-left: -160px;
+	margin-bottom: 3px;
+}
+
+.bloxberg-tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+	margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: grey transparent transparent transparent;
+}
+
+.bloxberg-tooltip:hover .tooltiptext {
+    visibility: visible;
+}
 
