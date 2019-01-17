@@ -171,7 +171,7 @@ class BCertificateManager(models.Manager):
         return b_certificate.obj_id
 
     def has_bloxberg_certificate(self, repo_id, path, commit_id):
-        return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count() 
+        return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count()
 
 class BCertificate(models.Model):
 
