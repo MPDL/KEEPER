@@ -429,10 +429,11 @@ define([
         success: function(data) {
           if (data.sha256) {
             var certify_time = data.timestampString;
+            console.log(certify_time);
             var certifyStr = {
               checksum: data.sha256,
               authorName: data.authorName,
-              timestampString: certify_time
+              timestampString: certify_time.toString()
             };
             console.log(data.sha256);
             $.ajax({
