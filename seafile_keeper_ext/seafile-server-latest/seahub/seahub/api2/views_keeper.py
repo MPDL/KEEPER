@@ -12,7 +12,7 @@ import sys
 import logging
 
 import seaserv
-
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,7 @@ def add_bloxberg_certificate(request):
     repo_id = request.GET.get('repo_id', None)
     path = request.GET.get('path', None)
     transaction_id = request.GET.get('transaction_id', None)
-    created_time = request.GET.get('created_time', None)
-
-    logger.error(created_time)
+    created_time = datetime.datetime.utcfromtimestamp(float(request.GET.get('created_time', None)))
 
     data = create_bloxberg_certificate(repo_id, path, transaction_id, created_time)
     return JsonResponse(data)
