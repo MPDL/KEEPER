@@ -10,7 +10,7 @@ import hashlib
 from seafobj import commit_mgr, fs_mgr
 from seaserv import seafile_api, get_repo
 
-import datetime
+import time
 
 from keeper.models import BCertificate
 from seahub.notifications.models import UserNotification
@@ -33,8 +33,8 @@ def hash_file(repo_id, path):
 
     data = {
         'sha256': file_hash_inc.hexdigest(),
-        'authorName': get_repo_owner(repo_id),
-        'timestampString': datetime.datetime.now(),
+        'authorName': email2nickname(get_repo_owner(repo_id)),
+        'timestampString': time.time(),
     }
     return data
 
@@ -62,22 +62,26 @@ def create_bloxberg_certificate(repo_id, path, transaction_id, created_time):
     data = {
         'msg': obj_id,
     }
-    send_notification(repo_id, transaction_id)
+    send_notification(repo_id, path, transaction_id)
     return data
 
 def certified_with_keeper(repo_id, path):
     commit_id = get_commit_root_id(repo_id)
     return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
 
-def send_notification(repo_id, transaction_id):
+def send_notification(repo_id, path, transaction_id):
     BLOXBERG_MSG=[]
     msg = 'Your data was successfully certified!'
     msg_transaction = 'Transaction ID: ' + transaction_id
+    file_name = path.rsplit('/', 1)[-1]
     BLOXBERG_MSG.append(msg)
     BLOXBERG_MSG.append(msg_transaction)
     UserNotification.objects._add_user_notification(get_repo_owner(repo_id), MSG_TYPE_KEEPER_BLOXBERG_MSG,
       json.dumps({
       'message':('; '.join(BLOXBERG_MSG)),
       'transaction_id': transaction_id,
+      'repo_id': repo_id,
+      'link_to_file': path,
+      'file_name': file_name,
       'author_name': email2nickname(get_repo_owner(repo_id)),
     }))
