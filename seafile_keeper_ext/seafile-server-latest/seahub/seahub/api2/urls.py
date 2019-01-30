@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file, add_bloxberg_certificate
+from .views_keeper import CatalogView, certify_file
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -115,8 +115,6 @@ urlpatterns = [
 
     # Bloxberg
     url(r'^ajax/certify/$', certify_file, name='certify_file'),
-    url(r'^ajax/add_bloxberg_certificate/$', add_bloxberg_certificate, name='add_bloxberg_certificate'),
-
 ]
 
 # serve office converter static files

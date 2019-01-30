@@ -161,12 +161,12 @@ def remove_catalog_and_cdc_entry(sender, **kwargs):
 
 class BCertificateManager(models.Manager):
 
-    def add_bloxberg_certificate(self, transaction_id, repo_id, path, commit_id, created_time, owner):
+    def add_bloxberg_certificate(self, transaction_id, repo_id, path, commit_id, created_time, owner, checksum):
         """
         Add to DB a new Bloxberg certificate, modify currently is not needed
         Returns Bloxberg certificate id and EVENT: db_create
         """
-        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner)
+        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner, checksum=checksum)
         b_certificate.save()
         return b_certificate.obj_id
 
@@ -181,11 +181,11 @@ class BCertificate(models.Model):
         db_table = 'bloxberg_certificate'
 
     transaction_id = models.CharField(max_length=255, null=False)
-    repo_id = models.CharField(max_length=37, unique=True, null=False)
-    commit_id =  models.CharField(max_length=255, null=False)
-    path = models.CharField(max_length=255, null=False)
+    repo_id = models.CharField(max_length=37, null=False)
+    commit_id =  models.CharField(max_length=41, null=False)
+    path = models.TextField(null=False)
     obj_id = models.AutoField(primary_key=True)
     created = models.DateTimeField()
     owner = models.CharField(max_length=255, null=False)
-
+    checksum = models.CharField(max_length=64, null=False)
     objects = BCertificateManager()
