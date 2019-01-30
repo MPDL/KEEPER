@@ -696,7 +696,7 @@ def do_deploy(args):
 
         # deploy CRON node conf
         cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
-        if cron_node == 'True':
+        if cron_node.lower() == 'true':
             deploy_file('system/cron.d.keeper', expand=True)
 
 

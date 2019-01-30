@@ -7,7 +7,7 @@ from keeper.catalog.catalog_manager import get_catalog
 
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse
 
 import sys
 import logging
