@@ -90,7 +90,7 @@ class VirusScan(object):
                     logging.info('File %s virus scan by %s: Found virus.',
                                  fpath, self.settings.scan_cmd)
                     vnum += 1
-                    vrecords.append((scan_task.repo_id, scan_task.head_commit_id, fpath))
+                    vrecords.append((scan_task.repo_id, scan_task.head_commit_id, fpath.decode('utf-8')))
                 else:
                     logging.debug('File %s virus scan by %s: Failed.',
                                   fpath, self.settings.scan_cmd)
