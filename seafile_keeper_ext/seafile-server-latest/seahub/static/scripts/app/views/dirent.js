@@ -427,10 +427,10 @@ define([
         },
         dataType: "json",
         success: function(data) {
-          if (data.msg === "Transaction failed") {
-            Common.ajaxErrorHandler(data.msg);
-          } else {
+          if (data.msg && data.msg === "Transaction succeeded") {
             Common.feedback(data.msg, "success");
+          } else {
+            Common.ajaxErrorHandler("Transaction failed");
           }
         }
       });
