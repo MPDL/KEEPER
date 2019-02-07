@@ -4,11 +4,47 @@ import logging
 import os
 import tempfile
 import subprocess
+import multiprocessing as mp
 from seafobj import commit_mgr, fs_mgr, block_mgr
 from db_oper import DBOper
 from commit_differ import CommitDiffer
-from thread_pool import ThreadPool
 from seafevents.utils import get_python_executable
+
+def scan_file_virus(repo_id, head_commit_id, file_id, file_path, scan_cmd, nscan, ntotal, pflag):
+    try:
+        tfd, tpath = tempfile.mkstemp(dir = '/run/tmp')
+        seafile = fs_mgr.load_seafile(repo_id, 1, file_id)
+        for blk_id in seafile.blocks:
+            os.write(tfd, block_mgr.load_block(repo_id, 1, blk_id))
+        with open(os.devnull, 'w') as devnull:
+            ret_code = subprocess.call([scan_cmd, tpath],
+                                       stdout=devnull, stderr=devnull)
+        if ret_code == 0:
+            logging.debug('File %s virus scan by %s: OK.',
+                                          file_path, scan_cmd)
+        elif ret_code == 1:
+            logging.info('File %s virus scan by %s: Found virus.',
+                                          file_path, scan_cmd)
+        else:
+            logging.debug('File %s virus scan by %s: Failed.',
+                                          file_path, scan_cmd)
+        if pflag == 1:
+            logging.info('Scan progress: %d/%d total items', nscan, ntotal)
+
+        scan_file_task = ScanFileTask(repo_id, head_commit_id, file_id, file_path)
+
+        scan_file_task.result = ret_code
+        return scan_file_task
+
+    except Exception as e:
+        logging.warning('Virus scan for file %s encounter error: %s.',
+                        file_path, e)
+        return -1
+    finally:
+        if tfd > 0:
+            os.close(tfd)
+            os.unlink(tpath)
+
 
 class ScanTask(object):
     def __init__(self, repo_id, head_commit_id, scan_commit_id):
@@ -16,10 +52,19 @@ class ScanTask(object):
         self.head_commit_id = head_commit_id
         self.scan_commit_id = scan_commit_id
 
+class ScanFileTask(object):
+    def __init__(self, repo_id, head_commit_id, fid, fpath):
+        self.repo_id = repo_id
+        self.head_commit_id = head_commit_id
+        self.fid = fid
+        self.fpath = fpath
+        self.result = -1
+
 class VirusScan(object):
     def __init__(self, settings):
         self.settings = settings
         self.db_oper = DBOper(settings)
+        self.res = []
 
     def start(self):
         if not self.db_oper.is_enabled():
@@ -30,9 +75,6 @@ class VirusScan(object):
             self.db_oper.close_db()
             return
 
-        thread_pool = ThreadPool(self.scan_virus, self.settings.threads)
-        thread_pool.start()
-
         for row in repo_list:
             repo_id, head_commit_id, scan_commit_id = row
 
@@ -41,9 +83,7 @@ class VirusScan(object):
                               repo_id)
                 continue
 
-            thread_pool.put_task(ScanTask(repo_id, head_commit_id, scan_commit_id))
-
-        thread_pool.join()
+            self.scan_virus(ScanTask(repo_id, head_commit_id, scan_commit_id))
 
         self.db_oper.close_db()
 
@@ -68,33 +108,41 @@ class VirusScan(object):
                 self.db_oper.update_vscan_record(scan_task.repo_id, scan_task.head_commit_id)
                 return
             else:
-                logging.info('Start to scan virus for repo %.8s.', scan_task.repo_id)
+                logging.info('Start to scan virus for repo %.8s [%d total items].', scan_task.repo_id, len(scan_files))
 
             vnum = 0
             nvnum = 0
             nfailed = 0
+            nscan = 0
+            pflag = 0
             vrecords = []
+            pool = mp.Pool(self.settings.threads)
 
             for scan_file in scan_files:
                 fpath, fid, fsize = scan_file
+                nscan += 1
+                if nscan%1000 == 0:
+                    pflag = 1
                 if not self.should_scan_file(fpath, fsize):
                     continue
+                handler = pool.apply_async(scan_file_virus, args = (scan_task.repo_id, scan_task.head_commit_id, fid, fpath, self.settings.scan_cmd, nscan, len(scan_files), pflag), callback
+= self.do_result)
+                pflag = 0
 
-                ret = self.scan_file_virus(scan_task.repo_id, fid, fpath)
+            pool.close();
+            pool.join()
 
-                if ret == 0:
-                    logging.debug('File %s virus scan by %s: OK.',
-                                  fpath, self.settings.scan_cmd)
-                    nvnum += 1
-                elif ret == 1:
-                    logging.info('File %s virus scan by %s: Found virus.',
-                                 fpath, self.settings.scan_cmd)
-                    vnum += 1
-                    vrecords.append((scan_task.repo_id, scan_task.head_commit_id, fpath.decode('utf-8')))
-                else:
-                    logging.debug('File %s virus scan by %s: Failed.',
-                                  fpath, self.settings.scan_cmd)
-                    nfailed += 1
+            for proc in self.res:
+                if proc.repo_id == scan_task.repo_id:
+                    ret = self.parse_scan_result(proc.result);
+
+                    if ret == 0:
+                        nvnum += 1
+                    elif ret == 1:
+                        vnum += 1
+                        vrecords.append((proc.repo_id, proc.head_commit_id, proc.fpath.decode('utf-8')))
+                    else:
+                        nfailed += 1
 
             if nfailed == 0:
                 ret = 0
@@ -112,27 +160,20 @@ class VirusScan(object):
             logging.warning('Failed to scan virus for repo %.8s: %s.',
                             scan_task.repo_id, e)
 
-    def scan_file_virus(self, repo_id, file_id, file_path):
-        try:
-            tfd, tpath = tempfile.mkstemp()
-            seafile = fs_mgr.load_seafile(repo_id, 1, file_id)
-            for blk_id in seafile.blocks:
-                os.write(tfd, block_mgr.load_block(repo_id, 1, blk_id))
+    def do_result(self, result):
+        self.res.append(result)
 
-            with open(os.devnull, 'w') as devnull:
-                ret_code = subprocess.call([self.settings.scan_cmd, tpath],
-                                           stdout=devnull, stderr=devnull)
+    def parse_scan_result(self, ret_code):
+        rcode_str = str(ret_code)
+        for code in self.settings.nonvir_codes:
+            if rcode_str == code:
+               return 0
+        for code in self.settings.vir_codes:
+            if rcode_str == code:
+               return 1
 
-            return self.parse_scan_result(ret_code)
+        return ret_code
 
-        except Exception as e:
-            logging.warning('Virus scan for file %s encounter error: %s.',
-                            file_path, e)
-            return -1
-        finally:
-            if tfd > 0:
-                os.close(tfd)
-                os.unlink(tpath)
 
     def send_email(self, vrecords):
         args = ["%s:%s" % (e[0], e[2]) for e in vrecords]
@@ -142,19 +183,6 @@ class VirusScan(object):
             'notify_admins_on_virus',
         ] + args
         subprocess.Popen(cmd, cwd=self.settings.seahub_dir)
-
-    def parse_scan_result(self, ret_code):
-        rcode_str = str(ret_code)
-
-        for code in self.settings.nonvir_codes:
-            if rcode_str == code:
-                return 0
-
-        for code in self.settings.vir_codes:
-            if rcode_str == code:
-                return 1
-
-        return ret_code
 
     def should_scan_file(self, fpath, fsize):
         if fsize >= self.settings.scan_size_limit << 20:
