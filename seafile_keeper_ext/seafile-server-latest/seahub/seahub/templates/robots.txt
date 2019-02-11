@@ -1,0 +1,5 @@
+User-agent: Googlebot                                                                                                                                                                                                                 
+Allow: /accounts/login/
+
+User-agent: *
+Disallow: /
