@@ -32,9 +32,11 @@ def hash_file(repo_id, path):
         file_hash_inc.update(data);
 
     data = {
-        'sha256': file_hash_inc.hexdigest(),
-        'authorName': email2nickname(get_repo_owner(repo_id)),
-        'timestampString': time.time(),
+        'certifyVariables': {
+            'checksum': file_hash_inc.hexdigest(),
+            'authorName': email2nickname(get_repo_owner(repo_id)),
+            'timestampString': str(time.time()),
+        }
     }
     return data
 
@@ -55,10 +57,10 @@ def get_commit_root_id(repo_id):
 def get_repo_owner(repo_id):
     return seafile_api.get_repo_owner(repo_id)
 
-def create_bloxberg_certificate(repo_id, path, transaction_id, created_time):
+def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum):
     commit_id = get_commit_root_id(repo_id)
     owner = get_repo_owner(repo_id)
-    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, owner)
+    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, owner, checksum)
     data = {
         'msg': obj_id,
     }

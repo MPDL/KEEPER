@@ -426,49 +426,16 @@ define([
           path: path
         },
         dataType: "json",
+        beforeSend: Common.prepareCSRFToken,
         success: function(data) {
-          if (data.sha256) {
-            var certify_time = data.timestampString;
-            console.log(certify_time);
-            var certifyStr = {
-              checksum: data.sha256,
-              authorName: data.authorName,
-              timestampString: certify_time.toString()
-            };
-            console.log(data.sha256);
-            $.ajax({
-              type: "POST",
-              url: "https://bloxberg.org/certifyData",
-              // The key needs to match your method's input parameter (case-sensitive).
-              data: JSON.stringify({ certifyVariables: certifyStr }),
-              contentType: "application/json; charset=utf-8",
-              dataType: "json",
-              success: function(data) {
-                Common.feedback(data.msg, "success");
-                $.ajax({
-                  url: "/api2/ajax/add_bloxberg_certificate/",
-                  data: {
-                    repo_id: dir.repo_id,
-                    path: path,
-                    transaction_id: data.txReceipt.tx,
-                    created_time: certify_time
-                  },
-                  dataType: "json",
-                  success: function(data) {
-                    if (data.msg) {
-                      console.log(data.msg);
-                    }
-                  }
-                });
-              },
-              error: function(errMsg) {
-                Common.ajaxErrorHandler(errMsg);
-              }
-            });
-            Common.feedback("Certify the file through Bloxberg...", "success");
+          if (data.msg && data.msg === "Transaction succeeded") {
+            Common.feedback(data.msg, "success");
+          } else {
+            Common.ajaxErrorHandler("Transaction failed");
           }
         }
       });
+      Common.feedback("Certify the file through Bloxberg...", "success");
 
       this._hideMenu();
       return false;
