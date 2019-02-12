@@ -426,6 +426,7 @@ define([
           path: path
         },
         dataType: "json",
+        beforeSend: Common.prepareCSRFToken,
         success: function(data) {
           if (data.msg && data.msg === "Transaction succeeded") {
             Common.feedback(data.msg, "success");
