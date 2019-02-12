@@ -8,11 +8,14 @@ from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 
 from django.http import JsonResponse
+
 import sys
 import logging
 
 import seaserv
 import datetime
+import requests
+from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -33,16 +36,23 @@ class CatalogView(APIView):
 def certify_file(request):
     repo_id = request.GET.get('repo_id', None)
     path = request.GET.get('path', None)
-    data = hash_file(repo_id, path)
-    return JsonResponse(data)
+    hash_data = hash_file(repo_id, path)
 
+    response_bloxberg = request_bloxberg(hash_data);
+    if response_bloxberg is not None:
+        if response_bloxberg.status_code == 200:
+            transaction_id = response_bloxberg.json()['txReceipt']['tx']
+            checksum = hash_data['certifyVariables']['checksum']
+            created_time = datetime.datetime.utcfromtimestamp(float(hash_data['certifyVariables']['timestampString']))
+            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum)
+            return JsonResponse(response_bloxberg.json())
 
-def add_bloxberg_certificate(request):
-    repo_id = request.GET.get('repo_id', None)
-    path = request.GET.get('path', None)
-    transaction_id = request.GET.get('transaction_id', None)
-    created_time = datetime.datetime.utcfromtimestamp(float(request.GET.get('created_time', None)))
+    return JsonResponse({'msg': 'Transaction failed'})
 
-    data = create_bloxberg_certificate(repo_id, path, transaction_id, created_time)
-    return JsonResponse(data)
+def request_bloxberg(certify_payload):
+    try:
+        response = requests.post('https://bloxberg.org/certifyData', json=certify_payload)
+        return response
+    except ConnectionError as e:
+        logger.error(str(e))
 
