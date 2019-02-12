@@ -5,7 +5,10 @@
 
 {% block extra_style %}
 <style type="text/css">
-#main p { font-size:14px; }
+#main p { 
+        font-size:14px; 
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
@@ -13,9 +16,9 @@
     {% if LANGUAGE_CODE == 'zh-cn' %}
     <p>你可以从 Seafile 的<a href="http://seafile.com/download/">官方下载页面</a>下载 Windows，Mac 以及 Linux 的客户端。</p>
     {% else %}
-    <p>You can download Seafile desktop client for Windows, Mac and Linux from Seafile's <a href="http://seafile.com/en/download/">official download page</a>.
+    <p>You can download Seafile desktop client for Windows, Mac, Linux, Android, iPhone from Seafile's <a href="http://seafile.com/en/download/">official download page</a>.
         Please download the desktop client without Shibboleth support.</p>
-    <p>Also you can download the LabCam Android apk from <a href="https://github.com/MPDL/LabCam/blob/master/dist/Labcam.apk?raw=true">here</a>.</p>    
+    <p>You can download LabCam from <a href="https://itunes.apple.com/de/app/labcam/id1433646232?mt=8">App Store</a> (iOS), <a href="https://play.google.com/store/apps/details?id=de.mpg.mpdl.labcam&hl=de">Google Play</a> (Android), or from <a href="https://github.com/MPDL/LabCam/blob/master/dist/Labcam.apk?raw=true">GitHub</a> directly.</p>
     {% endif %}
 {% endblock %}
 
