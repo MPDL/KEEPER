@@ -695,7 +695,7 @@ def do_deploy(args):
             deploy_file('system/keepalived.conf', expand=True)
         if node_type in ('BACKGROUND', 'SINGLE'):
             deploy_file('system/cron.d.keeper@background', expand=True)
-            deploy_file('system/clamd.conf'), expand=True)
+            deploy_file('system/clamd.conf', expand=True)
             deploy_file('system/clamav-daemon.service', expand=True)
 
         # deploy CRON node conf
