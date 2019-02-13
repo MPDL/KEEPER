@@ -343,6 +343,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
+        'can_send_share_link_mail': True,
         'role_quota': '1t',
     },
     'guest': {
@@ -369,6 +370,7 @@ ENABLED_ROLE_PERMISSIONS = {
         'can_connect_with_android_clients': True,
         'can_connect_with_ios_clients': True,
         'can_connect_with_desktop_clients': True,
+        'can_send_share_link_mail': True,
         'role_quota': '1t',
     },
 }
