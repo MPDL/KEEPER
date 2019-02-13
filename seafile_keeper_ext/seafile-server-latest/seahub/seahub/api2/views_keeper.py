@@ -41,7 +41,7 @@ def certify_file(request):
     response_bloxberg = request_bloxberg(hash_data);
     if response_bloxberg is not None:
         if response_bloxberg.status_code == 200:
-            transaction_id = response_bloxberg.json()['txReceipt']['tx']
+            transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
             checksum = hash_data['certifyVariables']['checksum']
             created_time = datetime.datetime.utcfromtimestamp(float(hash_data['certifyVariables']['timestampString']))
             create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum)
