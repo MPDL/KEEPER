@@ -22,7 +22,6 @@ import urllib2
 
 from django.core.cache import cache
 from django.db import connections
-from pprint import pprint
 
 # time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
@@ -45,6 +44,7 @@ def strip_uni(str):
     if str:
         str = unicode(str.strip(), 'utf-8', errors='replace')
     return str
+
 
 def reconnect_db():
     """
@@ -85,8 +85,6 @@ def get_mpg_ip_set():
     else:
         logging.info("Get ips from cache...")
         ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
-
-    connections.close_all()
     return ip_set
 
 
@@ -168,11 +166,9 @@ def generate_catalog_entry(repo):
 
     except Exception:
         msg = "repo_name: %s, id: %s" % (repo.name, repo.id)
-        connections.close_all()
         logging.error(msg)
         logging.error(traceback.format_exc())
 
-    connections.close_all()
     return proj
 
 
@@ -180,10 +176,7 @@ def generate_catalog_entry_by_repo_id(repo_id):
     """
     Generate catalog entry by repo_id
     """
-    ret = generate_catalog_entry(seafile_api.get_repo(repo_id))
-    
-    connections.close_all()
-    return ret
+    return generate_catalog_entry(seafile_api.get_repo(repo_id))
 
 
 def get_catalog(filter='all'):
@@ -194,12 +187,9 @@ def get_catalog(filter='all'):
     if filter == 'with_certificate':
         return Catalog.objects.get_certified()
     elif filter == 'with_metadata':
-        ret = Catalog.objects.get_with_metadata()
+        return Catalog.objects.get_with_metadata()
     else:
-        ret = Catalog.objects.get_all_mds_ordered()
-
-    connections.close_all()
-    return ret
+        return Catalog.objects.get_all_mds_ordered()
 
 
 def delete_catalog_entry_by_repo_id(repo_id):
@@ -208,7 +198,6 @@ def delete_catalog_entry_by_repo_id(repo_id):
     """
     reconnect_db()
     Catalog.objects.delete_by_repo_id(repo_id)
-    connections.close_all()
 
 
 def generate_catalog():
@@ -218,7 +207,6 @@ def generate_catalog():
     repos_all = [r for r in seafile_api.get_repo_list(0, MAX_INT)
                  if get_repo_owner(r.id) != 'system']
 
-    connections.close_all()
     return [generate_catalog_entry(repo) for repo in
             sorted(repos_all, key=lambda x: x.last_modify, reverse=False)]
 
@@ -235,8 +223,6 @@ def clean_up_catalog():
         if ce.repo_id not in repo_ids:
             ce.delete()
             i += 1
-
-    connections.close_all()
     return i
 
 
@@ -249,7 +235,6 @@ if __name__ == "__main__":
         param = sys.argv[1]
     except:
         usage()
-        connections.close_all()
         sys.exit(1)
 
     if param == 'clean-db':
@@ -259,8 +244,4 @@ if __name__ == "__main__":
     else:
         print str(sys.argv)
         usage()
-        connections.close_all()
         sys.exit(1)
-
-    connections.close_all()
-
