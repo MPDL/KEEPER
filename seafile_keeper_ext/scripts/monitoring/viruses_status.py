@@ -24,5 +24,5 @@ if len(rows)>0:
         print row
     RC = 2
 
+connection.close()
 sys.exit(RC)
-
