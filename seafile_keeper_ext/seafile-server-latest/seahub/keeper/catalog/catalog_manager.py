@@ -22,7 +22,6 @@ import urllib2
 
 from django.core.cache import cache
 from django.db import connections
-from pprint import pprint
 
 # time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
