@@ -1,4 +1,4 @@
-
+import logging
 from seahub.api2.utils import json_response
 from seahub import settings
 
@@ -16,6 +16,11 @@ from keeper.models import BCertificate
 from seahub.notifications.models import UserNotification
 import json
 from seahub.base.templatetags.seahub_tags import email2nickname
+from seahub.utils import send_html_email, get_site_name
+from django.utils.translation import ugettext as _
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 MSG_TYPE_KEEPER_BLOXBERG_MSG = 'bloxberg_msg'
 
@@ -72,12 +77,15 @@ def certified_with_keeper(repo_id, path):
     return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
 
 def send_notification(repo_id, path, transaction_id):
+
     BLOXBERG_MSG=[]
     msg = 'Your data was successfully certified!'
     msg_transaction = 'Transaction ID: ' + transaction_id
     file_name = path.rsplit('/', 1)[-1]
+    repo_owner = get_repo_owner(repo_id)
     BLOXBERG_MSG.append(msg)
     BLOXBERG_MSG.append(msg_transaction)
+
     UserNotification.objects._add_user_notification(get_repo_owner(repo_id), MSG_TYPE_KEEPER_BLOXBERG_MSG,
       json.dumps({
       'message':('; '.join(BLOXBERG_MSG)),
@@ -87,3 +95,23 @@ def send_notification(repo_id, path, transaction_id):
       'file_name': file_name,
       'author_name': email2nickname(get_repo_owner(repo_id)),
     }))
+
+    c = {
+        'to_user': repo_owner,
+        'message_type': 'bloxberg_msg',
+        'message':('; '.join(BLOXBERG_MSG)),
+        'transaction_id': transaction_id,
+        'repo_id': repo_id,
+        'link_to_file': path,
+        'file_name': file_name,
+        'author_name': email2nickname(repo_owner),
+    }
+
+    try:
+        send_html_email(_('New notice on %s') % get_site_name(),
+                                'notifications/keeper_email.html', c,
+                                None, [repo_owner])
+
+        logger.info('Successfully sent email to %s' % repo_owner)
+    except Exception as e:
+        logger.error('Failed to send email to %s, error detail: %s' % (repo_owner, e))

@@ -1,0 +1,40 @@
+{% extends 'email_base.html' %}
+
+{% load i18n seahub_tags keeper_tags %}
+
+{% block email_con %}
+
+<p style="font-size:14px; line-height: 1.5; color:#121214; margin:.2em 0 12px;">{% blocktrans with name=to_user|email2nickname %}Hi, {{ name }}{% endblocktrans %}</p>
+<p style="font-size:14px; line-height: 1.5; color:#434144; margin:.2em 0;">
+{% blocktrans%}
+You've got 1 new notice on {{ site_name }}:
+{% endblocktrans %}
+</p>
+
+    <table style="width:100%; margin:12px 0 20px; table-layout:fixed; border-spacing: 0; border-collapse: collapse;">
+        <tr>
+            <th width="9%" style="padding: 5px 3px; border-bottom: 1px solid #eee;"></th>
+            <th width="69%" style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size:13px; text-align: left; font-weight: normal; color: #9c9c9c;">{% trans "Message" %}</th>
+            <th width="22%" style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size:13px; text-align: left; font-weight: normal; color: #9c9c9c;">{% trans "Time" %}</th>
+        </tr>
+        <tr>
+            <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">
+                {% if message_type  == 'keeper_cdc_msg' %}
+                <p style="line-height:1.5; margin:.2em 10px .2em 0;">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ lib }}">{{ lib_name }}</a>: {{ message }}
+
+                {% elif message_type  == 'bloxberg_msg' %}
+                <p style="brief">
+                This notice verifies that <b>{{author_name}}</b> uploaded a data hash of the file: <a href="{{ url_base }}/lib/{{ repo_id }}/file{{link_to_file}}">{{file_name}}</a> that proves authenticity of the corresponding data matching the hash.
+                It was authenticated in the following transaction on the bloxberg blockchain <a href="https://blockexplorer.bloxberg.org/tx/{{ transaction_id }}/internal_transactions">{{transaction_id}}</a></p>
+                {% endif %}
+            </td>           
+            <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">{{ notice.timestamp|date:"Y-m-d G:i:s"}}</td>
+        </tr>
+    </table>
+
+<p style="font-size:14px;color:#434144;">
+    {% trans "Go check out at the following page:" %}<br />
+    <a href="{{ url_base }}{% url 'user_notification_list' %}">{{ url_base }}{% url 'user_notification_list' %}</a>
+</p>
+{% endblock %}
