@@ -86,14 +86,14 @@ def send_notification(repo_id, path, transaction_id):
     BLOXBERG_MSG.append(msg)
     BLOXBERG_MSG.append(msg_transaction)
 
-    UserNotification.objects._add_user_notification(get_repo_owner(repo_id), MSG_TYPE_KEEPER_BLOXBERG_MSG,
+    UserNotification.objects._add_user_notification(repo_owner, MSG_TYPE_KEEPER_BLOXBERG_MSG,
       json.dumps({
       'message':('; '.join(BLOXBERG_MSG)),
       'transaction_id': transaction_id,
       'repo_id': repo_id,
       'link_to_file': path,
       'file_name': file_name,
-      'author_name': email2nickname(get_repo_owner(repo_id)),
+      'author_name': email2nickname(repo_owner),
     }))
 
     c = {
