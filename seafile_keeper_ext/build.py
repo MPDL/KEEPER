@@ -433,6 +433,8 @@ class EnvManager(object):
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
 
+        self.keeper_tmp_dir = os.path.join('/run', 'tmp')
+
 
     def setup_python_path(self, env):
         '''And PYTHONPATH and CCNET_CONF_DIR/SEAFILE_CONF_DIR to env, which is
@@ -674,6 +676,7 @@ def do_deploy(args):
             env_mgr.seafile_logs_dir,
             env_mgr.keeper_var_log_dir,
             env_mgr.install_path,
+            env_mgr.keeper_tmp_dir,
             ),
             group=keep_ini.get('system', '__OS_GROUP__'),
             user=keep_ini.get('system', '__OS_USER__'),
