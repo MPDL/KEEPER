@@ -26,15 +26,12 @@ from keeper.common import parse_markdown, get_user_name, get_logger
 
 from keeper.models import Catalog
 
-from django.core.mail import EmailMessage
-from django.template import Context, loader
-
-
 import tempfile
 import json
 
 from keeper.models import CDC
 from seahub.notifications.models import UserNotification
+from seahub.utils import send_html_email, get_site_name
 
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 
@@ -42,7 +39,6 @@ CDC_GENERATOR_MAIN_CLASS = "de.mpg.mpdl.keeper.CDCGenerator.MainApp"
 CDC_GENERATOR_JARS =  ('CDCGenerator.jar', 'fonts-ext.jar')
 CDC_PDF_PREFIX = "cared-data-certificate_"
 CDC_LOGO = 'Keeper-Cared-Data-Certificate-Logo.png'
-CDC_EMAIL_TEMPLATE = 'cdc_mail_template.html'
 CDC_EMAIL_SUBJECT = 'Cared Data Certificate for project "%s"'
 CDC_LOG = '__KEEPER_LOG_DIR__/keeper.cdc.log'
 
@@ -202,15 +198,15 @@ def register_cdc_in_db(repo_id, owner):
 
 def send_email(to, msg_ctx):
     LOGGER.info("Send CDC email and keeper notification...")
+
     try:
-        t = loader.get_template(CDC_EMAIL_TEMPLATE)
-        msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(msg_ctx), SERVER_EMAIL, [to, SERVER_EMAIL] )
-        msg.content_subtype = "html"
-        msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
-        msg.send()
-    except Exception as err:
-        LOGGER.error('Cannot send email')
-        raise err
+        send_html_email(_('New notice on %s') % get_site_name(),
+                                'notifications/keeper_email.html', msg_ctx,
+                                None, [to])
+
+        LOGGER.info('Successfully sent email to %s' % to)
+    except Exception as e:
+        LOGGER.info('Failed to send email to %s, error detail: %s' % (to, e))
 
     LOGGER.info("Sucessfully sent")
 
