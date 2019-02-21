@@ -36,7 +36,7 @@ def test_catalog():
 
 
 @pytest.mark.skip
-def test_generate_catalog():
+def ___test_generate_catalog():
     """
         Test catalog generation
         Note: you prorbaly need to truncate keeper_catalog table
@@ -49,7 +49,7 @@ def test_generate_catalog():
     print "len:", len(catalog)
 
 @pytest.mark.skip
-def test_clean_up_catalog():
+def ___test_clean_up_catalog():
     """
         Test catalog clean up
         TODO: move to catalog admin script
