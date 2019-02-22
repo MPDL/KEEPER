@@ -400,6 +400,7 @@ class EnvManager(object):
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+            'system/nginx.phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
             'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
             'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
@@ -623,6 +624,11 @@ def deploy_http_conf():
         deploy_file('http/' + file, expand=True)
 
     deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'], expand=True)
+
+    # debug_opt = env_mgr.keeper_config['global']['__DEBUG__']
+    global_sec = env_mgr.keeper_config.items('global')
+    if '__DEBUG__' in global_sec and global_sec.get('__DEBUG__').lower() == 'true':
+        deploy_file('system/nginx.phpmyadmin.conf', expand=True)
 
     Utils.info("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details".format(opts['__HTTP_CONF__']))
 
