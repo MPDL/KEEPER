@@ -738,17 +738,17 @@
     <td class="dirent-op">
         <div class="op-container">
             <div class="displayed-op">
-                <a class="op-icon download sf2-icon-download sf2-x vh" href="<%= download_url %>" title="{% trans "Download" %}" aria-label="{% trans "Download" %}"></a>
+                <a class="op-icon download sf2-icon-download sf2-x vh dir-op" href="<%= download_url %>" title="{% trans "Download" %}" aria-label="{% trans "Download" %}"></a>
                 <% if (!repo_encrypted && can_generate_share_link) { %>
-                <a href="#" class="op-icon share sf2-icon-share sf2-x vh" title="{% trans "Share" %}" aria-label="{% trans "Share" %}"></a>
+                <a href="#" class="op-icon share sf2-icon-share sf2-x vh dir-op" title="{% trans "Share" %}" aria-label="{% trans "Share" %}"></a>
                 <% } %>
                 <% if (dirent.perm == 'rw') { %>
                 <% if (!dirent.is_locked || (dirent.is_locked && dirent.locked_by_me)) { %>
-                    <a href="#" class="op-icon delete sf2-icon-delete sf2-x vh" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
+                    <a href="#" class="op-icon delete sf2-icon-delete sf2-x vh dir-op" title="{% trans "Delete" %}" aria-label="{% trans "Delete" %}"></a>
                 <% } %>
                 <% } %>
                 <div class="op-icon sf2-x bloxberg-tooltip vh">
-                    <div class= "certify"><img src="/media/custom/bloxberg_icon.png" style="height: 16px; width: auto; margin-bottom: 3px;"/></div>
+                    <div class= "certify dir-op" ><img src="/media/custom/berg_icon.png" style="height: 16px; width: auto; margin-bottom: 2px;"/></div>
                     <div class="tooltiptext">
                         <span style="color:#b02318;font-weight:bold;display:block;margin-bottom:3px;">Beta Status ---- only for testing</span>
                         <span style="color:black;font-weight:bold;">Certify your data via the bloxberg blockchain.</span>

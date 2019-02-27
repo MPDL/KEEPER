@@ -268,6 +268,11 @@ div.op-container a, div#dir-view li.grid-item a.ellipsis.text-link, .commit-list
 .op-icon.sf2-x, [class^='sf2-icon-']:hover {
     color: #57a5b8 !important
 }
+.dir-op:hover {
+	text-decoration: none !important;
+	border-bottom: 1px solid !important;
+}
+
 #side-nav a#enable-mods:focus {
     color: #ccc !important
 }
