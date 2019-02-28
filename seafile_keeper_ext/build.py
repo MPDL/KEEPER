@@ -513,9 +513,11 @@ def expand_properties(content, path):
            # capitalize bools
             if value.lower() in ('false', 'true') and path.endswith('.py'):
                 value = value.capitalize()
-            if key == '__EXTERNAL_ES_SERVER__':
+            if key in ('__EXTERNAL_ES_SERVER__'):
                 value = value.lower()
-             # expand  __PROP__ and not ${__PROP__}
+            if key in ('__STATUS_ALLOW_IPS__', '__PHPMYADMIN_ALLOW_IPS__'):
+               value = value.strip('\"')
+              # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
     #remove complete external_es_server setting complete from seafevents.conf on BACKGROUND node
@@ -625,9 +627,8 @@ def deploy_http_conf():
 
     deploy_file('http/' + opts['__MAINTENANCE_HTML__'], dest_dir=opts['__HTML_DEFAULT_DIR__'], expand=True)
 
-    # debug_opt = env_mgr.keeper_config['global']['__DEBUG__']
-    global_sec = env_mgr.keeper_config.items('global')
-    if '__DEBUG__' in global_sec and global_sec.get('__DEBUG__').lower() == 'true':
+    global_sec = dict(env_mgr.keeper_config.items('global'))
+    if '__DEBUG__' in global_sec and global_sec['__DEBUG__'].lower() == 'true':
         deploy_file('system/nginx.phpmyadmin.conf', expand=True)
 
     Utils.info("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details".format(opts['__HTTP_CONF__']))
