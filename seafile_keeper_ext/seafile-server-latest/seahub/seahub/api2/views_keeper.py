@@ -20,6 +20,8 @@ from requests.exceptions import ConnectionError
 logger = logging.getLogger(__name__)
 
 
+URL = 'https://bloxberg.org/certifyData'
+
 def is_in_mpg_ip_range(ip):
     # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
     return True
@@ -43,7 +45,7 @@ def certify_file(request):
         if response_bloxberg.status_code == 200:
             transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
             checksum = hash_data['certifyVariables']['checksum']
-            created_time = datetime.datetime.utcfromtimestamp(float(hash_data['certifyVariables']['timestampString']))
+            created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
             create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum)
             return JsonResponse(response_bloxberg.json())
 
@@ -51,7 +53,8 @@ def certify_file(request):
 
 def request_bloxberg(certify_payload):
     try:
-        response = requests.post('https://bloxberg.org/certifyData', json=certify_payload)
+        print(URL)
+        response = requests.post(URL, json=certify_payload)
         return response
     except ConnectionError as e:
         logger.error(str(e))
