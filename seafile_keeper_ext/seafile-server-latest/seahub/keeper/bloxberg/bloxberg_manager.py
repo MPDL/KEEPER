@@ -69,14 +69,14 @@ def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, che
     data = {
         'msg': obj_id,
     }
-    send_notification(repo_id, path, transaction_id)
+    send_notification(repo_id, path, transaction_id, created_time)
     return data
 
 def certified_with_keeper(repo_id, path):
     commit_id = get_commit_root_id(repo_id)
     return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
 
-def send_notification(repo_id, path, transaction_id):
+def send_notification(repo_id, path, transaction_id, timestamp):
 
     BLOXBERG_MSG=[]
     msg = 'Your data was successfully certified!'
@@ -105,6 +105,7 @@ def send_notification(repo_id, path, transaction_id):
         'link_to_file': path,
         'file_name': file_name,
         'author_name': email2nickname(repo_owner),
+        'timestamp': timestamp,
     }
 
     try:
