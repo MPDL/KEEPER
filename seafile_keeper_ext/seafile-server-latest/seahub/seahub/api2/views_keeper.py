@@ -38,15 +38,16 @@ class CatalogView(APIView):
 def certify_file(request):
     repo_id = request.GET.get('repo_id', None)
     path = request.GET.get('path', None)
-    hash_data = hash_file(repo_id, path)
+    user_email = request.user.username
+    hash_data = hash_file(repo_id, path, user_email)
+    response_bloxberg = request_bloxberg(hash_data)
 
-    response_bloxberg = request_bloxberg(hash_data);
     if response_bloxberg is not None:
         if response_bloxberg.status_code == 200:
             transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
             checksum = hash_data['certifyVariables']['checksum']
             created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
-            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum)
+            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
             return JsonResponse(response_bloxberg.json())
 
     return JsonResponse({'msg': 'Transaction failed'})

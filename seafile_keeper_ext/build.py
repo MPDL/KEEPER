@@ -400,6 +400,8 @@ class EnvManager(object):
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+            'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
+            'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -430,6 +432,8 @@ class EnvManager(object):
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
+
+        self.keeper_tmp_dir = os.path.join('/run', 'tmp')
 
 
     def setup_python_path(self, env):
@@ -672,6 +676,7 @@ def do_deploy(args):
             env_mgr.seafile_logs_dir,
             env_mgr.keeper_var_log_dir,
             env_mgr.install_path,
+            env_mgr.keeper_tmp_dir,
             ),
             group=keep_ini.get('system', '__OS_GROUP__'),
             user=keep_ini.get('system', '__OS_USER__'),
@@ -693,6 +698,8 @@ def do_deploy(args):
             deploy_file('system/keepalived.conf', expand=True)
         if node_type in ('BACKGROUND', 'SINGLE'):
             deploy_file('system/cron.d.keeper@background', expand=True)
+            deploy_file('system/clamd.conf', expand=True)
+            deploy_file('system/clamav-daemon.service', expand=True)
 
         # deploy CRON node conf
         cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')

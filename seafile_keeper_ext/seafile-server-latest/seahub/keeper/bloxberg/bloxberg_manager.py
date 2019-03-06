@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 MSG_TYPE_KEEPER_BLOXBERG_MSG = 'bloxberg_msg'
 
-def hash_file(repo_id, path):
+def hash_file(repo_id, path, user_email):
     file = get_file_by_path(repo_id, path)
     BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
     file_hash_inc = hashlib.sha256()
@@ -39,7 +39,7 @@ def hash_file(repo_id, path):
     data = {
         'certifyVariables': {
             'checksum': file_hash_inc.hexdigest(),
-            'authorName': email2nickname(get_repo_owner(repo_id)),
+            'authorName': email2nickname(user_email),
             'timestampString': str(time.time()),
         }
     }
@@ -59,60 +59,54 @@ def get_commit_root_id(repo_id):
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     return commit.root_id
 
-def get_repo_owner(repo_id):
-    return seafile_api.get_repo_owner(repo_id)
-
-def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum):
+def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email):
     commit_id = get_commit_root_id(repo_id)
-    owner = get_repo_owner(repo_id)
-    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, owner, checksum)
+    obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, user_email, checksum)
     data = {
         'msg': obj_id,
     }
-    send_notification(repo_id, path, transaction_id, created_time)
+    send_notification(repo_id, path, transaction_id, created_time, user_email)
     return data
 
 def certified_with_keeper(repo_id, path):
     commit_id = get_commit_root_id(repo_id)
     return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
 
-def send_notification(repo_id, path, transaction_id, timestamp):
-
+def send_notification(repo_id, path, transaction_id, timestamp, user_email):
     BLOXBERG_MSG=[]
     msg = 'Your data was successfully certified!'
     msg_transaction = 'Transaction ID: ' + transaction_id
     file_name = path.rsplit('/', 1)[-1]
-    repo_owner = get_repo_owner(repo_id)
     BLOXBERG_MSG.append(msg)
     BLOXBERG_MSG.append(msg_transaction)
 
-    UserNotification.objects._add_user_notification(repo_owner, MSG_TYPE_KEEPER_BLOXBERG_MSG,
+    UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_BLOXBERG_MSG,
       json.dumps({
       'message':('; '.join(BLOXBERG_MSG)),
       'transaction_id': transaction_id,
       'repo_id': repo_id,
       'link_to_file': path,
       'file_name': file_name,
-      'author_name': email2nickname(repo_owner),
+      'author_name': email2nickname(user_email),
     }))
 
     c = {
-        'to_user': repo_owner,
+        'to_user': user_email,
         'message_type': 'bloxberg_msg',
         'message':('; '.join(BLOXBERG_MSG)),
         'transaction_id': transaction_id,
         'repo_id': repo_id,
         'link_to_file': path,
         'file_name': file_name,
-        'author_name': email2nickname(repo_owner),
+        'author_name': email2nickname(user_email),
         'timestamp': timestamp,
     }
 
     try:
         send_html_email(_('New notice on %s') % get_site_name(),
                                 'notifications/keeper_email.html', c,
-                                None, [repo_owner])
+                                None, [user_email])
 
-        logger.info('Successfully sent email to %s' % repo_owner)
+        logger.info('Successfully sent email to %s' % user_email)
     except Exception as e:
-        logger.error('Failed to send email to %s, error detail: %s' % (repo_owner, e))
+        logger.error('Failed to send email to %s, error detail: %s' % (user_email, e))
