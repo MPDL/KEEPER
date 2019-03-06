@@ -470,7 +470,7 @@ VIRUS_SCAN_NOTIFY_LIST = ['__SERVER_EMAIL__']
 ##########################################################################
 #### KEEPER branding settings
 
-BRANDING_CSS = 'custom/keeper.css'
+BRANDING_CSS = 'custom/keeper_1.6.css'
 
 LOGO_PATH = 'custom/__LOGO_IMG__'
 CUSTOM_LOGO_PATH = 'custom/__LOGO_IMG__'
