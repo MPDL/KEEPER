@@ -444,7 +444,7 @@ ENABLE_SHARE_LINK_AUDIT = False
 
 # Check virus after upload files to shared upload links. Defaults to `False`.
 # Since version 6.0
-ENABLE_UPLOAD_LINK_VIRUS_CHECK = True
+ENABLE_UPLOAD_LINK_VIRUS_CHECK = False
 
 # Enable system admin add T&C, all users need to accept terms before using. Defaults to `False`.
 # Since version 6.0
