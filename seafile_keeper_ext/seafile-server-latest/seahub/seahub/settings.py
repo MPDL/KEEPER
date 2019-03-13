@@ -123,6 +123,7 @@ MIDDLEWARE_CLASSES = (
     'seahub.base.middleware.UserPermissionMiddleware',
     'termsandconditions.middleware.TermsAndConditionsRedirectMiddleware',
     'seahub.two_factor.middleware.OTPMiddleware',
+    # 'seahub.two_factor.middleware.ForceTwoFactorAuthMiddleware', TODO: check
     'seahub.trusted_ip.middleware.LimitIpMiddleware',
 )
 
@@ -300,6 +301,7 @@ ENABLE_UPLOAD_FOLDER = True
 
 # enable resumable fileupload or not
 ENABLE_RESUMABLE_FILEUPLOAD = False
+RESUMABLE_UPLOAD_FILE_BLOCK_SIZE = 8
 
 ## maxNumberOfFiles for fileupload
 MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 1000
@@ -322,6 +324,10 @@ SHARE_LINK_LOGIN_REQUIRED = False
 # min/max expire days for a share link
 SHARE_LINK_EXPIRE_DAYS_MIN = 0 # 0 means no limit
 SHARE_LINK_EXPIRE_DAYS_MAX = 0 # 0 means no limit
+
+# default expire days should be
+# greater than or equal to MIN and less than or equal to MAX
+SHARE_LINK_EXPIRE_DAYS_DEFAULT = 0
 
 # mininum length for the password of a share link
 SHARE_LINK_PASSWORD_MIN_LENGTH = 8
@@ -359,6 +365,9 @@ FORCE_PASSWORD_CHANGE = True
 
 # Enable a user to change password in 'settings' page.
 ENABLE_CHANGE_PASSWORD = True
+
+ENABLE_DELETE_ACCOUNT = True # TODO: check
+ENABLE_UPDATE_USER_INFO = True # TODO: check
 
 # Enable or disable repo history setting
 ENABLE_REPO_HISTORY_SETTING = True
@@ -650,6 +659,8 @@ THUMBNAIL_VIDEO_FRAME_TIME = 5  # use the frame at 5 second as thumbnail
 # template for create new office file
 OFFICE_TEMPLATE_ROOT = os.path.join(MEDIA_ROOT, 'office-template')
 
+ENABLE_WEBDAV_SECRET = False
+
 #####################
 # Global AddressBook #
 #####################
@@ -830,4 +841,4 @@ CONSTANCE_CONFIG = {
     'ENABLE_USER_CLEAN_TRASH': (ENABLE_USER_CLEAN_TRASH, ''),
 }
 
-SEAFILE_VERSION = "6.3.6"
+SEAFILE_VERSION = "6.3.12"
