@@ -106,7 +106,7 @@ define([
 
             'click .download-dir': 'downloadDir',
             'click .share': 'share',
-	    'click .certify': 'certify',
+            'click .certify': 'certify',
             'click .delete': 'del', // 'delete' is a preserve word
             'click .rename': 'rename',
             'click .mv': 'mvcp',
@@ -369,34 +369,34 @@ define([
             $.magnificPopup.open(this.dirView.magnificPopupOptions, index);
         },
 
-    	certify: function() {
-      	    this.hideMobileMenu();
-      	    var dir = this.dir;
-      	    var path = this.model.getPath();
+        certify: function() {
+            this.hideMobileMenu();
+            var dir = this.dir;
+            var path = this.model.getPath();
 
-      	    $.ajax({
-           	 url: "/api2/ajax/certify/",
-            	data: {
+            $.ajax({
+                url: "/api2/ajax/certify/",
+                data: {
                     repo_id: dir.repo_id,
                     path: path
-            	},
-            	dataType: "json",
-            	beforeSend: Common.prepareCSRFToken,
-            	success: function(data) {
+                },
+                dataType: "json",
+                beforeSend: Common.prepareCSRFToken,
+                success: function(data) {
                     if (data.msg && data.msg === "Transaction succeeded") {
-                      Common.feedback(data.msg, "success");
+                        Common.feedback(data.msg, "success");
                     } else {
-                      Common.ajaxErrorHandler("Transaction failed");
+                        Common.ajaxErrorHandler("Transaction failed");
                     }
-                  }
-               });
-           Common.feedback("Certify the file through Bloxberg...", "success");
+                }
+            });
+            Common.feedback("Certify the file through Bloxberg...", "success");
 
-           this._hideMenu();
-           return false;
-       }, 
+            this._hideMenu();
+            return false;
+        },
 
-       share: function() {
+        share: function() {
             this.hideMobileMenu();
             var dir = this.dir,
                 obj_name = this.model.get('obj_name'),

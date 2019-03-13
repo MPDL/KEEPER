@@ -2402,7 +2402,7 @@ msgid ""
 "In some occasions, you want to modify files on the cloud directly without "
 "syncing them. Seafile client comes with a \"cloud file browser\" to meet "
 "this need. Click an unsynced library will open the cloud file browser."
-msgstr "KEEPER hat einen eigenen Dateibrowser, mit dem Sie die Dateien einer Bibliothek öffnen und bearbeiten können, ohne sie erst synchronisieren zu müssen oder einen Internetbrowser zu verwenden. Bei einem Doppelklick auf eine nicht synchronisierte Bibliothek öffnet Seafile automatisch den eigenen Dateibrowser."
+msgstr "KEEPER hat einen eigenen Dateibrowser, mit dem Sie die Dateien einer Bibliothek öffnen und bearbeiten können, ohne sie erst synchronisieren zu müssen oder einen Internetbrowser zu verwenden. Bei einem Doppelklick auf eine nicht synchronisierte Bibliothek öffnet KEEPER automatisch den eigenen Dateibrowser."
 
 #: seahub/help/templates/help/selective_sync.html:6
 msgid "Selective Sync Sub-folders"
