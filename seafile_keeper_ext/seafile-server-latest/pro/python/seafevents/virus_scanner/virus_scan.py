@@ -78,6 +78,12 @@ class VirusScan(object):
         for row in repo_list:
             repo_id, head_commit_id, scan_commit_id = row
 
+            if self.settings.rescan:
+                virus_list = self.db_oper.get_virus_records()
+                for VirusFile in virus_list:
+                    if repo_id == VirusFile.repo_id:
+                        scan_commit_id = 0
+
             if head_commit_id == scan_commit_id:
                 logging.debug('No change occur for repo %.8s, skip virus scan.',
                               repo_id)
@@ -95,10 +101,12 @@ class VirusScan(object):
             if scan_task.scan_commit_id:
                 sroot_id = commit_mgr.get_commit_root_id(scan_task.repo_id, 1,
                                                          scan_task.scan_commit_id)
+            else:
+                sroot_id = '0000000000000000000000000000000000000000'
+
             if scan_task.head_commit_id:
                 hroot_id = commit_mgr.get_commit_root_id(scan_task.repo_id, 1,
                                                          scan_task.head_commit_id)
-
             differ = CommitDiffer(scan_task.repo_id, 1, sroot_id, hroot_id)
             scan_files = differ.diff()
 
