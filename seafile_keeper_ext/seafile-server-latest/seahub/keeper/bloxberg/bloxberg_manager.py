@@ -62,11 +62,8 @@ def get_commit_root_id(repo_id):
 def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email):
     commit_id = get_commit_root_id(repo_id)
     obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, user_email, checksum)
-    data = {
-        'msg': obj_id,
-    }
     send_notification(repo_id, path, transaction_id, created_time, user_email)
-    return data
+    return obj_id
 
 def certified_with_keeper(repo_id, path):
     commit_id = get_commit_root_id(repo_id)
