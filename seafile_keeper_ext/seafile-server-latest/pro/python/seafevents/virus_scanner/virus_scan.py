@@ -169,6 +169,7 @@ class VirusScan(object):
                             scan_task.repo_id, e)
 
     def do_result(self, result):
+        self.db_oper.ping()
         self.res.append(result)
 
     def parse_scan_result(self, ret_code):

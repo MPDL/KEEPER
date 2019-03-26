@@ -105,6 +105,17 @@ class DBOper(object):
             logging.warning('Failed to get virus records: %s.', e)
             return None
 
+    def ping(self):
+        try:
+            if self.sdb_conn is None:
+                return None
+            else:
+                q = self.sdb_conn.ping()
+                return None
+        except Exception as e:
+            logging.warning('Failed to ping database: %s.', e)
+            return None
+
 
 def get_virus_record(session, repo_id, start, limit):
     if start < 0:
