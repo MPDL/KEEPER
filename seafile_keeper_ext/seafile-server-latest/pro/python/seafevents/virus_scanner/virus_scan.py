@@ -92,6 +92,7 @@ class VirusScan(object):
             self.scan_virus(ScanTask(repo_id, head_commit_id, scan_commit_id))
 
         self.db_oper.close_db()
+
     def scan_virus(self, scan_task):
         try:
             sroot_id = None
