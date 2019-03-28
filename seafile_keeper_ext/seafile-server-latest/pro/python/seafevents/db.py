@@ -22,7 +22,7 @@ def create_mysql_session(host, port, username, passwd, dbname):
     db_url = "mysql+mysqldb://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
-    kwargs = dict(pool_recycle=30, echo=False, echo_pool=False)
+    kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
     engine = create_engine(db_url, **kwargs)
 
@@ -94,7 +94,7 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
 
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
-    kwargs = dict(pool_recycle=30, echo=False, echo_pool=False)
+    kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
     engine = create_engine(db_url, **kwargs)
 
