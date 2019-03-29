@@ -507,6 +507,7 @@ def do_links():
 
 def expand_properties(content, path):
     kc = env_mgr.keeper_config
+    is_background = kc.get('global', '__NODE_TYPE__').lower() == 'background'
     for section in kc.sections():
         for key, value in kc.items(section):
            # capitalize bools
@@ -514,12 +515,16 @@ def expand_properties(content, path):
                 value = value.capitalize()
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
+            # switch off webdav for BACKGROUND server
+            if key == '__WEBDAV_ENABLED__' and is_background:
+                value = 'false'
              # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
     #remove complete external_es_server setting complete from seafevents.conf on BACKGROUND node
-    if kc.get('global', '__NODE_TYPE__').lower() == 'background':
+    if is_background:
         content = re.sub("external_es_server.*?\n", "", content)
+
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
         content = re.sub("backup_url.*?\n", "", content)
