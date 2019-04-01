@@ -36,6 +36,7 @@ statici18n:
 collectstatic:
 	@echo "--> Collect django static files to media/assets"
 	rm -rf media/assets 2> /dev/null
+	#python manage.py collectstatic --noinput -i admin -i termsandconditions
 	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
 
 compressstatic:

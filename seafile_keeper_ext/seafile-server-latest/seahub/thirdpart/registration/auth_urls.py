@@ -69,6 +69,7 @@ urlpatterns += [
          'redirect_if_logged_in': 'libraries'},
         name='auth_login'),
     ### KEEPER
+    ### KEEPER
     url(r'^logout/$',
         auth_views.logout_then_login,
         name='auth_logout'),
