@@ -401,6 +401,7 @@ class EnvManager(object):
             'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+            'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
             'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
             'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
@@ -690,6 +691,7 @@ def do_deploy(args):
 
         # deploy common confs
         deploy_file('system/nginx.conf', expand=True)
+        deploy_file('system/phpmyadmin.conf', expand=True)
         deploy_file('system/rsyslog.conf', expand=True)
         deploy_file('system/my.cnf', expand=True)
         deploy_file('system/nagios.keeper.cfg')
