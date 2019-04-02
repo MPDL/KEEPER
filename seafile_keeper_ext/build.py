@@ -398,6 +398,7 @@ class EnvManager(object):
             'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
             'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
+            'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
             'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
@@ -703,6 +704,7 @@ def do_deploy(args):
             deploy_file('system/keepalived.conf', expand=True)
         if node_type in ('BACKGROUND', 'SINGLE'):
             deploy_file('system/cron.d.keeper@background', expand=True)
+            deploy_file('system/my.cnf@single', expand=True)
             deploy_file('system/clamd.conf', expand=True)
             deploy_file('system/clamav-daemon.service', expand=True)
 
