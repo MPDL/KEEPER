@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 from seahub.auth import login as auth_login
 from seahub.auth import get_backends
 from seahub.base.accounts import User
-from seahub.constants import DEFAULT_USER
+from seahub.constants import GUEST_USER, DEFAULT_USER
 from seahub.invitations.models import Invitation
 from seahub.invitations.signals import accept_guest_invitation_successful
 from seahub.settings import SITE_ROOT, NOTIFY_ADMIN_AFTER_REGISTRATION
@@ -36,28 +36,14 @@ def token_view(request, token):
             User.objects.get(email=i.accepter)
             messages.error(request, _('A user with this email already exists.'))
         except User.DoesNotExist:
-
             # Create user, set that user as guest, and log user in.
-            # u = User.objects.create_user(email=i.accepter, password=passwd,
-                                         # is_active=True)
-            # User.objects.update_role(u.username, GUEST_USER)
-            #i.accept()          # Update invitaion accept time.
+#            User.objects.update_role(u.username, GUEST_USER)
 
-            # for backend in get_backends():
-                # u.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
-            # auth_login(request, u)
+#            i.accept()          # Update invitaion accept time.
 
-            # send signal to notify inviter
-            #accept_guest_invitation_successful.send(
-            #    sender=None, invitation_obj=i)
-
-            # send email to notify admin
-            #if NOTIFY_ADMIN_AFTER_REGISTRATION:
-            #    notify_admins_on_register_complete(u.email)
-
-            #return HttpResponseRedirect(SITE_ROOT)
-
-
+#            for backend in get_backends():
+#                u.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
+#            auth_login(request, u)
             # KEEPER
             # Create user, set that user as default, send, login if mpg user
 
@@ -76,9 +62,10 @@ def token_view(request, token):
                     u.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
                 auth_login(request, u)
 
+
             # send signal to notify inviter
             accept_guest_invitation_successful.send(
-               sender=None, invitation_obj=i)
+                sender=None, invitation_obj=i)
 
             # send email to notify admin
             if NOTIFY_ADMIN_AFTER_REGISTRATION:
