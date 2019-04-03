@@ -40,14 +40,14 @@ class BloxbergTest(BaseTestCase):
   '''
 
   # @pytest.mark.skip
-  def test_get_commit_root_id(self):
+  def test_get_commit_root_id_succeed(self):
     self.login_as(self.user)
     commit_root_id = bloxberg_manager.get_commit_root_id(self.repo.repo_id)
     self.assertEqual(40, len(commit_root_id))
     print(commit_root_id)
 
   # @pytest.mark.skip
-  def test_get_file_by_path(self):
+  def test_get_file_by_path_succeed(self):
     self.login_as(self.user)
     file_dir = bloxberg_manager.get_file_by_path(self.repo.repo_id, self.file)
     self.assertTrue(isinstance(file_dir, SeafFile))
@@ -61,7 +61,7 @@ class BloxbergTest(BaseTestCase):
     print('file_hash: {0}'.format(file_hash))
 
   # @pytest.mark.skip
-  def test_create_bloxberg_certificate(self):
+  def test_create_bloxberg_certificate_succeed(self):
     self.login_as(self.user)
     transaction_id = '0xdeb2a269c9cd01a343f1c0ad25e48409f3b81c7e2b01c65e5a8ee87b2a8bff6f'
     created_time = datetime.datetime.now()
@@ -71,7 +71,7 @@ class BloxbergTest(BaseTestCase):
     print(obj_id)
 
   # @pytest.mark.skip
-  def test_send_notification(self):
+  def test_send_notification_succeed(self):
     self.login_as(self.user)
     timestamp = datetime.datetime.now()
     transaction_id = '0xdeb2a269c9cd01a343f1c0ad25e48409f3b81c7e2b01c65e5a8ee87b2a8bff6f'
