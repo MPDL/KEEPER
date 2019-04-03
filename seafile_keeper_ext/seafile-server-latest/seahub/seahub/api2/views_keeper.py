@@ -19,6 +19,7 @@ from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
+URL = "https://bloxberg.org/certifyData"
 
 def is_in_mpg_ip_range(ip):
     # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
@@ -52,7 +53,7 @@ def certify_file(request):
 
 def request_bloxberg(certify_payload):
     try:
-        response = requests.post('https://bloxberg.org/certifyData', json=certify_payload)
+        response = requests.post(URL, json=certify_payload)
         return response
     except ConnectionError as e:
         logger.error(str(e))
