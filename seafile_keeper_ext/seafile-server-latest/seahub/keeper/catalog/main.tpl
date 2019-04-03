@@ -9,7 +9,7 @@
 <![endif]-->
 <link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
 <link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1465786517" />
-<link rel="stylesheet" type="text/css" href="/media/custom/keeper_1.6.css" />
+<link rel="stylesheet" type="text/css" href="/media/custom/__BRANDING_CSS__" />
 <style>
 
     body {
