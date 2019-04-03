@@ -10,7 +10,7 @@ from urllib import quote
 
 import seahub.api2.views_keeper as views_keeper
 import keeper.bloxberg.bloxberg_manager as bloxberg_manager
-from seafobj.fs import SeafFile  
+from seafobj.fs import SeafFile
 import mock
 import json
 import datetime
@@ -20,13 +20,14 @@ from seahub.notifications.models import UserNotification
 from seahub.base.models import CommandsLastCheck
 
 """
-Following email will receive a notification email if the certify process is successful, 
+Following email will receive a notification email if the certify process is successful,
 file link will not work since the test user is destoried after running the test.
 
 !!!IMPORTANT: NEVER use an email which already exists in the system!!!
 """
 EMAIL = 'test@mpdl.mpg.de'
 
+@pytest.mark.skip
 class BloxbergTest(BaseTestCase):
 
   def setUp(self):
@@ -89,11 +90,11 @@ class BloxbergTest(BaseTestCase):
   def test_request_bloxberg_succeed(self):
     """
     Unit Test: test
-    """  
+    """
     certify_payload = {
       'certifyVariables': {
-        'checksum': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 
-        'authorName': 'tester No.1', 
+        'checksum': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        'authorName': 'tester No.1',
         'timestampString': '1551692787.55'
       }
     }
@@ -156,7 +157,7 @@ class BloxbergTest(BaseTestCase):
       cmd_last_check = CommandsLastCheck.objects.get(command_type=label)
       unseen_notices = UserNotification.objects.get_all_notifications(
         seen=False, time_since=cmd_last_check.last_check)
-  
+
       self.assertEqual(1, len(unseen_notices))
       print('unread notification: {0}'.format(len(unseen_notices)))
       print(unseen_notices[0])
