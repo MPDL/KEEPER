@@ -13,7 +13,8 @@
 echo ""
 
 SCRIPT=$(readlink -f "$0")
-INSTALLPATH=$(dirname "${SCRIPT}")
+#INSTALLPATH=$(dirname "${SCRIPT}")
+INSTALLPATH=__SEAFILE_DIR__/__SEAFILE_SERVER_LATEST_DIR__
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
 central_config_dir=${TOPDIR}/conf
