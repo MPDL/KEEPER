@@ -334,7 +334,29 @@ class Utils(object):
 class EnvManager(object):
     '''System environment and directory layout'''
     def __init__(self):
-        self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        self.read_keeper_conf()
+        self.set_seafile_env()
+        self.set_keeper_env()
+
+
+    def read_keeper_conf(self):
+        '''Read keeper config file and set keeper related properties
+           Note: keeper*.ini must be available! It can be symlink too.
+        '''
+        # conf_files = glob.glob(self.top_dir + '/keeper*.ini')
+        conf_files = glob.glob('../../keeper*.ini')
+        if not conf_files:
+            Utils.error('Cannot find KEEPER config files')
+
+        self.keeper_config = ConfigParser.ConfigParser()
+        self.keeper_config.optionxform = str
+        self.keeper_config.readfp(open(conf_files[0]))
+
+
+    def set_seafile_env(self):
+
+        # self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        self.install_path = self.keeper_config.get('global', '__SEAFILE_DIR__')
         self.install_path = os.path.join(self.install_path, 'seafile-server-latest')
 
         self.top_dir = os.path.dirname(self.install_path)
@@ -373,37 +395,30 @@ class EnvManager(object):
         self.setup_python_path(env)
         return env
 
-    def read_keeper_conf(self):
-        '''Read keeper config file and set keeper related properties '''
-        conf_files = glob.glob(self.top_dir + '/keeper*.ini')
-        if not conf_files:
-            Utils.error('Cannot find KEEPER config files')
 
-        self.keeper_config = ConfigParser.ConfigParser()
-        self.keeper_config.optionxform = str
-        self.keeper_config.readfp(open(conf_files[0]))
+    def set_keeper_env(self):
 
         self.SEAF_EXT_DIR_MAPPING = {
-            # dir -> dir mappings
-            'conf': os.path.join(self.top_dir, 'conf'),
-            'seafile-server-latest': self.install_path,
-            'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
-            'scripts': os.path.join(self.top_dir, 'scripts'),
-            'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
-            # file -> file mappings
-            'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
-            'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
-            'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
-            'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
-            'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
-            'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
-            'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
-            'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
-            'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
-            'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
-            'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
+                # dir -> dir mappings
+                'conf': os.path.join(self.top_dir, 'conf'),
+                'seafile-server-latest': self.install_path,
+                'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
+                'scripts': os.path.join(self.top_dir, 'scripts'),
+                'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
+                # file -> file mappings
+                'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
+                'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
+                'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
+                'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
+                'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
+                'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
+                'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
+                'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
+                'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+                'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+                'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
+                'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -436,6 +451,7 @@ class EnvManager(object):
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
 
         self.keeper_tmp_dir = os.path.join('/run', 'tmp')
+
 
 
     def setup_python_path(self, env):
