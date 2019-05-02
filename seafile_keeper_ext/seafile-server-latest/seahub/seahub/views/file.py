@@ -460,7 +460,6 @@ def convert_repo_path_when_can_not_view_file(request, repo_id, path):
 @repo_passwd_set_required
 def view_lib_file(request, repo_id, path):
 
-
     # resource check
     repo = seafile_api.get_repo(repo_id)
     if not repo:
@@ -689,7 +688,6 @@ def view_lib_file(request, repo_id, path):
             wopi_dict = get_wopi_dict(username, repo_id, path,
                     action_name=action_name, language_code=request.LANGUAGE_CODE)
 
-
             if wopi_dict:
                 if is_pro_version() and action_name == 'edit':
                     try:
@@ -703,7 +701,7 @@ def view_lib_file(request, repo_id, path):
                 send_file_access_msg(request, repo, path, 'web')
                 return render(request, 'view_file_wopi.html', wopi_dict)
             else:
-                return_dict['err'] = _(u'Error when prepare Office Online file preview page.3')
+                return_dict['err'] = _(u'Error when prepare Office Online file preview page.')
 
         if ENABLE_ONLYOFFICE and fileext in ONLYOFFICE_FILE_EXTENSION:
 
@@ -730,7 +728,7 @@ def view_lib_file(request, repo_id, path):
                 send_file_access_msg(request, repo, path, 'web')
                 return render(request, 'view_file_onlyoffice.html', onlyoffice_dict)
             else:
-                return_dict['err'] = _(u'Error when prepare OnlyOffice file preview page.4')
+                return_dict['err'] = _(u'Error when prepare OnlyOffice file preview page.')
 
         if not HAS_OFFICE_CONVERTER:
             return_dict['err'] = "File preview unsupported"
@@ -795,8 +793,6 @@ def view_history_file_common(request, repo_id, ret_dict):
 
             username = request.user.username
 
-            raise NameError('HiThere 3')
-
             if ENABLE_OFFICE_WEB_APP and fileext in OFFICE_WEB_APP_FILE_EXTENSION:
 
                 # obj_id for view trash/history file
@@ -806,7 +802,7 @@ def view_history_file_common(request, repo_id, ret_dict):
                 if wopi_dict:
                     ret_dict['wopi_dict'] = wopi_dict
                 else:
-                    ret_dict['err'] = _(u'Error when prepare Office Online file preview page.5')
+                    ret_dict['err'] = _(u'Error when prepare Office Online file preview page.')
 
             if ENABLE_ONLYOFFICE and fileext in ONLYOFFICE_FILE_EXTENSION:
 
@@ -1073,7 +1069,6 @@ def view_shared_file(request, fileshare):
                     action_name=action_name, can_download=can_download,
                     language_code=request.LANGUAGE_CODE)
 
-            raise NameError('HiThere 4')
             if wopi_dict:
                 if is_pro_version() and can_edit:
                     online_office_lock_or_refresh_lock(repo_id, path, username)
@@ -1081,7 +1076,7 @@ def view_shared_file(request, fileshare):
                 wopi_dict['share_link_token'] = token
                 return render(request, 'view_file_wopi.html', wopi_dict)
             else:
-                ret_dict['err'] = _(u'Error when prepare Office Online file preview page.66')
+                ret_dict['err'] = _(u'Error when prepare Office Online file preview page.')
 
         if ENABLE_ONLYOFFICE and fileext in ONLYOFFICE_FILE_EXTENSION:
 
@@ -1236,11 +1231,10 @@ def view_file_via_shared_dir(request, fileshare):
             wopi_dict = get_wopi_dict(username, repo_id, real_path,
                     language_code=request.LANGUAGE_CODE)
 
-            raise NameError('Hi 1')
             if wopi_dict:
                 return render(request, 'view_file_wopi.html', wopi_dict)
             else:
-                ret_dict['err'] = _(u'Error when prepare Office Online file preview page.1')
+                ret_dict['err'] = _(u'Error when prepare Office Online file preview page.')
 
         if ENABLE_ONLYOFFICE and fileext in ONLYOFFICE_FILE_EXTENSION:
 
