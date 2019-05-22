@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file
+from .views_keeper import CatalogView, certify_file, add_doi
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -115,6 +115,9 @@ urlpatterns = [
 
     # Bloxberg
     url(r'^ajax/certify/$', certify_file, name='certify_file'),
+
+    # DOI
+    url(r'^ajax/doi/$', add_doi, name='add_doi'),
 ]
 
 # serve office converter static files

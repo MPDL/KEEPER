@@ -4,8 +4,8 @@ from seahub.api2.utils import json_response
 from seahub import settings
 
 from keeper.catalog.catalog_manager import get_catalog
-
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
+from keeper.doi.doi_manager import get_metadata
 
 from django.http import JsonResponse
 
@@ -58,3 +58,11 @@ def request_bloxberg(certify_payload):
     except ConnectionError as e:
         logger.error(str(e))
 
+def add_doi(request):
+    repo_id = request.GET.get('repo_id', None)
+    metadata = get_metadata(repo_id)
+    if metadata:
+        return JsonResponse({'msg': str(metadata['Description'])})
+    else:
+        return JsonResponse({'msg': 'unable to read metadata'})
+        

@@ -124,7 +124,7 @@ LOGGING = {
 }
 
 # Debug mode
-DEBUG = False
+DEBUG = True
 
 ##########################################################################
 #### Web server <-> file server
