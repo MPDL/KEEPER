@@ -1,17 +1,22 @@
 from rest_framework.views import APIView
+from rest_framework import status
 
-from seahub.api2.utils import json_response
 from seahub import settings
+from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
+from seahub.api2.utils import json_response, api_error
+from seahub.share.models import FileShare
+from seahub.utils import gen_shared_link
+from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog, get_catalog_entry_by_repo_id
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata
+from keeper.models import CDC
+
 from django.http import JsonResponse
+from django.shortcuts import render
 
-import sys
 import logging
-
-import seaserv
 import datetime
 import requests
 from requests.exceptions import ConnectionError
@@ -19,18 +24,7 @@ from requests.exceptions import ConnectionError
 logger = logging.getLogger(__name__)
 
 URL = "https://bloxberg.org/certifyData"
-from django.shortcuts import render
-
-import seaserv
-from seaserv import seafile_api
-
-from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
-import logging
-from django.http import Http404
-from keeper.models import CDC
-
-
-logger = logging.getLogger(__name__)
+DOXI_URL = "https://test.doi.mpdl.mpg.de/"
 
 def is_in_mpg_ip_range(ip):
     # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
@@ -71,7 +65,8 @@ def request_bloxberg(certify_payload):
 
 def add_doi(request):
     repo_id = request.GET.get('repo_id', None)
-    metadata = get_metadata(repo_id)
+    user_email = request.user.username
+    metadata = get_metadata(repo_id, user_email)
     if metadata:
         return JsonResponse({'msg': str(metadata['Description'])})
     else:
@@ -84,21 +79,28 @@ def CatalogDetailView(request, repo_id):
     catalog = get_catalog_entry_by_repo_id(repo_id)
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
 
-    if repo is None:
-        raise Http404("repository does not exist")
+    if not repo:
+        error_msg = 'Library %s not found.' % repo_id
+        return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-    size = repo.size    
-    if repo.size > 1000000000:
-        size = "{0:.2f} GB".format(repo.size / 1000000000.00)
-    elif repo.size > 1000000:
-        size = "{0:.2f} MB".format(repo.size / 1000000.00) 
-    elif repo.size > 1000:
-        size = "{0:.2f} KB".format(repo.size / 1000.00)
+    ## TBD should we include username
+    username = request.user.username
+    fileshares = FileShare.objects.filter(username=username)
+    fileshares = filter(lambda fs: fs.repo_id == repo.id and fs.path == '/', fileshares)
+    links_info = []
+    for fs in fileshares:
+        token = fs.token
+        link = gen_shared_link(token, fs.s_type)
+        links_info.append(link)
 
+    if len(links_info) == 1:
+        link = links_info[0]
+    else:
+        link = 'not avaliable'
     return render(request, './catalog_detail/landing_page_en.html', {
         'repo': repo,
-        'owner_name':  email2nickname(repo_owner),
-        'size': size,
+        'owner_name': email2nickname(repo_owner),
+        'share_link': link,
         'cdc': cdc,
         'access': '',
         'year': catalog.modified,
@@ -114,3 +116,8 @@ def get_repo_owner(repo_id):
 def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
     return CDC.objects.get_cdc_id_by_repo(repo_id)    
+
+def request_doxi():
+    payload = "doix json"
+    response = requests.post(DOXI_URL, json=payload)
+    return

@@ -48,6 +48,10 @@
                 {% json_to_var notice.detail as bloxberg_msg %}
                 <p class="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>
 
+                {% elif notice.msg_type == "doi_msg" %}
+                {% json_to_var notice.detail as doi_msg %}
+                <p class="brief"> {{ doi_msg.message }}</p>
+
                 {% elif notice.is_add_user_to_group %}
                 <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>
 

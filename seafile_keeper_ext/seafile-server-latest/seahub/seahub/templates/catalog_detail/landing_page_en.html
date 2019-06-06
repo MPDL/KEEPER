@@ -30,11 +30,17 @@
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
 			<tr><td align="left" valign="top" class="table_title">Number of files:</td><td align="left" valign="top">{{repo.file_count}}</td></tr>
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
-			<tr><td align="left" valign="top" class="table_title">Data size:</td><td align="left" valign="top">{{size}}</td></tr>
+			<tr><td align="left" valign="top" class="table_title">Link to the Data</td><td align="left" valign="top">
+			{% if share_link == "not avaliable" %}
+			{{share_link}}
+			{% else %}
+			<a href={{share_link}}>{{share_link}}</a>
+			{% endif%}
+			</td></tr>
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
 			<tr><td align="left" valign="top" class="table_title">Access:</td><td align="left" valign="top"></td></tr>
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
-			<tr><td align="left" valign="top" class="table_title">DOI:</td><td align="left" valign="top">{{cdc}}</td></tr>
+			<tr><td align="left" valign="top" class="table_title">DOI:</td><td align="left" valign="top"></td></tr>
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
 			<tr><td align="left" valign="top" class="table_title">Contact:</td><td align="left" valign="top">{{owner_contact_email}}</td></tr>
 			<tr><td class="separator" colspan="2" height="0"></td></tr>
@@ -43,8 +49,9 @@
 		{% if cdc == True %}
 		<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" display = none />
 		{% endif %}
-		<img id="open_access" src="{{MEDIA_URL}}img/catalog/open_access_logo.png" />
-
+		{% if share_link != "not avaliable" %}
+		<img id="open_access" src="{{MEDIA_URL}}img/catalog/open_access_logo.png"/>
+		{% endif %}
 		<!-- FOOTER -->
 		<div id="footer">
 			<img id="logos" src="{{MEDIA_URL}}img/catalog/logos.png"/>	
