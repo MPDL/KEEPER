@@ -7,6 +7,9 @@ from picklefield.fields import PickledObjectField
 
 from datetime import datetime
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class CatalogManager(models.Manager):
 
@@ -189,3 +192,29 @@ class BCertificate(models.Model):
     owner = models.CharField(max_length=255, null=False)
     checksum = models.CharField(max_length=64, null=False)
     objects = BCertificateManager()
+
+###### DOI Repository ######
+class DoiRepoManager(models.Manager):
+
+    def add_doi_repo(self, repo_id, repo_name, doi, prev_doi, commit_id, owner):
+        doi_repo = self.model(repo_id=repo_id, repo_name=repo_name, doi=doi, prev_doi=prev_doi, commit_id=commit_id, owner=owner)
+        doi_repo.save()
+        return doi_repo
+
+    def get_doi_repo(self, repo_id, commit_id):
+        return super(DoiRepoManager, self).get(repo_id=repo_id, commit_id=commit_id)
+class DoiRepo(models.Model):
+
+    """ Doi Repository """
+    class Meta:
+        db_table = 'doi_repos'
+
+    repo_id = models.CharField(max_length=37, null=False)
+    repo_name = models.CharField(max_length=255, null=False)
+    doi = models.CharField(primary_key=True, max_length=37, null=False)
+    prev_doi = models.CharField(max_length=37, default=None)
+    commit_id = models.CharField(max_length=41, default=None)
+    owner = models.CharField(max_length=255, null=False)
+    created = models.DateTimeField(auto_now_add=True)
+    rm = models.DateTimeField(blank=True, default=datetime.now, null=True)
+    objects = DoiRepoManager()

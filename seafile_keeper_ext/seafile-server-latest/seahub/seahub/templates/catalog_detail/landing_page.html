@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}css/landing_page.css"/>
+		<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
+	</head>
+
+	<body>		
+		<!-- HEADER -->
+		<div id="header">
+			<img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" title=""/>
+			{% comment %} <div id="languages"><a href="./landing_page_de.html">DE</a>  |  <a href="#"><b>EN</b></a></div> {% endcomment %}
+		</div>
+
+		<div class="container doi-root">
+			<h1 class="doi_title">{{repo.name}}</h1> 
+			<h3 class="doi_author">{{owner_name}}({{year.year}})</h3>
+			<p class="doi_institute">MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V</p>
+
+				<!-- TABLE -->
+			<div><b>DOI: </b><a class="doi_link">https://doi.org/{{doi}}</a></div>
+			<div><b>Published </b>{{year|date:'F d, Y'}}</div>
+			<div><b>Cite as </b>...</div>
+			<div><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
+
+			<a class="doi_download">Download dataset as zip file</a>
+		</div>	
+
+		{% if cdc == True %}
+		<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" display = none />
+		{% endif %}
+		{% if share_link != "not avaliable" %}
+		<img id="open_access" src="{{MEDIA_URL}}img/catalog/open_access_logo.png"/>
+		{% endif %}
+		<!-- FOOTER -->
+		<div id="footer">
+			<img id="logos" src="{{MEDIA_URL}}img/catalog/logos.png"/>	
+		</div>
+	</body>
+
+</html>

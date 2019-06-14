@@ -72,6 +72,7 @@ define([
                 el: this.$('.sf-dropdown')
             }, dropdownOptions));
             this.mobileMenu = this.$(".mobile-menu-container");
+            //this.$(".js-add-doi-label").hide();
             return this;
         },
 

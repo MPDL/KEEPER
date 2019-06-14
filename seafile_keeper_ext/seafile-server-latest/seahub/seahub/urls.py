@@ -104,7 +104,7 @@ from seahub.api2.endpoints.admin.upload_links import AdminUploadLink, \
         AdminUploadLinkUpload, AdminUploadLinkCheckPassword
 from seahub.api2.endpoints.admin.users_batch import AdminUsersBatch
 from seahub.api2.endpoints.admin.operation_logs import AdminOperationLogs
-from seahub.api2.endpoints.admin.organizations import AdminOrganization
+from seahub.api2.endpoints.admin.organizations import AdminOrganizations, AdminOrganization
 from seahub.api2.endpoints.admin.org_users import AdminOrgUsers, AdminOrgUser
 from seahub.api2.endpoints.admin.org_stats import AdminOrgStatsTraffic
 from seahub.api2.endpoints.admin.logo import AdminLogo
@@ -118,7 +118,7 @@ from seahub.api2.endpoints.admin.address_book.groups import AdminAddressBookGrou
         AdminAddressBookGroup
 from seahub.api2.endpoints.admin.group_owned_libraries import AdminGroupOwnedLibraries, \
         AdminGroupOwnedLibrary
-from seahub.api2.views_keeper import CatalogDetailView
+from seahub.api2.views_keeper import DoiView
 
 urlpatterns = [
     url(r'^accounts/', include('seahub.base.registration_urls')),
@@ -404,6 +404,7 @@ urlpatterns = [
     url(r'^api/v2.1/admin/admin-role/$', AdminAdminRole.as_view(), name='api-v2.1-admin-admin-role'),
 
     ## admin::organizations
+    url(r'^api/v2.1/admin/organizations/$', AdminOrganizations.as_view(), name='api-v2.1-admin-organizations'),
     url(r'^api/v2.1/admin/organizations/(?P<org_id>\d+)/$', AdminOrganization.as_view(), name='api-v2.1-admin-organization'),
     url(r'^api/v2.1/admin/organizations/(?P<org_id>\d+)/users/$', AdminOrgUsers.as_view(), name='api-v2.1-admin-org-users'),
     url(r'^api/v2.1/admin/organizations/(?P<org_id>\d+)/users/(?P<email>[^/]+)/$', AdminOrgUser.as_view(), name='api-v2.1-admin-org-user'),
@@ -506,7 +507,7 @@ urlpatterns = [
     url(r'^useradmin/batchadduser/example/$', batch_add_user_example, name='batch_add_user_example'),
 
     url(r'^client-login/$', client_token_login, name='client_token_login'),
-    url(r'^catalog-detail/(?P<repo_id>[-0-9a-f]{36})/$', CatalogDetailView, name='catalog_detail'),
+    url(r'^(?P<doi>[10.\d{4,9}/\w]+)/$', DoiView, name='doi_page'),
 ]
 
 from seahub.utils import EVENTS_ENABLED

@@ -47,8 +47,9 @@ def get_metadata(repo_id, user_email):
         if not isValidate:
             return ""
 
-        LOGGER.info(generate_metadata_xml(doi_dict))
-        return doi_dict
+        metadata_xml = generate_metadata_xml(doi_dict)
+        LOGGER.info(metadata_xml)
+        return metadata_xml
 
     except Exception as err:
         LOGGER.error(str(err))
@@ -68,19 +69,21 @@ def generate_metadata_xml(doi_dict):
     year = doi_dict.get('Year')
     resource_type = doi_dict.get("Resource Type")
     ## TODO: read prev_doi from database 
-    prev_doi = "pre.doi.mpdl.mpg.de"
+    prev_doi = None
 
     header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + br() + "<resource xmlns=\"" + kernelNamespace + "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"" + kernelSchemaLocation + "\">" + br()
     xml = header
     # Mandatory Elements: Title(s), Creator(s), Publisher, PublicationYear, resourceType, descriptions, resource(is it optional)
     # NameIdentifier, affiliation is not used
+    xml += ota("identifier", attrib("identifierType", "DOI")) + ct("identifier") +br()
     xml += ot("titles") + br() + tab(1) + ot("title") + title + ct("title") + br() + ct("titles") + br()
     xml += ot("creators") + br() + tab(1) + ot("creator") + br() + tab(2) + ot("creatorName") + creator + ct("creatorName") + br() + tab(1) + ct("creator") + br() + ct("creators") + br()
     xml += ot("publisher") + publisher + ct("publisher") + br()
     xml += ot("publicationYear") + year + ct("publicationYear") + br()
     xml += ota("resourceType", attrib("resourceTypeGeneral", "Dataset")) + resource_type + ct("resourceType") + br()
-    xml += ot("descriptions") + br() + tab(1) + ot("description") + description + ct("description") + br() + ct("descriptions") + br()   
-    xml += ot("relatedIdentifiers") +br() + tab(1) + ota("relatedIdentifier", attrib("relatedIdentifierType", "DOI") + " " + attrib("relationType", "IsNewVersionOf")) + prev_doi + ct("relatedIdentifierType") + br() + ct("relatedIdentifiers") + br()
+    xml += ot("descriptions") + br() + tab(1) + ota("description", attrib("descriptionType", "Abstract")) + description + ct("description") + br() + ct("descriptions") + br()   
+    if prev_doi is not None:
+        xml += ot("relatedIdentifiers") +br() + tab(1) + ota("relatedIdentifier", attrib("relatedIdentifierType", "DOI") + " " + attrib("relationType", "IsNewVersionOf")) + prev_doi + ct("relatedIdentifierType") + br() + ct("relatedIdentifiers") + br()
     xml += ct("resource")
     return xml
 
@@ -125,7 +128,8 @@ def validate(doi_dict, user_email):
 
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid    
     LOGGER.info('DOI metadata are {}:\n{}'.format('valid' if valid else 'not valid', '\n'.join(DOI_MSG)))
-    send_notification(DOI_MSG, user_email)
+    if not valid:
+        send_notification(DOI_MSG, user_email)
     return valid
 
 def validate_resource_type(txt):
