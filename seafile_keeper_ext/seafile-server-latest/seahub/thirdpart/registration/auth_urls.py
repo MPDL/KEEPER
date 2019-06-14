@@ -27,7 +27,6 @@ from django.conf import settings
 from django.conf.urls import url
 
 from seahub.auth import views as auth_views
-from seahub.auth import views
 from seahub.two_factor.views.login import TwoFactorVerifyView
 
 urlpatterns = [
@@ -69,8 +68,9 @@ urlpatterns += [
          'redirect_if_logged_in': 'libraries'},
         name='auth_login'),
     ### KEEPER
-    ### KEEPER
     url(r'^logout/$',
-        auth_views.logout_then_login,
+        auth_views.logout,
+        {'template_name': 'registration/logout.html',
+         'next_page': settings.LOGOUT_REDIRECT_URL},
         name='auth_logout'),
 ]

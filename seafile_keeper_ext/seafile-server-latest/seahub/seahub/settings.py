@@ -301,6 +301,7 @@ ENABLE_UPLOAD_FOLDER = True
 
 # enable resumable fileupload or not
 ENABLE_RESUMABLE_FILEUPLOAD = False
+RESUMABLE_UPLOAD_FILE_BLOCK_SIZE = 8
 
 ## maxNumberOfFiles for fileupload
 MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 1000
@@ -364,6 +365,9 @@ FORCE_PASSWORD_CHANGE = True
 
 # Enable a user to change password in 'settings' page.
 ENABLE_CHANGE_PASSWORD = True
+
+ENABLE_DELETE_ACCOUNT = True
+ENABLE_UPDATE_USER_INFO = True
 
 # Enable or disable repo history setting
 ENABLE_REPO_HISTORY_SETTING = True
@@ -837,4 +841,4 @@ CONSTANCE_CONFIG = {
     'ENABLE_USER_CLEAN_TRASH': (ENABLE_USER_CLEAN_TRASH, ''),
 }
 
-SEAFILE_VERSION = "6.3.9"
+SEAFILE_VERSION = "6.3.12"
