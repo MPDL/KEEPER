@@ -72,7 +72,10 @@ define([
                 el: this.$('.sf-dropdown')
             }, dropdownOptions));
             this.mobileMenu = this.$(".mobile-menu-container");
-            //this.$(".js-add-doi-label").hide();
+            var doi_repo = this.model.get('doi');
+            if (doi_repo) {
+                this.$(".js-add-doi-label").hide();
+            }
             return this;
         },
 
@@ -442,22 +445,40 @@ define([
         },
 
         addDoi: function(event) {
-            $.ajax({
-                url: "/api2/ajax/doi/",
-                data: {
-                    repo_id: this.model.get('id'),
-                },
-                dataType: "json",
-                beforeSend: Common.prepareCSRFToken,
-                success: function(data) {
-                    if (data.msg) {
-                        Common.feedback(data.msg, "success");
-                    } else {
-                        Common.ajaxErrorHandler("Create DOI failed");
+            var _this = this;
+            this.togglePopup(); // close the popup
+
+            var repo_name = _this.model.get('name')
+            var $form = $('<form action="" method=""><h3 id="dialogTitle">Assign DOI to <span style="color:#57a5b8;">' + repo_name + '</span></h3><p>Please, take into consideration that a DOI identifier will be assigned to current state(snapshot) of the library. The DOI will persistently reference to the snapshot and not to the latest state of the library.</p><button type="submit" class="submit">Assign DOI</button></form>');
+
+            var $el = $('<div><span class="loading-icon loading-tip"></span></div>');
+            $el.modal({focus:false, minWidth: 400});
+            $('#simplemodal-container').css({'height':'auto'});
+            $('#simplemodal-data').html($form);
+
+            $form.on('submit', function() {
+                var $submit = $('[type="submit"]', $form);
+
+                Common.disableButton($submit);
+                $.ajax({
+                    url: "/api2/ajax/doi/",
+                    data: {
+                        repo_id: _this.model.get('id'),
+                        host: window.location.origin,
+                    },
+                    dataType: "json",
+                    beforeSend: Common.prepareCSRFToken,
+                    success: function(data) {
+                        if (data.msg) {
+                            Common.feedback(data.msg, "success");
+                        } else {
+                            Common.ajaxErrorHandler("Create DOI failed");
+                        }
                     }
-                }
+                });
+                $.modal.close();
+                return false;
             });
-            this.togglePopup();
             return false;
         },
 

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}css/landing_page.css"/>
+		<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css" />
+		<title>Dataset does not exist anymore</title>
+		<link rel="icon" type="image/x-icon" href="/media/img/favicon.png?t=1465786517" />
+	</head>
+
+	<body>
+		<!-- HEADER -->
+		<div id="header">
+			<img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" />
+		</div>
+
+		<div class="container doi-root">
+			<h3 class="doi_tombstone_title">Dataset does not exist anymore: <b>{{doi_dict.Title}}</b></h3> 
+			<p> The dataset with identifier <b class="doi_link">{{doi}}</b> was removed.</p>
+
+		</div>	
+
+		<!-- FOOTER -->
+		<div id="footer">
+			<img id="logos" src="{{MEDIA_URL}}img/catalog/logos.png"/>	
+		</div>
+	</body>
+
+</html>

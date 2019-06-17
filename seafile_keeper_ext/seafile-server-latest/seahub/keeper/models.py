@@ -158,6 +158,14 @@ def remove_catalog_and_cdc_entry(sender, **kwargs):
     except Exception:
         logging.error(traceback.format_exc())
 
+@receiver(repo_deleted)
+def remove_doi(sender, **kwargs):
+    repo_id = kwargs['repo_id']
+    try:
+        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+        doi_repos.update(rm=datetime.now())
+    except Exception:
+        logging.error(traceback.format_exc())
 
 
 ###### bloxberg certificate ######
@@ -196,13 +204,17 @@ class BCertificate(models.Model):
 ###### DOI Repository ######
 class DoiRepoManager(models.Manager):
 
-    def add_doi_repo(self, repo_id, repo_name, doi, prev_doi, commit_id, owner):
-        doi_repo = self.model(repo_id=repo_id, repo_name=repo_name, doi=doi, prev_doi=prev_doi, commit_id=commit_id, owner=owner)
+    def add_doi_repo(self, repo_id, repo_name, doi, prev_doi, commit_id, owner, md):
+        doi_repo = self.model(repo_id=repo_id, repo_name=repo_name, doi=doi, prev_doi=prev_doi, commit_id=commit_id, owner=owner, md=md)
         doi_repo.save()
         return doi_repo
 
-    def get_doi_repo(self, repo_id, commit_id):
-        return super(DoiRepoManager, self).get(repo_id=repo_id, commit_id=commit_id)
+    def get_valid_doi_repos(self, repo_id):
+        return super(DoiRepoManager, self).exclude(rm__isnull=False).filter(repo_id=repo_id)
+
+    def get_doi_by_commit_id(self, repo_id, commit_id):
+        return super(DoiRepoManager, self).filter(repo_id=repo_id, commit_id=commit_id)
+
 class DoiRepo(models.Model):
 
     """ Doi Repository """
@@ -215,6 +227,7 @@ class DoiRepo(models.Model):
     prev_doi = models.CharField(max_length=37, default=None)
     commit_id = models.CharField(max_length=41, default=None)
     owner = models.CharField(max_length=255, null=False)
+    md = PickledObjectField()
     created = models.DateTimeField(auto_now_add=True)
-    rm = models.DateTimeField(blank=True, default=datetime.now, null=True)
+    rm = models.DateTimeField(blank=True, default=None, null=True)
     objects = DoiRepoManager()

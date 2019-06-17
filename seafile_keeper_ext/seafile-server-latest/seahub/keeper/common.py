@@ -44,7 +44,7 @@ def get_db(db_name):
 
 HEADER_STEP = 2
 # Headers in MD file to be processed by the parse_markdown
-md_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'DOI', 'Comments', 'Resource Type', 'RelatedIdentifier']
+md_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'Comments', 'Resource Type', 'RelatedIdentifier']
 
 class TokenTreeRenderer(mistune.Renderer):
     # options is required

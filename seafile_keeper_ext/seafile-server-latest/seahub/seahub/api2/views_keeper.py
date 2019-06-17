@@ -3,14 +3,14 @@ from rest_framework import status
 
 from seahub import settings
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
-from seahub.api2.utils import json_response, api_error
+from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
 from seahub.utils import gen_shared_link
 from seaserv import seafile_api
 
-from keeper.catalog.catalog_manager import get_catalog, get_catalog_entry_by_repo_id
+from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
-from keeper.doi.doi_manager import get_metadata
+from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_lastest_commit_id
 from keeper.models import CDC, DoiRepo
 
 from django.http import JsonResponse
@@ -66,8 +66,8 @@ def request_bloxberg(certify_payload):
 def request_doxi(shared_link, doxi_payload):
     try:
         # credentials for https://test.doi.mpdl.mpg.de/
-        user='keeper_test'
-        pwd='4PsYQ_788%sd'
+        user=''
+        pwd=''
         headers = {'Content-Type': 'text/xml'}
         response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload)
         return response
@@ -76,65 +76,51 @@ def request_doxi(shared_link, doxi_payload):
 
 def add_doi(request):
     repo_id = request.GET.get('repo_id', None)
+    host = request.GET.get('host', None)
     user_email = request.user.username
     metadata = get_metadata(repo_id, user_email)
-    shared_link = get_shared_link(user_email, repo_id)
-    logger.info(metadata)
-    logger.info(shared_link)
-    if shared_link == 'not avaliable':
-        return JsonResponse({'msg': 'lib not shared'})
-
-    # delete
+    if metadata is None:
+        return JsonResponse({'msg': 'metaData not valid'})
+    metadata_xml = generate_metadata_xml(metadata)
     repo = get_repo(repo_id)
-    repo_name = repo.name
-    repo_owner = get_repo_owner(repo_id)
+    commit_id = get_lastest_commit_id(repo)
 
-    DoiRepo.objects.add_doi_repo(repo_id, repo_name, 'https://doi.org/10.15771/5.28m', None, '057c81f004fab23082ec32bd804225c5df3f9f3b', repo_owner)
-    
-    doi_repo = DoiRepo.objects.get_doi_repo(repo_id, '057c81f004fab23082ec32bd804225c5df3f9f3b')
-    
-    if doi_repo is not None:
-        logger.info(doi_repo)
-        logger.info(doi_repo.doi)
-        return JsonResponse({'msg': 'Doi  exists: ' + doi_repo.doi})
-    else:
-        logger.info("doiRepo is None")
-        return JsonResponse({'msg': 'Doi is none: '})
-
-    response_doxi = request_doxi(shared_link, metadata)
+    url_landing_page = host + '/doi/libs/' + repo_id + '&' + commit_id
+    response_doxi = request_doxi(url_landing_page, metadata_xml)
 
     if response_doxi is not None:
         if response_doxi.status_code == 201:
             doi = response_doxi.text
             logger.info(doi)
             #todo: add to doi
-            return JsonResponse({'msg': 'Create DOI successful: ' + doi})
+            repo_owner = get_repo_owner(repo_id)
+            DoiRepo.objects.add_doi_repo(repo_id, repo.name, 'https://doi.org/' + doi, None, commit_id, repo_owner, metadata)
+            return JsonResponse({'msg': 'Create DOI successful: ' + 'https://doi.org/' + doi})
         else:
             logger.info(response_doxi.status_code)
             logger.info(response_doxi.text)
-            return JsonResponse({'msg': 'Failed to create DOI: ' + response_doxi.text})
+            return JsonResponse({'msg': 'Failed to create DOI, ' + response_doxi.text})
         
-def DoiView(request, doi):
-    repo_id = '9a3e3d8b-9448-4328-9aa3-9dd4990dc00c'
-    repo = get_repo(repo_id)
-    repo_owner = get_repo_owner(repo_id) 
-    catalog = get_catalog_entry_by_repo_id(repo_id)
+def DoiView(request, repo_id, commit_id):
+    doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+    if len(doi_repos) == 0:
+        return render(request, '404.html')
+    elif len(doi_repos) > 0 and doi_repos[0].rm is not None:
+        return render(request, './catalog_detail/tombstone_page.html', {
+            'doi': doi_repos[0].doi,
+            'doi_dict': doi_repos[0].md
+        })
+
+    repo_owner = get_repo_owner(repo_id)
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-
-    if not repo:
-        error_msg = 'Library %s not found.' % repo_id
-        return api_error(status.HTTP_404_NOT_FOUND, error_msg)
-
-    ## TBD should we include username
-    link = get_shared_link(request.user.username, repo_id)
+    link = "http://192.168.33.11/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
     return render(request, './catalog_detail/landing_page.html', {
-        'repo': repo,
-        'owner_name': email2nickname(repo_owner),
         'share_link': link,
         'cdc': cdc,
         'access': '',
-        'year': catalog.modified,
-        'doi': doi,
+        'commit_id': commit_id,
+        'doi_dict': doi_repos[0].md,
+        'doi': doi_repos[0].doi,
         'owner_contact_email': email2contact_email(repo_owner) })
 
 def get_repo(repo_id): 
@@ -145,19 +131,4 @@ def get_repo_owner(repo_id):
 
 def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
-    return CDC.objects.get_cdc_id_by_repo(repo_id)    
-
-def get_shared_link(username, repo_id):
-    fileshares = FileShare.objects.filter(username=username)
-    fileshares = filter(lambda fs: fs.repo_id == repo_id and fs.path == '/', fileshares)
-    links_info = []
-    for fs in fileshares:
-        token = fs.token
-        link = gen_shared_link(token, fs.s_type)
-        links_info.append(link)
-
-    if len(links_info) == 1:
-        link = links_info[0]
-    else:
-        link = 'not avaliable'
-    return link
+    return CDC.objects.get_cdc_id_by_repo(repo_id)

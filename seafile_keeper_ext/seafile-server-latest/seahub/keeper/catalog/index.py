@@ -247,11 +247,8 @@ def application(env, start_response):
 
                 slots = {}
                 result_id = '#'
-                repo_id = ''
                 if ( 'id' in tmpresult):
                     result_id = '/f/'+tmpresult['id']
-                    repo_id = tmpresult['id']
-                slots['repo_id'] = repo_id
 
                 result_title = "Project archive no. %s" % tmpresult['catalog_id']
                 if ( 'title' in tmpresult and len(tmpresult['title']) > 0 ):

@@ -162,7 +162,7 @@
 
 
                     {dataset}
-                    <div class="item-block" id=%repo_id%>
+                    <div class="item-block">
                         <h3>%title%</h3>
                         <p>%smalltext%</p>
                         <p>%author%</p>
@@ -171,7 +171,7 @@
                     </div>
                     {/dataset}
                     {dataset_certified}
-                    <div class="item-block" id=%repo_id%>
+                    <div class="item-block">
                         <img src="/catalog/static/certified.png" />
                         <h3>%title%</h3>
                         <p>%smalltext%</p>
@@ -246,14 +246,6 @@
                 feedback("Failed. Please check the network.", 'error');
             }
         }
-
-        $(document).ready(function(){
-            $('.item-block').click(function( event ) {
-                var repo = $(this).attr("id");
-                var repo_detail = window.location.origin+"/catalog-detail/"+repo+"/"
-                window.location = window.location.origin+"/catalog-detail/"+repo+"/";
-            });
-        });
     </script>
 </body>
 

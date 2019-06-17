@@ -1,6 +1,6 @@
 #footer{
-	position:fixed; bottom: 0%; left:0%; 
-	width:100%; height: 8%; 
+	position:fixed; bottom: 0%; left:0%;
+	width:100%; height: 8%;
 	background-color: #EBEBEB;}
 
 #body{
@@ -47,6 +47,11 @@ a{text-decoration: none; outline: none; color: black;}
 	margin-top: 8%;
 	margin-bottom: 1.2rem;
 	color:#57a5b8;
+}
+
+.doi_tombstone_title{
+	margin-top: 8%;
+	margin-bottom: 1.2rem;
 }
 
 .doi_author{

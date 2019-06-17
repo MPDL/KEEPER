@@ -199,13 +199,6 @@ def delete_catalog_entry_by_repo_id(repo_id):
     reconnect_db()
     Catalog.objects.delete_by_repo_id(repo_id)
 
-def get_catalog_entry_by_repo_id(repo_id):
-    """
-    get catalog entry by repo_id
-    """
-    reconnect_db()
-    return Catalog.objects.get_by_repo_id(repo_id)  
-
 def generate_catalog():
     """
     Generate entire catalog and put it into DB cache
