@@ -126,6 +126,10 @@ LOGGING = {
 # Debug mode
 DEBUG = True
 
+
+# KEEPER Service URL
+SERVICE_URL = '__SERVICE_URL__'
+
 ##########################################################################
 #### Web server <-> file server
 
@@ -554,6 +558,11 @@ ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 
 # default KEEPER library name
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
+
+# Keeper DOI integration
+DOI_SERVER = '__DOI_SERVER__'
+DOI_USER = '__DOI_USER__'
+DOI_PASSWORD = '__DOI_PASSWORD__'
 
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from seahub import settings
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, SERVICE_URL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
@@ -23,8 +24,9 @@ from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
-URL = "https://bloxberg.org/certifyData"
-DOXI_URL = "https://test.doi.mpdl.mpg.de/doxi/rest/doi"
+BLOXBERG_URL = "https://bloxberg.org/certifyData"
+DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
+
 
 def is_in_mpg_ip_range(ip):
     # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
@@ -58,7 +60,7 @@ def certify_file(request):
 
 def request_bloxberg(certify_payload):
     try:
-        response = requests.post(URL, json=certify_payload)
+        response = requests.post(BLOXBERG_URL, json=certify_payload)
         return response
     except ConnectionError as e:
         logger.error(str(e))
@@ -66,8 +68,8 @@ def request_bloxberg(certify_payload):
 def request_doxi(shared_link, doxi_payload):
     try:
         # credentials for https://test.doi.mpdl.mpg.de/
-        user=''
-        pwd=''
+        user=DOI_USER
+        pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml'}
         response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload)
         return response
@@ -100,7 +102,7 @@ def add_doi(request):
             logger.info(response_doxi.status_code)
             logger.info(response_doxi.text)
             return JsonResponse({'msg': 'Failed to create DOI, ' + response_doxi.text})
-        
+
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
     if len(doi_repos) == 0:
@@ -113,7 +115,7 @@ def DoiView(request, repo_id, commit_id):
 
     repo_owner = get_repo_owner(repo_id)
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-    link = "http://192.168.33.11/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+    link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
@@ -123,7 +125,7 @@ def DoiView(request, repo_id, commit_id):
         'doi': doi_repos[0].doi,
         'owner_contact_email': email2contact_email(repo_owner) })
 
-def get_repo(repo_id): 
+def get_repo(repo_id):
     return seafile_api.get_repo(repo_id)
 
 def get_repo_owner(repo_id):

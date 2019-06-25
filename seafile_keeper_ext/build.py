@@ -649,6 +649,24 @@ def deploy_http_conf():
 
     Utils.info("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details".format(opts['__HTTP_CONF__']))
 
+def deploy_ext():
+
+    ### deploy dirs
+    for path in ('scripts', 'seahub-data', 'conf'):
+        deploy_dir(path, expand=True)
+
+    ## check and create links.
+    do_links()
+
+    ### deploy seafile-serverl-latest
+    deploy_dir('seafile-server-latest', expand=True)
+
+    ### generate i18n
+    # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
+
+    ### dist keeper
+    Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+
 
 def do_deploy(args):
 
@@ -667,21 +685,8 @@ def do_deploy(args):
         deploy_file('system/keeper.service')
         os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
 
-        ### deploy dirs
-        for path in ('scripts', 'seahub-data', 'conf'):
-           deploy_dir(path, expand=True)
-
-        ## check and create links.
-        do_links()
-
-        ### deploy seafile-serverl-latest
-        deploy_dir('seafile-server-latest', expand=True)
-
-        ### generate i18n
-        # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
-
-        ### dist keeper
-        Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        # deploy ext sources
+        deploy_ext()
 
 
         # create logging dirs
@@ -735,6 +740,8 @@ def do_deploy(args):
 
     elif args.conf:
         deploy_dir('conf', expand=True)
+    elif args.ext:
+        deploy_ext()
     elif args.http_conf:
         deploy_http_conf()
     else:
@@ -818,6 +825,7 @@ def main():
     parser_deploy = parser_deploy.add_mutually_exclusive_group()
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
+    parser_deploy.add_argument('--ext', help='deploy KEEPER ext sources', action='store_true')
     parser_deploy.add_argument('--conf', help='deploy KEEPER configurations', action='store_true')
     parser_deploy.add_argument('--http-conf', help='deploy http-conf', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
