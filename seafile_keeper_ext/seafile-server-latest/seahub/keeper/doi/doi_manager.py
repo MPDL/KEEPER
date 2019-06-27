@@ -17,34 +17,41 @@ MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 
 def get_metadata(repo_id, user_email):
     """ Read metadata from libray root folder"""
-    event = None
 
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_lastest_commit_id(repo)
 
     # exit if repo encrypted
     if repo.encrypted:
-        return {}
+        return {
+            'error': 'Library is encrypted.'
+        }
 
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
-        return {}
+        return {
+            'error': 'The Library is system template destination.'
+        }
 
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
 
         if not file:
-            return {}
+            return {
+                'error': 'archive-metadata.md file not found.'
+            }
         LOGGER.info('Repo has creative dirents')
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
         doi_dict = parse_markdown(file.get_content())
         LOGGER.info(doi_dict)
 
-        isValidate = validate(doi_dict, user_email)
-        if not isValidate:
-            return {}
+        doi_msg = validate(doi_dict, repo_id, user_email)
+        if len(doi_msg) > 0:
+            return {
+                'error': ' '.join(doi_msg),
+            }
         return doi_dict
 
     except Exception as err:
@@ -53,7 +60,6 @@ def get_metadata(repo_id, user_email):
 
 def generate_metadata_xml(doi_dict):
     """ DataCite Metadata Generator """
-    kernelVersion = "4.0"
     kernelNamespace = "http://datacite.org/schema/kernel-4"
     kernelSchema = "http://schema.datacite.org/meta/kernel-4/metadata.xsd"
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
@@ -64,7 +70,6 @@ def generate_metadata_xml(doi_dict):
     publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
     year = doi_dict.get('Year')
     resource_type = doi_dict.get("Resource Type")
-    ## TODO: read prev_doi from database
     prev_doi = None
 
     header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + br() + "<resource xmlns=\"" + kernelNamespace + "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"" + kernelSchemaLocation + "\">" + br()
@@ -88,11 +93,10 @@ def get_lastest_commit_id(repo):
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     return commit.root_id
 
-def validate(doi_dict, user_email):
+def validate(doi_dict, repo_id, user_email):
     LOGGER.info("""Validate the DOI mandatory fields and content...""")
 
-    global DOI_MSG
-    DOI_MSG = []
+    doi_msg = []
 
     # 1. check mandatory fields
     # todo add more mandatory fields
@@ -102,36 +106,33 @@ def validate(doi_dict, user_email):
 
     mandatory_field_valid = s2.issubset(s1)
     if not mandatory_field_valid:
-        missing_fields = s2.difference(s1)
-        if len(missing_fields) > 1:
-            msg =  'DOI:'+ ', '.join(missing_fields) + ' fields are not filled'
-        elif len(missing_fields) == 1:
-            msg =  'DOI:'+ missing_fields.pop() + ' field is not filled'
-        DOI_MSG.append(msg)
+        invalid_fields = s2.difference(s1)
+    else:
+        invalid_fields = set()
 
     # 2. check content
     year_valid = validate_year(doi_dict.get('Year'))
     if not year_valid:
-        msg = 'DOI year field is not valid'
-        DOI_MSG.append(msg)
+        invalid_fields.add('Year')
     author_valid = validate_author(doi_dict.get('Author'))
     if not author_valid:
-        msg = 'DOI author field is not valid'
-        DOI_MSG.append(msg)
+        invalid_fields.add('Author')
     institute_valid = validate_institute(doi_dict.get('Institute'))
     if not institute_valid:
-        msg = 'DOI institute field is not valid'
-        DOI_MSG.append(msg)
+        invalid_fields.add('Institute')
     resource_type_valid = validate_resource_type(doi_dict.get("Resource Type"))
     if not resource_type_valid:
-        msg = 'Wrong Institution string'
-        DOI_MSG.append(msg)
-
+        invalid_fields.add('Resource Type')
+    
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid
-    LOGGER.info('DOI metadata are {}:\n{}'.format('valid' if valid else 'not valid', '\n'.join(DOI_MSG)))
     if not valid and user_email is not None:
-        send_notification(DOI_MSG, user_email)
-    return valid
+        if len(invalid_fields) > 1:
+            msg =  ', '.join(invalid_fields) + ' fields are either invalid or not filled.'
+        elif len(invalid_fields) == 1:
+            msg =  invalid_fields.pop() + ' field is either invalid or not filled.'
+        doi_msg.append(msg)
+        send_notification(doi_msg, repo_id, 'invalid', user_email)
+    return doi_msg
 
 def validate_resource_type(txt):
     """resource_type checking, options:
@@ -179,8 +180,24 @@ def ot(tag):
 def ct(tag):
     return "</" + tag + ">"
 
-def send_notification(DOI_MSG, user_email):
-    UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_DOI_MSG,
-        json.dumps({
-            'message': ('; '.join(DOI_MSG)),
-    }))
+def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link=''):
+    # status: 'invalid', 'success', 'error'
+    # TODO: replace 'doi_link' with 'doi' in production
+    if isinstance(doi_msg, list):
+        UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_DOI_MSG,
+            json.dumps({
+                'message': (' '.join(doi_msg)),
+                'lib': repo_id,
+                'archive_metadata': ARCHIVE_METADATA_TARGET,
+                'status': status,
+        }))
+    else:
+        UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_DOI_MSG,
+            json.dumps({
+                'message': (doi_msg),
+                'lib': repo_id,
+                'archive_metadata': ARCHIVE_METADATA_TARGET,
+                'doi': doi,
+                'doi_link': doi_link,
+                'status': status,
+        }))

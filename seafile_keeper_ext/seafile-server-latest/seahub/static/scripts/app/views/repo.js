@@ -464,15 +464,14 @@ define([
                     url: "/api2/ajax/doi/",
                     data: {
                         repo_id: _this.model.get('id'),
-                        host: window.location.origin,
                     },
                     dataType: "json",
                     beforeSend: Common.prepareCSRFToken,
                     success: function(data) {
-                        if (data.msg) {
-                            Common.feedback(data.msg, "success");
+                        if (data.status) {
+                            Common.feedback(data.msg, data.status, 8000);
                         } else {
-                            Common.ajaxErrorHandler("Create DOI failed");
+                            Common.ajaxErrorHandler('Create DOI failed');
                         }
                     }
                 });

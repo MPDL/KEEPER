@@ -11,7 +11,7 @@ from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
-from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_lastest_commit_id
+from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_lastest_commit_id, send_notification
 from keeper.models import CDC, DoiRepo
 
 from django.http import JsonResponse
@@ -78,30 +78,53 @@ def request_doxi(shared_link, doxi_payload):
 
 def add_doi(request):
     repo_id = request.GET.get('repo_id', None)
-    host = request.GET.get('host', None)
     user_email = request.user.username
-    metadata = get_metadata(repo_id, user_email)
-    if metadata is None:
-        return JsonResponse({'msg': 'metaData not valid'})
-    metadata_xml = generate_metadata_xml(metadata)
     repo = get_repo(repo_id)
+    doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+    if doi_repos:
+        msg = 'This library already has a DOI. '
+        url_landing_page = SERVICE_URL + '/doi/libs/' + doi_repos[0].repo_id + '/' + doi_repos[0].commit_id
+        send_notification(msg, repo_id, 'error', user_email, doi_repos[0].doi, url_landing_page)
+        return JsonResponse({
+            'msg': msg + doi_repos[0].doi,
+            'status': 'error',
+            })
+
+    metadata = get_metadata(repo_id, user_email)
+
+    if 'error' in metadata:
+        return JsonResponse({
+            'msg': metadata.get('error') + ' Please checkout notifications for more details.',
+            'status': 'error',
+            })
+
+    metadata_xml = generate_metadata_xml(metadata)
     commit_id = get_lastest_commit_id(repo)
 
-    url_landing_page = host + '/doi/libs/' + repo_id + '&' + commit_id
+    url_landing_page = SERVICE_URL + '/doi/libs/' + repo_id + '/' + commit_id
     response_doxi = request_doxi(url_landing_page, metadata_xml)
 
     if response_doxi is not None:
         if response_doxi.status_code == 201:
-            doi = response_doxi.text
+            doi = 'https://doi.org/' + response_doxi.text
             logger.info(doi)
-            #todo: add to doi
             repo_owner = get_repo_owner(repo_id)
-            DoiRepo.objects.add_doi_repo(repo_id, repo.name, 'https://doi.org/' + doi, None, commit_id, repo_owner, metadata)
-            return JsonResponse({'msg': 'Create DOI successful: ' + 'https://doi.org/' + doi})
+            DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
+            msg = 'Create DOI successfully. '
+            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page)
+            return JsonResponse({
+                'msg': msg + doi,
+                'status': 'success',
+                })
         else:
             logger.info(response_doxi.status_code)
             logger.info(response_doxi.text)
-            return JsonResponse({'msg': 'Failed to create DOI, ' + response_doxi.text})
+            msg = 'Failed to create DOI, ' + response_doxi.text
+            send_notification(msg, repo_id, 'error', user_email)
+            return JsonResponse({
+                'msg': msg,
+                'status': 'error'
+                })
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
