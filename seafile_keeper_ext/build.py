@@ -337,7 +337,7 @@ class EnvManager(object):
         self.read_keeper_conf()
         self.set_seafile_env()
         self.set_keeper_env()
-
+        self.read_seafile_conf_dir()
 
     def read_keeper_conf(self):
         '''Read keeper config file and set keeper related properties
@@ -493,21 +493,14 @@ def check_latest_link():
 
 
 
-def do_links():
+def do_links(link_target_list):
     """
     Create keeper related links
     """
 
     check_latest_link()
 
-    for (link, target) in ((env_mgr.custom_link, env_mgr.custom_dir),
-                           (env_mgr.avatars_link, env_mgr.avatars_dir),
-                           (env_mgr.django_admin_link, env_mgr.django_admin_path),
-                           (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
-                           (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
-                           (env_mgr.assets_app_link, env_mgr.assets_app_dir),
-                           (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
-                           ):
+    for (link, target) in link_target_list:
         if Utils.check_link(link, target):
             # case for avatar link: link has same name as existed target dir
             # --> backup the dir
@@ -650,27 +643,116 @@ def deploy_http_conf():
     Utils.info("Note: enable/disable {} with nginx_ensite and nginx_dissite, see https://github.com/perusio/nginx_ensite for details".format(opts['__HTTP_CONF__']))
 
 def deploy_ext():
+    """
+    Deploy keeper ext stuff
+    """
+
+    keep_ini = env_mgr.keeper_config
 
     ### deploy dirs
     for path in ('scripts', 'seahub-data', 'conf'):
         deploy_dir(path, expand=True)
 
-    ## check and create links.
-    do_links()
+    ### create ext-deploymnet related symlinks
+    do_links((
+        (env_mgr.django_admin_link, env_mgr.django_admin_path),
+        (env_mgr.custom_link, env_mgr.custom_dir),
+        (env_mgr.avatars_link, env_mgr.avatars_dir),
+    ))
 
     ### deploy seafile-serverl-latest
     deploy_dir('seafile-server-latest', expand=True)
 
-    ### generate i18n
-    # do_generate(type('',(object,),{"i18n": True, "min_css": False, "msgen": False})())
-
     ### dist keeper
     Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+
+    # TODO: remove, should be fixed in 6.3.12
+    do_links((
+        (env_mgr.assets_app_link, env_mgr.assets_app_dir),
+        (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
+    ))
+
+    # create seafile log dir
+    Utils.must_mkdir(env_mgr.seafile_logs_dir)
+
+    ### set chown and permissions for target dirs (ext related)
+
+    Utils.set_perms(dirs=(
+        env_mgr.ccnet_dir,
+        env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+        env_mgr.central_config_dir,
+        env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
+        env_mgr.pro_data_dir,
+        env_mgr.seafile_logs_dir,
+        env_mgr.install_path,
+        ),
+        group=keep_ini.get('system', '__OS_GROUP__'),
+        user=keep_ini.get('system', '__OS_USER__'),
+    )
+
+def deploy_system_conf():
+    """
+    Deploy keeper system confs
+    """
+
+    keep_ini = env_mgr.keeper_config
+
+
+    # create keeper log dir
+    Utils.must_mkdir(env_mgr.keeper_var_log_dir)
+
+    ### set chown and permissions for target dirs (system related)
+    Utils.set_perms(dirs=(
+        env_mgr.keeper_var_log_dir,
+        env_mgr.keeper_tmp_dir,
+        ),
+        group=keep_ini.get('system', '__OS_GROUP__'),
+        user=keep_ini.get('system', '__OS_USER__'),
+    )
+
+    # deploy common confs
+    deploy_file('system/nginx.conf', expand=True)
+    deploy_file('system/phpmyadmin.conf', expand=True)
+    deploy_file('system/rsyslog.conf', expand=True)
+    deploy_file('system/my.cnf', expand=True)
+    deploy_file('system/nagios.keeper.cfg')
+
+    # deploy http confs
+    deploy_http_conf()
+
+    # deploy APP node related confs
+    node_type = keep_ini.get('global', '__NODE_TYPE__')
+    if node_type == 'APP':
+        deploy_file('system/memcached.conf')
+        deploy_file('system/keepalived.conf', expand=True)
+    if node_type in ('BACKGROUND', 'SINGLE'):
+        deploy_file('system/cron.d.keeper@background', expand=True)
+        deploy_file('system/my.cnf@single', expand=True)
+        deploy_file('system/clamd.conf', expand=True)
+        deploy_file('system/clamav-daemon.service', expand=True)
+
+    # deploy CRON node conf
+    cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
+    if cron_node.lower() == 'true':
+        deploy_file('system/cron.d.keeper', expand=True)
+
+    # deploy keeper.service systemd
+    deploy_file('system/keeper.service')
+    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
+
+    # create system symlinks
+    do_links((
+        (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
+        (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
+    ))
 
 
 def do_deploy(args):
 
     if args.all:
+        """
+        Complete installation of the keeper on one node
+        """
 
         ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
@@ -679,63 +761,9 @@ def do_deploy(args):
         if args.yes:
             Utils.all = True
 
-        keep_ini = env_mgr.keeper_config
-
-        # deploy keeper.service systemd
-        deploy_file('system/keeper.service')
-        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
-
-        # deploy ext sources
         deploy_ext()
 
-
-        # create logging dirs
-        Utils.must_mkdir(env_mgr.seafile_logs_dir)
-        Utils.must_mkdir(env_mgr.keeper_var_log_dir)
-
-        ### set chown and permissions for target dires
-        env_mgr.read_seafile_conf_dir()
-        Utils.set_perms(dirs=(
-            env_mgr.ccnet_dir,
-            env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
-            env_mgr.central_config_dir,
-            env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
-            env_mgr.pro_data_dir,
-            env_mgr.seafile_logs_dir,
-            env_mgr.keeper_var_log_dir,
-            env_mgr.install_path,
-            env_mgr.keeper_tmp_dir,
-            ),
-            group=keep_ini.get('system', '__OS_GROUP__'),
-            user=keep_ini.get('system', '__OS_USER__'),
-        )
-
-        # deploy common confs
-        deploy_file('system/nginx.conf', expand=True)
-        deploy_file('system/phpmyadmin.conf', expand=True)
-        deploy_file('system/rsyslog.conf', expand=True)
-        deploy_file('system/my.cnf', expand=True)
-        deploy_file('system/nagios.keeper.cfg')
-
-        # deploy http confs
-        deploy_http_conf()
-
-        # deploy APP node related confs
-        node_type = keep_ini.get('global', '__NODE_TYPE__')
-        if node_type == 'APP':
-            deploy_file('system/memcached.conf')
-            deploy_file('system/keepalived.conf', expand=True)
-        if node_type in ('BACKGROUND', 'SINGLE'):
-            deploy_file('system/cron.d.keeper@background', expand=True)
-            deploy_file('system/my.cnf@single', expand=True)
-            deploy_file('system/clamd.conf', expand=True)
-            deploy_file('system/clamav-daemon.service', expand=True)
-
-        # deploy CRON node conf
-        cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
-        if cron_node.lower() == 'true':
-            deploy_file('system/cron.d.keeper', expand=True)
-
+        deploy_system_conf()
 
 
     elif args.conf:
@@ -744,6 +772,8 @@ def do_deploy(args):
         deploy_ext()
     elif args.http_conf:
         deploy_http_conf()
+    elif args.system_conf:
+        deploy_system_conf()
     else:
         if args.directory:
             for path in args.directory:
@@ -826,8 +856,9 @@ def main():
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
     parser_deploy.add_argument('--ext', help='deploy KEEPER ext sources', action='store_true')
-    parser_deploy.add_argument('--conf', help='deploy KEEPER configurations', action='store_true')
-    parser_deploy.add_argument('--http-conf', help='deploy http-conf', action='store_true')
+    parser_deploy.add_argument('--conf', help='deploy conf files in KEEPER ~ext/conf directory', action='store_true')
+    parser_deploy.add_argument('--http-conf', help='deploy http-confs', action='store_true')
+    parser_deploy.add_argument('--system-conf', help='deploy all system conf files on the node, --http-conf is included', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
     parser_deploy.add_argument('-d', '--directory', help='deploy directory(s)', nargs='+')
 
