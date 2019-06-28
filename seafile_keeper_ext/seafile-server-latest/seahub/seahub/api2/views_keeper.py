@@ -94,7 +94,7 @@ def add_doi(request):
 
     if 'error' in metadata:
         return JsonResponse({
-            'msg': metadata.get('error') + ' Please checkout notifications for more details.',
+            'msg': metadata.get('error'),
             'status': 'error',
             })
 

@@ -84,7 +84,7 @@ You've got {{num}} new notices on {{ site_name }}:
                 {% elif notice.msg_type == 'doi_msg' %}
                 {% json_to_var notice.detail as doi_msg %}
                     {% if doi_msg.status == 'invalid' %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} Check <a href="{{ url_base }}/lib/{{ doi_msg.lib }}/file/{{doi_msg.archive_metadata}}" target="_new">{{ doi_msg.archive_metadata }}</a> for more details</p>
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} Check <a href="{{ url_base }}/lib/{{ doi_msg.lib }}/file/{{doi_msg.archive_metadata}}" target="_new">{{ doi_msg.archive_metadata }}</a> for more details.</p>
                     {% else %}
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
                     {% endif %}

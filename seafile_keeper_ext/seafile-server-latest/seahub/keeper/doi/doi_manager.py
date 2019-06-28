@@ -7,7 +7,7 @@ from seaserv import seafile_api, get_repo
 from seahub.api2.utils import json_response
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown
-from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute
+from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute, has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
 
 # Get an instance of a logger
@@ -21,27 +21,31 @@ def get_metadata(repo_id, user_email):
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_latest_commit_root_id(repo)
 
-    # exit if repo encrypted
-    if repo.encrypted:
-        return {
-            'error': 'Library is encrypted.'
-        }
-
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
+        msg = 'Can not assgin DOI if the library is system template destination.'
+        send_notification(msg, repo_id, 'error', user_email)
         return {
-            'error': 'The Library is system template destination.'
+            'error': msg,
         }
 
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
-        file = dir.lookup(ARCHIVE_METADATA_TARGET)
-
-        if not file:
+        if not has_at_least_one_creative_dirent(dir):
+            msg = "Can not assgin DOI if the library has no creative dirents."
+            send_notification(msg, repo_id, 'error', user_email)
             return {
-                'error': 'archive-metadata.md file not found.'
+                'error': msg,
             }
         LOGGER.info('Repo has creative dirents')
+
+        file = dir.lookup(ARCHIVE_METADATA_TARGET)
+        if not file:
+            msg = 'Can not assgin DOI if archive-metadata.md file is not filled.'
+            send_notification(msg, repo_id, 'error', user_email)
+            return {
+                'error': msg,
+            }
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
         doi_dict = parse_markdown(file.get_content())
@@ -50,7 +54,7 @@ def get_metadata(repo_id, user_email):
         doi_msg = validate(doi_dict, repo_id, user_email)
         if len(doi_msg) > 0:
             return {
-                'error': ' '.join(doi_msg),
+                'error': ' '.join(doi_msg) + ' Please checkout notifications for more details.',
             }
         return doi_dict
 
@@ -64,9 +68,9 @@ def generate_metadata_xml(doi_dict):
     kernelSchema = "http://schema.datacite.org/meta/kernel-4/metadata.xsd"
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
 
-    title = doi_dict.get('Title')
-    creator = doi_dict.get('Author')
-    description = doi_dict.get('Description')
+    title = process_special_char(doi_dict.get('Title'))
+    creator = process_special_char(doi_dict.get('Author'))
+    description = process_special_char(doi_dict.get('Description'))
     publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
     year = doi_dict.get('Year')
     resource_type = doi_dict.get("Resource Type")
@@ -183,6 +187,18 @@ def ot(tag):
 
 def ct(tag):
     return "</" + tag + ">"
+
+def process_special_char(arg):
+    return '%s' % (
+        arg
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('\\', '\\\\')
+        .replace('"', '\\"')
+        .replace('$', '\\$')
+        .replace('`', '\\`')
+    )    
 
 def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link=''):
     # status: 'invalid', 'success', 'error'

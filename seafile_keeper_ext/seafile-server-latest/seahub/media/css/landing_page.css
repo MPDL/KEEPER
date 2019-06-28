@@ -9,7 +9,7 @@
 
 #logos{height:6%; width: auto; position:fixed; bottom:2px; left:2px; }
 
-#header{position:fixed; top:0%; left:0%; width: 100%; height:8%; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;}
+#header{position:fixed; top:0%; left:0%; width: 100%; height:57px; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;}
 #KEEPER_logo{height:6%; width: auto; position: fixed; top: 3px; left:2px;}
 
 #languages{position: fixed; top: 4%; right: 3%;}
