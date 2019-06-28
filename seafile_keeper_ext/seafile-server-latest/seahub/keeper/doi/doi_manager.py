@@ -194,10 +194,8 @@ def process_special_char(arg):
         .replace('&', '&amp;')
         .replace('<', '&lt;')
         .replace('>', '&gt;')
-        .replace('\\', '\\\\')
-        .replace('"', '\\"')
-        .replace('$', '\\$')
-        .replace('`', '\\`')
+        .replace('"', '&quot;')
+        .replace("'", "&apos;")
     )    
 
 def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link=''):
