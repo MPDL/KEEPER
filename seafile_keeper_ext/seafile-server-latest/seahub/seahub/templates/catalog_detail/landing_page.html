@@ -2,12 +2,8 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
-		<link rel="stylesheet" type="text/css" href="/media/css/seahub.min.css?t=1465786517" />
-		<link rel="stylesheet" type="text/css" href="/media/custom/__BRANDING_CSS__" />
 		<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}css/landing_page.css"/>
 		<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
-
-
 
 		<title>Landing Page</title>
 		<link rel="icon" type="image/x-icon" href="/media/img/favicon.png" />
@@ -37,9 +33,5 @@
 		{% endif %}
 
 	</body>
-		<!-- FOOTER -->		
-		<!--{% include "keeper_footer.html" %} -->
-		<div id="footer">
-			<img id="logos" src="{{MEDIA_URL}}img/catalog/logos.png"/>	
-		</div>
+		{% include "keeper_footer.html" %}
 </html>
