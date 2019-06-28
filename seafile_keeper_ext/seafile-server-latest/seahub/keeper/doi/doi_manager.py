@@ -19,7 +19,7 @@ def get_metadata(repo_id, user_email):
     """ Read metadata from libray root folder"""
 
     repo = seafile_api.get_repo(repo_id)
-    commit_id = get_lastest_commit_id(repo)
+    commit_id = get_latest_commit_root_id(repo)
 
     # exit if repo encrypted
     if repo.encrypted:
@@ -88,10 +88,14 @@ def generate_metadata_xml(doi_dict):
     xml += ct("resource")
     return xml
 
-def get_lastest_commit_id(repo):
+def get_latest_commit_root_id(repo):
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     return commit.root_id
+
+def get_latest_commit_id(repo):
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    return commits[0].id
 
 def validate(doi_dict, repo_id, user_email):
     LOGGER.info("""Validate the DOI mandatory fields and content...""")

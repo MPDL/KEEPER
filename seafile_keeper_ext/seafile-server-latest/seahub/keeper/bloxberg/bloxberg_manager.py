@@ -53,6 +53,11 @@ def get_file_by_path(repo_id, path):
         dir = dir.lookup(path)
     return dir
 
+def get_commit_id(repo_id):
+    repo = seafile_api.get_repo(repo_id)
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    return commits[0].id
+
 def get_commit_root_id(repo_id):
     repo = seafile_api.get_repo(repo_id)
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
@@ -60,13 +65,13 @@ def get_commit_root_id(repo_id):
     return commit.root_id
 
 def create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email):
-    commit_id = get_commit_root_id(repo_id)
+    commit_id = get_commit_id(repo_id)
     obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, repo_id, path, commit_id, created_time, user_email, checksum)
     send_notification(repo_id, path, transaction_id, created_time, user_email)
     return obj_id
 
 def certified_with_keeper(repo_id, path):
-    commit_id = get_commit_root_id(repo_id)
+    commit_id = get_commit_id(repo_id)
     return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
 
 def send_notification(repo_id, path, transaction_id, timestamp, user_email):

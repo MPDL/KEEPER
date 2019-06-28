@@ -11,7 +11,7 @@ from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
-from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_lastest_commit_id, send_notification
+from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification
 from keeper.models import CDC, DoiRepo
 
 from django.http import JsonResponse
@@ -99,7 +99,7 @@ def add_doi(request):
             })
 
     metadata_xml = generate_metadata_xml(metadata)
-    commit_id = get_lastest_commit_id(repo)
+    commit_id = get_latest_commit_id(repo)
 
     url_landing_page = SERVICE_URL + '/doi/libs/' + repo_id + '/' + commit_id
     response_doxi = request_doxi(url_landing_page, metadata_xml)
