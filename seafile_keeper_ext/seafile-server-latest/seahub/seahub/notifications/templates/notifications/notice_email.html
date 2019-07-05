@@ -23,6 +23,8 @@ You've got {{num}} new notices on {{ site_name }}:
         <tr>
             {% if notice.msg_type  == 'bloxberg_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            {% elif notice.msg_type  == 'doi_msg' %}
+            <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/KeeperAvatar.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
             {% else %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:top;"><img src="{{notice.avatar_src}}" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
             {% endif %}

@@ -110,7 +110,7 @@ def add_doi(request):
             logger.info(doi)
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = 'Create DOI successfully. '
+            msg = 'DOI successfully created: '
             send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page)
             return JsonResponse({
                 'msg': msg + doi,

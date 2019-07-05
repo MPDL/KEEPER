@@ -32,12 +32,12 @@ def get_metadata(repo_id, user_email):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = "Can not assgin DOI if the library has no creative dirents."
+            msg = "Can not assgin DOI if the library has no content."
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
             }
-        LOGGER.info('Repo has creative dirents')
+        LOGGER.info('Repo has content')
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
@@ -54,7 +54,7 @@ def get_metadata(repo_id, user_email):
         doi_msg = validate(doi_dict, repo_id, user_email)
         if len(doi_msg) > 0:
             return {
-                'error': ' '.join(doi_msg) + ' Please checkout notifications for more details.',
+                'error': ' '.join(doi_msg) + ' Please check out notifications for more details.',
             }
         return doi_dict
 
