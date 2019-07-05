@@ -410,7 +410,10 @@ class EnvManager(object):
                 'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
                 'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
                 'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
+                'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
+                'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
                 'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
                 'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
                 'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
@@ -725,6 +728,9 @@ def deploy_system_conf():
     if node_type == 'APP':
         deploy_file('system/memcached.conf')
         deploy_file('system/keepalived.conf', expand=True)
+        deploy_file('system/memcached.service.d.local.conf', expand=True)
+        deploy_file('system/journald.conf', expand=True)
+        deploy_file('system/keeper-oos-log.service', expand=True)
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/my.cnf@single', expand=True)
@@ -745,6 +751,17 @@ def deploy_system_conf():
         (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
         (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
     ))
+
+
+def do_services():
+
+    Utils.run('systemctl daemon-reload')
+    Utils.run('systemctl restart rsyslog')
+    Utils.run('systemctl restart systemd-journald')
+    Utils.run('systemctl restart memcached')
+    Utils.run('systemctl enable keeper-oos-log')
+    Utils.run('systemctl start keeper-oos-log')
+
 
 
 def do_deploy(args):
