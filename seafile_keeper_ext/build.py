@@ -753,7 +753,7 @@ def deploy_system_conf():
     ))
 
 
-def do_services():
+def run_services():
 
     Utils.run('systemctl daemon-reload')
     Utils.run('systemctl restart rsyslog')
@@ -781,6 +781,8 @@ def do_deploy(args):
         deploy_ext()
 
         deploy_system_conf()
+
+        run_services()
 
 
     elif args.conf:
