@@ -83,6 +83,7 @@ Max-Planck-Institut für marine Mikrobiologie	Bremen	mpi-bremen.de
 Max-Planck-Institut für Mathematik	Bonn	mpim-bonn.mpg.de
 Max-Planck-Institut für Mathematik in den Naturwissenschaften	Leipzig	mis.mpg.de
 Max-Planck-Institut für medizinische Forschung	Heidelberg	mpimf-heidelberg.mpg.de
+Max-Planck-Institut für medizinische Forschung	Heidelberg	mr.mpg.de
 Max-Planck-Institut für Menschheitsgeschichte	Jena	shh.mpg.de	Vorgängerinstitut = MPI Ökonomik
 Max-Planck-Institut für Meteorologie	Hamburg	zmaw.de
 Max-Planck-Institut für Meteorologie	Hamburg	mpimet.mpg.de

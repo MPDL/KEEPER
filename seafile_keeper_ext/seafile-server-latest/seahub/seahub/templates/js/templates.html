@@ -84,6 +84,14 @@
     <button type="submit" class="submit">{% trans "Submit" %}</button>
 </form>
 </script>
+<script type="text/template" id="add-doi-dialog-tmpl">
+    <form action="" method="">
+        <h3 id="dialogTitle">{% trans "Label current state" %}</h3>
+        <input type="hidden" name="labels" class="w100" />
+        <p class="error hide"></p>
+        <button type="submit" class="submit">{% trans "Submit" %}</button>
+    </form>
+</script>
 <script type="text/template" id="repo-tmpl">
     <td>
         <img src="<%= icon_url %>" title="<%= icon_title %>" alt="<%= icon_title %>" width="24" />
@@ -113,6 +121,7 @@
                     <% if (app.pageOptions.enable_repo_snapshot_label) { %>
                     <li><a class="op js-add-label" href="#">{% trans "Label current state" %}</a></li>
                     <% } %>
+                    <li><a class="op js-add-doi-label" href="#">Assign DOI to current state</a></li>
                 </ul>
             </div>
         </div>

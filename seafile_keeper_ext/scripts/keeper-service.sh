@@ -155,6 +155,7 @@ case "$1" in
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop
+                    sleep 3
                     echo "Starting..."
                 fi
                 sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
@@ -171,6 +172,7 @@ case "$1" in
                 ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
+            $0 status
         ;;
         stop)
             echo "Stopping..."

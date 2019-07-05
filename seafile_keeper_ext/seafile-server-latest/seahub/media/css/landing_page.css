@@ -1,0 +1,115 @@
+#footer{
+	position:fixed; bottom: 0%; left:0%;
+	width:100%; height: 8%;
+	background-color: #EBEBEB;}
+
+#body{
+	background-color: #f4f4f4;
+}
+
+#logos{height:6%; width: auto; position:fixed; bottom:2px; left:2px; }
+
+#header{position:fixed; top:0%; left:0%; width: 100%; height:55px; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;}
+#KEEPER_logo{height:43px; width: auto; position: fixed; top: 3px; left:2px;}
+
+#languages{position: fixed; top: 4%; right: 3%;}
+
+a{text-decoration: none; outline: none; color: black;}
+
+
+
+
+.separator{border-top: 1px solid #C8D0CF;}
+
+.table_title{font-weight: 500; color: #777C7B;}
+
+
+
+@media only screen and (max-width:950px){
+	#cared{width:20px; height: auto; position: fixed;right: 5%; top: 15%;}
+	#open_access{width:20px; height: auto; position:fixed; right: 5%; top:25%;}
+	td{font-size: 10pt;}
+}
+
+@media only screen and (min-width:950px){
+	td{font-size: 12pt;}
+	#cared{width:40px; height: auto; position: fixed;right: 10%; top: 25%;}
+	#open_access{width:40px; height: auto; position:fixed; right: 10%; top:45%;}
+}
+
+#title_ctn{width:90%; height: 4%; position:fixed; top:15%; left:5%;}
+.doi_root{
+	margin-top: 6%;
+	background: #fff;
+}
+
+.doi_title{
+	margin-top: 8%;
+	margin-bottom: 1.2rem;
+	color:#57a5b8;
+}
+
+.doi_tombstone_title{
+	margin-top: 8%;
+	margin-bottom: 1.2rem;
+}
+
+.doi_author{
+	font-weight: normal;
+	margin-bottom: 1.2rem;
+}
+
+.doi_institute{
+	font-weight: normal;
+	margin-bottom: 1.2rem;
+}
+
+.doi_link{
+	color:#57a5b8;
+}
+
+.doi_contact{
+	color:#57a5b8;
+}
+.doi_download{
+	background: #fff;
+	color:#57a5b8;
+}
+
+/* FOOTER */
+#lg_footer {
+	position:fixed; bottom: 0%; left:0%;
+	width:100%;
+	font-size: 13px;
+}
+
+#lg_footer {
+		bottom: 0;
+		padding-bottom: 0px;
+}
+
+#lg_footer .container {
+		border-top: 1px solid #dcdcdc;
+		padding-top: 15px;
+}
+
+
+#lg_footer div a {
+	color: #575859 !important;
+	font-size: 13px;
+}
+
+#lg_footer div h4 {
+	color:#57a5b8 !important;
+	font-size: 14.3px;
+}
+
+#lg_footer img {
+		height: 30px;
+		width: auto;
+}
+
+
+#seafile-credits {
+	text-align: center;
+}

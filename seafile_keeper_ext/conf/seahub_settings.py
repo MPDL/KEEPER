@@ -124,7 +124,11 @@ LOGGING = {
 }
 
 # Debug mode
-DEBUG = False
+DEBUG = True
+
+
+# KEEPER Service URL
+SERVICE_URL = '__SERVICE_URL__'
 
 ##########################################################################
 #### Web server <-> file server
@@ -490,6 +494,8 @@ DESKTOP_CUSTOM_BRAND = 'KEEPER'
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = '__EMAIL_HOST__'        # smpt server
+EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
+EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 EMAIL_PORT = '__EMAIL_PORT__'
 ###### DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
@@ -552,6 +558,11 @@ ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 
 # default KEEPER library name
 KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
+
+# Keeper DOI integration
+DOI_SERVER = '__DOI_SERVER__'
+DOI_USER = '__DOI_USER__'
+DOI_PASSWORD = '__DOI_PASSWORD__'
 
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
