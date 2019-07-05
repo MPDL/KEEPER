@@ -5,7 +5,8 @@
 #   When a 'set' action is found, it queries the memcached for details then it outputs to syslog (local1.info, label: keeper-oos) the following information
 #   about the wopi access token: timestamp, library, user, file, extension.
 
-memcached_host='__MEMCACHED_HOST__'
+MS='__MEMCACHED_SERVER__'
+memcached_host=${MS%:*}
 
 journalctl -u memcached -f | grep --line-buffered wopi_access_token | grep --line-buffered set | awk '{print $1" "$2" "$3" "$8}; system("")' | while read line
 do
