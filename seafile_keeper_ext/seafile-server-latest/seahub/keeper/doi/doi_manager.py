@@ -23,7 +23,7 @@ def get_metadata(repo_id, user_email):
 
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
-        msg = 'Can not assgin DOI if the library is system template destination.'
+        msg = 'Cannot assign DOI if the library is system template destination.'
         send_notification(msg, repo_id, 'error', user_email)
         return {
             'error': msg,
@@ -32,7 +32,7 @@ def get_metadata(repo_id, user_email):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = "Can not assgin DOI if the library has no content."
+            msg = "Cannot assign DOI if the library has no content."
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -41,7 +41,7 @@ def get_metadata(repo_id, user_email):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = 'Can not assgin DOI if archive-metadata.md file is not filled.'
+            msg = 'Cannot assign DOI if archive-metadata.md file is not filled.'
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -131,7 +131,7 @@ def validate(doi_dict, repo_id, user_email):
     resource_type_valid = validate_resource_type(doi_dict.get("Resource Type"))
     if not resource_type_valid:
         invalid_fields.add('Resource Type')
-    
+
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid
     if not valid and user_email is not None:
         if len(invalid_fields) > 1:
@@ -196,7 +196,7 @@ def process_special_char(arg):
         .replace('>', '&gt;')
         .replace('"', '&quot;')
         .replace("'", "&apos;")
-    )    
+    )
 
 def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link=''):
     # status: 'invalid', 'success', 'error'
