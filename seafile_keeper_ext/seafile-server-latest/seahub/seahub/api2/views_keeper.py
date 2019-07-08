@@ -81,6 +81,9 @@ def request_doxi(shared_link, doxi_payload):
     except ConnectionError as e:
         logger.error(str(e))
 
+def get_landing_page_url(repo_id, commit_id):
+    return "{}/doi/libs/{}/{}".format(SERVICE_URL, repo_id, commit_id)
+
 def add_doi(request):
     repo_id = request.GET.get('repo_id', None)
     user_email = request.user.username
@@ -88,7 +91,7 @@ def add_doi(request):
     doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
     if doi_repos:
         msg = 'This library already has a DOI. '
-        url_landing_page = SERVICE_URL + '/doi/libs/' + doi_repos[0].repo_id + '/' + doi_repos[0].commit_id
+        url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
         send_notification(msg, repo_id, 'error', user_email, doi_repos[0].doi, url_landing_page)
         return JsonResponse({
             'msg': msg + doi_repos[0].doi,
@@ -106,7 +109,7 @@ def add_doi(request):
     metadata_xml = generate_metadata_xml(metadata)
     commit_id = get_latest_commit_id(repo)
 
-    url_landing_page = SERVICE_URL + '/doi/libs/' + repo_id + '/' + commit_id
+    url_landing_page = get_landing_page_url(repo_id, commit_id)
     response_doxi = request_doxi(url_landing_page, metadata_xml)
 
     if response_doxi is not None:
