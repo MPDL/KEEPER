@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from seahub import settings
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, SERVICE_URL
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, SERVICE_URL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
@@ -20,7 +20,7 @@ from django.shortcuts import render
 import logging
 import datetime
 import requests
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, Timeout
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +71,13 @@ def request_doxi(shared_link, doxi_payload):
         user=DOI_USER
         pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml'}
-        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload)
+        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload, timeout=DOI_TIMEOUT)
         return response
+    except Timeout:
+        return JsonResponse({
+            'msg': 'DOXI request timeout',
+            'status': 'error',
+            }, status=408)
     except ConnectionError as e:
         logger.error(str(e))
 
@@ -116,6 +121,13 @@ def add_doi(request):
                 'msg': msg + doi,
                 'status': 'success',
                 })
+        elif response_doxi.status_code == 408:
+            msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
+            send_notification(msg, repo_id, 'error', user_email)
+            return JsonResponse({
+                'msg': msg,
+                'status': 'error'
+            })
         else:
             logger.info(response_doxi.status_code)
             logger.info(response_doxi.text)
