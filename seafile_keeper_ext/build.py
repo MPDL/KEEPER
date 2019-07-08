@@ -539,6 +539,12 @@ def expand_properties(content, path):
     if is_background:
         content = re.sub("external_es_server.*?\n", "", content)
 
+    #remove email smpt auth params for app nodes
+    if not is_background and path.endswith('seahub_settings.py'):
+        content = re.sub("EMAIL_HOST_USER.*?\n", "", content)
+        content = re.sub("EMAIL_HOST_PASSWORD.*?\n", "", content)
+
+
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
         content = re.sub("backup_url.*?\n", "", content)

@@ -5486,6 +5486,11 @@ msgstr "New Department Library"
 msgid "Label current state"
 msgstr "Label current state"
 
+#: KEEPER
+msgid "Assign DOI to current state"
+msgstr "Assign DOI to current state"
+
+
 #: seahub/templates/js/templates.html:100
 #: seahub/templates/js/templates.html:151
 #: seahub/templates/js/templates.html:276

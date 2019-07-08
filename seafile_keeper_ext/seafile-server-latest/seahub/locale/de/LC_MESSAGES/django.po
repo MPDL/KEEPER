@@ -5345,6 +5345,13 @@ msgstr "Neue Bereichs-Bibliothek"
 msgid "Label current state"
 msgstr "Bezeichnung aktueller Zustand"
 
+
+# KEEPER
+msgid "Assign DOI to current state"
+msgstr "DOI der aktuellen Version zuweisen"
+
+
+
 #: seahub/templates/js/templates.html:100
 #: seahub/templates/js/templates.html:151
 #: seahub/templates/js/templates.html:276
