@@ -256,6 +256,7 @@ class Command(BaseCommand):
                 str(datetime.datetime.now()), user_language))
 
             notices = []
+            num_keeper_notices = 0
             for notice in unseen_notices:
                 logger.info('Processing unseen notice: [%s]' % (notice))
 
@@ -302,7 +303,8 @@ class Command(BaseCommand):
                 elif notice.is_guest_invitation_accepted_msg():
                     notice = self.format_guest_invitation_accepted_msg(notice) 
 
-                if notice is None or notice.msg_type  == "keeper_cdc_msg" or notice.msg_type  == "bloxberg_msg":
+                if notice is None or notice.msg_type  == "keeper_cdc_msg" or notice.msg_type  == "bloxberg_msg" or notice.msg_type == "doi_suc_msg":
+                    num_keeper_notices += 1
                     continue
 
                 notices.append(notice)
@@ -314,7 +316,7 @@ class Command(BaseCommand):
             to_user = contact_email  # use contact email if any
             c = {
                 'to_user': to_user,
-                'notice_count': count,
+                'notice_count': count - num_keeper_notices,
                 'notices': notices,
                 }
 

@@ -48,7 +48,7 @@
                 {% json_to_var notice.detail as bloxberg_msg %}
                 <p class="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>
 
-                {% elif notice.msg_type == "doi_msg" %}
+                {% elif notice.msg_type == "doi_msg" or notice.msg_type == "doi_suc_msg" %}
                 {% json_to_var notice.detail as doi_msg %}
                     {% if doi_msg.status == 'invalid' %}
                     <p class="brief">{{ doi_msg.message }} Check <a href="{{ url_base }}/lib/{{ doi_msg.lib }}/file/{{doi_msg.archive_metadata}}" target="_new">{{ doi_msg.archive_metadata }}</a> for more details</p>

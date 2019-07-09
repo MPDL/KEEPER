@@ -116,7 +116,8 @@ def add_doi(request):
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
             msg = 'DOI successfully created: '
-            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page)
+            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)                
+            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
                 'msg': msg + doi,
                 'status': 'success',
@@ -137,6 +138,14 @@ def add_doi(request):
                 'msg': msg,
                 'status': 'error'
                 })
+    else:
+        msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
+        send_notification(msg, repo_id, 'error', user_email)
+        return JsonResponse({
+            'msg': msg,
+            'status': 'error'
+        })
+
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
