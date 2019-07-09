@@ -12,26 +12,28 @@
 	<body>		
 		<!-- HEADER -->
 		<div id="header">
-			<img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" title="Landing Page"/>
+			<a href="/"><img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" title="Landing Page"/></a>
 		</div>
 
-		<div class="container doi-root">
-			<h1 class="doi_title">{{doi_dict.Title}}</h1> 
-			<h3 class="doi_author">{{doi_dict.Author}}({{doi_dict.Year}})</h3>
-			<p class="doi_institute">{{doi_dict.Institute}}</p>
+		<div class="container doi_root">
+			<div>
+				{% if cdc == True %}
+				<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" />
+				{% endif %}
+			</div>
+			<div>
+				<h1 class="doi_title">{{doi_dict.Title}}</h1>
+				<p class="doi_desc">{{doi_dict.Description}}</p>
 
-				<!-- TABLE -->
-			<div><b>DOI: </b><a class="doi_link" href="{{doi}}">{{doi}}</a></div>
-			<div><b>Published: </b>{{doi_dict.Year}}</div>
-			<div><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
+				<div class="doi_table_row"><b>Author: </b>{{doi_dict.Author}}</div>
+				<div class="doi_table_row"><b>Institute: </b>{{doi_dict.Institute}}</div>
+				<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
+				<div class="doi_table_row"><b>DOI: </b><a class="doi_link" href="{{doi}}">{{doi}}</a></div>
+				<div class="doi_table_row"><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
 
-			<a class="doi_download" href="{{share_link}}">Link to dataset</a>
-		</div>	
-
-		{% if cdc == True %}
-		<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" />
-		{% endif %}
-
+				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a><small> *If you don't have access to the dataset, please get in touch with the listed contact.</samll></div>
+			</div>
+		</div>
 	</body>
 		{% include "keeper_footer.html" %}
 </html>
