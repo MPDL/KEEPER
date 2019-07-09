@@ -26,42 +26,43 @@ a{text-decoration: none; outline: none; color: black;}
 
 
 @media only screen and (max-width:950px){
-	#cared{width:20px; height: auto; position: fixed;right: 5%; top: 15%;}
-	#open_access{width:20px; height: auto; position:fixed; right: 5%; top:25%;}
+	#cared{width:20px; height: auto; margin-top: 8px; margin-right: 32px}
+	#open_access{width:20px; height: auto; position:fixed; left: 5%; top:25%;}
 	td{font-size: 10pt;}
 }
 
 @media only screen and (min-width:950px){
 	td{font-size: 12pt;}
-	#cared{width:40px; height: auto; position: fixed;right: 10%; top: 25%;}
-	#open_access{width:40px; height: auto; position:fixed; right: 10%; top:45%;}
+	#cared{width:40px; height: auto; margin-top: 8px; margin-right: 48px}
+	#open_access{width:40px; height: auto; position:fixed; left: 10%; top:45%;}
 }
 
 #title_ctn{width:90%; height: 4%; position:fixed; top:15%; left:5%;}
 .doi_root{
 	margin-top: 6%;
 	background: #fff;
+	display: flex;
+	justify-content: flex-start;
 }
 
 .doi_title{
-	margin-top: 8%;
-	margin-bottom: 1.2rem;
+	margin-bottom: 1.5rem;
 	color:#57a5b8;
 }
 
 .doi_tombstone_title{
 	margin-top: 8%;
-	margin-bottom: 1.2rem;
+	margin-bottom: 1.5rem;
 }
 
-.doi_author{
+.doi_table_row{
 	font-weight: normal;
-	margin-bottom: 1.2rem;
+	margin-bottom: 0.3rem;
 }
 
-.doi_institute{
+.doi_desc{
 	font-weight: normal;
-	margin-bottom: 1.2rem;
+	margin-bottom: 2.4rem;
 }
 
 .doi_link{
@@ -71,9 +72,17 @@ a{text-decoration: none; outline: none; color: black;}
 .doi_contact{
 	color:#57a5b8;
 }
+
+.doi_source{
+	display: flex;
+	justify-content: flex-start;
+	align-items: flex-end;
+}
+
 .doi_download{
 	background: #fff;
 	color:#57a5b8;
+	margin-right: 0.5rem
 }
 
 /* FOOTER */
