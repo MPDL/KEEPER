@@ -1,29 +1,7 @@
-#footer{
-	position:fixed; bottom: 0%; left:0%;
-	width:100%; height: 8%;
-	background-color: #EBEBEB;}
-
-#body{
-	background-color: #f4f4f4;
-}
-
 #logos{height:6%; width: auto; position:fixed; bottom:2px; left:2px; }
 
 #header{position:fixed; top:0%; left:0%; width: 100%; height:55px; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;}
 #KEEPER_logo{height:43px; width: auto; position: fixed; top: 3px; left:2px;}
-
-#languages{position: fixed; top: 4%; right: 3%;}
-
-a{text-decoration: none; outline: none; color: black;}
-
-
-
-
-.separator{border-top: 1px solid #C8D0CF;}
-
-.table_title{font-weight: 500; color: #777C7B;}
-
-
 
 @media only screen and (max-width:950px){
 	#cared{width:20px; height: auto; margin-top: 8px; margin-right: 32px}
@@ -37,12 +15,21 @@ a{text-decoration: none; outline: none; color: black;}
 	#open_access{width:40px; height: auto; position:fixed; left: 10%; top:45%;}
 }
 
-#title_ctn{width:90%; height: 4%; position:fixed; top:15%; left:5%;}
+html, body {
+	height: 100%;
+	margin: 0;
+}
+
+.tombstone_root {
+	min-height: 100%;
+}
+
 .doi_root{
 	margin-top: 6%;
 	background: #fff;
 	display: flex;
 	justify-content: flex-start;
+	margin-bottom: 20em;
 }
 
 .doi_title{
@@ -77,6 +64,7 @@ a{text-decoration: none; outline: none; color: black;}
 	display: flex;
 	justify-content: flex-start;
 	align-items: flex-end;
+	margin-bottom: -0.2em;
 }
 
 .doi_download{
@@ -87,7 +75,6 @@ a{text-decoration: none; outline: none; color: black;}
 
 /* FOOTER */
 #lg_footer {
-	position:fixed; bottom: 0%; left:0%;
 	width:100%;
 	font-size: 13px;
 }
