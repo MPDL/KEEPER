@@ -12,13 +12,20 @@
 	<body>
 		<!-- HEADER -->
 		<div id="header">
-			<img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" />
+			<a href="/"><img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" /></a>
 		</div>
 
 		<div class="container">
 			<h3 class="doi_tombstone_title">Dataset does not exist anymore: <b>{{doi_dict.Title}}</b></h3> 
-			<p> The dataset with identifier <b class="doi_link">{{doi}}</b> was removed.</p>
-		</div>	
+			<p> The dataset with identifier <strong class="doi_link">{{doi}}</strong> was removed along with removal of the library <strong>{{library_name}}</strong>.</p>
+
+			<div class="doi_table_row"><b>Title: </b>{{doi_dict.Title}}</div>
+			<div class="doi_table_row"><b>Description: </b>{{doi_dict.Description}}</div>
+			<div class="doi_table_row"><b>Author: </b>{{doi_dict.Author}}</div>
+			<div class="doi_table_row"><b>Institute: </b>{{doi_dict.Institute}}</div>
+			<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
+		</div>
+
 
 	</body>
 	{% include "keeper_footer.html" %}
