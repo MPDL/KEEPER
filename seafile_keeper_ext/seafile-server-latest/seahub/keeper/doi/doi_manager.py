@@ -9,6 +9,7 @@ from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown
 from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute, has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
+from django.utils.translation import ugettext as _
 
 # Get an instance of a logger
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ def get_metadata(repo_id, user_email):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = "Cannot assign DOI if the library has no content."
+            msg = _(u'Cannot assign DOI if the library has no content.')
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -41,7 +42,7 @@ def get_metadata(repo_id, user_email):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = 'Cannot assign DOI if archive-metadata.md file is not filled.'
+            msg = _(u'Cannot assign DOI if archive-metadata.md file does not exist.')
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -54,7 +55,7 @@ def get_metadata(repo_id, user_email):
         doi_msg = validate(doi_dict, repo_id, user_email)
         if len(doi_msg) > 0:
             return {
-                'error': ' '.join(doi_msg) + ' Please check out notifications for more details.',
+                'error': ' '.join(doi_msg) + ' ' + _(u'Please check out notifications for more details.'),
             }
         return doi_dict
 
@@ -135,9 +136,9 @@ def validate(doi_dict, repo_id, user_email):
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid
     if not valid and user_email is not None:
         if len(invalid_fields) > 1:
-            msg =  ', '.join(invalid_fields) + ' fields are either invalid or not filled.'
+            msg =  _(u'%(fields)s fields are either invalid or not filled.') % { 'fields': ', '.join(invalid_fields) }
         elif len(invalid_fields) == 1:
-            msg =  invalid_fields.pop() + ' field is either invalid or not filled.'
+            msg =  _(u'%(field)s field is either invalid or not filled.') % { 'field': invalid_fields.pop() }
         doi_msg.append(msg)
         send_notification(doi_msg, repo_id, 'invalid', user_email)
     return doi_msg

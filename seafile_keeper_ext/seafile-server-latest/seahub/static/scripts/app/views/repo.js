@@ -447,9 +447,13 @@ define([
         addDoi: function(event) {
             var _this = this;
             this.togglePopup(); // close the popup
-
             var repo_name = _this.model.get('name')
-            var $form = $('<form action="" method=""><h3 id="dialogTitle">Assign DOI to <span style="color:#57a5b8;">' + repo_name + '</span></h3><p>Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library.</p><button type="submit" class="submit">Assign DOI</button></form>');
+            var dialogTitle = gettext("Assign DOI to {library_name}").replace('{library_name}',
+                '<span style="color:#57a5b8;">' + repo_name + '</span>'            
+            ); 
+            var dialogContent = gettext("Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library.");
+            var dialogButton = gettext('Assign DOI'); 
+            var $form = $('<form action="" method=""><h3 id="dialogTitle">' + dialogTitle + '</h3><p>' + dialogContent + '</p><button type="submit" class="submit">' + dialogButton + '</button></form>');
 
             var $el = $('<div><span class="loading-icon loading-tip"></span></div>');
             $el.modal({focus:false, minWidth: 400});

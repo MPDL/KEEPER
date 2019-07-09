@@ -824,8 +824,8 @@ def do_generate(args):
         Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
         Utils.info('Generate i18n...')
-        Utils.run("make locale-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
-        Utils.run("make statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        Utils.run("make locale-keeper statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        # Utils.run("make statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
         Utils.info('Done.')
     elif args.min_css:
         Utils.info('Generate seahub.min.css...')
