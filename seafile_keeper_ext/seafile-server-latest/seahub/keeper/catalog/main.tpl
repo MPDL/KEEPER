@@ -168,6 +168,7 @@
                         <p>%author%</p>
                         %year%
                         <p>Contact: %contact%</p>
+                        %doi%
                     </div>
                     {/dataset}
                     {dataset_certified}
@@ -178,8 +179,13 @@
                         <p>%author%</p>
                         %year%
                         <p>Contact: %contact%</p>
+                        %doi%
                     </div>
                     {/dataset_certified}
+
+                    {fdoi}
+                        <p>DOI: <a href="%doi%">%doi%</a></p>
+                    {/fdoi}
 
                     {fyear}
                     <p>Year: %year%</p>

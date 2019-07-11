@@ -26,6 +26,7 @@ from django.core.cache import cache
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
 
+
 #########################
 #                       #
 #   start config vars   #
@@ -299,11 +300,14 @@ def application(env, start_response):
                 if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
                     slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
 
+                slots['doi'] = ''
+                if ('doi' in tmpresult):
+                    slots['doi'] = tmpl.format('fdoi', doi=tmpresult['doi'])
+
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)
                 else:
                     main_layer.write_layer('dataset', **slots)
-
 
 
             # load pagination into template
