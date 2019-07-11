@@ -154,7 +154,9 @@ def remove_catalog_and_cdc_entry(sender, **kwargs):
     logging.info("Repo deleted, id: %s" % repo_id)
     try:
         Catalog.objects.delete_by_repo_id(repo_id)
-        CDC.objects.get(repo_id=repo_id).delete()
+        cdc = CDC.objects.get(repo_id=repo_id)
+        if cdc:
+            cdc.delete()
     except Exception:
         logging.error(traceback.format_exc())
 
