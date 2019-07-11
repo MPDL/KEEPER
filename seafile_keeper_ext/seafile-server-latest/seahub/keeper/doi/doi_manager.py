@@ -55,7 +55,8 @@ def get_metadata(repo_id, user_email):
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
         doi_dict = parse_markdown(file.get_content())
-        ## add hardcoded DOI metadata, TODO: will be editable in next DOI releases
+        ## Add hardcoded DOI metadata
+        ## TODO: will be editable in next DOI releases
         doi_dict.update({
             'Publisher': PUBLISHER,
             'Resource Type': RESOURCE_TYPE
@@ -78,6 +79,9 @@ def generate_metadata_xml(doi_dict):
     kernelNamespace = "http://datacite.org/schema/kernel-4"
     kernelSchema = "http://schema.datacite.org/meta/kernel-4/metadata.xsd"
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
+
+    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
+    resource_type = "Library"
 
     title = process_special_char(doi_dict.get('Title'))
     creator = process_special_char(doi_dict.get('Author'))
@@ -119,7 +123,7 @@ def validate(doi_dict, repo_id, user_email):
 
     # 1. check mandatory fields
     # todo add more mandatory fields
-    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute', 'Resource Type']
+    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute']
     s1 = set(doi_dict.keys())
     s2 = set(doi_headers_mandatory)
 
