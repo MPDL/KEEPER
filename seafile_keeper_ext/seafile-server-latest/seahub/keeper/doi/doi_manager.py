@@ -71,12 +71,13 @@ def generate_metadata_xml(doi_dict):
     kernelSchema = "http://schema.datacite.org/meta/kernel-4/metadata.xsd"
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
 
+    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
+    resource_type = "Library"
+
     title = process_special_char(doi_dict.get('Title'))
     creator = process_special_char(doi_dict.get('Author'))
     description = process_special_char(doi_dict.get('Description'))
-    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
     year = doi_dict.get('Year')
-    resource_type = doi_dict.get("Resource Type")
     prev_doi = None
 
     header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + br() + "<resource xmlns=\"" + kernelNamespace + "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"" + kernelSchemaLocation + "\">" + br()
@@ -111,7 +112,7 @@ def validate(doi_dict, repo_id, user_email):
 
     # 1. check mandatory fields
     # todo add more mandatory fields
-    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute', 'Resource Type']
+    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute']
     s1 = set(doi_dict.keys())
     s2 = set(doi_headers_mandatory)
 
