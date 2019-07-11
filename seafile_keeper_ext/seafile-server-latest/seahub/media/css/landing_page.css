@@ -29,7 +29,8 @@ html, body {
 	background: #fff;
 	display: flex;
 	justify-content: flex-start;
-	margin-bottom: 20em;
+	padding-bottom: 20em;
+	min-height: 100%;
 }
 
 .doi_title{
