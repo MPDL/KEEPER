@@ -25,12 +25,13 @@ html, body {
 }
 
 .doi_root{
-	margin-top: 6%;
+	padding-top: 6%;
 	background: #fff;
 	display: flex;
 	justify-content: flex-start;
 	padding-bottom: 20em;
 	min-height: 100%;
+	padding-bottom: 208px;
 }
 
 .doi_title{
@@ -39,7 +40,7 @@ html, body {
 }
 
 .doi_tombstone_title{
-	margin-top: 8%;
+	padding-top: 8%;
 	margin-bottom: 1.5rem;
 }
 
@@ -78,6 +79,7 @@ html, body {
 #lg_footer {
 	width:100%;
 	font-size: 13px;
+	margin-top: -126px;
 }
 
 #lg_footer {
