@@ -18,6 +18,9 @@ TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 
+PUBLISHER = 'MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.'
+RESOURCE_TYPE = 'Library'
+
 def get_metadata(repo_id, user_email):
     """ Read metadata from libray root folder"""
 
@@ -50,8 +53,13 @@ def get_metadata(repo_id, user_email):
                 'error': msg,
             }
         owner = seafile_api.get_repo_owner(repo.id)
-        LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
+        LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
         doi_dict = parse_markdown(file.get_content())
+        ## add hardcoded DOI metadata, TODO: will be editable in next DOI releases
+        doi_dict.update({
+            'Publisher': PUBLISHER,
+            'Resource Type': RESOURCE_TYPE
+        })
         LOGGER.info(doi_dict)
 
         doi_msg = validate(doi_dict, repo_id, user_email)
@@ -74,9 +82,9 @@ def generate_metadata_xml(doi_dict):
     title = process_special_char(doi_dict.get('Title'))
     creator = process_special_char(doi_dict.get('Author'))
     description = process_special_char(doi_dict.get('Description'))
-    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
+    publisher = doi_dict.get('Publisher')
     year = doi_dict.get('Year')
-    resource_type = doi_dict.get("Resource Type")
+    resource_type = doi_dict.get('Resource Type')
     prev_doi = None
 
     header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + br() + "<resource xmlns=\"" + kernelNamespace + "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"" + kernelSchemaLocation + "\">" + br()
