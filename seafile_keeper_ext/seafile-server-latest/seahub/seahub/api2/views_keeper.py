@@ -121,11 +121,11 @@ def add_doi(request):
             logger.info(doi)
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = _(u'DOI successfully created')
+            msg = _(u'DOI successfully created') + ': '
             doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
             send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
-                'msg': msg + ': ' + doi,
+                'msg': msg + doi,
                 'status': 'success',
                 })
         elif response_doxi.status_code == 408:
