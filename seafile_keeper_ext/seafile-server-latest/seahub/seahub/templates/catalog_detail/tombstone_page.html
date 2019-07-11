@@ -15,17 +15,16 @@
 			<a href="/"><img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" /></a>
 		</div>
 
-		<div class="container">
-			<h3 class="doi_tombstone_title">Dataset does not exist anymore: <b>{{doi_dict.Title}}</b></h3> 
+		<div class="container tombstone_root">
+			<h3 class="doi_tombstone_title">Dataset does not exist anymore: <strong>{{doi_dict.Title}}</strong></h3> 
 			<p> The dataset with identifier <strong class="doi_link">{{doi}}</strong> was removed along with removal of the library <strong>{{library_name}}</strong>.</p>
 
-			<div class="doi_table_row"><b>Title: </b>{{doi_dict.Title}}</div>
-			<div class="doi_table_row"><b>Description: </b>{{doi_dict.Description}}</div>
-			<div class="doi_table_row"><b>Author: </b>{{doi_dict.Author}}</div>
-			<div class="doi_table_row"><b>Institute: </b>{{doi_dict.Institute}}</div>
-			<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
+			<div class="doi_table_row"><strong>Title: </strong>{{doi_dict.Title}}</div>
+			<div class="doi_table_row"><strong>Description: </strong>{{doi_dict.Description}}</div>
+			<div class="doi_table_row"><strong>Author: </strong>{{doi_dict.Author}}</div>
+			<div class="doi_table_row"><strong>Institute: </strong>{{doi_dict.Institute}}</div>
+			<div class="doi_table_row"><strong>Published: </strong>{{doi_dict.Year}}</div>
 		</div>
-
 
 	</body>
 	{% include "keeper_footer.html" %}
