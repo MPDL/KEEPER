@@ -18,11 +18,14 @@ You've got 1 new notice on {{ site_name }}:
             <th width="22%" style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size:13px; text-align: left; font-weight: normal; color: #9c9c9c;">{% trans "Time" %}</th>
         </tr>
         <tr>
+            {% if message_type  == 'doi_suc_msg' %}
+            <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/KeeperAvatar.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            {% elif message_type  == 'bloxberg_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
+            {% endif %}
             <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">
-                {% if message_type  == 'keeper_cdc_msg' %}
-                <p style="line-height:1.5; margin:.2em 10px .2em 0;">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ lib }}">{{ lib_name }}</a>: {{ message }}
-
+                {% if message_type  == 'doi_suc_msg' %}
+                <p style="brief">{{ message }}</p>
                 {% elif message_type  == 'bloxberg_msg' %}
                 <p style="brief">
                 This notice verifies that <b>{{author_name}}</b> uploaded a data hash of the file: <a href="{{ url_base }}/lib/{{ repo_id }}/file{{link_to_file}}">{{file_name}}</a> that proves authenticity of the corresponding data matching the hash.

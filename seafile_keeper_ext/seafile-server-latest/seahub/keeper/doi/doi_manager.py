@@ -9,12 +9,14 @@ from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown
 from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute, has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
+from seahub.utils import send_html_email, get_site_name
 from django.utils.translation import ugettext as _
 
 # Get an instance of a logger
 LOGGER = logging.getLogger(__name__)
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
+MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 
 def get_metadata(repo_id, user_email):
     """ Read metadata from libray root folder"""
@@ -199,7 +201,7 @@ def process_special_char(arg):
         .replace("'", "&apos;")
     )
 
-def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link=''):
+def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link='', timestamp=''):
     # status: 'invalid', 'success', 'error'
     # TODO: replace 'doi_link' with 'doi' in production
     if isinstance(doi_msg, list):
@@ -211,7 +213,26 @@ def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link='')
                 'status': status,
         }))
     else:
-        UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_DOI_MSG,
+        msg_type = MSG_TYPE_KEEPER_DOI_MSG
+        if status == "success":
+            msg_type = MSG_TYPE_KEEPER_DOI_SUC_MSG
+            c = {
+                'to_user': user_email,
+                'message_type': 'doi_suc_msg',
+                'message': doi_msg + doi,
+                'timestamp': timestamp,
+            }
+
+            try:
+                send_html_email(_('New notice on %s') % get_site_name(),
+                                        'notifications/keeper_email.html', c,
+                                        None, [user_email])
+
+                LOGGER.info('Successfully sent email to %s' % user_email)
+            except Exception as e:
+                LOGGER.error('Failed to send email to %s, error detail: %s' % (user_email, e))
+
+        UserNotification.objects._add_user_notification(user_email, msg_type,
             json.dumps({
                 'message': (doi_msg),
                 'lib': repo_id,

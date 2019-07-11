@@ -122,7 +122,8 @@ def add_doi(request):
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
             msg = _(u'DOI successfully created')
-            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page)
+            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
                 'msg': msg + ': ' + doi,
                 'status': 'success',
@@ -143,18 +144,28 @@ def add_doi(request):
                 'msg': msg,
                 'status': 'error'
                 })
+    else:
+        msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
+        send_notification(msg, repo_id, 'error', user_email)
+        return JsonResponse({
+            'msg': msg,
+            'status': 'error'
+        })
+
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+    repo_owner = get_repo_owner(repo_id)
+
     if len(doi_repos) == 0:
         return render(request, '404.html')
     elif len(doi_repos) > 0 and doi_repos[0].rm is not None:
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repos[0].doi,
-            'doi_dict': doi_repos[0].md
-        })
+            'doi_dict': doi_repos[0].md,
+            'library_name': doi_repos[0].repo_name,
+            'owner_contact_email': email2contact_email(repo_owner) })
 
-    repo_owner = get_repo_owner(repo_id)
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
     return render(request, './catalog_detail/landing_page.html', {

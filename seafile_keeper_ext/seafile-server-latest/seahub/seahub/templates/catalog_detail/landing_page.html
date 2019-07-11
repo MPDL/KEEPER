@@ -18,7 +18,7 @@
 		<div class="container doi_root">
 			<div>
 				{% if cdc == True %}
-				<img id="cared" src="{{MEDIA_URL}}img/catalog/Keeper-Cared-Data-Certificate-Logo.png" />
+				<img id="cared" src="/catalog/static/certified.png" />
 				{% endif %}
 			</div>
 			<div>
@@ -31,7 +31,8 @@
 				<div class="doi_table_row"><b>DOI: </b><a class="doi_link" href="{{doi}}">{{doi}}</a></div>
 				<div class="doi_table_row"><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
 
-				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a><small> *If you don't have access to the dataset, please get in touch with the listed contact.</samll></div>
+				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a></div>
+				<small> *If you don't have access to the dataset, please get in touch with the listed contact.</samll>
 			</div>
 		</div>
 	</body>

@@ -12,7 +12,7 @@ from seahub.settings import ARCHIVE_METADATA_TARGET
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
 from keeper.common import parse_markdown, get_user_name, print_json
 
-from keeper.models import Catalog
+from keeper.models import Catalog, DoiRepo
 
 import logging
 import json
@@ -185,11 +185,25 @@ def get_catalog(filter='all'):
     """
     reconnect_db()
     if filter == 'with_certificate':
-        return Catalog.objects.get_certified()
+
+        return add_doi_entry(Catalog.objects.get_certified())
     elif filter == 'with_metadata':
-        return Catalog.objects.get_with_metadata()
+        return add_doi_entry(Catalog.objects.get_with_metadata())
     else:
-        return Catalog.objects.get_all_mds_ordered()
+        return add_doi_entry(Catalog.objects.get_all_mds_ordered())
+
+def add_doi_entry(catalogs):
+
+    for catalog in catalogs:
+        repo_id = catalog.get('id')
+
+        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+        if doi_repos:
+            doi = doi_repos[0].doi
+            logging.error("doi: " + doi_repos[0].doi)
+            catalog['doi'] = doi
+
+    return catalogs
 
 
 def delete_catalog_entry_by_repo_id(repo_id):
