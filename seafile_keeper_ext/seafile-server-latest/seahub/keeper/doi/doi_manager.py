@@ -32,6 +32,14 @@ def get_metadata(repo_id, user_email):
             'error': msg,
         }
 
+    history_limit = seafile_api.get_repo_history_limit(repo_id)
+    if history_limit > -1:
+        msg = "Cannot assign DOI if the library doesn't keep full history."
+        send_notification(msg, repo_id, 'error', user_email)
+        return {
+            'error': msg,
+        }
+
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
