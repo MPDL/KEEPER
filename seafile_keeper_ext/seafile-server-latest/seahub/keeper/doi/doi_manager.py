@@ -6,7 +6,7 @@ from seafobj import commit_mgr, fs_mgr
 from seaserv import seafile_api, get_repo
 from seahub.api2.utils import json_response
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
-from keeper.common import parse_markdown
+from keeper.common import parse_markdown_doi
 from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute, has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
 from seahub.utils import send_html_email, get_site_name
@@ -32,6 +32,13 @@ def get_metadata(repo_id, user_email):
             'error': msg,
         }
 
+    if seafile_api.get_repo_history_limit(repo_id) > -1:
+        msg = "Cannot assign DOI because of the histroy setting."
+        send_notification(msg, repo_id, 'error', user_email)
+        return {
+            'error': msg,
+        }
+    
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
@@ -51,7 +58,7 @@ def get_metadata(repo_id, user_email):
             }
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
-        doi_dict = parse_markdown(file.get_content())
+        doi_dict = parse_markdown_doi(file.get_content())
         LOGGER.info(doi_dict)
 
         doi_msg = validate(doi_dict, repo_id, user_email)
@@ -72,7 +79,9 @@ def generate_metadata_xml(doi_dict):
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
 
     title = process_special_char(doi_dict.get('Title'))
-    creator = process_special_char(doi_dict.get('Author'))
+    creators = process_special_char(doi_dict.get('Author'))
+    LOGGER.info(creators)
+    LOGGER.info(str.splitlines(creators))
     description = process_special_char(doi_dict.get('Description'))
     publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
     year = doi_dict.get('Year')
@@ -85,7 +94,7 @@ def generate_metadata_xml(doi_dict):
     # NameIdentifier, affiliation is not used
     xml += ota("identifier", attrib("identifierType", "DOI")) + ct("identifier") +br()
     xml += ot("titles") + br() + tab(1) + ot("title") + title + ct("title") + br() + ct("titles") + br()
-    xml += ot("creators") + br() + tab(1) + ot("creator") + br() + tab(2) + ot("creatorName") + creator + ct("creatorName") + br() + tab(1) + ct("creator") + br() + ct("creators") + br()
+    xml += generate_creators_xml(creators)
     xml += ot("publisher") + publisher + ct("publisher") + br()
     xml += ot("publicationYear") + year + ct("publicationYear") + br()
     xml += ota("resourceType", attrib("resourceTypeGeneral", "Dataset")) + resource_type + ct("resourceType") + br()
@@ -93,6 +102,26 @@ def generate_metadata_xml(doi_dict):
     if prev_doi is not None:
         xml += ot("relatedIdentifiers") +br() + tab(1) + ota("relatedIdentifier", attrib("relatedIdentifierType", "DOI") + " " + attrib("relationType", "IsNewVersionOf")) + prev_doi + ct("relatedIdentifierType") + br() + ct("relatedIdentifiers") + br()
     xml += ct("resource")
+    LOGGER.info(xml)
+    return xml
+
+def generate_creators_xml(authors):
+    xml = ot("creators") + br()
+    for author in authors.splitlines():
+        author_array = author.split(";")
+        creator_name = author_array[0]
+        xml += tab(1) + ot("creator") + br()
+        xml += tab(2) + ot("creatorName") + creator_name.strip() + ct("creatorName") + br()
+        creator_name_array = creator_name.split(",")
+        xml += tab(2) + ot("givenName") + creator_name_array[0].strip() + ct("givenName") + br()
+        xml += tab(2) + ot("familyName") + creator_name_array[1].strip() + ct("familyName") + br()
+        if len(author_array) > 1:
+            affiliation_array = author_array[1].split("|")
+            for affiliation in affiliation_array:
+                if len(affiliation.strip()) > 0:
+                    xml += tab(2) + ot("affiliation") + affiliation.strip() + ct("affiliation") + br()
+        xml += tab(1) + ct("creator") + br()
+    xml += ct("creators") + br()
     return xml
 
 def get_latest_commit_root_id(repo):
@@ -240,4 +269,4 @@ def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link='',
                 'doi': doi,
                 'doi_link': doi_link,
                 'status': status,
-        }))        
+        }))
