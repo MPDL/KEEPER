@@ -113,8 +113,8 @@ def generate_creators_xml(authors):
         xml += tab(1) + ot("creator") + br()
         xml += tab(2) + ot("creatorName") + creator_name.strip() + ct("creatorName") + br()
         creator_name_array = creator_name.split(",")
-        xml += tab(2) + ot("givenName") + creator_name_array[0].strip() + ct("givenName") + br()
-        xml += tab(2) + ot("familyName") + creator_name_array[1].strip() + ct("familyName") + br()
+        xml += tab(2) + ot("givenName") + creator_name_array[1].strip() + ct("givenName") + br()
+        xml += tab(2) + ot("familyName") + creator_name_array[0].strip() + ct("familyName") + br()
         if len(author_array) > 1:
             affiliation_array = author_array[1].split("|")
             for affiliation in affiliation_array:

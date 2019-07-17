@@ -157,7 +157,8 @@ def DoiView(request, repo_id, commit_id):
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repos[0].doi,
             'doi_dict': doi_repos[0].md,
-            'authors': ', '.join(get_doi_authors(doi_repos)),
+            'authors': '; '.join(get_doi_authors(doi_repos)),
+            'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
             'library_name': doi_repos[0].repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
 
@@ -167,7 +168,8 @@ def DoiView(request, repo_id, commit_id):
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
-        'authors': ', '.join(get_doi_authors(doi_repos)),
+        'authors': '; '.join(get_doi_authors(doi_repos)),
+        'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
         'doi_dict': doi_repos[0].md,
         'doi': doi_repos[0].doi,
@@ -177,15 +179,20 @@ def get_doi_authors(doi_repos):
     authors = doi_repos[0].md.get("Author").split('\n')
     result_author = []
     for author in authors:
-        author_name = author.split(";")[0].strip()
+        author_array = author.split(";")
+        author_name = author_array[0].strip()
         name_array = author_name.split(", ")
         tmpauthor = ''
         for i in xrange(len(name_array)):
             if ( i <= 0 and len(name_array[i].strip()) > 1 ):
                 tmpauthor += name_array[i]+", "
             elif (len(name_array[i].strip()) >= 1):
-                tmpauthor += name_array[i].strip()[:1]+"., "
-        tmpauthor = tmpauthor.strip()[:-1]
+                tmpauthor += name_array[i].strip()[:1] + "."
+
+        if len(author_array) > 1 and len(author_array[1].strip()) > 0:
+            affiliations = author_array[1].split("|")
+            tmpauthor += " (" + ", ".join(map(str.strip, affiliations)) + ")"
+
         result_author.append(tmpauthor)
     return result_author
 
