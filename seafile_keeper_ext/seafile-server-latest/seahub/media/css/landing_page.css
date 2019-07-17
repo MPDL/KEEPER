@@ -21,7 +21,9 @@ html, body {
 }
 
 .tombstone_root {
+	padding-bottom: 20em;
 	min-height: 100%;
+	padding-bottom: 208px;
 }
 
 .doi_root{

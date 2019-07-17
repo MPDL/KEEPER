@@ -654,6 +654,7 @@ class Repos(APIView):
                     continue
 
                 doi_repos = DoiRepo.objects.get_valid_doi_repos(r.repo_id)
+                history_limit = seafile_api.get_repo_history_limit(r.repo_id)
 
                 repo = {
                     "type": "repo",
@@ -675,7 +676,7 @@ class Repos(APIView):
                     "root": '',
                     "head_commit_id": r.head_cmmt_id,
                     "version": r.version,
-                    "doi": r.encrypted or len(doi_repos) > 0,
+                    "doi": len(doi_repos) <= 0 and history_limit <= -1 and not r.encrypted,
                 }
 
                 if is_pro_version() and ENABLE_STORAGE_CLASSES:
