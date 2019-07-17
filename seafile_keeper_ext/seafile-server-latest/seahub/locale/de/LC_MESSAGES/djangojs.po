@@ -1121,7 +1121,7 @@ msgid "Assign DOI to {library_name}"
 msgstr "DOI zu {library_name} zuweisen"
 
 msgid "Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library."
-msgstr "Bitte beachten: Ein DOI-Identifikator wird der aktuellen Version der ausgewählten Bibliothek zugeordnet (Schnappschuss). Der DOI-Identifikator verweist auf den unveränderbaren Schnappschuss und nicht auf den aktuellsten Zustand der Bibliothek. Ein DOI-Identifikator kann nur einmal pro Bibliothek zugewiesen werden." 
+msgstr "Bitte beachten: Ein digitaler Objektbezeichner (Digital Object Identifier: DOI) wird der aktuellen Version der ausgewählten Bibliothek zugeordnet (Schnappschuss). Eine DOI verweist auf den unveränderbaren Schnappschuss und nicht auf den aktuellsten Zustand der Bibliothek. Zudem kann eine DOI nur einmal pro Bibliothek zugewiesen werden." 
 
 msgid "Assign DOI"
 msgstr "DOI zuweisen"

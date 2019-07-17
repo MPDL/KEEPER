@@ -61,7 +61,7 @@ def get_metadata(repo_id, user_email):
             }
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
-        doi_dict = parse_markdown(file.get_content())
+        doi_dict = parse_markdown_doi(file.get_content())
         ## Add hardcoded DOI metadata
         ## TODO: will be editable in next DOI releases
         doi_dict.update({
