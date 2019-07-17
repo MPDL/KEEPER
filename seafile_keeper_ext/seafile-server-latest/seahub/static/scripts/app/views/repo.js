@@ -73,8 +73,9 @@ define([
             }, dropdownOptions));
             this.mobileMenu = this.$(".mobile-menu-container");
             var doi_repo = this.model.get('doi');
-            if (doi_repo) {
-                this.$(".js-add-doi-label").hide();
+            this.$(".js-add-doi-label").hide();
+            if (doi_repo || (doi_repo === undefined && !this.model.get('encrypted'))) {
+                this.$(".js-add-doi-label").show();
             }
             return this;
         },

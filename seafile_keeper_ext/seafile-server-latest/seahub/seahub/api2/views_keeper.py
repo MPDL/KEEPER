@@ -157,19 +157,38 @@ def DoiView(request, repo_id, commit_id):
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repos[0].doi,
             'doi_dict': doi_repos[0].md,
+            'authors': ', '.join(get_doi_authors(doi_repos)),
             'library_name': doi_repos[0].repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
 
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+    
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
-        'access': '',
+        'authors': ', '.join(get_doi_authors(doi_repos)),
         'commit_id': commit_id,
         'doi_dict': doi_repos[0].md,
         'doi': doi_repos[0].doi,
         'owner_contact_email': email2contact_email(repo_owner) })
+
+def get_doi_authors(doi_repos):
+    authors = doi_repos[0].md.get("Author").split('\n')
+    result_author = []
+    for author in authors:
+        author_name = author.split(";")[0].strip()
+        name_array = author_name.split(", ")
+        tmpauthor = ''
+        for i in xrange(len(name_array)):
+            if ( i <= 0 and len(name_array[i].strip()) > 1 ):
+                tmpauthor += name_array[i]+", "
+            elif (len(name_array[i].strip()) >= 1):
+                tmpauthor += name_array[i].strip()[:1]+"., "
+        tmpauthor = tmpauthor.strip()[:-1]
+        result_author.append(tmpauthor)
+    return result_author
+
 
 def get_repo(repo_id):
     return seafile_api.get_repo(repo_id)
