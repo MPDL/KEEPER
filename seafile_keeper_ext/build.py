@@ -449,6 +449,10 @@ class EnvManager(object):
         self.keeper_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper.service')
         self.keeper_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper.service']
 
+        self.keeper_oos_log_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
+        self.keeper_oos_log_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service']
+
+
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
@@ -752,10 +756,15 @@ def deploy_system_conf():
     deploy_file('system/keeper.service')
     os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
 
+    # deploy keeper-oos-log.service systemd
+    deploy_file('system/keeper-oos-log.service')
+    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service'], 0755)
+
     # create system symlinks
     do_links((
         (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
         (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
+        (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
     ))
 
 
@@ -799,6 +808,7 @@ def do_deploy(args):
         deploy_http_conf()
     elif args.system_conf:
         deploy_system_conf()
+        run_services()
     else:
         if args.directory:
             for path in args.directory:
