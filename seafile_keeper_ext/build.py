@@ -746,7 +746,12 @@ def deploy_system_conf():
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
         
-    if node_type in ('BACKGROUND', 'SINGLE'):
+    if node_type == 'BACKGROUND':
+        deploy_file('system/cron.d.keeper@background', expand=True)
+        deploy_file('system/clamd.conf', expand=True)
+        deploy_file('system/clamav-daemon.service', expand=True)
+
+    if node_type == 'SINGLE':
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/my.cnf@single', expand=True)
         deploy_file('system/clamd.conf', expand=True)
@@ -770,12 +775,17 @@ def deploy_system_conf():
 
 def run_services():
 
+    keep_ini = env_mgr.keeper_config
+
     Utils.run('systemctl daemon-reload')
     Utils.run('systemctl restart rsyslog')
     Utils.run('systemctl restart systemd-journald')
     Utils.run('systemctl restart memcached')
-    Utils.run('systemctl enable keeper-oos-log')
-    Utils.run('systemctl start keeper-oos-log')
+    node_type = keep_ini.get('global', '__NODE_TYPE__')
+    if node_type == 'APP':
+      Utils.run('systemctl enable keeper-oos-log')
+      Utils.run('systemctl start keeper-oos-log')
+
 
 
 
