@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
-        return super(CatalogManager, self).get(repo_id=repo_id)
+        return self.get(repo_id=repo_id)
 
     def get_all(self):
         return super(CatalogManager, self).all()
@@ -155,7 +155,7 @@ def remove_keeper_entries(sender, **kwargs):
         logging.info("Removing keeper entries for repo: " + repo_id + "...")
         Catalog.objects.delete_by_repo_id(repo_id)
         logging.info("Project Catalog: done.")
-        cdc = CDC.objects.get(repo_id=repo_id)
+        cdc = CDC.objects.get_cdc_by_repo(repo_id)
         if cdc:
             cdc.delete()
         logging.info("CDC: done.")
