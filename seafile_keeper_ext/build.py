@@ -728,7 +728,7 @@ def deploy_system_conf():
     deploy_file('system/phpmyadmin.conf', expand=True)
     deploy_file('system/rsyslog.conf', expand=True)
     deploy_file('system/my.cnf', expand=True)
-    deploy_file('system/nagios.keeper.cfg')
+    deploy_file('system/nagios.keeper.cfg',expand=True)
 
     # deploy http confs
     deploy_http_conf()
