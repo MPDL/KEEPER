@@ -525,7 +525,8 @@ def do_links(link_target_list):
 
 def expand_properties(content, path):
     kc = env_mgr.keeper_config
-    is_background = kc.get('global', '__NODE_TYPE__').lower() == 'background'
+    node_type = kc.get('global', '__NODE_TYPE__').lower()
+    is_background = node_type == 'background'
     for section in kc.sections():
         for key, value in kc.items(section):
            # capitalize bools
@@ -544,7 +545,7 @@ def expand_properties(content, path):
         content = re.sub("external_es_server.*?\n", "", content)
 
     #remove email smpt auth params for app nodes
-    if not is_background and path.endswith('seahub_settings.py'):
+    if node_type != 'single' and path.endswith('seahub_settings.py'):
         content = re.sub("EMAIL_HOST_USER.*?\n", "", content)
         content = re.sub("EMAIL_HOST_PASSWORD.*?\n", "", content)
 
@@ -745,7 +746,7 @@ def deploy_system_conf():
         do_links((
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
-        
+
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/my.cnf@single', expand=True)
