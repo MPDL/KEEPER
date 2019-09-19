@@ -27,7 +27,7 @@ from requests.exceptions import ConnectionError, Timeout
 
 logger = logging.getLogger(__name__)
 
-BLOXBERG_URL = "https://bloxberg.org/certifyData"
+BLOXBERG_URL = "https://certify.bloxberg.org/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
 
 
