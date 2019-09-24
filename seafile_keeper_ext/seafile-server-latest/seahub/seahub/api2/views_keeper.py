@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from seahub import settings
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, SERVICE_URL
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
@@ -27,7 +27,7 @@ from requests.exceptions import ConnectionError, Timeout
 
 logger = logging.getLogger(__name__)
 
-BLOXBERG_URL = "https://bloxberg.org/certifyData"
+BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
 
 
@@ -170,7 +170,7 @@ def DoiView(request, repo_id, commit_id):
 
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
-    
+
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
