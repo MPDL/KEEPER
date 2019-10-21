@@ -7,7 +7,7 @@ import django
 django.setup()
 
 from seaserv import ccnet_api
-from keeper.utils import email_in_mpg_domain_list
+from keeper.utils import is_in_mpg_domain_list
 
 
 def get_user_stats():
@@ -21,8 +21,8 @@ def get_user_stats():
         return
 
     users_activated = [u for u in users if u.is_active]
-    mpg_users_activated = [u for u in users_activated if email_in_mpg_domain_list(u.email)]
-    external_users_activated = [u for u in users_activated if not email_in_mpg_domain_list(u.email)]
+    mpg_users_activated = [u for u in users_activated if is_in_mpg_domain_list(u.email)]
+    external_users_activated = [u for u in users_activated if not is_in_mpg_domain_list(u.email)]
 
 
     print("KEEPER users \n --total: {}\n --activated: {}\n   --MPG activated: {}\n   --external activated: {}".

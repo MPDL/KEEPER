@@ -18,6 +18,8 @@ from keepertestbase import create_tmp_user_with_profile, create_tmp_user
 
 from seahub.base.accounts import RegistrationBackend
 
+from keeper.utils import get_domain_list
+
 def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
     """Test enchancement https://github.com/MPDL/KEEPER/issues/113:
         Besser Einladungsemail
@@ -68,4 +70,13 @@ def test_account_auto_activation(mocker):
         assert not new_user.is_active, 'user should NOT be active'
     finally:
         User.objects.get(EMAIL).delete()
+
+def test_mpg_domain_list():
+    """TODO: Docstring for test_mpg_domain_list.
+    :returns: TODO
+    """
+
+    dls = get_domain_list()
+    print(dls)
+    assert dls, 'MPG domain list should be not empty'
 

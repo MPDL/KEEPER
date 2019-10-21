@@ -60,7 +60,7 @@ def get_mpg_ip_set():
     Get MPG IP ranges from cache or from rena service if cache is expired
     """
     if cache.get('KEEPER_CATALOG_LAST_FETCHED') is None:
-        logging.info("Put ips to cache...")
+        logging.info("Put IPs to cache...")
         try:
             # get json from server
             response = urllib2.urlopen(JSON_DATA_URL)
@@ -80,7 +80,7 @@ def get_mpg_ip_set():
                 "Cannot get/parse MPG IPs DB: " +
                 ": ".join(
                     str(i) for i in e))
-            logging.info("Get IPS from old cache")
+            logging.info("Get IPs from old cache")
             ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
     else:
         logging.info("Get ips from cache...")
