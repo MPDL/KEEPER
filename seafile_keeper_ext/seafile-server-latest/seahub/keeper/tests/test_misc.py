@@ -17,8 +17,11 @@ from seahub.profile.models import Profile
 from keepertestbase import create_tmp_user_with_profile, create_tmp_user
 
 from seahub.base.accounts import RegistrationBackend
+from django.core.cache import cache
 
-from keeper.utils import get_domain_list
+from keeper.utils import get_domain_list, is_in_mpg_domain_list, KEEPER_DOMAINS_LAST_FETCHED_KEY, \
+    KEEPER_DOMAINS_KEY, KEEPER_DOMAINS_TS_KEY, EMAIL_LIST_TIMESTAMP
+
 
 def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
     """Test enchancement https://github.com/MPDL/KEEPER/issues/113:
@@ -34,6 +37,7 @@ def test_nickename_in_invite_email(create_tmp_user_with_profile, mocker):
     args, kwargs = send_mail_mock.call_args
     assert Profile.objects.get_profile_by_user(inviter_email).nickname in args[1]
 
+#@pytest.mark.skip
 def test_account_auto_activation(mocker):
     """ Test auto activation for MPG signed up users,
         see https://github.com/MPDL/KEEPER/issues/133
@@ -71,12 +75,36 @@ def test_account_auto_activation(mocker):
     finally:
         User.objects.get(EMAIL).delete()
 
+#@pytest.mark.skip
 def test_mpg_domain_list():
-    """TODO: Docstring for test_mpg_domain_list.
-    :returns: TODO
+    """Test  MPG domain list from rena service: fetch & push into cache
     """
+    pfx = '_TEST'
+    def clean_cache():
+        cache.delete(KEEPER_DOMAINS_LAST_FETCHED_KEY + pfx)
+        cache.delete(KEEPER_DOMAINS_KEY + pfx)
+        cache.delete(KEEPER_DOMAINS_TS_KEY + pfx)
 
-    dls = get_domain_list()
-    print(dls)
-    assert dls, 'MPG domain list should be not empty'
 
+    with mock.patch.dict('keeper.utils.__dict__', {
+        'KEEPER_DOMAINS_LAST_FETCHED_KEY': KEEPER_DOMAINS_LAST_FETCHED_KEY + pfx,
+        'KEEPER_DOMAINS_KEY': KEEPER_DOMAINS_KEY + pfx,
+        'KEEPER_DOMAINS_TS_KEY': KEEPER_DOMAINS_TS_KEY + pfx,
+    }):
+
+        clean_cache()
+
+        dls = get_domain_list()
+        print("\nKEEPER_DOMAINS_LAST_FETCHED: {}\nKEEPER_DOMAINS_TS: {}\n".format(cache.get(KEEPER_DOMAINS_LAST_FETCHED_KEY + pfx), cache.get(KEEPER_DOMAINS_TS_KEY + pfx)))
+        assert dls, 'MPG domain list should be not empty'
+        assert cache.get(KEEPER_DOMAINS_TS_KEY + pfx), 'MPG domain list timestamp should not be empty'
+        assert is_in_mpg_domain_list('someone@mpdl.mpg.de'), 'MPDL should be in domain list!!!'
+
+        clean_cache()
+
+        # CASE: wrong domain or rena is not accessible
+        with mock.patch.dict('keeper.utils.__dict__', {'KEEPER_DOMAINS_URL': 'https://wrong_url.de/iplists/keeperx_domains.json'}):
+            dls = get_domain_list()
+            assert cache.get(KEEPER_DOMAINS_TS_KEY + pfx) == EMAIL_LIST_TIMESTAMP
+
+        clean_cache()
