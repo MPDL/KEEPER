@@ -79,11 +79,12 @@ def test_account_auto_activation(mocker):
 def test_mpg_domain_list():
     """Test  MPG domain list from rena service: fetch & push into cache
     """
+
     pfx = '_TEST'
     def clean_cache():
-        cache.delete(KEEPER_DOMAINS_LAST_FETCHED_KEY + pfx)
-        cache.delete(KEEPER_DOMAINS_KEY + pfx)
-        cache.delete(KEEPER_DOMAINS_TS_KEY + pfx)
+        [ cache.delete(k + pfx) for k in (
+            KEEPER_DOMAINS_LAST_FETCHED_KEY, KEEPER_DOMAINS_KEY, KEEPER_DOMAINS_TS_KEY
+        ) ]
 
 
     with mock.patch.dict('keeper.utils.__dict__', {
@@ -98,11 +99,14 @@ def test_mpg_domain_list():
         print("\nKEEPER_DOMAINS_LAST_FETCHED: {}\nKEEPER_DOMAINS_TS: {}\n".format(cache.get(KEEPER_DOMAINS_LAST_FETCHED_KEY + pfx), cache.get(KEEPER_DOMAINS_TS_KEY + pfx)))
         assert dls, 'MPG domain list should be not empty'
         assert cache.get(KEEPER_DOMAINS_TS_KEY + pfx), 'MPG domain list timestamp should not be empty'
-        assert is_in_mpg_domain_list('someone@mpdl.mpg.de'), 'MPDL should be in domain list!!!'
+        assert is_in_mpg_domain_list('someone@mpdl.mpg.de'), 'MPDL should be in domain list'
+        assert not is_in_mpg_domain_list('bad_email_mpdl.mpg.de'), 'Bad email is not in MPG domains'
+        assert not is_in_mpg_domain_list('someone@gmail.com'), 'email is not is in MPG domains'
 
         clean_cache()
 
-        # CASE: wrong domain or rena is not accessible
+        # CASE: wrong domain or rena is not accessible. Then domains and ts should be
+        # taken from hardcoded globvar
         with mock.patch.dict('keeper.utils.__dict__', {'KEEPER_DOMAINS_URL': 'https://wrong_url.de/iplists/keeperx_domains.json'}):
             dls = get_domain_list()
             assert cache.get(KEEPER_DOMAINS_TS_KEY + pfx) == EMAIL_LIST_TIMESTAMP

@@ -143,12 +143,10 @@ ACCOUNT_ACTIVATION_PATTERN = '^.*@(' + "|".join(
 ) + ')$'
 COMPILED_PATTERN = re.compile(ACCOUNT_ACTIVATION_PATTERN)
 
-
 # time to live of the mpg IP set: day
 KEEPER_DOMAINS_TTL = 60 * 60 * 24
 
-#TODO: set to PROD!!!
-KEEPER_DOMAINS_URL = 'https://rena4-qa.mpdl.mpg.de/iplists/keeperx_domains.json'
+KEEPER_DOMAINS_URL = 'https://rena.mpdl.mpg.de/iplists/keeperx_domains.json'
 
 KEEPER_DOMAINS_KEY = 'KEEPER_DOMAINS'
 
@@ -160,11 +158,15 @@ TS_FORMAT = "%a %b %d %H:%M:%S %Y"
 
 def has_to_be_updated(domains_dict):
     """
-    validate rena domain list
+    Check rena domain list status for cache update
     """
 
     # False if domain list is empty
     if not domains_dict['details']:
+        return False
+
+    # False if mpdl domain is not in the list
+    if not 'mpdl.mpg.de' in domains_dict['details']:
         return False
 
     # False if json ts is older or same
@@ -177,9 +179,9 @@ def has_to_be_updated(domains_dict):
 
 
 def get_domain_list_from_cache():
-    """TODO: Docstring for
-    :returns: TODO
-
+    """
+    Get domain list from cache. If cache is empty, get the list from hardcoded
+    starter and put it into the cache.
     """
     # get old domains from cache by default
     logging.info("Get domains from old cache by default...")
@@ -221,7 +223,7 @@ def get_domain_list():
                 ": ".join(
                     str(i) for i in e))
         finally:
-            # set next time for next load from rena
+            # set expiration time for next retrieval from rena
             cache.set(
                 KEEPER_DOMAINS_LAST_FETCHED_KEY,
                 str(datetime.utcnow()),
@@ -230,6 +232,9 @@ def get_domain_list():
     return domains
 
 def is_in_mpg_domain_list(email):
+    """
+    True if email is in MPG domain list
+    """
     domain = email.partition('@')[2]
     if not domain:
         logging.error("Cannot parse email: {}".format(email))
@@ -247,7 +252,7 @@ def is_in_mpg_domain_list(email):
 
 def account_can_be_auto_activated(email):
     """
-    account can be auto activated via activation token
+    True if account can be auto activated via activation token
     """
     # can if the uname in mpg domain
     yes_you_can =  is_in_mpg_domain_list(email)
@@ -265,7 +270,7 @@ def account_can_be_auto_activated(email):
 
 def user_can_invite(email):
     """
-    user can invite if he/she is in the mpg domain
+    User can invite if he/she is in the mpg domain
     """
     return is_in_mpg_domain_list(email)
 
