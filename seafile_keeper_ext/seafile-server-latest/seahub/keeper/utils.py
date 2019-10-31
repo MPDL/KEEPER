@@ -11,6 +11,8 @@ from django.core.cache import cache
 
 from seahub.invitations.models import Invitation
 
+from seahub.settings import KEEPER_MPG_DOMAINS_URL
+
 # List from http://colab.mpdl.mpg.de/mediawiki/Max_Planck_email_domains
 # Format: Institutsname<Tab>Ort<Tab>eMail domain<Tab>Kommentar
 EMAIL_DOMAIN_LIST = '''Bibliotheca Hertziana - Max-Planck-Institut für Kunstgeschichte	Rom	biblhertz.it
@@ -146,8 +148,6 @@ COMPILED_PATTERN = re.compile(ACCOUNT_ACTIVATION_PATTERN)
 # time to live of the mpg IP set: day
 KEEPER_DOMAINS_TTL = 60 * 60 * 24
 
-KEEPER_DOMAINS_URL = 'https://rena.mpdl.mpg.de/iplists/keeperx_domains.json'
-
 KEEPER_DOMAINS_KEY = 'KEEPER_DOMAINS'
 
 KEEPER_DOMAINS_LAST_FETCHED_KEY = 'KEEPER_DOMAINS_LAST_FETCHED'
@@ -208,7 +208,7 @@ def get_domain_list():
     if cache.get(KEEPER_DOMAINS_LAST_FETCHED_KEY) is None:
         try:
             # get json from server
-            response = urllib2.urlopen(KEEPER_DOMAINS_URL)
+            response = urllib2.urlopen(KEEPER_MPG_DOMAINS_URL)
             json_str = response.read()
             # parse json
             json_dict = json.loads(json_str)

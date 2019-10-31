@@ -7,7 +7,7 @@ import traceback
 
 from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
-from seahub.settings import ARCHIVE_METADATA_TARGET
+from seahub.settings import ARCHIVE_METADATA_TARGET, KEEPER_MPG_IP_LIST_URL
 
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
 from keeper.common import parse_markdown, get_user_name, print_json
@@ -27,8 +27,6 @@ from django.db import connections
 IP_SET_TTL = 60 * 60 * 24
 
 MAX_INT = 2147483647
-
-JSON_DATA_URL = 'https://rena.mpdl.mpg.de/iplists/keeper.json'
 
 
 def trim_by_len(str, max_len, suffix="..."):
@@ -63,7 +61,7 @@ def get_mpg_ip_set():
         logging.info("Put IPs to cache...")
         try:
             # get json from server
-            response = urllib2.urlopen(JSON_DATA_URL)
+            response = urllib2.urlopen(KEEPER_MPG_IP_LIST_URL)
             json_str = response.read()
             # parse json
             json_dict = json.loads(json_str)

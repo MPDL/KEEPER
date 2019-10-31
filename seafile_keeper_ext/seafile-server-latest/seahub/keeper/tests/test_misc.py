@@ -107,7 +107,7 @@ def test_mpg_domain_list():
 
         # CASE: wrong domain or rena is not accessible. Then domains and ts should be
         # taken from hardcoded globvar
-        with mock.patch.dict('keeper.utils.__dict__', {'KEEPER_DOMAINS_URL': 'https://wrong_url.de/iplists/keeperx_domains.json'}):
+        with mock.patch.dict('keeper.utils.__dict__', {'KEEPER_MPG_DOMAINS_URL': 'https://wrong_url.de/iplists/keeperx_domains.json'}):
             dls = get_domain_list()
             assert cache.get(KEEPER_DOMAINS_TS_KEY + pfx) == EMAIL_LIST_TIMESTAMP
 

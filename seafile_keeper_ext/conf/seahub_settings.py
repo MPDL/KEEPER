@@ -565,7 +565,11 @@ DOI_USER = '__DOI_USER__'
 DOI_PASSWORD = '__DOI_PASSWORD__'
 DOI_TIMEOUT = __DOI_TIMEOUT__
 
-# Keeper bloxberg integration
+# KEEPER external resources
+KEEPER_MPG_DOMAINS_URL = '__KEEPER_MPG_DOMAINS_URL__'
+KEEPER_MPG_IP_LIST_URL = '__KEEPER_MPG_IP_LIST_URL__'
+
+# Keepear bloxberg integration
 BLOXBERG_SERVER = '__BLOXBERG_SERVER__'
 
 TEST_SERVER='__TEST_SERVER__'
