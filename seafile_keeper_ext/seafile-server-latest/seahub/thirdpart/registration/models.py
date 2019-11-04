@@ -358,16 +358,18 @@ def email_admin_on_registration(sender, **kwargs):
     ``REGISTRATION_SEND_MAIL`` are set to False.
     """
     #### KEEPER
-    from keeper.utils import is_in_mpg_domain_list
-    is_mpg_email = is_in_mpg_domain_list(kwargs['user'].email)
+    # from keeper.utils import is_in_mpg_domain_list
+    # is_mpg_email = is_in_mpg_domain_list(kwargs['user'].email)
+    from keeper.utils import account_can_be_auto_activated
+    can_be_auto_activated = account_can_be_auto_activated(kwargs['user'].email)
 
     if bool(config.ACTIVATE_AFTER_REGISTRATION) is False and \
             bool(config.REGISTRATION_SEND_MAIL) is False and \
-            not is_mpg_email:
+            not can_be_auto_activated:
         reg_email = kwargs['user'].email
         notify_admins_on_activate_request(reg_email)
 
     if settings.NOTIFY_ADMIN_AFTER_REGISTRATION is True and \
-            not is_mpg_email:
+            not can_be_auto_activated:
         reg_email = kwargs['user'].email
         notify_admins_on_register_complete(reg_email)
