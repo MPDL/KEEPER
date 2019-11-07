@@ -122,10 +122,10 @@ def test_archiving_queue():
     q.put(Job("2"))
     q.put(Job("3"))
 
-    # q.join()
+    q.join()
 
     q.put(Job("4"))
     q.put(Job("5"))
     q.put(Job("6"))
 
-    # q.join()
+    q.join()

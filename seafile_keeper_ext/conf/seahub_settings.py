@@ -553,6 +553,9 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 # Keeper root dir
 SEAFILE_DIR = '__SEAFILE_DIR__'
 
+# Keeper logging
+KEEPER_LOG_DIR = '__KEEPER_LOG_DIR__'
+
 # default filename for CDC metadata
 ARCHIVE_METADATA_TARGET = 'archive-metadata.md'
 

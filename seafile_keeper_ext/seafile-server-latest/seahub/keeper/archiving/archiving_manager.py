@@ -13,6 +13,7 @@ import tarfile
 import threading
 import Queue
 
+from keeper.common import get_logger
 # from keeper.models import BCertificate
 # from seahub.notifications.models import UserNotification
 # from seahub.utils import send_html_email, get_site_name
@@ -22,17 +23,11 @@ MSG_TYPE_KEEPER_ARCHIVING_MSG = 'archiving_msg'
 
 STORAGE_PATH = '/srv/web/seafile/tmp/hpss'
 
-# Get an instance of a logger
-# logging.basicConfig(filename=STORAGE_PATH + '/arch.log', level=logging.DEBUG)
-# logging.basicConfig(filename='arch.log', level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-fh = logging.FileHandler(STORAGE_PATH + '/arch.log')
-fh.setLevel(logging.INFO)
-logger.addHandler(fh)
+ARCH_LOG = settings.KEEPER_LOG_DIR + '/keeper.archiving.log'
+
+logger = get_logger('keeper.archiving', ARCH_LOG)
 
 BUF_SIZE = 5120000  # 5MB chunks
-
 
 class Job:
 
