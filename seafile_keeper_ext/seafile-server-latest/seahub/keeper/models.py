@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
-        return self.get(repo_id=repo_id)
+        """Get catalog entry by repo_id. Return None if nothing found"""
+        try:
+            c = self.get(repo_id=repo_id)
+        except Catalog.DoesNotExist:
+            return None
+        return c
 
     def get_all(self):
         return super(CatalogManager, self).all()
@@ -92,18 +97,23 @@ class Catalog(models.Model):
 
 class CDCManager(models.Manager):
 
-    def get_cdc_by_repo(self, repo_id):
+    def get_by_repo(self, repo_id):
         """Get cdc_id by repo_id. Return None if nothing found"""
         try:
-            cdc = self.get(repo_id=repo_id)
+            c = self.get(repo_id=repo_id)
         except CDC.DoesNotExist:
             return None
-        return cdc
+        return c
 
     def get_cdc_id_by_repo(self, repo_id):
-        cdc = self.get_cdc_by_repo(repo_id)
+        cdc = self.get_by_repo(repo_id)
         return cdc.cdc_id if cdc else None
 
+    def delete_by_repo_id(self, repo_id):
+        c = self.get_by_repo(repo_id)
+        if c:
+            return c.delete()
+        return None
 
     def is_certified(self, repo_id):
         """Check whether the repo is already certified"""
@@ -116,7 +126,7 @@ class CDCManager(models.Manager):
         """
         from keeper.cdc.cdc_manager import EVENT
         event = EVENT.db_create
-        cdc = self.get_cdc_by_repo(repo_id=repo_id)
+        cdc = self.get_by_repo(repo_id=repo_id)
         if cdc is not None:
             cdc.modified = datetime.now()
             cdc.save()
@@ -155,7 +165,7 @@ def remove_keeper_entries(sender, **kwargs):
         logging.info("Removing keeper entries for repo: " + repo_id + "...")
         Catalog.objects.delete_by_repo_id(repo_id)
         logging.info("Project Catalog: done.")
-        cdc = CDC.objects.get_cdc_by_repo(repo_id)
+        cdc = CDC.objects.get_by_repo(repo_id)
         if cdc:
             cdc.delete()
         logging.info("CDC: done.")
