@@ -403,12 +403,12 @@ div.fright.js-file-op > a:focus {
 		@media (min-width:900px) {
 			.side-nav-footer{height:35%;bottom: -32%;}
 			#img-ctn{left:2%;}
-			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;font-size: 0.65vw;}
+			#link-bar{width: 85%; position: absolute; left: 10%; top:1%;font-size: 0.65vw;}
 
 			/* positioning of elements inside the toolbar */
 			#barr-link1{width: 30%; position: absolute; left:0%;}
-			#barr-link2{width: 20%; position: absolute; left:35%;}
-			#barr-link3{width: 20%; position: absolute; right:0%;}
+			#barr-link2{width: 50%; position: absolute; left:35%;}
+			#barr-link3{width: 15%; position: absolute; right:0%;}
 	
 			.footer-item{
 			max-width:45%;
