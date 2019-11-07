@@ -149,28 +149,28 @@
             margin: 0 auto;
         }
 
-        /* LabCam banner  */
+        /* banner  */
         #login_panel .con.auth {
             padding: 5px 0px 10px 0px; 
             /*padding-bottom: 10px;*/
         }
 
-        #labcam-banner p {
+        #banner p {
             font: 13px/1.5 Arial,Helvetica,sans-serif;
             text-align: center;
             color: #333;
             margin-bottom: 0px;
         }
 
-        #labcam-banner a {
+        #banner a {
             font-weight: normal;
         }
 
         @media (min-width: 1200px), (max-width: 991px) {
-            #labcam-banner img { width: 331px; }
+            #banner img { width: 331px; }
         }
         @media (max-width: 1199px) and (min-width: 992px) {
-            #labcam-banner img { width: 343px; }
+            #banner img { width: 343px; }
         }
        
         /* FOOTER */
