@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file, add_doi
+from .views_keeper import CatalogView, certify_file, add_doi, archive_lib
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -118,6 +118,9 @@ urlpatterns = [
 
     # DOI
     url(r'^ajax/doi/$', add_doi, name='add_doi'),
+
+    # Archive Library
+    url(r'^ajax/archive/$', archive_lib, name='archive_lib'),
 ]
 
 # serve office converter static files

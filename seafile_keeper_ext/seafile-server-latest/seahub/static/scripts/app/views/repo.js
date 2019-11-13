@@ -38,6 +38,7 @@ define([
             'click .js-repo-details': 'viewDetails',
             'click .js-add-label': 'addLabel',
             'click .js-add-doi-label': 'addDoi',
+            'click .js-archive-library-label': 'archiveLibrary',
             'click .mobile-menu-control': 'showMobileMenu',
             'click .mobile-menu-mask': 'closeMobileMenu'
         },
@@ -77,6 +78,11 @@ define([
             if (doi_repo || (doi_repo === undefined && !this.model.get('encrypted'))) {
                 this.$(".js-add-doi-label").show();
             }
+            this.$(".js-archive-library-label").hide();
+            if (!this.model.get('encrypted')) {
+                this.$(".js-archive-library-label").show();
+            }
+
             return this;
         },
 
@@ -480,6 +486,45 @@ define([
                 return false;
             });
             return false;
+        },
+
+        archiveLibrary: function(event) {
+            var _this = this;
+            this.togglePopup(); // close the popup
+
+            var repo_name = _this.model.get('name');
+            var archive_info = "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: >TBC (will go to help center)<. This library can be archived X more times.";
+            var $form = $('<form action="" method=""><h3 id="dialogTitle">Archive <span style="color:#57a5b8;">' + repo_name + '</span></h3><p>' + archive_info + '</p><button type="submit" class="submit">Archive</button></form>');
+
+            var $el = $('<div><span class="loading-icon loading-tip"></span></div>');
+            $el.modal({focus:false, minWidth: 400});
+            $('#simplemodal-container').css({'height':'auto'});
+            $('#simplemodal-data').html($form);
+
+            $form.on('submit', function() {
+                var $submit = $('[type="submit"]', $form);
+
+                Common.disableButton($submit);
+                $.ajax({
+                    url: "/api2/ajax/archive/",
+                    data: {
+                        repo_id: _this.model.get('id'),
+                    },
+                    dataType: "json",
+                    beforeSend: Common.prepareCSRFToken,
+                    success: function(data) {
+                        if (data.status) {
+                            Common.feedback(data.msg, data.status, 8000);
+                        } else {
+                            Common.ajaxErrorHandler('Archive Library Failed');
+                        }
+                    }
+                });
+                $.modal.close();
+                return false;
+            });
+            return false;
+
         },
 
         showMobileMenu: function(event) {

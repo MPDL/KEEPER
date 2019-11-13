@@ -95,7 +95,7 @@ def add_doi(request):
             'status': 'error',
             })
 
-    metadata = get_metadata(repo_id, user_email)
+    metadata = get_metadata(repo_id, user_email, "doi")
 
     if 'error' in metadata:
         return JsonResponse({
@@ -145,7 +145,6 @@ def add_doi(request):
             'msg': msg,
             'status': 'error'
         })
-
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
@@ -206,3 +205,25 @@ def get_repo_owner(repo_id):
 def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
     return CDC.objects.get_cdc_id_by_repo(repo_id)
+
+
+def archive_lib(request):
+
+    repo_id = request.GET.get('repo_id', None)
+    user_email = request.user.username
+    repo = get_repo(repo_id)
+
+    #replace doi_manager.get_metadata with 
+    metadata = get_metadata(repo_id, user_email, "archive")
+
+    if 'error' in metadata:
+        return JsonResponse({
+            'msg': metadata.get('error'),
+            'status': 'error',
+            })
+
+    msg = "archive_lib in views_keeper"
+    return JsonResponse({
+            'msg': msg,
+            'status': 'success'
+        })

@@ -18,22 +18,23 @@ TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 
-def get_metadata(repo_id, user_email):
+def get_metadata(repo_id, user_email, type):
     """ Read metadata from libray root folder"""
 
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_latest_commit_root_id(repo)
 
+    action_type = " assign DOI " if type == "doi" else " archive library " 
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
-        msg = 'Cannot assign DOI if the library is system template destination.'
+        msg = 'Cannot' + action_type + 'if the library is system template destination.'
         send_notification(msg, repo_id, 'error', user_email)
         return {
             'error': msg,
         }
 
     if seafile_api.get_repo_history_limit(repo_id) > -1:
-        msg = "Cannot assign DOI because of the histroy setting."
+        msg = 'Cannot' + action_type +'because of the histroy setting.'
         send_notification(msg, repo_id, 'error', user_email)
         return {
             'error': msg,
@@ -42,7 +43,7 @@ def get_metadata(repo_id, user_email):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = "Cannot assign DOI if the library has no content."
+            msg = 'Cannot' + action_type +'if the library has no content.'
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -51,7 +52,7 @@ def get_metadata(repo_id, user_email):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = 'Cannot assign DOI if archive-metadata.md file is not filled.'
+            msg = 'Cannot' + action_type +'if archive-metadata.md file is not filled.'
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
