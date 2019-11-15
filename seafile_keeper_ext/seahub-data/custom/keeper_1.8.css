@@ -535,3 +535,19 @@ textarea{resize: none;}
     visibility: visible;
 }
 
+
+#keeper-landing-page-nav .sharp {
+	display:inline-block;
+	width: 42px;
+	margin-right: 5px;
+	text-align: right;
+	color:#aaa;
+} 
+
+#keeper-landing-page-nav .toggle-icon {
+	color: #999;
+}
+
+#keeper-landing-page-nav .tab-cur .sharp {
+	color: #999;
+} 

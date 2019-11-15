@@ -215,6 +215,9 @@ class DoiRepoManager(models.Manager):
     def get_doi_by_commit_id(self, repo_id, commit_id):
         return super(DoiRepoManager, self).filter(repo_id=repo_id, commit_id=commit_id)
 
+    def get_doi_by_owner(self, owner):
+        return super(DoiRepoManager, self).filter(owner=owner)
+
 class DoiRepo(models.Model):
 
     """ Doi Repository """

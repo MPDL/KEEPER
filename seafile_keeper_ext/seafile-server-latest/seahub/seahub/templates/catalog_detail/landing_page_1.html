@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}css/landing_page.css"/>
+		<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
+
+		<title>Landing Page</title>
+		<link rel="icon" type="image/x-icon" href="/media/img/favicon.png" />
+	</head>
+
+	<body>
+		<!-- HEADER -->
+		<div id="header">
+			<a href="/"><img id="KEEPER_logo" src="{{MEDIA_URL}}img/catalog/KEEPER_logo.png" title="Landing Page"/></a>
+		</div>
+
+		<div class="container doi_root">
+			<div>
+				{% if cdc == True %}
+				<img id="cared" src="/catalog/static/certified.png" />
+				{% endif %}
+			</div>
+			<div>
+				<h1 class="doi_title">{{doi_dict.Title}}</h1>
+				<p class="doi_desc">{{doi_dict.Description}}</p>
+
+				<div class="doi_table_row"><b>Author(s): </b>{{authors}}</div>
+				<div class="doi_table_row"><b>Institute: </b>{{institute}}</div>
+				<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
+				<div class="doi_table_row"><b>DOI: </b><a class="doi_link" href="{{doi}}">{{doi}}</a></div>
+				<div class="doi_table_row"><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
+
+				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a></div>
+				<small> *If you don't have access to the dataset, please get in touch with the listed contact.</samll>
+			</div>
+		</div>
+		{% include "keeper_footer.html" %}
+	</body>
+</html>

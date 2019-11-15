@@ -118,7 +118,7 @@ from seahub.api2.endpoints.admin.address_book.groups import AdminAddressBookGrou
         AdminAddressBookGroup
 from seahub.api2.endpoints.admin.group_owned_libraries import AdminGroupOwnedLibraries, \
         AdminGroupOwnedLibrary
-from seahub.api2.views_keeper import DoiView
+from seahub.api2.views_keeper import DoiView, LandingPageView
 
 urlpatterns = [
     url(r'^accounts/', include('seahub.base.registration_urls')),
@@ -507,7 +507,8 @@ urlpatterns = [
     url(r'^useradmin/batchadduser/example/$', batch_add_user_example, name='batch_add_user_example'),
 
     url(r'^client-login/$', client_token_login, name='client_token_login'),
-    url(r'^doi/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<commit_id>[0-9a-f]{40})/$', DoiView, name='doi_page')
+    url(r'^doi/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<commit_id>[0-9a-f]{40})/$', DoiView, name='doi_page'),
+    url(r'^landing-page/libs/(?P<repo_id>[-0-9a-f]{36})/$', LandingPageView, name='landing_page')
 ]
 
 from seahub.utils import EVENTS_ENABLED

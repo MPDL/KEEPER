@@ -213,7 +213,6 @@ def archive_lib(request):
     user_email = request.user.username
     repo = get_repo(repo_id)
 
-    #replace doi_manager.get_metadata with 
     metadata = get_metadata(repo_id, user_email, "archive")
 
     if 'error' in metadata:
@@ -227,3 +226,16 @@ def archive_lib(request):
             'msg': msg,
             'status': 'success'
         })
+
+def LandingPageView(request, repo_id):
+    repo_owner = get_repo_owner(repo_id)
+
+    doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+    if doi_repos:
+        return render(request, './catalog_detail/landing_page_1.html', {
+            'doi_dict': doi_repos[0].md,
+            'owner_contact_email': email2contact_email(repo_owner) 
+        })
+    
+    return render(request, '404.html')
+
