@@ -15,10 +15,12 @@ define([
     'app/views/fileupload',
     'app/views/share',
     'app/views/file-comments',
-    'app/views/widgets/dropdown'
+    'app/views/widgets/dropdown',
+    'app/keeper-utils'
     ], function($, jQueryUI, magnificPopup, simplemodal, _, Backbone, Common,
         FileTree, Cookies, DirentCollection, DirentView, DirentGridView,
-        DirentDetailsView, FileUploadView, ShareView, FileCommentsView, DropdownView) {
+        DirentDetailsView, FileUploadView, ShareView, FileCommentsView, 
+        DropdownView, keeperUtils) {
         'use strict';
 
         var DirView = Backbone.View.extend({
@@ -622,6 +624,8 @@ define([
                 'click #add-new-word-file': 'newWordFile',
 
                 'click #share-cur-dir': 'share',
+                'click #archive-cur-lib': 'archiveLibrary',
+
                 'click #js-switch-grid-view': 'switchToGridView',
                 'click #js-switch-list-view': 'switchToListView',
 
@@ -887,6 +891,12 @@ define([
                     }
                 }
                 new ShareView(options);
+            },
+
+            archiveLibrary: function () {   
+                var dir = this.dir; 
+                keeperUtils.archive(dir.repo_name, dir.repo_id);
+                return false;
             },
 
             switchToGridView: function() {
