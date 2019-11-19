@@ -121,8 +121,8 @@
                     <% if (app.pageOptions.enable_repo_snapshot_label) { %>
                     <li><a class="op js-add-label" href="#">{% trans "Label current state" %}</a></li>
                     <% } %>
-                    <li><a class="op js-add-doi-label" href="#">Assign DOI to current state</a></li>
-                    <li><a class="op js-archive-library-label" href="#">Archive Library</a></li>
+                    <li><a class="op js-add-doi-label" href="#">{% trans "Assign DOI to current state" %}</a></li>
+                    <li><a class="op js-archive-library-label" href="#">{% trans "Archive Library" %}</a></li>
                 </ul>
             </div>
         </div>
@@ -1142,19 +1142,6 @@
                     <th width="35%"></th>
                     <td width="65%"></td>
                 </tr>
-                <tr>
-                    <th>{% trans "Folders" %}</th>
-                    <td class="dir-folder-counts"></td>
-                </tr>
-                <tr>
-                    <th>{% trans "Files" %}</th>
-                    <td class="dir-file-counts"></td>
-                </tr>
-                <tr>
-                    <th>{% trans "Size" %}</th>
-                    <td class="dir-size"></td>
-                </tr>
-
                 <tr>
                     <th>{% trans "Location" %}</th>
                     <td><%- path %></td>

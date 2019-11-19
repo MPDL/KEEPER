@@ -14,7 +14,7 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
-exec > >(tee ${__KEEPER_LOG_DIR__}/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
+exec > >(tee __KEEPER_LOG_DIR__/keeper_object_sorage_integrity.`date '+%Y-%m-%d'`.log)
 exec 2>&1 
 
 

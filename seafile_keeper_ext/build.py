@@ -449,6 +449,10 @@ class EnvManager(object):
         self.keeper_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper.service')
         self.keeper_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper.service']
 
+        self.keeper_oos_log_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
+        self.keeper_oos_log_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service']
+
+
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
@@ -521,7 +525,8 @@ def do_links(link_target_list):
 
 def expand_properties(content, path):
     kc = env_mgr.keeper_config
-    is_background = kc.get('global', '__NODE_TYPE__').lower() == 'background'
+    node_type = kc.get('global', '__NODE_TYPE__').lower()
+    is_background = node_type == 'background'
     for section in kc.sections():
         for key, value in kc.items(section):
            # capitalize bools
@@ -538,6 +543,12 @@ def expand_properties(content, path):
     #remove complete external_es_server setting complete from seafevents.conf on BACKGROUND node
     if is_background:
         content = re.sub("external_es_server.*?\n", "", content)
+
+    #remove email smpt auth params for app nodes
+    if node_type != 'single' and path.endswith('seahub_settings.py'):
+        content = re.sub("EMAIL_HOST_USER.*?\n", "", content)
+        content = re.sub("EMAIL_HOST_PASSWORD.*?\n", "", content)
+
 
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
@@ -718,7 +729,7 @@ def deploy_system_conf():
     deploy_file('system/phpmyadmin.conf', expand=True)
     deploy_file('system/rsyslog.conf', expand=True)
     deploy_file('system/my.cnf', expand=True)
-    deploy_file('system/nagios.keeper.cfg')
+    deploy_file('system/nagios.keeper.cfg',expand=True)
 
     # deploy http confs
     deploy_http_conf()
@@ -731,6 +742,11 @@ def deploy_system_conf():
         deploy_file('system/memcached.service.d.local.conf', expand=True)
         deploy_file('system/journald.conf', expand=True)
         deploy_file('system/keeper-oos-log.service', expand=True)
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service'], 0755)
+        do_links((
+          (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
+        ))
+
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/my.cnf@single', expand=True)
@@ -755,12 +771,17 @@ def deploy_system_conf():
 
 def run_services():
 
+    keep_ini = env_mgr.keeper_config
+
     Utils.run('systemctl daemon-reload')
     Utils.run('systemctl restart rsyslog')
     Utils.run('systemctl restart systemd-journald')
     Utils.run('systemctl restart memcached')
-    Utils.run('systemctl enable keeper-oos-log')
-    Utils.run('systemctl start keeper-oos-log')
+    node_type = keep_ini.get('global', '__NODE_TYPE__')
+    if node_type == 'APP':
+      Utils.run('systemctl enable keeper-oos-log')
+      Utils.run('systemctl start keeper-oos-log')
+
 
 
 
@@ -793,6 +814,7 @@ def do_deploy(args):
         deploy_http_conf()
     elif args.system_conf:
         deploy_system_conf()
+        run_services()
     else:
         if args.directory:
             for path in args.directory:
@@ -818,8 +840,8 @@ def do_generate(args):
         Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
         Utils.info('Generate i18n...')
-        Utils.run("make locale-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
-        Utils.run("make statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        Utils.run("make locale-keeper statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        # Utils.run("make statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
         Utils.info('Done.')
     elif args.min_css:
         Utils.info('Generate seahub.min.css...')

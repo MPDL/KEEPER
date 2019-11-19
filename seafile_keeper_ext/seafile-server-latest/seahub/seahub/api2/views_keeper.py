@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from seahub import settings
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, SERVICE_URL
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
@@ -17,6 +17,9 @@ from keeper.models import CDC, DoiRepo
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from django.utils.translation import ugettext as _
+
+
 import logging
 import datetime
 import requests
@@ -24,7 +27,7 @@ from requests.exceptions import ConnectionError, Timeout
 
 logger = logging.getLogger(__name__)
 
-BLOXBERG_URL = "https://bloxberg.org/certifyData"
+BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
 
 
@@ -71,7 +74,7 @@ def request_doxi(shared_link, doxi_payload):
         user=DOI_USER
         pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml'}
-        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload, timeout=15)
+        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload, timeout=DOI_TIMEOUT)
         return response
     except Timeout:
         return JsonResponse({
@@ -81,6 +84,9 @@ def request_doxi(shared_link, doxi_payload):
     except ConnectionError as e:
         logger.error(str(e))
 
+def get_landing_page_url(repo_id, commit_id):
+    return "{}/doi/libs/{}/{}".format(SERVICE_URL, repo_id, commit_id)
+
 def add_doi(request):
     repo_id = request.GET.get('repo_id', None)
     user_email = request.user.username
@@ -88,7 +94,7 @@ def add_doi(request):
     doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
     if doi_repos:
         msg = 'This library already has a DOI. '
-        url_landing_page = SERVICE_URL + '/doi/libs/' + doi_repos[0].repo_id + '/' + doi_repos[0].commit_id
+        url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
         send_notification(msg, repo_id, 'error', user_email, doi_repos[0].doi, url_landing_page)
         return JsonResponse({
             'msg': msg + doi_repos[0].doi,
@@ -106,7 +112,7 @@ def add_doi(request):
     metadata_xml = generate_metadata_xml(metadata)
     commit_id = get_latest_commit_id(repo)
 
-    url_landing_page = SERVICE_URL + '/doi/libs/' + repo_id + '/' + commit_id
+    url_landing_page = get_landing_page_url(repo_id, commit_id)
     response_doxi = request_doxi(url_landing_page, metadata_xml)
 
     if response_doxi is not None:
@@ -115,8 +121,8 @@ def add_doi(request):
             logger.info(doi)
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = 'DOI successfully created: '
-            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)                
+            msg = _(u'DOI successfully created') + ': '
+            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
             send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
                 'msg': msg + doi,
@@ -163,7 +169,7 @@ def DoiView(request, repo_id, commit_id):
 
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
-    
+
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,

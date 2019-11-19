@@ -494,12 +494,12 @@ DESKTOP_CUSTOM_BRAND = 'KEEPER'
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = '__EMAIL_HOST__'        # smpt server
-EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
-EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 EMAIL_PORT = '__EMAIL_PORT__'
-###### DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
 SERVER_EMAIL = '__SERVER_EMAIL__'
+#settings only for BACKGROUND & SINGLE, removed APPs by build.py
+EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
+EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 
 ##########################################################################
 #### Multiple Organization/Institution User Management, see http://manual.seafile.com/deploy_pro/multi_institutions.html
@@ -563,6 +563,14 @@ KEEPER_DEFAULT_LIBRARY = 'Keeper Default Library'
 DOI_SERVER = '__DOI_SERVER__'
 DOI_USER = '__DOI_USER__'
 DOI_PASSWORD = '__DOI_PASSWORD__'
+DOI_TIMEOUT = __DOI_TIMEOUT__
+
+# KEEPER external resources
+KEEPER_MPG_DOMAINS_URL = '__KEEPER_MPG_DOMAINS_URL__'
+KEEPER_MPG_IP_LIST_URL = '__KEEPER_MPG_IP_LIST_URL__'
+
+# Keepear bloxberg integration
+BLOXBERG_SERVER = '__BLOXBERG_SERVER__'
 
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'

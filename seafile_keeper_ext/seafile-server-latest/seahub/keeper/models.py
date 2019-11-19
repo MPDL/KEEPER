@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
-        return super(CatalogManager, self).get(repo_id=repo_id)
+        return self.get(repo_id=repo_id)
 
     def get_all(self):
         return super(CatalogManager, self).all()
@@ -149,21 +149,20 @@ from django.dispatch import receiver
 from seahub.signals import repo_deleted
 
 @receiver(repo_deleted)
-def remove_catalog_and_cdc_entry(sender, **kwargs):
+def remove_keeper_entries(sender, **kwargs):
     repo_id = kwargs['repo_id']
-    logging.info("Repo deleted, id: %s" % repo_id)
     try:
+        logging.info("Removing keeper entries for repo: " + repo_id + "...")
         Catalog.objects.delete_by_repo_id(repo_id)
-        CDC.objects.get(repo_id=repo_id).delete()
-    except Exception:
-        logging.error(traceback.format_exc())
-
-@receiver(repo_deleted)
-def remove_doi(sender, **kwargs):
-    repo_id = kwargs['repo_id']
-    try:
+        logging.info("Project Catalog: done.")
+        cdc = CDC.objects.get_cdc_by_repo(repo_id)
+        if cdc:
+            cdc.delete()
+        logging.info("CDC: done.")
         doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-        doi_repos.update(rm=datetime.now())
+        if doi_repos:
+            doi_repos.update(rm=datetime.now())
+        logging.info("DOI: done.")
     except Exception:
         logging.error(traceback.format_exc())
 

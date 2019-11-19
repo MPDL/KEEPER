@@ -5345,6 +5345,10 @@ msgstr "Neue Bereichs-Bibliothek"
 msgid "Label current state"
 msgstr "Bezeichnung aktueller Zustand"
 
+
+
+
+
 #: seahub/templates/js/templates.html:100
 #: seahub/templates/js/templates.html:151
 #: seahub/templates/js/templates.html:276
@@ -7934,3 +7938,27 @@ msgstr "1 Objekt erfolgreich gelöscht"
 #: seahub/views/wiki.py:160
 msgid "You do not have permission to create wiki"
 msgstr "Sie haben nicht die erforderlichen Rechte, ein Wiki zu erstellen"
+
+# KEEPER
+msgid "Assign DOI to current state"
+msgstr "DOI der aktuellen Version zuweisen"
+
+msgid "Cannot assign DOI if the library has no content."
+msgstr "DOI kann nicht zugewiesen werden, wenn die Bibliothek keinen Inhalt hat."
+
+msgid "Cannot assign DOI if archive-metadata.md file does not exist."
+msgstr "DOI kann nicht zugewiesen werden, wenn die archive-metadata.md Datei nicht existiert."
+
+msgid "%(field)s field is either invalid or not filled."
+msgstr "Das Feld %(field)s ist entweder ungültig oder nicht ausgefüllt."
+
+msgid "%(fields)s fields are either invalid or not filled."
+msgstr "Die Felder %(fields)s sind entweder ungültig oder nicht ausgefüllt."
+
+msgid "DOI successfully created"
+msgstr "DOI erfolgreich zugewiesen"
+
+msgid "Please check out notifications for more details."
+msgstr "Bitte beachten Sie die Benachrichtigungen für weitere Details."
+
+

@@ -116,13 +116,13 @@ def application(env, start_response):
                 break
         # change this or add code to support sigle-sign-on or session based authentification
 
-        #if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
-        #    errmsg = ''
-        #    is_valid_user = 1
+        if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
+           errmsg = ''
+           is_valid_user = 1
 
         # allow all
-        is_valid_user = 1
-        errmsg = ''
+        # is_valid_user = 1
+        # errmsg = ''
 
 
         results = []

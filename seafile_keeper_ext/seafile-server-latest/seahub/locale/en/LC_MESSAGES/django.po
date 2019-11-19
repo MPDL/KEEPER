@@ -5486,6 +5486,7 @@ msgstr "New Department Library"
 msgid "Label current state"
 msgstr "Label current state"
 
+
 #: seahub/templates/js/templates.html:100
 #: seahub/templates/js/templates.html:151
 #: seahub/templates/js/templates.html:276
@@ -8166,3 +8167,36 @@ msgstr "Successfully deleted 1 item"
 #: seahub/views/wiki.py:160
 msgid "You do not have permission to create wiki"
 msgstr "You do not have permission to create wiki"
+
+
+# KEEPER
+msgid "Assign DOI to current state"
+msgstr ""
+
+msgid "Cannot assign DOI if the library has no content."
+msgstr ""
+
+msgid "Cannot assign DOI if archive-metadata.md file does not exist."
+msgstr ""
+
+msgid "%(field)s field is either invalid or not filled."
+msgstr ""
+
+msgid "%(fields)s fields are either invalid or not filled."
+msgstr ""
+
+msgid "DOI successfully created"
+msgstr ""
+
+msgid "Please check out notifications for more details."
+msgstr ""
+
+msgid "Assign DOI to {library_name}"
+msgstr ""
+
+msgid "Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library."
+msgstr "" 
+
+msgid "Assign DOI"
+msgstr ""
+

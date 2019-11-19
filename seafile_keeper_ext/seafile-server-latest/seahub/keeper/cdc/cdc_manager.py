@@ -321,6 +321,7 @@ def generate_certificate(repo, commit):
         cdc_dict = parse_markdown(file.get_content())
 
         status = 'metadata are not valid'
+        is_successful = False
 
         if validate(cdc_dict):
 
@@ -400,12 +401,16 @@ def generate_certificate(repo, commit):
                     'AUTHOR_LIST': get_authors_for_email(cdc_dict['Author']), 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
 
+            is_successful = True
+
         #send user notification
         LOGGER.info("Commit desc: " + commit.desc)
         LOGGER.info("event: {}".format(event))
         if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
+            header = "Certificate processed for library" if is_successful else "Cannot process certificate for library"
             UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
                 json.dumps({
+                'header': header,
                 'status': status,
                 'message':('; '.join(CDC_MSG)),
                 'msg_from': SERVER_EMAIL,

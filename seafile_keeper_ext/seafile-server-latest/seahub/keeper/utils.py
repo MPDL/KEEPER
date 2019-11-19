@@ -3,8 +3,15 @@
 from __future__ import print_function
 import logging
 import re
+import urllib2
+import json
+from datetime import datetime
+
+from django.core.cache import cache
 
 from seahub.invitations.models import Invitation
+
+from seahub.settings import KEEPER_MPG_DOMAINS_URL
 
 # List from http://colab.mpdl.mpg.de/mediawiki/Max_Planck_email_domains
 # Format: Institutsname<Tab>Ort<Tab>eMail domain<Tab>Kommentar
@@ -127,35 +134,134 @@ Max-Planck-Institut für terrestrische Mikrobiologie	Marburg	mpi-marburg.mpg.de
 Max-Planck-Institut für Wissenschaftsgeschichte	Berlin	mpiwg-berlin.mpg.de
 Max-Planck-Institut zur Erforschung multireligiöser und multiethnischer Gesellschaften	Göttingen	mmg.mpg.de
 Max-Planck-Institut zur Erforschung von Gemeinschaftsgütern	Bonn	coll.mpg.de
+Max-Planck-Institut für VerhaltensbiologieKonstanzab.mpg.de	Konstanz	ab.mpg.de
+Max-Planck-Forschungsstelle für die Wissenschaft der Pathogene	Berlin	mpusp.mpg.de
 Mülheimer Institute	Mülheim an der Ruhr	mpi-muelheim.mpg.de	Nachfolgeinstitute: MPI chemische Energiekonversion + MPI Kohlenforschung
 Stuttgarter Institute	Stuttgart	mpis.mpg.de	Nachfolgeinstitute: MPI Intelligente Systeme + MPI Festkörperforschung
 '''
+EMAIL_LIST_TIMESTAMP = 'Thu Aug 26 11:46:00 2019'
 ACCOUNT_ACTIVATION_PATTERN = '^.*@(' + "|".join(
     map((lambda s: re.escape(s.split('\t')[2])), EMAIL_DOMAIN_LIST.splitlines())
 ) + ')$'
 COMPILED_PATTERN = re.compile(ACCOUNT_ACTIVATION_PATTERN)
 
-def email_in_mpg_domain_list(email):
-    flag = False
-    try:
-        flag = re.match(COMPILED_PATTERN, email)
-    except Exception as e:
-        logging.error("Cannot match pattern: {}".format(e))
+# time to live of the mpg IP set: day
+KEEPER_DOMAINS_TTL = 60 * 60 * 24
 
-    return flag
+KEEPER_DOMAINS_KEY = 'KEEPER_DOMAINS'
+
+KEEPER_DOMAINS_LAST_FETCHED_KEY = 'KEEPER_DOMAINS_LAST_FETCHED'
+
+KEEPER_DOMAINS_TS_KEY = 'KEEPER_DOMAINS_TS'
+
+TS_FORMAT = "%a %b %d %H:%M:%S %Y"
+
+def has_to_be_updated(domains_dict):
+    """
+    Check rena domain list status for cache update
+    """
+
+    # False if domain list is empty
+    if not domains_dict['details']:
+        return False
+
+    # False if mpdl domain is not in the list
+    if not 'mpdl.mpg.de' in domains_dict['details']:
+        return False
+
+    # False if json ts is older or same
+    d_cache = datetime.strptime(cache.get(KEEPER_DOMAINS_TS_KEY), TS_FORMAT)
+    d_json =  datetime.strptime(domains_dict['timestamp'], TS_FORMAT)
+    if d_json <= d_cache:
+        return False
+
+    return True
+
+
+def get_domain_list_from_cache():
+    """
+    Get domain list from cache. If cache is empty, get the list from hardcoded
+    starter and put it into the cache.
+    """
+    # get old domains from cache by default
+    logging.info("Get domains from old cache by default...")
+    domains = cache.get(KEEPER_DOMAINS_KEY)
+    # init case: KEEPER_DOMAINS_KEY does not exist, populate from hardcoded
+    # globvar
+    if domains is None:
+        logging.info("MPG DOMAIN LIST IS EMPTY, INITIALIZE FROM HARDCODED STARTER")
+        domains = map((lambda s: s.split('\t')[2]), EMAIL_DOMAIN_LIST.splitlines())
+        cache.set(KEEPER_DOMAINS_KEY, domains, None)
+        cache.set(KEEPER_DOMAINS_TS_KEY, EMAIL_LIST_TIMESTAMP, None)
+
+    return domains
+
+
+def get_domain_list():
+    """
+    Get MPG domain list ranges from cache or from rena service if cache is expired.
+    Source of the list is http://colab.mpdl.mpg.de/mediawiki/Max_Planck_email_domains
+    """
+
+    domains = get_domain_list_from_cache()
+
+    if cache.get(KEEPER_DOMAINS_LAST_FETCHED_KEY) is None:
+        try:
+            # get json from server
+            response = urllib2.urlopen(KEEPER_MPG_DOMAINS_URL)
+            json_str = response.read()
+            # parse json
+            json_dict = json.loads(json_str)
+            if has_to_be_updated(json_dict):
+                domains = json_dict['details']
+                logging.info("Domain list has been updated, refresh cache...")
+                cache.set(KEEPER_DOMAINS_KEY, domains, None)
+                cache.set(KEEPER_DOMAINS_TS_KEY, json_dict['timestamp'], None)
+        except Exception as e:
+            logging.info(
+                "Cannot get/parse new MPG domian list: " +
+                ": ".join(
+                    str(i) for i in e))
+        finally:
+            # set expiration time for next retrieval from rena
+            cache.set(
+                KEEPER_DOMAINS_LAST_FETCHED_KEY,
+                str(datetime.utcnow()),
+                KEEPER_DOMAINS_TTL)
+
+    return domains
+
+def is_in_mpg_domain_list(email):
+    """
+    True if email is in MPG domain list
+    """
+    domain = email.partition('@')[2]
+    if not domain:
+        logging.error("Cannot parse email: {}".format(email))
+        return False
+    return domain in get_domain_list()
+
+# def is_in_mpg_domain_list(email):
+#   # flag = False
+#   # try:
+#       # flag = re.match(COMPILED_PATTERN, email)
+#   # except Exception as e:
+#       # logging.error("Cannot match pattern: {}".format(e))
+#
+#   # return flag
 
 def account_can_be_auto_activated(email):
     """
-    account can be auto activated via activation token
+    True if account can be auto activated via activation token
     """
     # can if the uname in mpg domain
-    yes_you_can =  email_in_mpg_domain_list(email)
+    yes_you_can =  is_in_mpg_domain_list(email)
     if not yes_you_can:
         try:
             invitations = Invitation.objects.filter(accepter=email)
             # can if at least one inviter in mpg domain
             for inv in invitations:
-                if email_in_mpg_domain_list(inv.inviter):
+                if is_in_mpg_domain_list(inv.inviter):
                     return True
         except Exception as e:
             logging.error("Cannot lookup inviter: {}".format(e))
@@ -164,13 +270,8 @@ def account_can_be_auto_activated(email):
 
 def user_can_invite(email):
     """
-    user can invite if he/she is in the mpg domain
+    User can invite if he/she is in the mpg domain
     """
-    return email_in_mpg_domain_list(email)
+    return is_in_mpg_domain_list(email)
 
-if __name__ == "__main__":
-    print(ACCOUNT_ACTIVATION_PATTERN)
-    # if account_can_be_auto_activated('some_user@mpdl.mpg.de'):
-    if not account_can_be_auto_activated('test_email_for_non_mpg_domain@gmail.com'):
-        print('NOT ', end='')
-    print('Matched')
+

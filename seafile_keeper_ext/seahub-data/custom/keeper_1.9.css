@@ -149,28 +149,28 @@
             margin: 0 auto;
         }
 
-        /* LabCam banner  */
+        /* banner  */
         #login_panel .con.auth {
             padding: 5px 0px 10px 0px; 
             /*padding-bottom: 10px;*/
         }
 
-        #labcam-banner p {
+        #banner p {
             font: 13px/1.5 Arial,Helvetica,sans-serif;
             text-align: center;
             color: #333;
             margin-bottom: 0px;
         }
 
-        #labcam-banner a {
+        #banner a {
             font-weight: normal;
         }
 
         @media (min-width: 1200px), (max-width: 991px) {
-            #labcam-banner img { width: 331px; }
+            #banner img { width: 331px; }
         }
         @media (max-width: 1199px) and (min-width: 992px) {
-            #labcam-banner img { width: 343px; }
+            #banner img { width: 343px; }
         }
        
         /* FOOTER */
@@ -403,12 +403,12 @@ div.fright.js-file-op > a:focus {
 		@media (min-width:900px) {
 			.side-nav-footer{height:35%;bottom: -32%;}
 			#img-ctn{left:2%;}
-			#link-bar{width: 85%; position: absolute; left: 14%; top:1%;font-size: 0.65vw;}
+			#link-bar{width: 85%; position: absolute; left: 10%; top:1%;font-size: 0.65vw;}
 
 			/* positioning of elements inside the toolbar */
 			#barr-link1{width: 30%; position: absolute; left:0%;}
-			#barr-link2{width: 20%; position: absolute; left:35%;}
-			#barr-link3{width: 20%; position: absolute; right:0%;}
+			#barr-link2{width: 50%; position: absolute; left:35%;}
+			#barr-link3{width: 15%; position: absolute; right:0%;}
 	
 			.footer-item{
 			max-width:45%;

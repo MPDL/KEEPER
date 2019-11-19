@@ -44,7 +44,7 @@
         
     {% elif notice.msg_type  == "keeper_cdc_msg" %}
         {% json_to_var notice.detail as cdc_msg %}
-        <p class="brief">Certificate processed for library <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}" target="_new">{{ cdc_msg.lib_name }}</a></p>
+        <p class="brief">{{ cdc_msg.header }} <a href="{{ url_base }}/#my-libs/lib/{{ cdc_msg.lib }}" target="_new">{{ cdc_msg.lib_name }}</a></p>
 
     {% elif notice.msg_type  == "bloxberg_msg" %}
         {% json_to_var notice.detail as bloxberg_msg %}

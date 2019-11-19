@@ -18,7 +18,11 @@ TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 
-def get_metadata(repo_id, user_email, type):
+
+PUBLISHER = 'MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.'
+RESOURCE_TYPE = 'Library'
+
+def get_metadata(repo_id, user_email):
     """ Read metadata from libray root folder"""
 
     repo = seafile_api.get_repo(repo_id)
@@ -39,11 +43,15 @@ def get_metadata(repo_id, user_email, type):
         return {
             'error': msg,
         }
-    
+
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = 'Cannot' + action_type +'if the library has no content.'
+            if action_type == " archive library ": 
+                msg = 'Cannot' + action_type +'if the library has no content.'
+            else:
+                msg = _(u'Cannot assign DOI if the library has no content.')
+
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -52,20 +60,29 @@ def get_metadata(repo_id, user_email, type):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = 'Cannot' + action_type +'if archive-metadata.md file is not filled.'
+            if action_type == " archive library ": 
+                msg = 'Cannot' + action_type +'if archive-metadata.md file is not filled.'
+            else:
+                msg = _(u'Cannot assign DOI if archive-metadata.md file does not exist.')
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
             }
         owner = seafile_api.get_repo_owner(repo.id)
-        LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
+        LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
         doi_dict = parse_markdown_doi(file.get_content())
+        ## Add hardcoded DOI metadata
+        ## TODO: will be editable in next DOI releases
+        doi_dict.update({
+            'Publisher': PUBLISHER,
+            'Resource Type': RESOURCE_TYPE
+        })
         LOGGER.info(doi_dict)
 
         doi_msg = validate(doi_dict, repo_id, user_email)
         if len(doi_msg) > 0:
             return {
-                'error': ' '.join(doi_msg) + ' Please check out notifications for more details.',
+                'error': ' '.join(doi_msg) + ' ' + _(u'Please check out notifications for more details.'),
             }
         return doi_dict
 
@@ -79,14 +96,17 @@ def generate_metadata_xml(doi_dict):
     kernelSchema = "http://schema.datacite.org/meta/kernel-4/metadata.xsd"
     kernelSchemaLocation = kernelNamespace + " " + kernelSchema
 
+    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
+    resource_type = "Library"
+
     title = process_special_char(doi_dict.get('Title'))
     creators = process_special_char(doi_dict.get('Author'))
     LOGGER.info(creators)
     LOGGER.info(str.splitlines(creators))
     description = process_special_char(doi_dict.get('Description'))
-    publisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V."
+    publisher = doi_dict.get('Publisher')
     year = doi_dict.get('Year')
-    resource_type = doi_dict.get("Resource Type")
+    resource_type = doi_dict.get('Resource Type')
     prev_doi = None
 
     header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + br() + "<resource xmlns=\"" + kernelNamespace + "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"" + kernelSchemaLocation + "\">" + br()
@@ -141,7 +161,7 @@ def validate(doi_dict, repo_id, user_email):
 
     # 1. check mandatory fields
     # todo add more mandatory fields
-    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute', 'Resource Type']
+    doi_headers_mandatory = ['Title', 'Author', 'Year', 'Description', 'Institute']
     s1 = set(doi_dict.keys())
     s2 = set(doi_headers_mandatory)
 
@@ -168,9 +188,9 @@ def validate(doi_dict, repo_id, user_email):
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid
     if not valid and user_email is not None:
         if len(invalid_fields) > 1:
-            msg =  ', '.join(invalid_fields) + ' fields are either invalid or not filled.'
+            msg =  _(u'%(fields)s fields are either invalid or not filled.') % { 'fields': ', '.join(invalid_fields) }
         elif len(invalid_fields) == 1:
-            msg =  invalid_fields.pop() + ' field is either invalid or not filled.'
+            msg =  _(u'%(field)s field is either invalid or not filled.') % { 'field': invalid_fields.pop() }
         doi_msg.append(msg)
         send_notification(doi_msg, repo_id, 'invalid', user_email)
     return doi_msg

@@ -172,6 +172,7 @@ case "$1" in
                 ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
+            sleep 3
             $0 status
         ;;
         stop)
