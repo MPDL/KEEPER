@@ -230,10 +230,16 @@ def archive_lib(request):
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
 
-    doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+    doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
+
+    #todo: find latest entry from two tables and fill in data...
+
     if doi_repos:
-        return render(request, './catalog_detail/landing_page_1.html', {
+        return render(request, './catalog_detail/lib_detail_landing_page.html', {
+            'authors': '; '.join(get_doi_authors(doi_repos)),
+            'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
             'doi_dict': doi_repos[0].md,
+            'doi_repos': doi_repos,
             'owner_contact_email': email2contact_email(repo_owner) 
         })
     

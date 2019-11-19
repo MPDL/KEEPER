@@ -24,11 +24,20 @@
 			<div>
 				<h1 class="doi_title">{{doi_dict.Title}}</h1>
 				<p class="doi_desc">{{doi_dict.Description}}</p>
+				<br />
 
 				<div class="doi_table_row"><b>Author(s): </b>{{authors}}</div>
 				<div class="doi_table_row"><b>Institute: </b>{{institute}}</div>
 				<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
-				<div class="doi_table_row"><b>DOI: </b><a class="doi_link" href="{{doi}}">{{doi}}</a></div>
+				<br />
+
+				{% if doi_repos.count > 0 %}
+					<b>Digital Object Identifier(DOI)</b><br />
+					{% for doi_repo in doi_repos%}
+					<a href="{doi_repo.doi}">{{doi_repo.doi}}</a><br />
+					{% endfor %}
+					<br />
+				{% endif %}
 				<div class="doi_table_row"><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
 
 				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a></div>
