@@ -495,7 +495,7 @@ define([
 
             var repo_name = _this.model.get('name');
             var repo_id = _this.model.get('id');
-            keeperUtils.archive(repo_name, repo_id);
+            keeperUtils.start_archive(repo_name, repo_id);
             return false;
 
         },

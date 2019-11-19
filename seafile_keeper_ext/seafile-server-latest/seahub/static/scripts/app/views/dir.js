@@ -895,7 +895,7 @@ define([
 
             archiveLibrary: function () {   
                 var dir = this.dir; 
-                keeperUtils.archive(dir.repo_name, dir.repo_id);
+                keeperUtils.start_archive(dir.repo_name, dir.repo_id);
                 return false;
             },
 

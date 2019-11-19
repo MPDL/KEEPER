@@ -21,7 +21,6 @@ define([
                 Cookie.get('group_expanded') == 'true') {
                 this.group_expanded = true;
             }
-            console.log(app.pageOptions);
             this.data = {
                 'cur_tab': this.default_cur_tab,
                 'show_group_list': this.group_expanded, // when cur_tab is not 'group'

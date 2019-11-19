@@ -227,8 +227,24 @@ def archive_lib(request):
             'status': 'success'
         })
 
+def can_archive(request):
+
+    repo_id = request.GET.get('repo_id', None)
+    user_email = request.user.username
+    repo = get_repo(repo_id)
+    
+    msg = repo.size < 67108864000000000
+    return JsonResponse({
+        'msg': msg,
+        'status': 'success'
+    })
+
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
+    if repo_owner is None:
+        repo_owner_email = "keeper@mpdl.mpg.de"
+    else:
+        repo_owner_email = email2contact_email(repo_owner)
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
 
@@ -240,7 +256,7 @@ def LandingPageView(request, repo_id):
             'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
             'doi_dict': doi_repos[0].md,
             'doi_repos': doi_repos,
-            'owner_contact_email': email2contact_email(repo_owner) 
+            'owner_contact_email':  repo_owner_email
         })
     
     return render(request, '404.html')
