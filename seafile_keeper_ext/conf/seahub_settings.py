@@ -124,7 +124,7 @@ LOGGING = {
 }
 
 # Debug mode
-DEBUG = True
+DEBUG = False
 
 
 # KEEPER Service URL
