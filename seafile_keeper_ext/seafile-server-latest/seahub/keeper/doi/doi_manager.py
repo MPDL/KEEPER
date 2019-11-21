@@ -22,7 +22,7 @@ MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 PUBLISHER = 'MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.'
 RESOURCE_TYPE = 'Library'
 
-def get_metadata(repo_id, user_email):
+def get_metadata(repo_id, user_email, action_type):
     """ Read metadata from libray root folder"""
 
     repo = seafile_api.get_repo(repo_id)

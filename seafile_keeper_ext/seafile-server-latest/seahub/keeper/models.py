@@ -236,3 +236,45 @@ class DoiRepo(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     rm = models.DateTimeField(blank=True, default=None, null=True)
     objects = DoiRepoManager()
+
+class ArchiveQuotaManager(models.Manager):
+
+    def init_archive_quota(self, repo_id, owner):
+        try:
+            quota = self.model(repo_id=repo_id, owner=owner, quota=5)
+            quota.save()
+            return quota
+        except Exception:
+            logging.error(traceback.format_exc())
+    
+    def get_archive_quota(self, repo_id, owner):
+        try:
+            quota = super(ArchiveQuotaManager, self).get(repo_id=repo_id, owner=owner)
+            return quota
+        except ArchiveQuota.DoesNotExist:
+            return None
+
+    def set_archive_quota(self, repo_id, owner):
+        try:
+            quota = self.get_archive_quota(repo_id, owner)
+            if quota is not None and quota.quota > 0:
+                quota.quota = quota.quota -1
+                quota.save()
+                return quota.quota
+            else:
+                return -1
+        except Exception:
+            logging.error(traceback.format_exc())
+            return -1
+
+class ArchiveQuota(models.Model):
+
+    """ Archive Quota per Library per User """
+    class Meta:
+        db_table = 'archive_owner_quota'
+
+    id = models.AutoField(auto_created = True, primary_key = True, null=False)
+    owner = models.CharField(max_length=255, null=False)
+    repo_id = models.CharField(max_length=37, null=False)
+    quota = models.IntegerField(null=False)
+    objects = ArchiveQuotaManager()

@@ -12,7 +12,7 @@ from seaserv import seafile_api
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification
-from keeper.models import CDC, DoiRepo
+from keeper.models import CDC, DoiRepo, ArchiveQuota
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -227,7 +227,14 @@ def archive_lib(request):
             'status': 'error',
             })
 
-    msg = "archive_lib in views_keeper"
+    #todo: 1. create archive_repos, set archive quota
+    quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
+
+    if quota == -1:
+        msg = "Can not set archive quota for this Library, please contact support"
+    else:
+        msg = str(quota) + " left!"
+
     return JsonResponse({
             'msg': msg,
             'status': 'success'
@@ -238,12 +245,35 @@ def can_archive(request):
     repo_id = request.GET.get('repo_id', None)
     user_email = request.user.username
     repo = get_repo(repo_id)
+    is_oversized = repo.size > 67108864000000000
+
+    if is_oversized:
+        return JsonResponse({
+            'msg': "oversized",
+            'status': "error"
+        })
     
-    msg = repo.size < 67108864000000000
-    return JsonResponse({
-        'msg': msg,
-        'status': 'success'
-    })
+    quota = update_quota(repo_id, user_email)
+
+    if quota <= 0: 
+        return JsonResponse({
+            'msg': "quota_expired",
+            'status': "error"
+        })
+    else:
+        return JsonResponse({
+        'quota': quota,
+        'status': "success"
+    }) 
+
+def update_quota(repo_id, owner):
+    quota = ArchiveQuota.objects.get_archive_quota(repo_id, owner)
+
+    if quota is None:
+        quota = ArchiveQuota.objects.init_archive_quota(repo_id, owner)
+
+    return quota.quota
+
 
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
