@@ -66,7 +66,7 @@ LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
 from constance import config
 
 # Landing Pages add DoiRepo
-from keeper.models import DoiRepo
+from keeper.models import DoiRepo, ArchiveRepo
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -709,16 +709,25 @@ def libraries(request):
         logger.error(e)
         expire_days = -1
 
-    try:
-        doi_repos = DoiRepo.objects.get_doi_by_owner(username)
-        if doi_repos:
-            landing_pages = []
-            for doi_repo in doi_repos:
-                landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": doi_repo.repo_name })
 
-    except Exception as e:
-        logger.error(e)
-        landing_pages = []
+    landing_pages = []
+    doi_repos = DoiRepo.objects.get_doi_by_owner(username)
+    if doi_repos:
+        for doi_repo in doi_repos:
+            landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": doi_repo.repo_name })
+
+    archive_repos = ArchiveRepo.objects.get_archive_repos_by_owner(username)
+    if archive_repos:
+        for archive_repo in archive_repos:
+            archive_repo_id = archive_repo.repo_id
+            has_landing_page = False
+            for landing_page in landing_pages:
+                if landing_page["repo_id"] == archive_repo_id:
+                    has_landing_page = True
+                    break
+            if  has_landing_page == False:
+                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name":  seafile_api.get_repo(archive_repo_id).name})
+
 
     return render(request, 'libraries.html', {
             "allow_public_share": allow_public_share,

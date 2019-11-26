@@ -31,17 +31,22 @@
 				<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
 				<br />
 
+				{% if archive_repos.count > 0 %}
+					<b>Archives</b><br />
+					{% for archive_repo in archive_repos%}
+					<a href="">Archive {{archive_repo.created}}</a><br />
+					{% endfor %}
+					<br />
+				{% endif %}
+
 				{% if doi_repos.count > 0 %}
 					<b>Digital Object Identifier(DOI)</b><br />
 					{% for doi_repo in doi_repos%}
-					<a href="{doi_repo.doi}">{{doi_repo.doi}}</a><br />
+					<a href="{{doi_repo.doi}}">{{doi_repo.doi}}</a><br />
 					{% endfor %}
 					<br />
 				{% endif %}
 				<div class="doi_table_row"><b>Contact: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
-
-				<div class="doi_source"><a class="doi_download" href="{{share_link}}">Link to dataset (login required)</a></div>
-				<small> *If you don't have access to the dataset, please get in touch with the listed contact.</samll>
 			</div>
 		</div>
 		{% include "keeper_footer.html" %}

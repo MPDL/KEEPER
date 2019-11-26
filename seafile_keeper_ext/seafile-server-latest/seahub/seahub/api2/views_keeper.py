@@ -12,7 +12,7 @@ from seaserv import seafile_api
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification
-from keeper.models import CDC, DoiRepo, ArchiveQuota
+from keeper.models import CDC, DoiRepo, ArchiveQuota, ArchiveRepo
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -162,7 +162,7 @@ def DoiView(request, repo_id, commit_id):
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repos[0].doi,
             'doi_dict': doi_repos[0].md,
-            'authors': '; '.join(get_doi_authors(doi_repos)),
+            'authors': '; '.join(get_authors_from_md(doi_repos[0].md)),
             'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
             'library_name': doi_repos[0].repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
@@ -173,15 +173,15 @@ def DoiView(request, repo_id, commit_id):
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
-        'authors': '; '.join(get_doi_authors(doi_repos)),
+        'authors': '; '.join(get_authors_from_md(doi_repos[0].md)),
         'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
         'doi_dict': doi_repos[0].md,
         'doi': doi_repos[0].doi,
         'owner_contact_email': email2contact_email(repo_owner) })
 
-def get_doi_authors(doi_repos):
-    authors = doi_repos[0].md.get("Author").split('\n')
+def get_authors_from_md(md):
+    authors = md.get("Author").split('\n')
     result_author = []
     for author in authors:
         author_array = author.split(";")
@@ -212,34 +212,6 @@ def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
     return CDC.objects.get_cdc_id_by_repo(repo_id)
 
-
-def archive_lib(request):
-
-    repo_id = request.GET.get('repo_id', None)
-    user_email = request.user.username
-    repo = get_repo(repo_id)
-
-    metadata = get_metadata(repo_id, user_email, "archive")
-
-    if 'error' in metadata:
-        return JsonResponse({
-            'msg': metadata.get('error'),
-            'status': 'error',
-            })
-
-    #todo: 1. create archive_repos, set archive quota
-    quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
-
-    if quota == -1:
-        msg = "Can not set archive quota for this Library, please contact support"
-    else:
-        msg = str(quota) + " left!"
-
-    return JsonResponse({
-            'msg': msg,
-            'status': 'success'
-        })
-
 def can_archive(request):
 
     repo_id = request.GET.get('repo_id', None)
@@ -266,6 +238,54 @@ def can_archive(request):
         'status': "success"
     }) 
 
+def archive_lib(request):
+
+    """ archive library, double check quota to avoid misuse """
+    repo_id = request.GET.get('repo_id', None)
+    user_email = request.user.username
+    repo = get_repo(repo_id)
+    metadata = get_metadata(repo_id, user_email, "archive")
+
+    if 'error' in metadata:
+        return JsonResponse({
+            'msg': metadata.get('error'),
+            'status': 'error',
+            })
+
+    quota = ArchiveQuota.objects.get_archive_quota(repo_id, user_email)
+    if quota.quota <= 0:
+        return JsonResponse({
+            'msg': "Misuse of archive_lib api!",
+            'status': 'error'
+        })
+
+    #todo: 1 perform archive, start background service
+
+    #todo: 2. for now we assume archive in done synchronously update library
+    commit_id = get_latest_commit_id(repo)
+    checksum = "todo:ask_vlad_how_to_get_checksum_of_zip"
+    status = "in_process"
+    external_path = "some_external_path"
+
+    archiveRepo = archive_finished(repo_id, commit_id, user_email, checksum, external_path, metadata, status)
+
+    #todo: 3. set archive quota after archive is done
+    quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
+
+    if quota == -1:
+        msg = "Can not archive for this Library, please contact support"
+    else:
+        msg = str(quota) + " left!"
+
+    return JsonResponse({
+            'msg': msg,
+            'status': 'success'
+        })
+
+def archive_finished(repo_id, commit_id, user_email, checksum, external_path, metadata, status):
+    archiveRepo = ArchiveRepo.objects.create_archive_repo(repo_id, commit_id, user_email, checksum, external_path, metadata, status)
+    return archiveRepo
+
 def update_quota(repo_id, owner):
     quota = ArchiveQuota.objects.get_archive_quota(repo_id, owner)
 
@@ -278,20 +298,26 @@ def update_quota(repo_id, owner):
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
     if repo_owner is None:
-        repo_owner_email = "keeper@mpdl.mpg.de"
+        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)  
     else:
         repo_owner_email = email2contact_email(repo_owner)
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
 
-    #todo: find latest entry from two tables and fill in data...
+    archive_repos = ArchiveRepo.objects.get_archive_repos_by_repo_id(repo_id)
 
     if doi_repos:
+        md = doi_repos[0].md
+    elif archive_repos:
+        md = archive_repos[0].md
+    
+    if md:
         return render(request, './catalog_detail/lib_detail_landing_page.html', {
-            'authors': '; '.join(get_doi_authors(doi_repos)),
-            'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
-            'doi_dict': doi_repos[0].md,
+            'authors': '; '.join(get_authors_from_md(md)),
+            'institute': md.get("Institute").replace(";", "; "),
+            'doi_dict': md,
             'doi_repos': doi_repos,
+            'archive_repos': archive_repos,
             'owner_contact_email':  repo_owner_email
         })
     
