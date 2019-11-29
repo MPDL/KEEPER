@@ -112,7 +112,7 @@ def test_huge_repo_archiving():
 
 
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_new_archiving():
    # from seafevents.app.config import load_config
 

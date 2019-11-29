@@ -24,6 +24,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
+from keeper.utils import add_keeper_archiving_task
 
 logger = logging.getLogger(__name__)
 
@@ -320,7 +321,10 @@ def archive_lib(request):
     external_path = "some_external_path"
     repo_name = repo.name
 
-    archiveRepo = archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
+    resp1 = add_keeper_archiving_task(repo_id, user_email)
+    logger.debug(resp1.__dict__)
+
+    #archiveRepo = archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
 
     #todo: set archive quota should be removed
     quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
@@ -328,7 +332,7 @@ def archive_lib(request):
     if quota == -1:
         msg = "Can not archive for this Library, please contact support"
     else:
-        msg = "Archive started: " + str(quota) + " left!"
+        msg = "Archive started: " + resp1["status"]
 
     return JsonResponse({
             'msg': msg,
