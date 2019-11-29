@@ -2,31 +2,70 @@
 
 import os
 import Queue
-import tempfile
 import tarfile
 import threading
-import logging
+import logging as _l
 import atexit
-
-from .convert import Convertor, ConvertorFatalError
+import shutil
+import hashlib
 
 from seaserv import seafile_api
+from seafobj import commit_mgr, fs_mgr
+
+from seahub_settings import ARCHIVE_METADATA_TARGET
+
+
+import json
 
 __all__ = ["task_manager"]
 
-def _checkdir(dname):
+def _check_dir(dname):
     # If you do not have permission for keeper-archiving-storage files, then false is returned event if the file exists.
     if os.path.exists(dname):
         if not os.path.isdir(dname):
             raise RuntimeError("{} exists, but not a directory".format(dname))
-
         if not os.access(dname, os.R_OK | os.W_OK):
             raise RuntimeError("Access to {} denied".format(dname))
     else:
         msg = "Path to archiving storage {} does not exist".format(dname)
-        logging.error(msg)
+        _l.error(msg)
         raise RuntimeError(msg)
 
+def _remove_dir_or_file(path):
+    """Remove dir or file
+    """
+    _l.debug('Remove dir: {}'.format(path))
+    if path is not None and os.path.exists(path):
+        if os.path.isdir(path):
+            try:
+                shutil.rmtree(path, ignore_errors=True)
+            except Exception as e:
+                _l.error('Cannot remove directory {}: {}'.format(path, e))
+        elif os.path.isfile(path):
+            try:
+                os.remove(path)
+            except Exception as e:
+                _l.error('Cannot remove file {}: {}'.format(path, e))
+    else:
+        _l.warning('Directory/file {} does not exist.'.format(path))
+
+
+def _generate_file_md5(path, blocksize=5 * 2**20):
+    """Calculate md5 for the file
+    """
+    m = hashlib.md5()
+    with open(path, "rb") as f:
+        while True:
+            buf = f.read(blocksize)
+            if not buf:
+                break
+            m.update(buf)
+    return m.hexdigest()
+
+def get_archive_path(storage_path, owner, repo_id, version):
+    """Construct path to archive
+    """
+    return os.path.join(storage_path, owner, "{}_ver{}.tar.gz".format(repo_id, version))
 
 class KeeperArchivingTask(object):
     """ A task is in one of these status:
@@ -37,11 +76,16 @@ class KeeperArchivingTask(object):
     - ERROR: error in fetching or archiving
 
     """
-    def __init__(self, repo_id, owner, ver, archiving_storage):
+    def __init__(self, repo_id, owner, archiving_storage):
         self.repo_id = repo_id
         self.owner = owner
-        self.ver = ver
+
+
+        self.version = 1
         self.archiving_storage = archiving_storage
+
+        # unique archive id of the task
+        self.archive_id = None
 
         # path to tmp extracted library
         self._extracted_tmp_dir = None
@@ -49,7 +93,12 @@ class KeeperArchivingTask(object):
         # path to the created archive tar in file system
         self._archive_path = None
 
-        self._repo = seafile_api.get_repo(repo_id)
+        # path to the archive metadata markdown file
+        self._md_path = None
+
+        self._checksum = None
+
+        self._repo = None
 
         self._status = 'QUEUED'
         self.error = None
@@ -68,18 +117,18 @@ class KeeperArchivingTask(object):
         # Remove temporary file when done or error
         if status == 'ERROR' or status == 'DONE':
             path = self._extracted_tmp_dir
-            if path and os.path.exists(path):
-                logging.debug("removing extracted tmp library {}".format(path))
-                try:
-                    os.remove(path)
-                except OSError, e:
-                    logging.warning('failed to remove extracted tmp library {}: {}'.format(path, e))
+            _l.debug("removing extracted tmp library {}".format(path))
+            _remove_dir_or_file(path)
 
         self._status = status
 
     status = property(get_status, set_status, None, "status of this task")
 
-# TODO:
+def _set_error(task, msg):
+    task.error = msg
+    task.status = 'ERROR'
+    _l.error(task.error)
+
 class Worker(threading.Thread):
     """Worker thread for task manager.
     """
@@ -92,91 +141,27 @@ class Worker(threading.Thread):
 
         self._index = index
 
-    # def _convert_to_pdf(self, task):
-        # """Use libreoffice API to convert document to pdf"""
-        # convertor = task_manager.convertor
-        # if os.path.exists(task.pdf):
-            # logging.debug('task %s already handle', task)
-            # task.status = 'DONE'
-            # return True
 
-        # logging.debug('start to convert task %s', task)
-
-        # success = False
-        # _checkdir_with_mkdir(os.path.dirname(task.pdf))
-        # try:
-            # success = convertor.convert_to_pdf(task.document, task.pdf)
-        # except ConvertorFatalError:
-            # task.status = 'ERROR'
-            # task.error = 'failed to convert document'
-            # return False
-
-        # if success:
-            # logging.debug("succefully converted %s to pdf", task)
-            # task.status = 'DONE'
-        # else:
-            # logging.warning("failed to convert %s to pdf", task)
-            # task.status = 'ERROR'
-            # task.error = 'failed to convert document'
-
-        # return success
-
-    # def _convert_excel_to_html(self, task):
-        # '''Use libreoffice to convert excel to html'''
-        # _checkdir_with_mkdir(task.htmldir)
-        # if not task_manager.convertor.excel_to_html(
-                # task.document, os.path.join(task.htmldir, 'index.html')):
-            # logging.warning('failed to convert %s from excel to html', task)
-            # task.status = 'ERROR'
-            # task.error = 'failed to convert excel to html'
-            # return False
-        # else:
-            # logging.debug('successfully convert excel %s to html', task)
-            # task.status = 'DONE'
-            # return True
-
-    # def write_content_to_tmp(self, task):
-        # '''write the document/pdf content to a temporary file'''
-        # content = task.content
-        # try:
-            # suffix = "." + task.doctype
-            # fd, tmpfile = tempfile.mkstemp(suffix=suffix)
-            # os.close(fd)
-
-            # with open(tmpfile, 'wb') as fp:
-                # fp.write(content)
-        # except Exception, e:
-            # logging.warning('failed to write fetched document for task %s: %s', task, str(e))
-            # task.status = 'ERROR'
-            # task.error = 'failed to write fetched document to temporary file'
-            # return False
-        # else:
-            # if task.doctype == 'pdf':
-                # task.pdf = tmpfile
-            # else:
-                # task.document = tmpfile
-            # return True
-
-    def copy_repo_into_tmp_dir(self, repo):
+    def copy_repo_into_tmp_dir(self, task):
         """TODO: Docstring for copy_repo_into_tmp_dir.
 
-        :repo_id: TODO
-        :returns: TODO
         """
-
         def get_root_dir(repo):
             """
             Get root commit dir
             """
-            commits = seafile_api.get_commit_list(repo.id, 0, 1)
+            try:
+                commits = seafile_api.get_commit_list(repo.id, 0, 1)
+            except Exception as e:
+                _l.error('exception: {}'.format(e))
+
             commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
             return fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
 
 
-        seaf_dir = get_root_dir(repo)
-        owner = seafile_api.get_repo_owner(repo.id)
-
-        tmp_root_dir_path = os.path.join(self.archiving_storage, owner, repo.id)
+        seaf_dir = get_root_dir(task._repo)
+        owner = seafile_api.get_repo_owner(task._repo.id)
+        task._extracted_tmp_dir = os.path.join(task.archiving_storage, owner, task._repo.id)
 
         def write_seaf_to_path(seaf, to_path):
             """ Write SeafFile to path with stream
@@ -193,8 +178,8 @@ class Worker(threading.Thread):
                             break
                         target.write(data)
                     target.close()
-            except Exception, e:
-                logging.warning('failed to write extracted file for task {}: {}'.format(task, e))
+            except Exception as e:
+                _l.error('failed to write extracted file {}: e'.format(to_path, e))
                 task.status = 'ERROR'
                 task.error = 'failed to write extracted file {}'.format(to_path)
                 return False
@@ -208,91 +193,119 @@ class Worker(threading.Thread):
             fn - file name to be copied
             path - path in local file system where fn should be saved
             """
-
             if obj.is_dir():
-                # print(obj.get_files_list())
-                # print(fs_mgr.obj_store.__dict__)
                 dpath = path + os.sep + obj.name
                 d = fs_mgr.load_seafdir(repo.id, repo.version, obj.id)
                 for dname, dobj in d.dirents.items():
                     copy_dirent(dobj, repo, owner, dpath)
             elif obj.is_file():
                 plist = [p for p in path.split(os.sep) if p]
-                absdirpath = os.path.join(tmp_root_dir_path, *plist)
+                absdirpath = os.path.join(task._extracted_tmp_dir, *plist)
                 if not os.path.exists(absdirpath):
                     os.makedirs(absdirpath)
-                    seaf = fs_mgr.load_seafile(repo.id, repo.version, obj.id)
-                    to_path = os.path.join(absdirpath, obj.name)
-                    write_seaf_to_path(seaf, to_path)
-                    logging.debug(u"File: {} copied to {}".format(obj.name, to_path))
-
-                else:
-                    logging.debug(u"Wrong object: {}".format(obj))
+                seaf = fs_mgr.load_seafile(repo.id, repo.version, obj.id)
+                to_path = os.path.join(absdirpath, obj.name)
+                write_seaf_to_path(seaf, to_path)
+                _l.debug(u"File: {} copied to {}".format(obj.name, to_path))
+            else:
+                _l.debug(u"Wrong object: {}".format(obj))
 
 
         for name, obj in seaf_dir.dirents.items():
-            copy_dirent(seaf_dir, repo, owner, '')
+            copy_dirent(obj, task._repo, owner, '')
 
 
-        return tmp_root_dir_path
+    def _clean_up(self, task):
+        """Clean up tmps"""
+
+        if task._extracted_tmp_dir is not None:
+            _remove_dir_or_file(task._extracted_tmp_dir)
+            task._extracted_tmp_dir = None
+
+        if task._archive_path is not None:
+            _remove_dir_or_file(task._archive_path)
+            task._archive_path = None
 
 
     def _extract_repo(self, task):
         """
         Extract repo from object storage to tmp directory
         """
-        logging.debug('start to extract repo: %s', task)
+        _l.info('start to extract repo: {}'.format(task.repo_id))
+        _l.debug('start to extract repo: {}'.format(task))
         try:
-            tmp_dir = copy_repo_into_tmp_dir(task._repo)
+            self.copy_repo_into_tmp_dir(task)
         except Exception as e:
-            logging.warning('failed to extract repo {} of task {}: %s', task, e)
+            _l.error('failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
             task.status = 'ERROR'
-            task.error = 'failed to fetch document'
+            task.error = 'failed to extract library'
+            #clean up
+            self._clean_up(task)
             return False
         else:
-            task._extracted_tmp_dir = tmp_dir
             return True
 
-    def get_archive_path(task):
-        """Construct path to archive
+    def _add_md(self, task):
         """
-        return os.path.join(task.archiving_storage, task.owner, "{}_ver{}.tar.gz".format(task.repo_id, task.ver))
+        Rename metadata markdown file of archive
+        """
+        if task._archive_path:
+            dname = os.path.dirname(task._archive_path)
+            md_path = os.path.join(dname, ARCHIVE_METADATA_TARGET)
+            # check if md file exists
+            if os.path.exists(md_path):
+                new_md_path = os.path.splitext(task._archive_path)[0] + '.md'
+                try:
+                    shutil.copyfile(md_path, new_md_path)
+                    task._md_path = new_md_path
+                except Exception as e:
+                    _set_error(task, '_archive_path is not defined for task {}'.format(task))
+                    return False
+            else:
+                #TODO: exception handling
+                return False
+        else:
+            _set_error(task, '_archive_path is not defined for task {}'.format(task))
+            return False
+
+        return True
 
 
     def _create_tar(self, task):
         """
         Create tar file for extracted repo
         """
-        logging.debug('start to create tar for repo: {}', task.repo_id)
+        _l.debug('start to create tar for repo: {}'.format(task.repo_id))
+        assert task._extracted_tmp_dir is not None
         try:
-            #create tar.gz
-            src_path = task._extracted_tmp_dir
-            dest_path = get_archive_path(task)
-            with tarfile.open(dest_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
-                archive.add(src_path, '')
-
+            task._archive_path = get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
+            with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
+                archive.add(task._extracted_tmp_dir, '')
         except Exception as e:
-            logging.warning('failed to archive dir {} to tar {} of task {}: {}'.format(src_path, dest_path, task, e))
+            _l.error('failed to archive dir {} to tar {} of task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
             task.status = 'ERROR'
             task.error = 'failed to tar archive'
+            #clean up
+            self._clean_up(task)
             return False
         else:
-            task._archive_path = dest_path
-            return True
-        finally:
             archive.close()
+            task._checksum = _generate_file_md5(task._archive_path)
+            return True
 
     def _push_to_hpss(self, task):
         """
         Push created archive tar to HPSS
         """
-        logging.debug('start to push archive to hpss: {}', task.repo_id)
+        assert task._archive_path is not None
+        _l.debug('start to push archive to hpss: {}'.format(task._archive_path))
         try:
             pass
         except Exception as e:
-            logging.warning('failed to push archive tar {} of task {} to hpss: {}'.format(task._archive_path, task, e))
+            _l.error('failed to push archive tar {} of task {} to hpss: {}'.format(task._archive_path, task, e))
             task.status = 'ERROR'
-            task.error = 'failed to push to hpss'
+            task.error = 'failed to push to HPSS'
+            #TODO: Do not clean tmp files/dirs, try to redo
             return False
         else:
             return True
@@ -308,6 +321,10 @@ class Worker(threading.Thread):
         if not success:
             return
 
+        # success = self._add_metadata(task)
+        # if not success:
+            # return
+
         success = self._create_tar(task)
         if not success:
             return
@@ -316,10 +333,20 @@ class Worker(threading.Thread):
         if not success:
             return
 
+        ## Put into DB, if success
+        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, '{}')
+
+        task.status = 'DONE'
+
+        task_manager._notify_user(task)
+
+        #self._clean_up(task)
+
         with task_manager._tasks_map_lock:
             task_manager._tasks_map.pop(task.repo_id)
 
         return
+
 
     def run(self):
         """Repeatedly get task from tasks queue and process it."""
@@ -341,7 +368,6 @@ class TaskManager(object):
     - push tar.gz to hpss
     """
     def __init__(self):
-        # (file id, task) map
         self._tasks_map = {}
         self._tasks_map_lock = threading.Lock()
 
@@ -350,84 +376,158 @@ class TaskManager(object):
         self._workers = []
 
         self.archiving_storage = None
-        self.archive_max_size = 500 * 1024 * 1024 * 1024
+        self.archive_max_size = 500 * 1024**3
         self._num_workers = 1
         self.archives_per_library = 5
 
-        # TODO: Connection to HPSS???
+        self._db_oper = None
 
-    def init(self, num_workers=1,
+        # TODO: Connection to HPSS
+
+    def init(self, db_oper,
+             num_workers=1,
              archiving_storage='/tmp/keeper-archiving-storage',
-             archive_max_size=500 * 1024 * 1024 * 1024,
+             archive_max_size=500 * 1024**3,
              archives_per_library=5):
+        self._db_oper = db_oper
         self._set_archiving_storage(archiving_storage)
         self._num_workers = num_workers
         self.archive_max_size = archive_max_size
         self.archives_per_library = archives_per_library
 
+
     def _set_archiving_storage(self, arch_dir):
         """Check the directory to store archive"""
-        _checkdir(arch_dir)
+        _check_dir(arch_dir)
         self.archiving_storage = arch_dir
 
-    # ???
-    def _task_file_exists(self, file_id, doctype=None):
-        '''Test whether the file has already been converted'''
-        file_html_dir = os.path.join(self.html_dir, file_id)
-        pdf_dir = os.path.dirname(self.html_dir)
-        # handler document->pdf
-        if doctype not in EXCEL_TYPES:
-            done_file = os.path.join(pdf_dir, 'pdf', file_id + '.pdf')
+    def _archive_exists(self, repo_id, version):
+        """Archive has been successfuly created and stored in HPSS and DB """
+        a = self._db_oper.get_archives(repo_id=repo_id, version=version)
+        _l.error(a)
+        return a is not None and len(a)>0
+
+
+    def _check_and_add_task(self, repo_id, owner, storage_path):
+        """
+        TODO:
+        """
+        at = KeeperArchivingTask(repo_id, owner, storage_path)
+        # check repo exists
+        try:
+            at._repo = seafile_api.get_repo(repo_id)
+        except Exception as e:
+            at.status = 'ERROR'
+            at.error = 'Cannot get library {}: {}'.format(repo_id, e)
+            _l.error(at.error)
+            return at
+
+        # check owner
+        ro = seafile_api.get_repo_owner(repo_id)
+        if ro != owner:
+            at.status = 'ERROR'
+            at.error = 'Wrong owner of library {}: {}'.format(repo_id, owner)
+            _l.error(at.error)
+            return at
         else:
-            done_file = os.path.join(file_html_dir, 'index.html')
+            at.owner = owner
 
-        return os.path.exists(done_file)
+        # check version
+        max_ver = self._db_oper.get_max_archive_version(repo_id)
+        if max_ver is None:
+            at.status = 'ERROR'
+            at.error = 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner)
+            _l.error(at.error)
+            return at
+        elif max_ver >= self.archives_per_library:
+            at.version = max_ver
+            at.status = 'ERROR'
+            at.error = 'Max number of archives for library {} is exceeded'.format(repo_id)
+            _l.error(at.error)
+            return at
+        elif max_ver == -1:
+            at.version = 1
+        else:
+            at.version = max_ver + 1
 
-    def add_task(self, repo_id, owner, ver):
+        # check max repo size
+        try:
+            repo_size = seafile_api.get_repo_size(repo_id)
+        except Exception as e:
+            at.status = 'ERROR'
+            at.error = 'Cannot get library size {}: {}'.format(repo_id, e)
+            _l.error(at.error)
+            return at
+
+        # check max repo size
+        # TODO: check units
+        if repo_size > self.archive_max_size:
+            at.status = 'ERROR'
+            at.error = 'Size of library {} is too big to be archived: {}.'.format(repo_id, repo_size)
+            _l.error(at.error)
+            return at
+
+        return at
+
+
+    def _notify_user(self, task):
+        """
+        Notify user
+        """
+        self._db_oper.add_user_notification(task.owner, json.dumps({
+            'status': task.status
+        }))
+
+
+    def add_task(self, repo_id, owner):
         """Create an archiving task and dispatch it to worker threads"""
+        ret = {}
+        with self._tasks_map_lock:
+            # task is already in queue, return this one
+            ret['repo_id'] = repo_id
+            if repo_id in self._tasks_map:
+                task = self._tasks_map[repo_id]
+                ret['version'] = task.version
+            else:
+            # add new task
+                task = self._check_and_add_task(repo_id, owner, self.archiving_storage)
+                if task.status == 'ERROR':
+                    # notify user!!!
+                    self._notify_user(task)
+                    ret['error'] = task.error
+                else:
+                    self._tasks_map[repo_id] = task
+                    self._tasks_queue.put(task)
+                    ret['version'] = task.version
+            ret['status'] = task.status
+        return ret
+
+    def query_task_status(self, repo_id, version):
+        ret = { 'repo_id': repo_id, 'version': version }
         with self._tasks_map_lock:
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
-                if task.status != 'ERROR' and task.status != 'DONE':
-                    # If there is already a archiving  task in progress, don't create a
-                    # new one.
-                    return
-
-            task = KeeperArchivingTask(repo_id, owner, ver, self.archiving_storage)
-            self._tasks_map[repo_id] = task
-            self._tasks_queue.put(task)
-
-
-    # TODO:
-    def query_task_status(self, file_id, doctype):
-        ret = {}
-        with self._tasks_map_lock:
-            if file_id in self._tasks_map:
-                task = self._tasks_map[file_id]
+                ret['status'] = task.status
                 if task.status == 'ERROR':
-                    ret['status'] = 'ERROR'
                     ret['error'] = task.error
-                else:
-                    ret['status'] = task.status
             else:
-                if self._task_file_exists(file_id):
+                if self._archive_exists(repo_id, version):
                     ret['status'] = 'DONE'
                 else:
                     ret['status'] = 'ERROR'
-                    # handler document->pdf
-                    ret['error'] = 'invalid file id'
+                    ret['error'] = 'Cannot find archiving task or archive for repo_id: {}, version: {}'.format(repo_id, version)
         return ret
 
     def run(self):
         assert self._tasks_map is not None
         assert self._tasks_map_lock is not None
         assert self._tasks_queue is not None
-        assert self.pdf_dir is not None
-        assert self.html_dir is not None
+        assert self.archiving_storage is not None
 
         atexit.register(self.stop)
 
-        self.convertor.start()
+        # start HPSS session
+        #self.convertor.start()
 
         for i in range(self._num_workers):
             t = Worker(self._tasks_queue, i)
@@ -436,7 +536,7 @@ class TaskManager(object):
             self._workers.append(t)
 
     def stop(self):
-        logging.info('stop libreoffice...')
-        self.convertor.stop()
+        # stop HPSS session
+        _l.info('stop HPSS session...')
 
 task_manager = TaskManager()

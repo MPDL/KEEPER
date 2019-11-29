@@ -275,3 +275,96 @@ def user_can_invite(email):
     return is_in_mpg_domain_list(email)
 
 
+# KEEPER ARCHIVING
+import ccnet
+import seaserv
+from seahub.settings import OFFICE_CONVERTOR_ROOT, OFFICE_CONVERTOR_NODE
+from seafevents.keeper_archiving import KeeperArchivingRpcClient
+from seahub.utils import CLUSTER_MODE, do_urlopen
+import urllib
+from urlparse import urlparse, urljoin
+
+keeper_archiving_rpc = None
+
+def _get_keeper_archiving_rpc():
+    global keeper_archiving_rpc
+    if keeper_archiving_rpc is None:
+        pool = ccnet.ClientPool(
+            seaserv.CCNET_CONF_PATH,
+            central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
+        )
+        keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
+
+    return keeper_archiving_rpc
+
+#TODO: keeper
+# def office_convert_cluster_token(file_id):
+    # from django.core import signing
+    # s = '-'.join([file_id, datetime.now().strftime('%Y%m%d')])
+    # return signing.Signer().sign(s)
+
+# def _office_convert_token_header(file_id):
+    # return {
+        # 'X-Seafile-Office-Preview-Token': office_convert_cluster_token(file_id),
+    # }
+
+def cluster_delegate(delegate_func):
+    '''usage:
+
+    @cluster_delegate(funcA)
+    def func(*args):
+        ...non-cluster logic goes here...
+
+    - In non-cluster mode, this decorator effectively does nothing.
+    - In cluster mode, if this node is not the office convert node,
+    funcA is called instead of the decorated function itself
+
+    '''
+    def decorated(func):
+        def real_func(*args, **kwargs):
+            cluster_internal = kwargs.pop('cluster_internal', False)
+            # TODO: KEEPER specfic!!!
+            if CLUSTER_MODE and not OFFICE_CONVERTOR_NODE and not cluster_internal:
+                return delegate_func(*args)
+            else:
+                return func(*args)
+        return real_func
+
+    return decorated
+
+def delegate_add_keeper_archiving_task(repo_id, owner):
+    url = urljoin(OFFICE_CONVERTOR_ROOT, '/keeper-archiving/internal/add-task/')
+    data = urllib.urlencode({
+        'repo_id': repo_id,
+        'owner': owner,
+    })
+
+    # headers = _office_convert_token_header(file_id)
+    # ret = do_urlopen(url, data=data, headers=headers).read()
+    ret = do_urlopen(url, data=data).read()
+
+    return json.loads(ret)
+
+
+def delegate_query_keeper_archiving_status(repo_id):
+    url = urljoin(OFFICE_CONVERTOR_ROOT, '/keeper-archiving/internal/status/')
+    url += '?repo_id={}'.format(repo_id)
+    # headers = _office_convert_token_header(file_id)
+    # ret = do_urlopen(url, headers=headers).read()
+    ret = do_urlopen(url).read()
+
+    return json.loads(ret)
+
+
+# @cluster_delegate(delegate_add_keeper_archiving_task)
+def add_keeper_archiving_task(repo_id, owner):
+    rpc = _get_keeper_archiving_rpc()
+    ret = rpc.add_task(repo_id, owner)
+    return ret
+
+# @cluster_delegate(delegate_query_keeper_archiving_status)
+def query_keeper_archiving_status(repo_id, version):
+    rpc = _get_keeper_archiving_rpc()
+    ret = rpc.query_task_status(repo_id, version)
+    return ret
+

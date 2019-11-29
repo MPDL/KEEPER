@@ -19,6 +19,16 @@ import keeper.archiving.archiving_manager as arch_mgr
 
 from datetime import datetime
 
+from seafevents.keeper_archiving import KeeperArchiving
+from seafevents.keeper_archiving.task_manager import task_manager, Worker
+from seafevents.keeper_archiving.config import get_keeper_archiving_conf
+from seafevents.utils import get_config
+from keeper.utils import query_keeper_archiving_status, add_keeper_archiving_task
+from time import sleep
+
+import json
+from seahub.notifications.models import UserNotification
+
 
 @pytest.mark.skip
 def test_tmp_repo_archiving(create_tmp_repo):
@@ -80,8 +90,6 @@ def test_tmp_repo_archiving(create_tmp_repo):
 
 
 
-
-
 @pytest.mark.skip
 def test_huge_repo_archiving():
     """TODO: test_huge_repo_archiving
@@ -104,28 +112,57 @@ def test_huge_repo_archiving():
 
 
 
-def test_archiving_queue():
+@pytest.mark.skip
+def test_new_archiving():
+   # from seafevents.app.config import load_config
 
-    # import logging
-    # logger = logging.getLogger()
-    # logger.setLevel(logging.DEBUG)
-    # fh = logging.FileHandler('arch.log')
-    # fh.setLevel(logging.DEBUG)
-    # logger.addHandler(fh)
+    try:
+        # config_file = get_config(os.path.join(os.environ['SEAFILE_CENTRAL_CONF_DIR'], 'seafevents.conf'))
+        # keeper_config = get_keeper_archiving_conf(config_file)
+        # for key in ('enabled', 'workers', 'archiving_storage', 'archive-max-size', 'archives-per-library',):
+            # assert key in keeper_config
 
-    # logger.debug("HERE!!!!")
-    # q.join()
-    from keeper.archiving.archiving_manager import Job
-    q = arch_mgr.arch_queue
+        # keeper_archiving = KeeperArchiving(keeper_config)
 
-    q.put(Job("1"))
-    q.put(Job("2"))
-    q.put(Job("3"))
+        # if keeper_archiving and keeper_archiving.is_enabled():
+            # keeper_archiving.start()
 
-    q.join()
+        # keeper_archiving.start()
 
-    q.put(Job("4"))
-    q.put(Job("5"))
-    q.put(Job("6"))
+        repo_id = 'c61cdb5e-2829-4a12-8d30-db421324a84d'
+        owner = 'makarenko@mpdl.mpg.de'
 
-    q.join()
+        # print(keeper_archiving._db_oper.get_max_archive_version(repo_id))
+        # print(threading.enumerate())
+        # sleep(5)
+        resp1 = add_keeper_archiving_task(repo_id, owner)
+        print(resp1.__dict__)
+        # sleep(10)
+        # print(threading.enumerate())
+
+        repo_id = 'bdca5491-e60f-413a-af5f-33003bca2292'
+        resp2 = add_keeper_archiving_task(repo_id, owner)
+        print(resp2.__dict__)
+
+
+        sleep(5)
+        resp1 = query_keeper_archiving_status(resp1.repo_id, resp1.version)
+        print(resp1.__dict__)
+        sleep(5)
+        resp2 = query_keeper_archiving_status(resp2.repo_id, resp2.version)
+        print(resp2.__dict__)
+
+
+        # print(query_keeper_archiving_status(task2.repo_id, task2.version))
+        # sleep(10)
+
+        # keeper_archiving.stop()
+        # ret = query_keeper_archiving_status(repo_id)
+        # print(ret)
+
+        # print(threading.enumerate())
+
+    finally:
+        pass
+
+
