@@ -62,8 +62,8 @@ def _generate_file_md5(path, blocksize=5 * 2**20):
             m.update(buf)
     return m.hexdigest()
 
-def get_archive_path(storage_path, owner, repo_id, version):
-    """Construct path to archive
+def _get_archive_path(storage_path, owner, repo_id, version):
+    """Construct full path to archive in fs
     """
     return os.path.join(storage_path, owner, "{}_ver{}.tar.gz".format(repo_id, version))
 
@@ -95,6 +95,9 @@ class KeeperArchivingTask(object):
 
         # path to the archive metadata markdown file
         self._md_path = None
+
+        #md content
+        self._md = None
 
         self._checksum = None
 
@@ -247,25 +250,34 @@ class Worker(threading.Thread):
 
     def _add_md(self, task):
         """
-        Rename metadata markdown file of archive
+        Add metadata markdown file of archive
         """
-        if task._archive_path:
-            dname = os.path.dirname(task._archive_path)
-            md_path = os.path.join(dname, ARCHIVE_METADATA_TARGET)
+        if task._extracted_tmp_dir is not None:
+            arch_path = _get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
+            md_path = os.path.join(task._extracted_tmp_dir, ARCHIVE_METADATA_TARGET)
             # check if md file exists
-            if os.path.exists(md_path):
-                new_md_path = os.path.splitext(task._archive_path)[0] + '.md'
+            if os.path.exists(md_path) and os.path.isfile(md_path):
+                new_md_path = arch_path + '.md'
                 try:
+                    #copy to new place
                     shutil.copyfile(md_path, new_md_path)
                     task._md_path = new_md_path
                 except Exception as e:
-                    _set_error(task, '_archive_path is not defined for task {}'.format(task))
+                    _set_error(task, 'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
+                    return False
+                try:
+                    #save content for DB
+                    md = open(md_path, "r")
+                    task._md = md.read()
+                    md.close()
+                except Exception as e:
+                    _set_error(task, 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
                     return False
             else:
-                #TODO: exception handling
+                _set_error(task, 'Cannot find md file {} for task {}'.format(md_path, task))
                 return False
         else:
-            _set_error(task, '_archive_path is not defined for task {}'.format(task))
+            _set_error(task, 'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
             return False
 
         return True
@@ -278,11 +290,12 @@ class Worker(threading.Thread):
         _l.debug('start to create tar for repo: {}'.format(task.repo_id))
         assert task._extracted_tmp_dir is not None
         try:
-            task._archive_path = get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
+            task._archive_path = _get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
             with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
         except Exception as e:
-            _l.error('failed to archive dir {} to tar {} of task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
+            _set_error(task, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
+            _l.error()
             task.status = 'ERROR'
             task.error = 'failed to tar archive'
             #clean up
@@ -302,7 +315,7 @@ class Worker(threading.Thread):
         try:
             pass
         except Exception as e:
-            _l.error('failed to push archive tar {} of task {} to hpss: {}'.format(task._archive_path, task, e))
+            _l.error('Failed to push archive tar {} for task {} to hpss: {}'.format(task._archive_path, task, e))
             task.status = 'ERROR'
             task.error = 'failed to push to HPSS'
             #TODO: Do not clean tmp files/dirs, try to redo
@@ -321,9 +334,9 @@ class Worker(threading.Thread):
         if not success:
             return
 
-        # success = self._add_metadata(task)
-        # if not success:
-            # return
+        success = self._add_md(task)
+        if not success:
+            return
 
         success = self._create_tar(task)
         if not success:
@@ -334,7 +347,7 @@ class Worker(threading.Thread):
             return
 
         ## Put into DB, if success
-        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, '{}')
+        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, task._md)
 
         task.status = 'DONE'
 
