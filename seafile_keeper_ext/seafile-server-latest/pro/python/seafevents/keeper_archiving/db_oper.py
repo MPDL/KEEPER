@@ -3,26 +3,17 @@
 import logging
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
-from models import KeeperArchive, KeeperArchiveOwnerQuota
+from models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase
 from urllib import quote_plus
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from seafevents.db import ping_connection
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
 from sqlalchemy.pool import Pool
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import text
-
-from seafevents.app.config import appconfig, load_env_config
-from datetime import datetime
-
-from seafevents.db import init_db_session_class
-from seafevents.db import init_db_session_class
 
 from seahub.utils import normalize_cache_key
 from seahub_settings import CACHES, DATABASES
 
-from contextlib import contextmanager
+from datetime import datetime
 
 import pylibmc
 # from seahub.notifications.models import get_cache_key_of_unseen_notifications
@@ -40,14 +31,8 @@ def create_db_session(host, port, username, passwd, dbname):
     engine = create_engine(db_url, **kwargs)
 
     # create tables, if not exist
-    # run only once!!!
-
-    Base = declarative_base()
     if dbname == DATABASES['keeper']['NAME']:
-        Base.metadata.create_all(engine, tables=[KeeperArchive.__table__, KeeperArchiveOwnerQuota.__table__])
-
-    # KeeperBase = automap_base()
-    # KeeperBase.prepare(engine, reflect=True)
+        KeeperBase.metadata.create_all(engine, tables=[KeeperArchive.__table__, KeeperArchiveOwnerQuota.__table__])
 
     if not has_event_listener(Pool, 'checkout', ping_connection):
         # We use has_event_listener to double check in case we call create_engine
