@@ -28,17 +28,17 @@ def get_metadata(repo_id, user_email, action_type):
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_latest_commit_root_id(repo)
 
-    action_type = " assign DOI " if type == "doi" else " archive library " 
+    action_type = "assign DOI" if type == "doi" else "archive library" 
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
-        msg = 'Cannot' + action_type + 'if the library is system template destination.'
+        msg = _(u'Cannot ' + action_type + ' if the library is system template destination.')
         send_notification(msg, repo_id, 'error', user_email)
         return {
             'error': msg,
         }
 
     if seafile_api.get_repo_history_limit(repo_id) > -1:
-        msg = 'Cannot' + action_type +'because of the histroy setting.'
+        msg = _(u'Cannot ' + action_type +' because of the histroy setting.')
         send_notification(msg, repo_id, 'error', user_email)
         return {
             'error': msg,
@@ -47,11 +47,7 @@ def get_metadata(repo_id, user_email, action_type):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            if action_type == " archive library ": 
-                msg = 'Cannot' + action_type +'if the library has no content.'
-            else:
-                msg = _(u'Cannot assign DOI if the library has no content.')
-
+            msg = _(u'Cannot ' + action_type +' if the library has no content.')
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,
@@ -60,10 +56,7 @@ def get_metadata(repo_id, user_email, action_type):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            if action_type == " archive library ": 
-                msg = 'Cannot' + action_type +'if archive-metadata.md file is not filled.'
-            else:
-                msg = _(u'Cannot assign DOI if archive-metadata.md file does not exist.')
+            msg = _(u'Cannot ' + action_type +' if archive-metadata.md file is not filled.')
             send_notification(msg, repo_id, 'error', user_email)
             return {
                 'error': msg,

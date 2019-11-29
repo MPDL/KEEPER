@@ -1,6 +1,9 @@
 #logos{height:6%; width: auto; position:fixed; bottom:2px; left:2px; }
 
-#header{position:fixed; top:0%; left:0%; width: 100%; height:55px; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;}
+#header{position:fixed; top:0%; left:0%; width: 100%; height:55px; padding: 8px 16px 4px 16px; background-color: #f4f4f7; border-bottom: 1px solid #e8e8e8;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: rgb(232, 232, 232);}
 #KEEPER_logo{height:43px; width: auto; position: fixed; top: 3px; left:2px;}
 
 @media only screen and (max-width:950px){
@@ -53,6 +56,8 @@ html, body {
 
 .doi_desc{
 	font-weight: normal;
+	max-height: 410px;
+	overflow-y: scroll;
 	margin-bottom: 2.4rem;
 }
 
@@ -75,6 +80,10 @@ html, body {
 	background: #fff;
 	color:#57a5b8;
 	margin-right: 0.5rem
+}
+
+.btn:focus {
+  outline: none !important;
 }
 
 /* FOOTER */

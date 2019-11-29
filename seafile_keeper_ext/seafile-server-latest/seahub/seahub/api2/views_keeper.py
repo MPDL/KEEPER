@@ -161,7 +161,7 @@ def DoiView(request, repo_id, commit_id):
     elif len(doi_repos) > 0 and doi_repos[0].rm is not None:
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repos[0].doi,
-            'doi_dict': doi_repos[0].md,
+            'md_dict': doi_repos[0].md,
             'authors': '; '.join(get_authors_from_md(doi_repos[0].md)),
             'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
             'library_name': doi_repos[0].repo_name,
@@ -212,6 +212,67 @@ def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
     return CDC.objects.get_cdc_id_by_repo(repo_id)
 
+def LandingPageView(request, repo_id):
+    repo_owner = get_repo_owner(repo_id)
+    if repo_owner is None:
+        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)
+    else:
+        repo_owner_email = email2contact_email(repo_owner)
+
+    doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
+
+    archive_repos = ArchiveRepo.objects.get_archive_repos_by_repo_id(repo_id)
+
+    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+
+    if doi_repos:
+        md = doi_repos[0].md
+    elif archive_repos:
+        md = archive_repos[0].md
+    
+    if md:
+        return render(request, './catalog_detail/lib_detail_landing_page.html', {
+            'authors': '; '.join(get_authors_from_md(md)),
+            'institute': md.get("Institute").replace(";", "; "),
+            'doi_dict': md,
+            'doi_repos': doi_repos,
+            'archive_repos': archive_repos,
+            'cdc': cdc,
+            'owner_contact_email':  repo_owner_email
+        })
+    
+    return render(request, '404.html')
+
+def ArchiveView(request, repo_id, version_id):
+    archive_repo = ArchiveRepo.objects.get_archive_repo_by_repo_id_and_version(repo_id, version_id)
+    if archive_repo == None:
+        return render(request, '404.html')
+
+    repo_owner = get_repo_owner(repo_id)
+    if repo_owner is None:
+        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)
+        return render(request, './catalog_detail/tombstone_page.html', {
+            'md_dict': archive_repo.md,
+            'authors': '; '.join(get_authors_from_md(archive_repo.md)),
+            'institute': archive_repo.md.get("Institute").replace(";", "; "),
+            'library_name': archive_repo.repo_name,
+            'owner_contact_email': email2contact_email(repo_owner) })
+    else:
+        repo_owner_email = email2contact_email(repo_owner)
+
+    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+    commit_id = archive_repo.commit_id
+    link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+
+    return render(request, './catalog_detail/archive_page.html', {
+        'share_link': link,
+        'authors': '; '.join(get_authors_from_md(archive_repo.md)),
+        'institute': archive_repo.md.get("Institute").replace(";", "; "),
+        'commit_id': commit_id,
+        'md_dict': archive_repo.md,
+        'cdc': cdc,
+        'owner_contact_email': email2contact_email(repo_owner) })
+
 def can_archive(request):
 
     repo_id = request.GET.get('repo_id', None)
@@ -250,40 +311,32 @@ def archive_lib(request):
         return JsonResponse({
             'msg': metadata.get('error'),
             'status': 'error',
-            })
-
-    quota = ArchiveQuota.objects.get_archive_quota(repo_id, user_email)
-    if quota.quota <= 0:
-        return JsonResponse({
-            'msg': "Misuse of archive_lib api!",
-            'status': 'error'
         })
+    logger.info("Successfully get metadata, start archiving...")
 
-    #todo: 1 perform archive, start background service
-
-    #todo: 2. for now we assume archive in done synchronously update library
     commit_id = get_latest_commit_id(repo)
     checksum = "todo:ask_vlad_how_to_get_checksum_of_zip"
     status = "in_process"
     external_path = "some_external_path"
+    repo_name = repo.name
 
-    archiveRepo = archive_finished(repo_id, commit_id, user_email, checksum, external_path, metadata, status)
+    archiveRepo = archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
 
-    #todo: 3. set archive quota after archive is done
+    #todo: set archive quota should be removed
     quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
 
     if quota == -1:
         msg = "Can not archive for this Library, please contact support"
     else:
-        msg = str(quota) + " left!"
+        msg = "Archive started: " + str(quota) + " left!"
 
     return JsonResponse({
             'msg': msg,
             'status': 'success'
         })
 
-def archive_finished(repo_id, commit_id, user_email, checksum, external_path, metadata, status):
-    archiveRepo = ArchiveRepo.objects.create_archive_repo(repo_id, commit_id, user_email, checksum, external_path, metadata, status)
+def archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status):
+    archiveRepo = ArchiveRepo.objects.create_archive_repo(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
     return archiveRepo
 
 def update_quota(repo_id, owner):
@@ -293,33 +346,3 @@ def update_quota(repo_id, owner):
         quota = ArchiveQuota.objects.init_archive_quota(repo_id, owner)
 
     return quota.quota
-
-
-def LandingPageView(request, repo_id):
-    repo_owner = get_repo_owner(repo_id)
-    if repo_owner is None:
-        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)  
-    else:
-        repo_owner_email = email2contact_email(repo_owner)
-
-    doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
-
-    archive_repos = ArchiveRepo.objects.get_archive_repos_by_repo_id(repo_id)
-
-    if doi_repos:
-        md = doi_repos[0].md
-    elif archive_repos:
-        md = archive_repos[0].md
-    
-    if md:
-        return render(request, './catalog_detail/lib_detail_landing_page.html', {
-            'authors': '; '.join(get_authors_from_md(md)),
-            'institute': md.get("Institute").replace(";", "; "),
-            'doi_dict': md,
-            'doi_repos': doi_repos,
-            'archive_repos': archive_repos,
-            'owner_contact_email':  repo_owner_email
-        })
-    
-    return render(request, '404.html')
-

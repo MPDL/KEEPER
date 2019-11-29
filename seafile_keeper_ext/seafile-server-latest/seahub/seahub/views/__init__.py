@@ -726,7 +726,7 @@ def libraries(request):
                     has_landing_page = True
                     break
             if  has_landing_page == False:
-                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name":  seafile_api.get_repo(archive_repo_id).name})
+                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name":  archive_repo.repo_name})
 
 
     return render(request, 'libraries.html', {

@@ -7,6 +7,7 @@ from picklefield.fields import PickledObjectField
 
 from datetime import datetime
 from enum import Enum
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger(__name__)
@@ -282,14 +283,14 @@ class ArchiveQuota(models.Model):
 
 
 class ArchiveRepoManager(models.Manager):
-    def create_archive_repo(self, repo_id, commit_id, owner, checksum, external_path, md, status):
+    def create_archive_repo(self, repo_id, repo_name, commit_id, owner, checksum, external_path, md, status):
         try:
             latest_archive_repo = self.get_latest_archive_repos_by_repo_id(repo_id)
             if latest_archive_repo is None:
-                archive_repo = self.model(repo_id=repo_id, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=1, status=status)
+                archive_repo = self.model(repo_id=repo_id, repo_name=repo_name, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=1, status=status)
             else:
                 version = latest_archive_repo.version + 1
-                archive_repo = self.model(repo_id=repo_id, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=version, status=status)
+                archive_repo = self.model(repo_id=repo_id, repo_name=repo_name, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=version, status=status)
             archive_repo.save()
             return archive_repo
         except Exception:
@@ -301,6 +302,14 @@ class ArchiveRepoManager(models.Manager):
             return archive_repos
         except Exception:
             logger.error(traceback.format_exc())
+
+    def get_archive_repo_by_repo_id_and_version(self, repo_id, version):
+        try:
+            archive_repo = super(ArchiveRepoManager, self).get(repo_id=repo_id, version=version)
+            return archive_repo
+        except Exception:
+            logger.error(traceback.format_exc())
+            return None
 
     def get_archive_repos_by_owner(self, owner):
         try:
@@ -355,6 +364,7 @@ class ArchiveRepo(models.Model):
 
     id = models.AutoField(auto_created = True, primary_key = True, null=False)
     repo_id = models.CharField(max_length=37, null=False)
+    repo_name = models.CharField(max_length=255, null=False)
     commit_id = models.CharField(max_length=41, default=None)
     owner = models.CharField(max_length=255, null=False)
     checksum = models.CharField(max_length=64, null=False)
@@ -362,5 +372,5 @@ class ArchiveRepo(models.Model):
     md = PickledObjectField()
     version = TinyIntegerField(null=False)
     status = models.CharField(choices=Status.choices, default=Status.IN_PROCESS)
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(default=timezone.now)
     objects = ArchiveRepoManager()
