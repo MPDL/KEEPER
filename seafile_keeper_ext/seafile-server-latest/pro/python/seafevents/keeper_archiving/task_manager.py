@@ -347,7 +347,7 @@ class Worker(threading.Thread):
             return
 
         ## Put into DB, if success
-        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, task._md)
+        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, task._md, task._repo.name)
 
         task.status = 'DONE'
 

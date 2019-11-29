@@ -12,6 +12,7 @@ class KeeperArchive(KeeperBase):
 
     aid = Column(Integer, primary_key=True, autoincrement=True)
     repo_id = Column(String(length=37), nullable=False, index=True)
+    repo_name = Column(String(length=255), nullable=False)
     owner = Column(String(length=255), nullable=False, index=True)
     version = Column(SmallInteger, index=True, nullable=False)
     checksum = Column(String(length=255), nullable=False)
@@ -21,13 +22,14 @@ class KeeperArchive(KeeperBase):
     UniqueConstraint(repo_id, version, name='unq_repo_id_version')
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, repo_id, owner, version, checksum, external_path, md):
+    def __init__(self, repo_id, owner, version, checksum, external_path, md, repo_name):
         self.repo_id = repo_id
         self.owner = owner
         self.version = version
         self.checksum = checksum
         self.external_path = external_path
         self.md = md
+        self.repo_name = repo_name
 
 class KeeperArchiveOwnerQuota(KeeperBase):
     __tablename__ = 'keeper_archive_owner_quota'

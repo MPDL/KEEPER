@@ -92,6 +92,7 @@ class DBOper(object):
                 # add notification to gui
                 cache = pylibmc.Client([CACHES['default']['LOCATION']])
                 cache_key = normalize_cache_key(to_user, USER_NOTIFICATION_COUNT_CACHE_PREFIX)
+                #django specific versioning
                 cache.delete(':1:' + cache_key)
 
             except Exception as e:
@@ -101,9 +102,9 @@ class DBOper(object):
                 self.edb_session.remove()
 
 
-    def add_archive(self, repo_id, owner, version, checksum, external_path, md):
+    def add_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name):
         try:
-            a = KeeperArchive(repo_id, owner, version, checksum, external_path, md)
+            a = KeeperArchive(repo_id, owner, version, checksum, external_path, md, repo_name)
             self.kdb_session.add(a)
             self.kdb_session.flush()
             return 0
@@ -115,12 +116,12 @@ class DBOper(object):
             self.kdb_session.remove()
 
 
-    def update_archive(self, repo_id, owner, version, checksum, external_path, md, ts):
+    def update_archive(self, repo_id, owner, version, checksum, external_path, md, ts, repo_name):
         try:
             q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id, KeeperArchive.version == version)
             a = q.first()
             if not a:
-                self.add_archive(repo_id, owner, version, checksum, external_path, md)
+                self.add_archive(repo_id, owner, version, checksum, external_path, md, repo_name)
             else:
                 a.owner = owner
                 a.checksum = checksum
