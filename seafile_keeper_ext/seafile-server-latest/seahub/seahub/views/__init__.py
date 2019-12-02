@@ -714,7 +714,8 @@ def libraries(request):
     doi_repos = DoiRepo.objects.get_doi_by_owner(username)
     if doi_repos:
         for doi_repo in doi_repos:
-            landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": doi_repo.repo_name })
+            repo_name = doi_repo.repo_name if get_repo(doi_repo.repo_id) is None else get_repo(doi_repo.repo_id).name
+            landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": repo_name })
 
     archive_repos = ArchiveRepo.objects.get_archive_repos_by_owner(username)
     if archive_repos:
@@ -726,7 +727,8 @@ def libraries(request):
                     has_landing_page = True
                     break
             if  has_landing_page == False:
-                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name":  archive_repo.repo_name})
+                repo_name = archive_repo.repo_name if get_repo(archive_repo.repo_id) is None else get_repo(archive_repo.repo_id).name
+                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name": repo_name })
 
 
     return render(request, 'libraries.html', {

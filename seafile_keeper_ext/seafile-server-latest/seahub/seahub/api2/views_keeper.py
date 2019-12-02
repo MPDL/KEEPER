@@ -25,6 +25,8 @@ import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task
+from keeper.common import parse_markdown_doi
+
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +231,8 @@ def LandingPageView(request, repo_id):
     if doi_repos:
         md = doi_repos[0].md
     elif archive_repos:
-        md = archive_repos[0].md
+        # DOI and Archive implementations are not consistant, without encoding will caused Type error
+        md = parse_markdown_doi((archive_repos[0].md).encode("utf-8"))
     
     if md:
         return render(request, './catalog_detail/lib_detail_landing_page.html', {
@@ -250,12 +253,13 @@ def ArchiveView(request, repo_id, version_id):
         return render(request, '404.html')
 
     repo_owner = get_repo_owner(repo_id)
+    archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
     if repo_owner is None:
         repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)
         return render(request, './catalog_detail/tombstone_page.html', {
-            'md_dict': archive_repo.md,
-            'authors': '; '.join(get_authors_from_md(archive_repo.md)),
-            'institute': archive_repo.md.get("Institute").replace(";", "; "),
+            'md_dict': archive_md,
+            'authors': '; '.join(get_authors_from_md(archive_md)),
+            'institute': archive_md.get("Institute").replace(";", "; "),
             'library_name': archive_repo.repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
     else:
@@ -267,10 +271,10 @@ def ArchiveView(request, repo_id, version_id):
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,
-        'authors': '; '.join(get_authors_from_md(archive_repo.md)),
-        'institute': archive_repo.md.get("Institute").replace(";", "; "),
+        'authors': '; '.join(get_authors_from_md(archive_md)),
+        'institute': archive_md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
-        'md_dict': archive_repo.md,
+        'md_dict': archive_md,
         'cdc': cdc,
         'owner_contact_email': email2contact_email(repo_owner) })
 
@@ -306,25 +310,8 @@ def archive_lib(request):
     repo_id = request.GET.get('repo_id', None)
     user_email = request.user.username
     repo = get_repo(repo_id)
-    metadata = get_metadata(repo_id, user_email, "archive")
-
-    if 'error' in metadata:
-        return JsonResponse({
-            'msg': metadata.get('error'),
-            'status': 'error',
-        })
-    logger.info("Successfully get metadata, start archiving...")
-
-    commit_id = get_latest_commit_id(repo)
-    checksum = "todo:ask_vlad_how_to_get_checksum_of_zip"
-    status = "in_process"
-    external_path = "some_external_path"
-    repo_name = repo.name
 
     resp1 = add_keeper_archiving_task(repo_id, user_email)
-    logger.debug(resp1.__dict__)
-
-    #archiveRepo = archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
 
     #todo: set archive quota should be removed
     quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
@@ -340,10 +327,6 @@ def archive_lib(request):
             'msg': msg,
             'status': 'success'
         })
-
-def archive_finished(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status):
-    archiveRepo = ArchiveRepo.objects.create_archive_repo(repo_id, repo_name, commit_id, user_email, checksum, external_path, metadata, status)
-    return archiveRepo
 
 def update_quota(repo_id, owner):
     quota = ArchiveQuota.objects.get_archive_quota(repo_id, owner)

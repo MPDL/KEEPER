@@ -283,9 +283,9 @@ class ArchiveQuota(models.Model):
 
     """ Archive Quota per Library per User """
     class Meta:
-        db_table = 'archive_owner_quota'
+        db_table = 'keeper_archive_owner_quota'
 
-    id = models.AutoField(auto_created = True, primary_key = True, null=False)
+    qid = models.AutoField(auto_created = True, primary_key = True, null=False)
     owner = models.CharField(max_length=255, null=False)
     repo_id = models.CharField(max_length=37, null=False)
     quota = models.IntegerField(null=False)
@@ -293,19 +293,6 @@ class ArchiveQuota(models.Model):
 
 
 class ArchiveRepoManager(models.Manager):
-    def create_archive_repo(self, repo_id, repo_name, commit_id, owner, checksum, external_path, md, status):
-        try:
-            latest_archive_repo = self.get_latest_archive_repos_by_repo_id(repo_id)
-            if latest_archive_repo is None:
-                archive_repo = self.model(repo_id=repo_id, repo_name=repo_name, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=1, status=status)
-            else:
-                version = latest_archive_repo.version + 1
-                archive_repo = self.model(repo_id=repo_id, repo_name=repo_name, commit_id=commit_id, owner=owner, checksum=checksum, external_path=external_path, md=md, version=version, status=status)
-            archive_repo.save()
-            return archive_repo
-        except Exception:
-            logging.error(traceback.format_exc())
-
     def get_archive_repos_by_repo_id(self, repo_id):
         try:
             archive_repos = super(ArchiveRepoManager, self).filter(repo_id=repo_id)
@@ -328,42 +315,12 @@ class ArchiveRepoManager(models.Manager):
         except Exception:
             logger.error(traceback.format_exc())
 
-    def get_archive_repos_by_repo_id(self, repo_id):
-        try:
-            archive_repos = super(ArchiveRepoManager, self).filter(repo_id=repo_id)
-            return archive_repos
-        except Exception:
-            logging.error(traceback.format_exc())
-
-    def get_latest_archive_repos_by_repo_id(self, repo_id):
-        try:
-            latest_archive_repo = super(ArchiveRepoManager, self).filter(repo_id=repo_id).order_by('-version')[0]
-            return latest_archive_repo
-        except Exception:
-            logging.error(traceback.format_exc())
-
-    def update_archive_repo_status(self, repo_id, version, status):
-        try:
-            super(ArchiveRepoManager, self).filter(repo_id=repo_id, version=version).update(status=status)
-        except Exception:
-            logging.error(traceback.format_exc())
-
 
 class ArchiveRepo(models.Model):
 
     """ Archive Repository """
     class Meta:
-        db_table = 'archive_repos'
-
-    class Status(Enum):
-        IN_PROCESS = 'in_process'
-        ARCHIVED = 'archived'
-        FAILED = 'failed'
-
-        @classmethod
-        def choices(cls):
-            print(tuple((i.name, i.value) for i in cls))
-            return tuple((i.name, i.value) for i in cls)
+        db_table = 'keeper_archive'
 
     class TinyIntegerField(models.SmallIntegerField):
         def db_type(self, connection):
@@ -372,15 +329,14 @@ class ArchiveRepo(models.Model):
             else:
                 return super(TinyIntegerField, self).db_type(connection)
 
-    id = models.AutoField(auto_created = True, primary_key = True, null=False)
+    aid = models.AutoField(auto_created = True, primary_key = True, null=False)
     repo_id = models.CharField(max_length=37, null=False)
-    repo_name = models.CharField(max_length=255, null=False)
     commit_id = models.CharField(max_length=41, default=None)
+    repo_name = models.CharField(max_length=255, null=False)
     owner = models.CharField(max_length=255, null=False)
-    checksum = models.CharField(max_length=64, null=False)
+    checksum = models.CharField(max_length=100, null=False)
     external_path = models.TextField()
-    md = PickledObjectField()
+    md = models.TextField()
     version = TinyIntegerField(null=False)
-    status = models.CharField(choices=Status.choices, default=Status.IN_PROCESS)
     created = models.DateTimeField(default=timezone.now)
     objects = ArchiveRepoManager()
