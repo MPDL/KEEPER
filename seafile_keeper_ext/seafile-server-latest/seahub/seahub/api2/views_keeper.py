@@ -332,7 +332,9 @@ def archive_lib(request):
     if quota == -1:
         msg = "Can not archive for this Library, please contact support"
     else:
-        msg = "Archive started: " + resp1["status"]
+        msg = "Archive started: " + resp1.status
+        if resp1.error:
+            msg = resp1.error
 
     return JsonResponse({
             'msg': msg,

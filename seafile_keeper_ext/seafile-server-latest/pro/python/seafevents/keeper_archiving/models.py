@@ -1,10 +1,13 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, SmallInteger, DateTime
 from sqlalchemy import func
-from  sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.schema import UniqueConstraint
 
-from seafevents.db import Base
+# KeeperBase = automap_base()
+KeeperBase = declarative_base()
 
-class KeeperArchive(Base):
+class KeeperArchive(KeeperBase):
     __tablename__ = 'keeper_archive'
 
     aid = Column(Integer, primary_key=True, autoincrement=True)
@@ -26,7 +29,7 @@ class KeeperArchive(Base):
         self.external_path = external_path
         self.md = md
 
-class KeeperArchiveOwnerQuota(Base):
+class KeeperArchiveOwnerQuota(KeeperBase):
     __tablename__ = 'keeper_archive_owner_quota'
 
     qid = Column(Integer, primary_key=True, autoincrement=True)
