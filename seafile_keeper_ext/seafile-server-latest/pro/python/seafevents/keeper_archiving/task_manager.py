@@ -65,7 +65,7 @@ def _generate_file_md5(path, blocksize=5 * 2**20):
 def _get_archive_path(storage_path, owner, repo_id, version):
     """Construct full path to archive in fs
     """
-    return os.path.join(storage_path, owner, "{}_ver{}.tar.gz".format(repo_id, version))
+    return os.path.join(storage_path, owner, '{}_ver{}.tar.gz'.format(repo_id, version))
 
 class KeeperArchivingTask(object):
     """ A task is in one of these status:
@@ -79,7 +79,6 @@ class KeeperArchivingTask(object):
     def __init__(self, repo_id, owner, archiving_storage):
         self.repo_id = repo_id
         self.owner = owner
-
 
         self.version = 1
         self.archiving_storage = archiving_storage
@@ -103,8 +102,15 @@ class KeeperArchivingTask(object):
 
         self._repo = None
 
+        self._commit_id = None
+
         self._status = 'QUEUED'
+
+        # verbose error for logs
         self.error = None
+
+        # message for user
+        self.msg = None
 
 
     def __str__(self):
@@ -127,8 +133,9 @@ class KeeperArchivingTask(object):
 
     status = property(get_status, set_status, None, "status of this task")
 
-def _set_error(task, msg):
-    task.error = msg
+def _set_error(task, msg, error):
+    task.msg = msg
+    task.error = error
     task.status = 'ERROR'
     _l.error(task.error)
 
@@ -156,9 +163,12 @@ class Worker(threading.Thread):
             try:
                 commits = seafile_api.get_commit_list(repo.id, 0, 1)
             except Exception as e:
+                #TODO:
                 _l.error('exception: {}'.format(e))
 
             commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+            #to save later in DB
+            task._commit_id = commit.root_id
             return fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
 
 
@@ -202,18 +212,19 @@ class Worker(threading.Thread):
                 for dname, dobj in d.dirents.items():
                     copy_dirent(dobj, repo, owner, dpath)
             elif obj.is_file():
-                plist = [p for p in path.split(os.sep) if p]
+                plist = [p.decode('utf-8') for p in path.split(os.sep) if p]
                 absdirpath = os.path.join(task._extracted_tmp_dir, *plist)
                 if not os.path.exists(absdirpath):
                     os.makedirs(absdirpath)
                 seaf = fs_mgr.load_seafile(repo.id, repo.version, obj.id)
-                to_path = os.path.join(absdirpath, obj.name)
+                fname = obj.name.decode('utf-8')
+                to_path = os.path.join(absdirpath, fname)
                 write_seaf_to_path(seaf, to_path)
-                _l.debug(u"File: {} copied to {}".format(obj.name, to_path))
+                _l.debug(u'File: {} copied to {}'.format(fname, to_path))
             else:
-                _l.debug(u"Wrong object: {}".format(obj))
+                _l.debug(u'Wrong seafile object: {}'.format(obj))
 
-
+        #start traversing repo
         for name, obj in seaf_dir.dirents.items():
             copy_dirent(obj, task._repo, owner, '')
 
@@ -229,25 +240,23 @@ class Worker(threading.Thread):
             _remove_dir_or_file(task._archive_path)
             task._archive_path = None
 
-
+    MSG_EXTRACT_REPO = 'Cannot extract library'
     def _extract_repo(self, task):
         """
         Extract repo from object storage to tmp directory
         """
-        _l.info('start to extract repo: {}'.format(task.repo_id))
-        _l.debug('start to extract repo: {}'.format(task))
+        _l.debug('Start extract repo for task: {}'.format(task))
         try:
             self.copy_repo_into_tmp_dir(task)
         except Exception as e:
-            _l.error('failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
-            task.status = 'ERROR'
-            task.error = 'failed to extract library'
+            _set_error(task, self.MSG_EXTRACT_REPO, u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
             #clean up
             self._clean_up(task)
             return False
         else:
             return True
 
+    MSG_ADD_MD = 'Cannot attach metadata file to library archive'
     def _add_md(self, task):
         """
         Add metadata markdown file of archive
@@ -263,7 +272,7 @@ class Worker(threading.Thread):
                     shutil.copyfile(md_path, new_md_path)
                     task._md_path = new_md_path
                 except Exception as e:
-                    _set_error(task, 'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
+                    _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
                     return False
                 try:
                     #save content for DB
@@ -271,10 +280,10 @@ class Worker(threading.Thread):
                     task._md = md.read()
                     md.close()
                 except Exception as e:
-                    _set_error(task, 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
+                    _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
                     return False
             else:
-                _set_error(task, 'Cannot find md file {} for task {}'.format(md_path, task))
+                _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot find md file {} for task {}'.format(md_path, task))
                 return False
         else:
             _set_error(task, 'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
@@ -283,45 +292,44 @@ class Worker(threading.Thread):
         return True
 
 
+    MSG_CREATE_TAR = 'Cannot create tar file for archive'
     def _create_tar(self, task):
         """
         Create tar file for extracted repo
         """
-        _l.debug('start to create tar for repo: {}'.format(task.repo_id))
+        _l.debug('Start create tar for repo: {}'.format(task.repo_id))
         assert task._extracted_tmp_dir is not None
         try:
             task._archive_path = _get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
             with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
         except Exception as e:
-            _set_error(task, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
-            _l.error()
-            task.status = 'ERROR'
-            task.error = 'failed to tar archive'
+            _set_error(task, self.MSG_CREATE_TAR, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
             #clean up
             self._clean_up(task)
             return False
         else:
             archive.close()
             task._checksum = _generate_file_md5(task._archive_path)
-            return True
 
+        return True
+
+
+    MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS'
     def _push_to_hpss(self, task):
         """
         Push created archive tar to HPSS
         """
         assert task._archive_path is not None
-        _l.debug('start to push archive to hpss: {}'.format(task._archive_path))
+        _l.debug('Start push archive to HPSS: {}'.format(task._archive_path))
         try:
             pass
         except Exception as e:
-            _l.error('Failed to push archive tar {} for task {} to hpss: {}'.format(task._archive_path, task, e))
-            task.status = 'ERROR'
-            task.error = 'failed to push to HPSS'
-            #TODO: Do not clean tmp files/dirs, try to redo
+            _set_error(task, self.MSG_PUSH_TO_HPSS, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
+            #TODO: Do not clean tmp files/dirs, try to resume
             return False
-        else:
-            return True
+
+        return True
 
 
     def _handle_task(self, task):
@@ -347,7 +355,8 @@ class Worker(threading.Thread):
             return
 
         ## Put into DB, if success
-        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version, task._checksum, task._archive_path, task._md)
+        task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version,
+            task._checksum, task._archive_path, task._md, task._repo.name, task._commit_id)
 
         task.status = 'DONE'
 
@@ -501,12 +510,16 @@ class TaskManager(object):
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
                 ret['version'] = task.version
+                if task.error:
+                    ret['msg'] = task.msg
+                    ret['error'] = task.error
             else:
             # add new task
                 task = self._check_and_add_task(repo_id, owner, self.archiving_storage)
                 if task.status == 'ERROR':
                     # notify user!!!
                     self._notify_user(task)
+                    ret['msg'] = task.msg
                     ret['error'] = task.error
                 else:
                     self._tasks_map[repo_id] = task
@@ -522,11 +535,13 @@ class TaskManager(object):
                 task = self._tasks_map[repo_id]
                 ret['status'] = task.status
                 if task.status == 'ERROR':
+                    ret['msg'] = task.msg
                     ret['error'] = task.error
             else:
                 if self._archive_exists(repo_id, version):
                     ret['status'] = 'DONE'
                 else:
+                    ret['msg'] = task.msg
                     ret['status'] = 'ERROR'
                     ret['error'] = 'Cannot find archiving task or archive for repo_id: {}, version: {}'.format(repo_id, version)
         return ret
