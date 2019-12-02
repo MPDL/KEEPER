@@ -385,8 +385,8 @@ class TaskManager(object):
     """Task manager schedules the processing of archiving tasks. A task comes
     from a http archive request. The handling of a task consists of these steps:
 
-    - extract library from object storage to tmp dir
-    - archive tmp library dir to tar.gz
+    - extract library from object storage to a tmp dir
+    - pack the tmp dir to tar.gz
     - push tar.gz to hpss
     """
     def __init__(self):
@@ -426,10 +426,11 @@ class TaskManager(object):
     def _archive_exists(self, repo_id, version):
         """Archive has been successfuly created and stored in HPSS and DB """
         a = self._db_oper.get_archives(repo_id=repo_id, version=version)
-        _l.error(a)
+        _l.debug(a)
         return a is not None and len(a)>0
 
 
+    MSG_ADD_TASK = 'Cannot add task'
     def _check_and_add_task(self, repo_id, owner, storage_path):
         """
         TODO:
@@ -439,33 +440,25 @@ class TaskManager(object):
         try:
             at._repo = seafile_api.get_repo(repo_id)
         except Exception as e:
-            at.status = 'ERROR'
-            at.error = 'Cannot get library {}: {}'.format(repo_id, e)
-            _l.error(at.error)
+            _set_error(at, self.MSG_ADD_TASK, 'Cannot get library {}: {}'.format(repo_id, e))
             return at
 
         # check owner
         ro = seafile_api.get_repo_owner(repo_id)
         if ro != owner:
-            at.status = 'ERROR'
-            at.error = 'Wrong owner of library {}: {}'.format(repo_id, owner)
-            _l.error(at.error)
+            _set_error(at, self.MSG_ADD_TASK, 'Wrong owner of library {}: {}'.format(repo_id, owner))
             return at
         else:
             at.owner = owner
 
         # check version
-        max_ver = self._db_oper.get_max_archive_version(repo_id)
+        max_ver = self._db_oper.get_max_archive_version(repo_id, owner)
+        owner_quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
         if max_ver is None:
-            at.status = 'ERROR'
-            at.error = 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner)
-            _l.error(at.error)
+            _set_error(at, self.MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
             return at
-        elif max_ver >= self.archives_per_library:
-            at.version = max_ver
-            at.status = 'ERROR'
-            at.error = 'Max number of archives for library {} is exceeded'.format(repo_id)
-            _l.error(at.error)
+        elif max_ver >= owner_quota:
+            _set_error(at, self.MSG_ADD_TASK, 'Max number of archives: {} for library {} and owner {} is exceeded'.format(max_ver, repo_id, owner))
             return at
         elif max_ver == -1:
             at.version = 1
@@ -476,17 +469,13 @@ class TaskManager(object):
         try:
             repo_size = seafile_api.get_repo_size(repo_id)
         except Exception as e:
-            at.status = 'ERROR'
-            at.error = 'Cannot get library size {}: {}'.format(repo_id, e)
-            _l.error(at.error)
+            _set_error(at, self.MSG_ADD_TASK, 'Cannot get library size {}: {}'.format(repo_id, e))
             return at
 
         # check max repo size
         # TODO: check units
         if repo_size > self.archive_max_size:
-            at.status = 'ERROR'
-            at.error = 'Size of library {} is too big to be archived: {}.'.format(repo_id, repo_size)
-            _l.error(at.error)
+            _set_error(at, self.MSG_ADD_TASK, 'Size of library {} is too big to be archived: {}.'.format(repo_id, repo_size))
             return at
 
         return at

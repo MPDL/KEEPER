@@ -49,7 +49,6 @@ class DBOper(object):
         self.init_db()
 
     def init_db(self):
-
         try:
             kdb = DATABASES['keeper']
             self.kdb_session = create_db_session(
@@ -129,7 +128,7 @@ class DBOper(object):
                 a.md = md
                 a.timestamp = ts
                 a.commit()
-
+                self.kdb_session.flush()
         except Exception as e:
             self.kdb_session.rollback()
             logging.warning('Failed to update keeper archive record from db: {}.'.format(e))
@@ -149,9 +148,9 @@ class DBOper(object):
             self.kdb_session.remove()
 
 
-    def get_max_archive_version(self, repo_id):
+    def get_max_archive_version(self, repo_id, owner):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id).order_by(desc(KeeperArchive.version)).first()
+            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id, KeeperArchive.owner == owner).order_by(desc(KeeperArchive.version)).first()
             if not q:
                 return -1
             else:
@@ -162,18 +161,33 @@ class DBOper(object):
         finally:
             self.kdb_session.remove()
 
+    def get_quota(self, repo_id, owner):
+        try:
+            q = self.kdb_session.query(KeeperArchiveOwnerQuota).filter(KeeperArchiveOwnerQuota.repo_id == repo_id, KeeperArchiveOwnerQuota.owner == owner).first()
+            if not q:
+                return None
+            else:
+                return q.quota
+        except Exception as e:
+            logging.warning('Failed to get archiving quota for library {} and owner {}: {}.'.format(repo_id, owner, e))
+            return None
+        finally:
+            self.kdb_session.remove()
 
 
-    def get_archives(self, repo_id=None, version=None):
+
+    def get_archives(self, repo_id=None, version=None, owner=None):
         try:
             q = self.kdb_session.query(KeeperArchive)
             if repo_id:
                 q = q.filter(KeeperArchive.repo_id == repo_id)
             if version:
                 q = q.filter(KeeperArchive.version == version)
+            if owner:
+                q = q.filter(KeeperArchive.owner == owner)
             return q.all()
         except Exception as e:
-            logging.warning('Failed to get keeper archives for repo {}, version {} : {}.'.format(repo_id, version, e))
+            logging.warning('Failed to get keeper archives for repo {}, version {}, owner {}: {}.'.format(repo_id, version, owner, e))
             return None
         finally:
             self.kdb_session.remove()

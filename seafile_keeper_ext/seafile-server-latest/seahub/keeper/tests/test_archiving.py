@@ -29,6 +29,7 @@ from time import sleep
 import json
 from seahub.notifications.models import UserNotification
 
+from seafevents.keeper_archiving import task_manager as arch_task_mgr
 
 @pytest.mark.skip
 def test_tmp_repo_archiving(create_tmp_repo):
@@ -113,7 +114,7 @@ def test_huge_repo_archiving():
 
 
 # @pytest.mark.skip
-def test_new_archiving():
+def test_new_archiving(mocker):
    # from seafevents.app.config import load_config
 
     try:
@@ -129,30 +130,35 @@ def test_new_archiving():
 
         # keeper_archiving.start()
 
-        repo_id = 'c61cdb5e-2829-4a12-8d30-db421324a84d'
-        owner = 'makarenko@mpdl.mpg.de'
+        # send_mail_mock = mocker.patch('django.core.mail.message.EmailMessage.send')
+        # with mock.patch('django.core.mail.message.EmailMessage') as mocked_email:
+        # with mock.patch('seahub.utils.EmailMessage') as mocked_email:
+        # with mock.patch('post_office.models.EmailMessage') as mocked_email:
+        # with mock.patch('django.core.mail.EmailMessage') as mocked_email:
+        with mock.patch('seafevents.tasks.seahub_email_sender.SendSeahubEmailTimer') as mocked_email:
 
-        # print(keeper_archiving._db_oper.get_max_archive_version(repo_id))
-        # print(threading.enumerate())
-        # sleep(5)
-        resp1 = add_keeper_archiving_task(repo_id, owner)
-        print(resp1.__dict__)
-        # sleep(10)
-        # print(threading.enumerate())
+            repo_id = 'c61cdb5e-2829-4a12-8d30-db421324a84d'
+            owner = 'makarenko@mpdl.mpg.de'
+            # owner = 'vlamak868@gmail.com'
 
-        repo_id = 'bdca5491-e60f-413a-af5f-33003bca2292'
-        resp2 = add_keeper_archiving_task(repo_id, owner)
-        print(resp2.__dict__)
+            resp1 = add_keeper_archiving_task(repo_id, owner)
+            print(resp1.__dict__)
+            # sleep(10)
 
-
-        sleep(5)
-        resp1 = query_keeper_archiving_status(resp1.repo_id, resp1.version)
-        print(resp1.__dict__)
-        sleep(5)
-        resp2 = query_keeper_archiving_status(resp2.repo_id, resp2.version)
-        print(resp2.__dict__)
+            # repo_id = 'bdca5491-e60f-413a-af5f-33003bca2292'
+            # resp2 = add_keeper_archiving_task(repo_id, owner)
+            # print(resp2.__dict__)
 
 
+            sleep(5)
+            resp1 = query_keeper_archiving_status(resp1.repo_id, resp1.version)
+            print(resp1.__dict__)
+
+            # sleep(5)
+            # resp2 = query_keeper_archiving_status(resp2.repo_id, resp2.version)
+            # print(resp2.__dict__)
+
+            # mocked_email.send_seahub_email.assert_called()
         # print(query_keeper_archiving_status(task2.repo_id, task2.version))
         # sleep(10)
 

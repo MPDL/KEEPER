@@ -20,7 +20,7 @@ class KeeperArchive(KeeperBase):
     external_path = Column(Text, nullable=False)
     md = Column(Text, nullable=False)
     created = Column(DateTime, server_default=func.now(), index=True)
-    UniqueConstraint(repo_id, version, name='unq_repo_id_version')
+    UniqueConstraint(repo_id, owner, version, name='unq_keeper_archive_repo_id_version')
     __table_args__ = {'extend_existing': True}
 
     def __init__(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id):
@@ -38,9 +38,12 @@ class KeeperArchiveOwnerQuota(KeeperBase):
 
     qid = Column(Integer, primary_key=True, autoincrement=True)
     owner = Column(String(length=255), primary_key=True)
-    quota = Column(SmallInteger, default=5)
+    repo_id = Column(CHAR(length=37), nullable=False, index=True)
+    quota = Column(SmallInteger)
+    UniqueConstraint(repo_id, owner, name='unq_keeper_archive_quota_owner_repo_id')
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, owner, quota):
+    def __init__(self, owner, repo_id, quota):
         self.owner = owner
+        self.repo_id = repo_id
         self.quota = quota
