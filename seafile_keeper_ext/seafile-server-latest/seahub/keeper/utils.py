@@ -368,3 +368,9 @@ def query_keeper_archiving_status(repo_id, version):
     ret = rpc.query_task_status(repo_id, version)
     return ret
 
+def get_keeper_archiving_quota(repo_id, owner):
+    rpc = _get_keeper_archiving_rpc()
+    ret = rpc.get_quota(repo_id, owner)
+    return ret
+
+

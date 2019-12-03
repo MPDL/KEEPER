@@ -15,3 +15,7 @@ class KeeperArchivingRpcClient(ccnet.RpcClientBase):
     @searpc_func("object", ["string", "string"])
     def query_task_status(self, repo_id, version):
         pass
+
+    @searpc_func("object", ["string", "string"])
+    def get_quota(self, repo_id, owner):
+        pass

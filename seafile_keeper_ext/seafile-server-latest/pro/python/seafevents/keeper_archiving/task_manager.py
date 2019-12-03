@@ -3,6 +3,7 @@
 import os
 import Queue
 import tarfile
+import json
 import threading
 import logging as _l
 import atexit
@@ -14,8 +15,18 @@ from seafobj import commit_mgr, fs_mgr
 
 from seahub_settings import ARCHIVE_METADATA_TARGET
 
+import config as _cfg
 
-import json
+MSG_DB_ERROR = 'Error by DB query'
+MSG_ADD_TASK = 'Cannot add task'
+MSG_WRONG_OWNER = 'Wrong owner of the library'
+MSG_MAX_NUMBER_ARCHIVES_ACHIEVED = 'Max number of archives for library is achieved'
+MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota'
+MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived'
+MSG_EXTRACT_REPO = 'Cannot extract library'
+MSG_ADD_MD = 'Cannot attach metadata file to library archive'
+MSG_CREATE_TAR = 'Cannot create tar file for archive'
+MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS'
 
 __all__ = ["task_manager"]
 
@@ -124,10 +135,10 @@ class KeeperArchivingTask(object):
         assert status in ('QUEUED', 'PROCESSING', 'DONE', 'ERROR')
 
         # Remove temporary file when done or error
-        if status == 'ERROR' or status == 'DONE':
-            path = self._extracted_tmp_dir
-            _l.debug("removing extracted tmp library {}".format(path))
-            _remove_dir_or_file(path)
+            # path = self._extracted_tmp_dir
+        # if status == 'ERROR' or status == 'DONE':
+            # _l.debug("removing extracted tmp library {}".format(path))
+            # _remove_dir_or_file(path)
 
         self._status = status
 
@@ -144,12 +155,22 @@ class Worker(threading.Thread):
     """
     should_exit = False
 
-    def __init__(self, tasks_queue, index, **kwargs):
+    def __init__(self, tasks_queue, index, archiving_storage, hpss_params, **kwargs):
         threading.Thread.__init__(self, **kwargs)
 
         self._tasks_queue = tasks_queue
 
         self._index = index
+
+        self.archiving_storage = archiving_storage
+
+        self.hpss_enabled = hpss_params[_cfg.key_hpss_enabled]
+
+        if self.hpss_enabled:
+            self.hpss_url = hpss_params[_cfg.key_hpss_url]
+            self.hpss_user = hpss_params[_cfg.key_hpss_user]
+            self.hpss_password = hpss_params[_cfg.key_hpss_password]
+            self.hpss_storage_path = hpss_params[_cfg.key_hpss_storage_path]
 
 
     def copy_repo_into_tmp_dir(self, task):
@@ -174,7 +195,7 @@ class Worker(threading.Thread):
 
         seaf_dir = get_root_dir(task._repo)
         owner = seafile_api.get_repo_owner(task._repo.id)
-        task._extracted_tmp_dir = os.path.join(task.archiving_storage, owner, task._repo.id)
+        task._extracted_tmp_dir = os.path.join(self.archiving_storage, owner, task._repo.id)
 
         def write_seaf_to_path(seaf, to_path):
             """ Write SeafFile to path with stream
@@ -230,17 +251,20 @@ class Worker(threading.Thread):
 
 
     def _clean_up(self, task):
-        """Clean up tmps"""
-
+        """Clean up tmps
+        """
+        # clean extracted library dir
         if task._extracted_tmp_dir is not None:
             _remove_dir_or_file(task._extracted_tmp_dir)
             task._extracted_tmp_dir = None
+        # clean tar.gz and tar.gz.md only if task is DONE, i.e. pushed to HPSS
+        # if self.hpss_enabled and task.status == 'DONE':
+            # _remove_dir_or_file(task._archive_path)
+            # task._archive_path = None
+            #TODO: md can be stored in archived_storage to make archive search faster
+            # _remove_dir_or_file(task._md_path)
+            # task._md_path = None
 
-        if task._archive_path is not None:
-            _remove_dir_or_file(task._archive_path)
-            task._archive_path = None
-
-    MSG_EXTRACT_REPO = 'Cannot extract library'
     def _extract_repo(self, task):
         """
         Extract repo from object storage to tmp directory
@@ -249,20 +273,19 @@ class Worker(threading.Thread):
         try:
             self.copy_repo_into_tmp_dir(task)
         except Exception as e:
-            _set_error(task, self.MSG_EXTRACT_REPO, u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
+            _set_error(task, MSG_EXTRACT_REPO, u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
             #clean up
             self._clean_up(task)
             return False
         else:
             return True
 
-    MSG_ADD_MD = 'Cannot attach metadata file to library archive'
     def _add_md(self, task):
         """
         Add metadata markdown file of archive
         """
         if task._extracted_tmp_dir is not None:
-            arch_path = _get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
+            arch_path = _get_archive_path(self.archiving_storage, task.owner, task.repo_id, task.version)
             md_path = os.path.join(task._extracted_tmp_dir, ARCHIVE_METADATA_TARGET)
             # check if md file exists
             if os.path.exists(md_path) and os.path.isfile(md_path):
@@ -272,7 +295,7 @@ class Worker(threading.Thread):
                     shutil.copyfile(md_path, new_md_path)
                     task._md_path = new_md_path
                 except Exception as e:
-                    _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
+                    _set_error(task, MSG_EXTRACT_REPO, 'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
                     return False
                 try:
                     #save content for DB
@@ -280,10 +303,10 @@ class Worker(threading.Thread):
                     task._md = md.read()
                     md.close()
                 except Exception as e:
-                    _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
+                    _set_error(task, MSG_EXTRACT_REPO, 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
                     return False
             else:
-                _set_error(task, self.MSG_EXTRACT_REPO, 'Cannot find md file {} for task {}'.format(md_path, task))
+                _set_error(task, MSG_EXTRACT_REPO, 'Cannot find md file {} for task {}'.format(md_path, task))
                 return False
         else:
             _set_error(task, 'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
@@ -292,7 +315,6 @@ class Worker(threading.Thread):
         return True
 
 
-    MSG_CREATE_TAR = 'Cannot create tar file for archive'
     def _create_tar(self, task):
         """
         Create tar file for extracted repo
@@ -300,11 +322,11 @@ class Worker(threading.Thread):
         _l.debug('Start create tar for repo: {}'.format(task.repo_id))
         assert task._extracted_tmp_dir is not None
         try:
-            task._archive_path = _get_archive_path(task.archiving_storage, task.owner, task.repo_id, task.version)
+            task._archive_path = _get_archive_path(self.archiving_storage, task.owner, task.repo_id, task.version)
             with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
         except Exception as e:
-            _set_error(task, self.MSG_CREATE_TAR, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
+            _set_error(task, MSG_CREATE_TAR, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
             #clean up
             self._clean_up(task)
             return False
@@ -315,17 +337,21 @@ class Worker(threading.Thread):
         return True
 
 
-    MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS'
     def _push_to_hpss(self, task):
         """
         Push created archive tar to HPSS
         """
         assert task._archive_path is not None
-        _l.debug('Start push archive to HPSS: {}'.format(task._archive_path))
+
+        if not self.hpss_enabled:
+            _l.info('HPSS is not enabled, do not push archive to it')
+            return True
+
+        _l.info('Start push archive to HPSS: {}'.format(task._archive_path))
         try:
             pass
         except Exception as e:
-            _set_error(task, self.MSG_PUSH_TO_HPSS, 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir, task._archive_path, task, e))
+            _set_error(task, MSG_PUSH_TO_HPSS, 'Failed to archive {} to hpss for task {}: {}'.format(task._archive_path, task, e))
             #TODO: Do not clean tmp files/dirs, try to resume
             return False
 
@@ -362,7 +388,7 @@ class Worker(threading.Thread):
 
         task_manager._notify_user(task)
 
-        #self._clean_up(task)
+        self._clean_up(task)
 
         with task_manager._tasks_map_lock:
             task_manager._tasks_map.pop(task.repo_id)
@@ -406,17 +432,16 @@ class TaskManager(object):
 
         # TODO: Connection to HPSS
 
-    def init(self, db_oper,
-             num_workers=1,
-             archiving_storage='/tmp/keeper-archiving-storage',
-             archive_max_size=500 * 1024**3,
-             archives_per_library=5):
+    def init(self, db_oper, num_workers,
+             archiving_storage, archive_max_size, archives_per_library,
+             hpss_enabled, hpss_url, hpss_user, hpss_password, hpss_storage_path):
         self._db_oper = db_oper
         self._set_archiving_storage(archiving_storage)
         self._num_workers = num_workers
         self.archive_max_size = archive_max_size
         self.archives_per_library = archives_per_library
-
+        (self.hpss_enabled, self.hpss_url, self.hpss_user, self.hpss_password, self.hpss_storage_path) = \
+            (True, hpss_url, hpss_user, hpss_password, hpss_storage_path) if hpss_enabled else (False, None, None, None, None)
 
     def _set_archiving_storage(self, arch_dir):
         """Check the directory to store archive"""
@@ -430,8 +455,7 @@ class TaskManager(object):
         return a is not None and len(a)>0
 
 
-    MSG_ADD_TASK = 'Cannot add task'
-    def _check_and_add_task(self, repo_id, owner, storage_path):
+    def _build_task(self, repo_id, owner, storage_path):
         """
         TODO:
         """
@@ -440,13 +464,13 @@ class TaskManager(object):
         try:
             at._repo = seafile_api.get_repo(repo_id)
         except Exception as e:
-            _set_error(at, self.MSG_ADD_TASK, 'Cannot get library {}: {}'.format(repo_id, e))
+            _set_error(at, MSG_ADD_TASK, 'Cannot get library {}: {}'.format(repo_id, e))
             return at
 
         # check owner
         ro = seafile_api.get_repo_owner(repo_id)
         if ro != owner:
-            _set_error(at, self.MSG_ADD_TASK, 'Wrong owner of library {}: {}'.format(repo_id, owner))
+            _set_error(at, MSG_WRONG_OWNER, 'Wrong owner of library {}: {}'.format(repo_id, owner))
             return at
         else:
             at.owner = owner
@@ -455,10 +479,10 @@ class TaskManager(object):
         max_ver = self._db_oper.get_max_archive_version(repo_id, owner)
         owner_quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
         if max_ver is None:
-            _set_error(at, self.MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
+            _set_error(at, MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
             return at
         elif max_ver >= owner_quota:
-            _set_error(at, self.MSG_ADD_TASK, 'Max number of archives: {} for library {} and owner {} is exceeded'.format(max_ver, repo_id, owner))
+            _set_error(at, MSG_MAX_NUMBER_ARCHIVES_ACHIEVED, 'Max number of archives: {} for library {} and owner {} is exceeded'.format(max_ver, repo_id, owner))
             return at
         elif max_ver == -1:
             at.version = 1
@@ -469,13 +493,13 @@ class TaskManager(object):
         try:
             repo_size = seafile_api.get_repo_size(repo_id)
         except Exception as e:
-            _set_error(at, self.MSG_ADD_TASK, 'Cannot get library size {}: {}'.format(repo_id, e))
+            _set_error(at, MSG_ADD_TASK, 'Cannot get library size {}: {}'.format(repo_id, e))
             return at
 
         # check max repo size
         # TODO: check units
         if repo_size > self.archive_max_size:
-            _set_error(at, self.MSG_ADD_TASK, 'Size of library {} is too big to be archived: {}.'.format(repo_id, repo_size))
+            _set_error(at, MSG_LIBRARY_TOO_BIG, 'Size of library {} is too big to be archived: {}.'.format(repo_id, repo_size))
             return at
 
         return at
@@ -504,7 +528,7 @@ class TaskManager(object):
                     ret['error'] = task.error
             else:
             # add new task
-                task = self._check_and_add_task(repo_id, owner, self.archiving_storage)
+                task = self._build_task(repo_id, owner, self.archiving_storage)
                 if task.status == 'ERROR':
                     # notify user!!!
                     self._notify_user(task)
@@ -524,16 +548,58 @@ class TaskManager(object):
                 task = self._tasks_map[repo_id]
                 ret['status'] = task.status
                 if task.status == 'ERROR':
-                    ret['msg'] = task.msg
-                    ret['error'] = task.error
+                    ret.update({
+                        'msg': task.msg,
+                        'error': task.error
+                    })
             else:
                 if self._archive_exists(repo_id, version):
                     ret['status'] = 'DONE'
                 else:
-                    ret['msg'] = task.msg
-                    ret['status'] = 'ERROR'
-                    ret['error'] = 'Cannot find archiving task or archive for repo_id: {}, version: {}'.format(repo_id, version)
+                    ret.update({
+                        'msg': task.msg,
+                        'status': 'ERROR',
+                        'error': 'Cannot find archiving task or archive for repo_id: {}, version: {}'.format(repo_id, version)
+                    })
         return ret
+
+    def get_quota(self, repo_id, owner):
+        """Get archiving quota from DB and config
+        """
+        resp = { 'repo_id': repo_id, 'owner': owner }
+        try:
+            repo = seafile_api.get_repo(repo_id)
+            if owner != seafile_api.get_repo_owner(repo_id):
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_WRONG_OWNER
+                })
+                return resp
+            # get current version
+            curr_ver = self._db_oper.get_max_archive_version(repo_id, owner)
+            if curr_ver is None:
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_DB_ERROR
+                })
+                return resp
+            curr_ver = 1 if curr_ver == -1 else curr_ver
+            # get quota from db or from config
+            quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
+            resp.update({
+                'curr_ver': curr_ver,
+                'remains': quota - curr_ver
+            })
+            return resp
+        except Exception as e:
+            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
+            resp.update({
+                'status': 'ERROR',
+                'error': MSG_CANNOT_GET_QUOTA
+            })
+            return resp
+
+
 
     def run(self):
         assert self._tasks_map is not None
@@ -544,10 +610,16 @@ class TaskManager(object):
         atexit.register(self.stop)
 
         # start HPSS session
-        #self.convertor.start()
+        hpss_params = {
+            _cfg.key_hpss_enabled: self.hpss_enabled,
+            _cfg.key_hpss_url: self.hpss_url,
+            _cfg.key_hpss_user: self.hpss_user,
+            _cfg.key_hpss_password: self.hpss_password,
+            _cfg.key_hpss_storage_path: self.hpss_storage_path,
+        }
 
         for i in range(self._num_workers):
-            t = Worker(self._tasks_queue, i)
+            t = Worker(self._tasks_queue, i, self.archiving_storage, hpss_params)
             t.setDaemon(True)
             t.start()
             self._workers.append(t)
