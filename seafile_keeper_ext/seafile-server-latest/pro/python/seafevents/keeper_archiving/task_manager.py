@@ -20,13 +20,14 @@ import config as _cfg
 MSG_DB_ERROR = 'Error by DB query'
 MSG_ADD_TASK = 'Cannot add task'
 MSG_WRONG_OWNER = 'Wrong owner of the library'
-MSG_MAX_NUMBER_ARCHIVES_ACHIEVED = 'Max number of archives for library is achieved'
+MSG_MAX_NUMBER_ARCHIVES_REACHED = 'Max number of archives for library is reached'
 MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived'
 MSG_EXTRACT_REPO = 'Cannot extract library'
 MSG_ADD_MD = 'Cannot attach metadata file to library archive'
 MSG_CREATE_TAR = 'Cannot create tar file for archive'
 MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS'
+MSG_ARCHIVING_SUCCESFUL = 'Library is sucessfully archived'
 
 __all__ = ["task_manager"]
 
@@ -385,6 +386,7 @@ class Worker(threading.Thread):
             task._checksum, task._archive_path, task._md, task._repo.name, task._commit_id)
 
         task.status = 'DONE'
+        task.msg = MSG_ARCHIVING_SUCCESFUL
 
         task_manager._notify_user(task)
 
@@ -482,7 +484,7 @@ class TaskManager(object):
             _set_error(at, MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
             return at
         elif max_ver >= owner_quota:
-            _set_error(at, MSG_MAX_NUMBER_ARCHIVES_ACHIEVED, 'Max number of archives: {} for library {} and owner {} is exceeded'.format(max_ver, repo_id, owner))
+            _set_error(at, MSG_MAX_NUMBER_ARCHIVES_REACHED, 'Max number of archives {} for library {} and owner {} is reached'.format(max_ver, repo_id, owner))
             return at
         elif max_ver == -1:
             at.version = 1
@@ -510,7 +512,11 @@ class TaskManager(object):
         Notify user
         """
         self._db_oper.add_user_notification(task.owner, json.dumps({
-            'status': task.status
+            'status': task.status,
+            'repo_id': task.repo_id,
+            'version': task.version,
+            'msg': task.msg,
+            'error': task.error
         }))
 
 
@@ -531,7 +537,7 @@ class TaskManager(object):
                 task = self._build_task(repo_id, owner, self.archiving_storage)
                 if task.status == 'ERROR':
                     # notify user!!!
-                    self._notify_user(task)
+                    # self._notify_user(task)
                     ret['msg'] = task.msg
                     ret['error'] = task.error
                 else:
