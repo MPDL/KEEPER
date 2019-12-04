@@ -19,10 +19,12 @@ define([
       success: function (data) {
         if (data.status === "success") {
           keeperUtils.archive(repo_name, repo_id, data.quota);
-        } else if (data.msg === "oversized") {
+        } else if (data.status === "oversized") {
           keeperUtils.archive_failed(repo_name, "oversized");
-        } else if (data.msg === "quota_expired") {
+        } else if (data.status === "quota_expired") {
           keeperUtils.archive_failed(repo_name, "quota_expired");
+        } else if (data.status === "metadata_error") {
+          keeperUtils.archive_failed(repo_name, "metadata_error", error_msg = data.msg);
         }
       },
       error: function (error) {
@@ -65,7 +67,7 @@ define([
     });
   }
 
-  keeperUtils.archive_failed = function (repo_name, error_type) {
+  keeperUtils.archive_failed = function (repo_name, error_type, error_msg = "") {
     var archive_info = "Archive is only available for Libraries under 500G."
     switch (error_type) {
       case "unknown":
@@ -74,6 +76,8 @@ define([
       case "quota_expired":
         archive_info = "Can not archive due to quota expired, please contact support.";
         break;
+      case "metadata_error":
+        archive_info = error_msg;
       case "oversized":
         archive_info = "Archive is only available for Libraries under 500G.";
         break;

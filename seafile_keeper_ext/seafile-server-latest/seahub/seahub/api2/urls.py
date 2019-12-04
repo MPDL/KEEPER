@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file, add_doi, archive_lib, can_archive
+from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -120,8 +120,8 @@ urlpatterns = [
     url(r'^ajax/doi/$', add_doi, name='add_doi'),
 
     # Archive Library
-    url(r'^ajax/archive/$', archive_lib, name='archive_lib'),
-    url(r'^ajax/can-archive/$', can_archive, name='can_archive')
+    url(r'^ajax/archive/$', ArchiveLib.as_view(), name='archive_lib'),
+    url(r'^ajax/can-archive/$', CanArchive.as_view(), name='can_archive')
 ]
 
 # serve office converter static files

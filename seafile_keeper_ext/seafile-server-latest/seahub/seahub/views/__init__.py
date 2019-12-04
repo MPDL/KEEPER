@@ -66,7 +66,8 @@ LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
 from constance import config
 
 # Landing Pages add DoiRepo
-from keeper.models import DoiRepo, ArchiveRepo
+from keeper.models import DoiRepo
+from seafevents.keeper_archiving.db_oper import DBOper
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -717,7 +718,7 @@ def libraries(request):
             repo_name = doi_repo.repo_name if get_repo(doi_repo.repo_id) is None else get_repo(doi_repo.repo_id).name
             landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": repo_name })
 
-    archive_repos = ArchiveRepo.objects.get_archive_repos_by_owner(username)
+    archive_repos = DBOper().get_archives(owner = username)
     if archive_repos:
         for archive_repo in archive_repos:
             archive_repo_id = archive_repo.repo_id

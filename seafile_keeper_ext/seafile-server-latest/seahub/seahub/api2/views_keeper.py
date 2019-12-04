@@ -12,7 +12,7 @@ from seaserv import seafile_api
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification
-from keeper.models import CDC, DoiRepo, ArchiveQuota, ArchiveRepo
+from keeper.models import CDC, DoiRepo
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -26,7 +26,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task
 from keeper.common import parse_markdown_doi
-
+from seafevents.keeper_archiving.db_oper import DBOper
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +204,6 @@ def get_authors_from_md(md):
         result_author.append(tmpauthor)
     return result_author
 
-
 def get_repo(repo_id):
     return seafile_api.get_repo(repo_id)
 
@@ -223,15 +222,13 @@ def LandingPageView(request, repo_id):
         repo_owner_email = email2contact_email(repo_owner)
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
-
-    archive_repos = ArchiveRepo.objects.get_archive_repos_by_repo_id(repo_id)
+    archive_repos = DBOper().get_archives(repo_id=repo_id)
 
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
 
     if doi_repos:
         md = doi_repos[0].md
     elif archive_repos:
-        # DOI and Archive implementations are not consistant, without encoding will caused Type error
         md = parse_markdown_doi((archive_repos[0].md).encode("utf-8"))
     
     if md:
@@ -248,7 +245,8 @@ def LandingPageView(request, repo_id):
     return render(request, '404.html')
 
 def ArchiveView(request, repo_id, version_id):
-    archive_repo = ArchiveRepo.objects.get_archive_repo_by_repo_id_and_version(repo_id, version_id)
+
+    archive_repo = DBOper.get_archives(repo_id=repo_id, version = version_id)
     if archive_repo == None:
         return render(request, '404.html')
 
@@ -278,60 +276,50 @@ def ArchiveView(request, repo_id, version_id):
         'cdc': cdc,
         'owner_contact_email': email2contact_email(repo_owner) })
 
-def can_archive(request):
+class CanArchive(APIView):
 
-    repo_id = request.GET.get('repo_id', None)
-    user_email = request.user.username
-    repo = get_repo(repo_id)
-    is_oversized = repo.size > 67108864000000000
+    def __init__(self):
+        self.db_oper = DBOper()
 
-    if is_oversized:
+    def get(self, request):
+        repo_id = request.GET.get('repo_id', None)
+        user_email = request.user.username
+        repo = get_repo(repo_id)
+
+        metadata = get_metadata(repo_id, user_email, "archive")
+        if 'error' in metadata:
+            return JsonResponse({
+                'msg': metadata.get('error'),
+                'status': 'error',
+                })
+
+        quota = self.db_oper.get_quota(repo_id, user_email)
+        if quota <= 0: 
+            return JsonResponse({
+                'status': "quota_expired"
+        }) 
+
         return JsonResponse({
-            'msg': "oversized",
-            'status': "error"
-        })
-    
-    quota = update_quota(repo_id, user_email)
+            'quota': quota,
+            'status': "success"
+        }) 
 
-    if quota <= 0: 
-        return JsonResponse({
-            'msg': "quota_expired",
-            'status': "error"
-        })
-    else:
-        return JsonResponse({
-        'quota': quota,
-        'status': "success"
-    }) 
+class ArchiveLib(APIView):
 
-def archive_lib(request):
+    """ create keeper archive for a library """
+    def __init__(self):
+        self.db_oper = DBOper()
 
-    """ archive library, double check quota to avoid misuse """
-    repo_id = request.GET.get('repo_id', None)
-    user_email = request.user.username
-    repo = get_repo(repo_id)
-
-    resp1 = add_keeper_archiving_task(repo_id, user_email)
-
-    #todo: set archive quota should be removed
-    quota = ArchiveQuota.objects.set_archive_quota(repo_id, user_email)
-
-    if quota == -1:
-        msg = "Can not archive for this Library, please contact support"
-    else:
+    def get(self, request):
+        repo_id = request.GET.get('repo_id', None)
+        user_email = request.user.username
+        resp1 = add_keeper_archiving_task(repo_id, user_email)
         msg = "Archive started: " + resp1.status
+
         if resp1.error:
             msg = resp1.error
 
-    return JsonResponse({
-            'msg': msg,
-            'status': 'success'
-        })
-
-def update_quota(repo_id, owner):
-    quota = ArchiveQuota.objects.get_archive_quota(repo_id, owner)
-
-    if quota is None:
-        quota = ArchiveQuota.objects.init_archive_quota(repo_id, owner)
-
-    return quota.quota
+        return JsonResponse({
+                'msg': msg,
+                'status': 'success'
+            })
