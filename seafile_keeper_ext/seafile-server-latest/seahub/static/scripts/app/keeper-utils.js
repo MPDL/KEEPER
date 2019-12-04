@@ -8,6 +8,7 @@ define([
 
   var keeperUtils = {}
 
+
   keeperUtils.start_archive = function (repo_name, repo_id) {
     $.ajax({
       url: "/api2/ajax/can-archive/",
@@ -24,7 +25,7 @@ define([
         } else if (data.status === "quota_expired") {
           keeperUtils.archive_failed(repo_name, "quota_expired");
         } else if (data.status === "metadata_error") {
-          keeperUtils.archive_failed(repo_name, "metadata_error", error_msg = data.msg);
+          keeperUtils.archive_failed(repo_name, "metadata_error", data.msg);
         }
       },
       error: function (error) {
@@ -33,6 +34,7 @@ define([
     })
     return false;
   }
+
 
   keeperUtils.archive = function (repo_name, repo_id, quota) {
     var archive_info = "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: >TBC (will go to help center)<. This library can be archived " + quota + " more times.";
@@ -67,19 +69,21 @@ define([
     });
   }
 
+
   keeperUtils.archive_failed = function (repo_name, error_type, error_msg = "") {
-    var archive_info = "Archive is only available for Libraries under 500G."
+    var archive_info;
     switch (error_type) {
-      case "unknown":
-        archive_info = "Can not archive due to unknown reason, please contact support.";
-        break;
       case "quota_expired":
         archive_info = "Can not archive due to quota expired, please contact support.";
         break;
       case "metadata_error":
         archive_info = error_msg;
+        break;
       case "oversized":
         archive_info = "Archive is only available for Libraries under 500G.";
+        break;
+      default:
+        archive_info = "Can not archive due to unknown reason, please contact support.";
         break;
     }
 

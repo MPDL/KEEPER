@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from seahub import settings
+from seahub.auth.decorators import login_required
+from seahub.base.decorators import user_mods_check
 from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
@@ -24,7 +26,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task
+from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper
 
@@ -214,46 +216,48 @@ def get_cdc_id_by_repo(repo_id):
     """Get cdc_id by repo_id. Return None if nothing found"""
     return CDC.objects.get_cdc_id_by_repo(repo_id)
 
+
+@login_required
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
-    if repo_owner is None:
-        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)
+    if repo_owner is None:    # Library is deleted
+        repo_contact_email = "keeper@mpdl.mpg.de"
+    elif repo_owner == request.user.username:  # Show LandingPage only to repo_owner
+        repo_contact_email = email2contact_email(repo_owner)
     else:
-        repo_owner_email = email2contact_email(repo_owner)
+        return render(request, '404.html')
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
     archive_repos = DBOper().get_archives(repo_id=repo_id)
-
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-
+    if archive_repos is not None and len(archive_repos) == 0:
+        archive_repos = None
     if doi_repos:
         md = doi_repos[0].md
     elif archive_repos:
         md = parse_markdown_doi((archive_repos[0].md).encode("utf-8"))
+    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+
+    return render(request, './catalog_detail/lib_detail_landing_page.html', {
+        'authors': '; '.join(get_authors_from_md(md)),
+        'institute': md.get("Institute").replace(";", "; "),
+        'doi_dict': md,
+        'doi_repos': doi_repos,
+        'archive_repos': archive_repos,
+        'cdc': cdc,
+        'owner_contact_email':  repo_contact_email
+    })
     
-    if md:
-        return render(request, './catalog_detail/lib_detail_landing_page.html', {
-            'authors': '; '.join(get_authors_from_md(md)),
-            'institute': md.get("Institute").replace(";", "; "),
-            'doi_dict': md,
-            'doi_repos': doi_repos,
-            'archive_repos': archive_repos,
-            'cdc': cdc,
-            'owner_contact_email':  repo_owner_email
-        })
-    
-    return render(request, '404.html')
 
 def ArchiveView(request, repo_id, version_id):
-
-    archive_repo = DBOper.get_archives(repo_id=repo_id, version = version_id)
-    if archive_repo == None:
+    archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
+    if archive_repos is None or len(archive_repos) == 0:
         return render(request, '404.html')
 
+    archive_repo = archive_repos[0]
     repo_owner = get_repo_owner(repo_id)
     archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
     if repo_owner is None:
-        repo_owner_email = "keeper@mpdl.mpg.de"   # in case repo has no owner (Z.B deleted)
+        repo_owner_email = "keeper@mpdl.mpg.de"
         return render(request, './catalog_detail/tombstone_page.html', {
             'md_dict': archive_md,
             'authors': '; '.join(get_authors_from_md(archive_md)),
@@ -276,8 +280,10 @@ def ArchiveView(request, repo_id, version_id):
         'cdc': cdc,
         'owner_contact_email': email2contact_email(repo_owner) })
 
+
 class CanArchive(APIView):
 
+    "Quota checking before adding archiving"
     def __init__(self):
         self.db_oper = DBOper()
 
@@ -290,35 +296,52 @@ class CanArchive(APIView):
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
-                'status': 'error',
-                })
+                'status': 'metadata_error',
+            })
 
-        quota = self.db_oper.get_quota(repo_id, user_email)
-        if quota <= 0: 
+        resp_quota = get_keeper_archiving_quota(repo_id, user_email)
+        if resp_quota.remains <= 0:
             return JsonResponse({
                 'status': "quota_expired"
-        }) 
+            }) 
 
         return JsonResponse({
-            'quota': quota,
+            'quota': resp_quota.remains,
             'status': "success"
         }) 
+
 
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
     def __init__(self):
         self.db_oper = DBOper()
+        self.msg_dict = {
+        'Error by DB query': 'There is a little problem with the server, please try later.',
+        'Cannot add task': 'Cannot start archiving, please try later.',
+        'Wrong owner of the library': 'Only the owner can start archiving, please contact the library owner.',
+        'Max number of archives for library is achieved': 'Please contact support if you want to have more archives',
+        'Cannot get archiving quota': 'Cannot find archive quota for this library.',
+        'The library is too big to be archived': '"Archive is only available for Libraries under 500G.',
+        'Cannot extract library': 'Cannot extract current library, please contact support',
+        'Cannot attach metadata file to library archive': 'Cannot attack metadata file to library archive, please contact support.',
+        'Cannot create tar file for archive': 'Cannot create tar file for archive, please contact support.',
+        'Cannot push archive to HPSS': 'Cannot push archive to HPSS, please contact support.'
+    }
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
         resp1 = add_keeper_archiving_task(repo_id, user_email)
-        msg = "Archive started: " + resp1.status
+        
+        if resp1.status == 'ERROR':
+            msg = self.msg_dict[resp1.error]
+            return JsonResponse({
+                'msg': msg,
+                'status': 'error'
+            })
 
-        if resp1.error:
-            msg = resp1.error
-
+        msg = "Archive started: " + resp1.status    
         return JsonResponse({
                 'msg': msg,
                 'status': 'success'
