@@ -42,6 +42,9 @@ def create_db_session(host, port, username, passwd, dbname):
     return scoped_session(sessionmaker(bind=engine, autocommit=True, expire_on_commit=False))
 
 class DBOper(object):
+    '''
+    Class for keeper db operations
+    '''
     def __init__(self):
         self.is_enabled = False
         self.kdb_session = None
@@ -78,6 +81,9 @@ class DBOper(object):
 
 
     def add_user_notification(self, to_user, detail):
+        '''
+        Add seafile user notification entry,  refresh notices counter
+        '''
         if to_user and detail:
             try:
                 cmd = 'INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) VALUES ( \'{}\', \'{}\', \'{}\', \'{}\', 0 )'.format(
@@ -136,7 +142,6 @@ class DBOper(object):
             self.kdb_session.remove()
 
 
-
     def get_archive_by_id(self, aid):
         try:
             q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.aid == aid)
@@ -173,7 +178,6 @@ class DBOper(object):
             return None
         finally:
             self.kdb_session.remove()
-
 
 
     def get_archives(self, repo_id=None, version=None, owner=None):

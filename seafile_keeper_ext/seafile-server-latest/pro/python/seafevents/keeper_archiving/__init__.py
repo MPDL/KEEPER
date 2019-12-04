@@ -1,16 +1,13 @@
-import os
-import sys
 import re
 import logging
-import tempfile
-import ConfigParser
 from pysearpc import searpc_server
 from ccnet.async import RpcServerProc
 
 from .task_manager import task_manager
 from .rpc import KeeperArchivingRpcClient, KEEPER_ARCHIVING_RPC_SERVICE_NAME
 from .db_oper import DBOper
-from seafevents.keeper_archiving.config import parse_workers, parse_archives_per_library, parse_max_size, parse_bool
+import config as _cfg
+from config import parse_workers, parse_archives_per_library, parse_max_size, parse_bool
 
 __all__ = [
     'keeper_archiving',
@@ -29,25 +26,23 @@ class KeeperArchiving(object):
         self._enabled = conf['enabled']
 
         if self._enabled:
-            self._archiving_storage = conf['archiving_storage']
-            self._num_workers = conf['workers']
-            self._archive_max_size = conf['archive-max-size']
-            self._archives_per_library = conf['archives-per-library']
+            self._conf = conf
             self._db_oper = DBOper()
 
     def add_task(self, repo_id, owner):
-
         if not _valid_repo_id(repo_id):
             raise Exception('invalid repo id by add_task')
-
         return task_manager.add_task(repo_id, owner)
 
     def query_task_status(self, repo_id, version):
-
         if not _valid_repo_id(repo_id):
                 raise Exception('invalid repo id by query_task: {}'.format(repo_id))
-
         return task_manager.query_task_status(repo_id, version)
+
+    def get_quota(self, repo_id, owner):
+        if not _valid_repo_id(repo_id):
+                raise Exception('invalid repo id {} for owner {} by get_quota'.format(repo_id, owner))
+        return task_manager.get_quota(repo_id, owner)
 
     def register_rpc(self, ccnet_client):
         '''Register archiving rpc service'''
@@ -62,12 +57,20 @@ class KeeperArchiving(object):
         searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
                                         self.add_task)
 
+        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
+                                        self.get_quota)
+
     def start(self):
         task_manager.init(db_oper=self._db_oper,
-                          num_workers=self._num_workers,
-                          archiving_storage=self._archiving_storage,
-                          archive_max_size=self._archive_max_size,
-                          archives_per_library=self._archives_per_library)
+                          num_workers=self._conf[_cfg.key_workers],
+                          archiving_storage=self._conf[_cfg.key_archiving_storage],
+                          archive_max_size=self._conf[_cfg.key_archive_max_size],
+                          archives_per_library=self._conf[_cfg.key_archives_per_library],
+                          hpss_enabled=self._conf[_cfg.key_hpss_enabled],
+                          hpss_url=self._conf[_cfg.key_hpss_url],
+                          hpss_user=self._conf[_cfg.key_hpss_user],
+                          hpss_password=self._conf[_cfg.key_hpss_password],
+                          hpss_storage_path=self._conf[_cfg.key_hpss_storage_path])
         task_manager.run()
 
         logging.info('keeper archiving started')

@@ -23,7 +23,8 @@ from seafevents.keeper_archiving import KeeperArchiving
 from seafevents.keeper_archiving.task_manager import task_manager, Worker
 from seafevents.keeper_archiving.config import get_keeper_archiving_conf
 from seafevents.utils import get_config
-from keeper.utils import query_keeper_archiving_status, add_keeper_archiving_task
+from keeper.utils import query_keeper_archiving_status,\
+        add_keeper_archiving_task, get_keeper_archiving_quota
 from time import sleep
 
 import json
@@ -152,8 +153,13 @@ def test_new_archiving(mocker):
 
 
             sleep(5)
-            resp1 = query_keeper_archiving_status(resp1.repo_id, resp1.version)
-            print(resp1.__dict__)
+            # resp1 = query_keeper_archiving_status(resp1.repo_id, resp1.version)
+            # print(resp1.__dict__)
+
+
+            resp = get_keeper_archiving_quota(repo_id, owner)
+            print(resp.__dict__)
+
 
             # sleep(5)
             # resp2 = query_keeper_archiving_status(resp2.repo_id, resp2.version)
