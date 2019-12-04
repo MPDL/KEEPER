@@ -23,7 +23,7 @@ You've got {{num}} new notices on {{ site_name }}:
         <tr>
             {% if notice.msg_type  == 'bloxberg_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
-            {% elif notice.msg_type  == 'doi_msg' %}
+            {% elif notice.msg_type  == 'doi_msg' or notice.msg_type  == 'keeper_archiving_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/KeeperAvatar.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
             {% else %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:top;"><img src="{{notice.avatar_src}}" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
@@ -91,6 +91,10 @@ You've got {{num}} new notices on {{ site_name }}:
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
                     {% endif %}
                 {% endif %}
+
+                {% elif notice.msg_type  == 'keeper_archiving_msg' %}
+                {% json_to_var notice.detail as keeper_archiving_msg %}
+                <p style="brief">You have just successfully archived your library!</p>
             </td>           
             <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">{{ notice.timestamp|date:"Y-m-d G:i:s"}}</td>
         </tr>
