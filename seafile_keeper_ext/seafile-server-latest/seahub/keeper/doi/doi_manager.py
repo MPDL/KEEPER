@@ -293,6 +293,7 @@ def send_notification(msg, repo_id, notification_type, user_email, doi='', doi_l
     elif notification_type == MSG_TYPE_KEEPER_ARCHIVING_MSG:
         UserNotification.objects._add_user_notification(user_email, notification_type,
             json.dumps({
-                'msg': (msg),
+                'msg': (msg),   # unify format for backend  
                 '_repo': repo_id,
+                'status': 'prepare', # use 'prepare' to distinguish from backend sent notifications
         }))

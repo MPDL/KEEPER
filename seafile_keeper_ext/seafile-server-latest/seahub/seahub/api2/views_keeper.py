@@ -337,12 +337,15 @@ class ArchiveLib(APIView):
         
         if resp_archive.status == 'ERROR':
             msg = self.msg_dict[resp_archive.error]
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, user_email)
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
             })
 
-        msg = "Archive started: " + resp_archive.status    
+        # status for "QUEUED" and "DONE"
+        # TODO: add notification here if it is needed
+        msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
                 'msg': msg,
                 'status': 'success'

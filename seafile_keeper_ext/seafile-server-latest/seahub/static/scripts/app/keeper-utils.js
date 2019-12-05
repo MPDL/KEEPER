@@ -60,7 +60,7 @@ define([
           if (data.status) {
             Common.feedback(data.msg, data.status, 8000);
           } else {
-            Common.ajaxErrorHandler('Archive Library Failed');
+            Common.feedback('Archive Library Failed', 'error');
           }
         }
       });
@@ -87,11 +87,7 @@ define([
         break;
     }
 
-    var $form = $('<form action="" method=""><h3 id="dialogTitle">Archive <span style="color:#57a5b8;">' + repo_name + '</span></h3><p>' + archive_info + '</p><');
-    var $el = $('<div><span class="loading-icon loading-tip"></span></div>');
-    $el.modal({ focus: false, minWidth: 400 });
-    $('#simplemodal-container').css({ 'height': 'auto' });
-    $('#simplemodal-data').html($form);
+    Common.feedback(archive_info, 'error');
   }
 
   return keeperUtils;
