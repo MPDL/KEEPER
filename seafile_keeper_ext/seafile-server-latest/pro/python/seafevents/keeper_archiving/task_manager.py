@@ -27,7 +27,7 @@ MSG_EXTRACT_REPO = 'Cannot extract library'
 MSG_ADD_MD = 'Cannot attach metadata file to library archive'
 MSG_CREATE_TAR = 'Cannot create tar file for archive'
 MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS'
-MSG_ARCHIVING_SUCCESFUL = 'Library is sucessfully archived'
+MSG_ARCHIVING_SUCCESSFUL = 'Library is successfully archived'
 
 __all__ = ["task_manager"]
 

@@ -11,12 +11,14 @@ from keeper.cdc.cdc_manager import validate_year, validate_author, validate_inst
 from seahub.notifications.models import UserNotification
 from seahub.utils import send_html_email, get_site_name
 from django.utils.translation import ugettext as _
+from seafevents.keeper_archiving.db_oper import MSG_TYPE_KEEPER_ARCHIVING_MSG
 
 # Get an instance of a logger
 LOGGER = logging.getLogger(__name__)
 TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
+MSG_TYPE_INVALID_METADATA_MSG = "invalid_metadata_msg"
 
 PUBLISHER = 'MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.'
 RESOURCE_TYPE = 'Library'
@@ -27,18 +29,18 @@ def get_metadata(repo_id, user_email, action_type):
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_latest_commit_root_id(repo)
 
-    action_type = "assign DOI" if type == "doi" else "archive library" 
+    notification_type = MSG_TYPE_KEEPER_DOI_MSG if action_type == "assign DOI" else MSG_TYPE_KEEPER_ARCHIVING_MSG
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
         msg = _(u'Cannot ' + action_type + ' if the library is system template destination.')
-        send_notification(msg, repo_id, 'error', user_email)
+        send_notification(msg, repo_id, notification_type, user_email)
         return {
             'error': msg,
         }
 
     if seafile_api.get_repo_history_limit(repo_id) > -1:
         msg = _(u'Cannot ' + action_type +' because of the histroy setting.')
-        send_notification(msg, repo_id, 'error', user_email)
+        send_notification(msg, repo_id, notification_type, user_email)
         return {
             'error': msg,
         }
@@ -47,7 +49,7 @@ def get_metadata(repo_id, user_email, action_type):
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
             msg = _(u'Cannot ' + action_type +' if the library has no content.')
-            send_notification(msg, repo_id, 'error', user_email)
+            send_notification(msg, repo_id, notification_type, user_email)
             return {
                 'error': msg,
             }
@@ -56,7 +58,7 @@ def get_metadata(repo_id, user_email, action_type):
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
             msg = _(u'Cannot ' + action_type +' if archive-metadata.md file is not filled.')
-            send_notification(msg, repo_id, 'error', user_email)
+            send_notification(msg, repo_id, notification_type, user_email)
             return {
                 'error': msg,
             }
@@ -184,7 +186,7 @@ def validate(doi_dict, repo_id, user_email):
         elif len(invalid_fields) == 1:
             msg =  _(u'%(field)s field is either invalid or not filled.') % { 'field': invalid_fields.pop() }
         doi_msg.append(msg)
-        send_notification(doi_msg, repo_id, 'invalid', user_email)
+        send_notification(doi_msg, repo_id, MSG_TYPE_INVALID_METADATA_MSG, user_email)
     return doi_msg
 
 def validate_resource_type(txt):
@@ -243,43 +245,54 @@ def process_special_char(arg):
         .replace("'", "&apos;")
     )
 
-def send_notification(doi_msg, repo_id, status, user_email, doi='', doi_link='', timestamp=''):
+def send_notification(msg, repo_id, notification_type, user_email, doi='', doi_link='', timestamp=''):
     # status: 'invalid', 'success', 'error'
     # TODO: replace 'doi_link' with 'doi' in production
-    if isinstance(doi_msg, list):
-        UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_DOI_MSG,
+    if notification_type == MSG_TYPE_KEEPER_DOI_SUC_MSG:
+        c = {
+            'to_user': user_email,
+            'message_type': 'doi_suc_msg',
+            'message': msg + doi,
+            'timestamp': timestamp,
+        }
+
+        try:
+            send_html_email(_('New notice on %s') % get_site_name(),
+                                    'notifications/keeper_email.html', c,
+                                    None, [user_email])
+
+            LOGGER.info('Successfully sent email to %s' % user_email)
+        except Exception as e:
+            LOGGER.error('Failed to send email to %s, error detail: %s' % (user_email, e))
+
+        UserNotification.objects._add_user_notification(user_email, notification_type,
             json.dumps({
-                'message': (' '.join(doi_msg)),
-                'lib': repo_id,
-                'archive_metadata': ARCHIVE_METADATA_TARGET,
-                'status': status,
-        }))
-    else:
-        msg_type = MSG_TYPE_KEEPER_DOI_MSG
-        if status == "success":
-            msg_type = MSG_TYPE_KEEPER_DOI_SUC_MSG
-            c = {
-                'to_user': user_email,
-                'message_type': 'doi_suc_msg',
-                'message': doi_msg + doi,
-                'timestamp': timestamp,
-            }
-
-            try:
-                send_html_email(_('New notice on %s') % get_site_name(),
-                                        'notifications/keeper_email.html', c,
-                                        None, [user_email])
-
-                LOGGER.info('Successfully sent email to %s' % user_email)
-            except Exception as e:
-                LOGGER.error('Failed to send email to %s, error detail: %s' % (user_email, e))
-
-        UserNotification.objects._add_user_notification(user_email, msg_type,
-            json.dumps({
-                'message': (doi_msg),
+                'message': (msg),
                 'lib': repo_id,
                 'archive_metadata': ARCHIVE_METADATA_TARGET,
                 'doi': doi,
                 'doi_link': doi_link,
-                'status': status,
+        }))
+    elif notification_type == MSG_TYPE_INVALID_METADATA_MSG:
+        if isinstance(msg, list):
+            UserNotification.objects._add_user_notification(user_email, notification_type,
+                json.dumps({
+                    'message': (' '.join(msg)),
+                    'lib': repo_id,
+                    'archive_metadata': ARCHIVE_METADATA_TARGET,
+            }))
+    elif notification_type == MSG_TYPE_KEEPER_DOI_MSG:
+        UserNotification.objects._add_user_notification(user_email, notification_type,
+            json.dumps({
+                'message': (msg),
+                'lib': repo_id,
+                'archive_metadata': ARCHIVE_METADATA_TARGET,
+                'doi': doi,
+                'doi_link': doi_link,
+        }))
+    elif notification_type == MSG_TYPE_KEEPER_ARCHIVING_MSG:
+        UserNotification.objects._add_user_notification(user_email, notification_type,
+            json.dumps({
+                'msg': (msg),
+                '_repo': repo_id,
         }))

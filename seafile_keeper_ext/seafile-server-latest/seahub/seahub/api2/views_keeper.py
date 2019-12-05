@@ -13,7 +13,7 @@ from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
-from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification
+from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
 from keeper.models import CDC, DoiRepo
 
 from django.http import JsonResponse
@@ -28,13 +28,13 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota
 from keeper.common import parse_markdown_doi
-from seafevents.keeper_archiving.db_oper import DBOper
+from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
+from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL
 
 logger = logging.getLogger(__name__)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
-
 
 def is_in_mpg_ip_range(ip):
     # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
@@ -100,13 +100,13 @@ def add_doi(request):
     if doi_repos:
         msg = 'This library already has a DOI. '
         url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
-        send_notification(msg, repo_id, 'error', user_email, doi_repos[0].doi, url_landing_page)
+        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email, doi_repos[0].doi, url_landing_page)
         return JsonResponse({
             'msg': msg + doi_repos[0].doi,
             'status': 'error',
             })
 
-    metadata = get_metadata(repo_id, user_email, "doi")
+    metadata = get_metadata(repo_id, user_email, "assign DOI")
 
     if 'error' in metadata:
         return JsonResponse({
@@ -128,14 +128,14 @@ def add_doi(request):
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
             msg = _(u'DOI successfully created') + ': '
             doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
-            send_notification(msg, repo_id, 'success', user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
                 'msg': msg + doi,
                 'status': 'success',
                 })
         elif response_doxi.status_code == 408:
             msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
-            send_notification(msg, repo_id, 'error', user_email)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
@@ -144,14 +144,14 @@ def add_doi(request):
             logger.info(response_doxi.status_code)
             logger.info(response_doxi.text)
             msg = 'Failed to create DOI, ' + response_doxi.text
-            send_notification(msg, repo_id, 'error', user_email)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
                 })
     else:
         msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
-        send_notification(msg, repo_id, 'error', user_email)
+        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
         return JsonResponse({
             'msg': msg,
             'status': 'error'
@@ -292,7 +292,7 @@ class CanArchive(APIView):
         user_email = request.user.username
         repo = get_repo(repo_id)
 
-        metadata = get_metadata(repo_id, user_email, "archive")
+        metadata = get_metadata(repo_id, user_email, "archive library")
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
@@ -317,31 +317,32 @@ class ArchiveLib(APIView):
     def __init__(self):
         self.db_oper = DBOper()
         self.msg_dict = {
-        'Error by DB query': 'There is a little problem with the server, please try later.',
-        'Cannot add task': 'Cannot start archiving, please try later.',
-        'Wrong owner of the library': 'Only the owner can start archiving, please contact the library owner.',
-        'Max number of archives for library is achieved': 'Please contact support if you want to have more archives',
-        'Cannot get archiving quota': 'Cannot find archive quota for this library.',
-        'The library is too big to be archived': '"Archive is only available for Libraries under 500G.',
-        'Cannot extract library': 'Cannot extract current library, please contact support',
-        'Cannot attach metadata file to library archive': 'Cannot attack metadata file to library archive, please contact support.',
-        'Cannot create tar file for archive': 'Cannot create tar file for archive, please contact support.',
-        'Cannot push archive to HPSS': 'Cannot push archive to HPSS, please contact support.'
+        MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
+        MSG_ADD_TASK: 'Cannot start archiving, please try later.',
+        MSG_WRONG_OWNER: 'Only the owner can start archiving, please contact the library owner.',
+        MSG_MAX_NUMBER_ARCHIVES_REACHED: 'Please contact support if you want to have more archives',
+        MSG_CANNOT_GET_QUOTA: 'Cannot find archive quota for this library.',
+        MSG_LIBRARY_TOO_BIG: '"Archive is only available for Libraries under 500G.',
+        MSG_EXTRACT_REPO: 'Cannot extract current library, please contact support',
+        MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
+        MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
+        MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
+        MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.'
     }
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        resp1 = add_keeper_archiving_task(repo_id, user_email)
+        resp_archive = add_keeper_archiving_task(repo_id, user_email)
         
-        if resp1.status == 'ERROR':
-            msg = self.msg_dict[resp1.error]
+        if resp_archive.status == 'ERROR':
+            msg = self.msg_dict[resp_archive.error]
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
             })
 
-        msg = "Archive started: " + resp1.status    
+        msg = "Archive started: " + resp_archive.status    
         return JsonResponse({
                 'msg': msg,
                 'status': 'success'

@@ -48,18 +48,17 @@
                 {% json_to_var notice.detail as bloxberg_msg %}
                 <p class="brief">Your data was successfully certified. Check your transaction on Bloxberg. <a href="#" onclick='window.open("https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions");return false;'>View transaction</a></p>
 
-                {% elif notice.msg_type == "doi_msg" or notice.msg_type == "doi_suc_msg" %}
-                {% json_to_var notice.detail as doi_msg %}
-                    {% if doi_msg.status == 'invalid' %}
-                    <p class="brief">{{ doi_msg.message }} Check <a href="{{ url_base }}/lib/{{ doi_msg.lib }}/file/{{doi_msg.archive_metadata}}" target="_new">{{ doi_msg.archive_metadata }}</a> for more details</p>
-                    {% else %}
-                    <p class="brief">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
-                    {% endif %}
-                {% elif notice.is_add_user_to_group %}
-                <p class="brief">{{ notice.format_add_user_to_group|safe }}</p>
+                {% elif notice.msg_type == "invalid_metadata_msg" %}
+                    {% json_to_var notice.detail as invalid_metadata_msg %}
+                    <p class="brief">{{ invalid_metadata_msg.message }} Check <a href="{{ url_base }}/lib/{{ invalid_metadata_msg.lib }}/file/{{invalid_metadata_msg.archive_metadata}}" target="_new">{{ invalid_metadata_msg.archive_metadata }}</a> for more details.</p>
 
-                {% elif notice.msg_type  == "keeper_archiving_msg" %}
-                <p class="brief">You have just successfully archived your library!</p>
+                {% elif notice.msg_type == "doi_msg" or notice.msg_type == "doi_suc_msg" %}
+                    {% json_to_var notice.detail as doi_msg %}
+                    <p class="brief">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
+
+                {% elif notice.msg_type == "keeper_archiving_msg" %}
+                    {% json_to_var notice.detail as archive_msg %}
+                    <p class="brief">{{archive_msg.msg}}</p>
                 {% endif %}
             </td>
             <td>{{ notice.timestamp|translate_seahub_time }}</td>

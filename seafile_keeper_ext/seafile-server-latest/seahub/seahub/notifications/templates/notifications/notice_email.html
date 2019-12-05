@@ -23,7 +23,7 @@ You've got {{num}} new notices on {{ site_name }}:
         <tr>
             {% if notice.msg_type  == 'bloxberg_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/bloxberg_icon.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
-            {% elif notice.msg_type  == 'doi_msg' or notice.msg_type  == 'keeper_archiving_msg' %}
+            {% elif notice.msg_type  == 'doi_msg' %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:center;"><img src="{{ url_base }}{{media_url}}/custom/KeeperAvatar.png" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
             {% else %}
             <td style="padding:8px 3px 5px; border-bottom: 1px solid #eee; text-align:center; vertical-align:top;"><img src="{{notice.avatar_src}}" width="32" height="32" alt="" style="border-radius:1000px;" /></td>
@@ -83,18 +83,21 @@ You've got {{num}} new notices on {{ site_name }}:
                 <p style="brief">
                 This notice verifies that <b>{{bloxberg_msg.author_name}}</b> uploaded a data hash of the file: <a href="{{ url_base }}/lib/{{ bloxberg_msg.repo_id }}/file{{bloxberg_msg.link_to_file}}">{{bloxberg_msg.file_name}}</a> that proves authenticity of the corresponding data matching the hash.
                 It was authenticated in the following transaction on the bloxberg blockchain <a href="https://blockexplorer.bloxberg.org/tx/{{ bloxberg_msg.transaction_id }}/internal_transactions">{{bloxberg_msg.transaction_id}}</a></p>
-                {% elif notice.msg_type == 'doi_msg' %}
-                {% json_to_var notice.detail as doi_msg %}
-                    {% if doi_msg.status == 'invalid' %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} Check <a href="{{ url_base }}/lib/{{ doi_msg.lib }}/file/{{doi_msg.archive_metadata}}" target="_new">{{ doi_msg.archive_metadata }}</a> for more details.</p>
-                    {% else %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
-                    {% endif %}
-                {% endif %}
 
-                {% elif notice.msg_type  == 'keeper_archiving_msg' %}
-                {% json_to_var notice.detail as keeper_archiving_msg %}
-                <p style="brief">You have just successfully archived your library!</p>
+                {% elif notice.msg_type == "invalid_metadata_msg" %}
+                    {% json_to_var notice.detail as invalid_metadata_msg %}
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ invalid_metadata_msg.message }} Check <a href="{{ url_base }}/lib/{{ invalid_metadata_msg.lib }}/file/{{invalid_metadata_msg.archive_metadata}}" target="_new">{{ invalid_metadata_msg.archive_metadata }}</a> for more details.</p>
+
+                {% elif notice.msg_type == "doi_msg" or notice.msg_type == "doi_suc_msg" %}
+                    {% json_to_var notice.detail as doi_msg %}
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
+
+                {% elif notice.msg_type == "keeper_archiving_msg" %}
+                    {% json_to_var notice.detail as archive_msg %}
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{archive_msg.msg}}</p>
+
+                {% endif %}
+            </td>
             </td>           
             <td style="padding: 5px 3px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; word-wrap: break-word;">{{ notice.timestamp|date:"Y-m-d G:i:s"}}</td>
         </tr>
