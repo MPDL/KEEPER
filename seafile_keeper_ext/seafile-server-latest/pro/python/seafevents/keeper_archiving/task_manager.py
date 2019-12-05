@@ -386,7 +386,7 @@ class Worker(threading.Thread):
             task._checksum, task._archive_path, task._md, task._repo.name, task._commit_id)
 
         task.status = 'DONE'
-        task.msg = MSG_ARCHIVING_SUCCESFUL
+        task.msg = MSG_ARCHIVING_SUCCESSFUL
 
         task_manager._notify_user(task)
 
@@ -511,13 +511,12 @@ class TaskManager(object):
         """
         Notify user
         """
-        self._db_oper.add_user_notification(task.owner, json.dumps({
-            'status': task.status,
-            'repo_id': task.repo_id,
-            'version': task.version,
-            'msg': task.msg,
-            'error': task.error
-        }))
+        d = { 'status': task.status, 'repo_id': task.repo_id, 'version': task.version }
+        task._repo and d.update(repo_name = task._repo.name)
+        task.msg and d.update(msg = task._repo.name)
+        task.error and d.update(error = task.error)
+
+        self._db_oper.add_user_notification(task.owner, json.dumps(d))
 
 
     def add_task(self, repo_id, owner):
@@ -537,7 +536,7 @@ class TaskManager(object):
                 task = self._build_task(repo_id, owner, self.archiving_storage)
                 if task.status == 'ERROR':
                     # notify user!!!
-                    # self._notify_user(task)
+                    self._notify_user(task)
                     ret['msg'] = task.msg
                     ret['error'] = task.error
                 else:
