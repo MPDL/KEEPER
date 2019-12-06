@@ -513,7 +513,7 @@ class TaskManager(object):
         """
         d = { 'status': task.status, 'repo_id': task.repo_id, 'version': task.version }
         task._repo and d.update(repo_name = task._repo.name)
-        task.msg and d.update(msg = task._repo.name)
+        task.msg and d.update(msg = task.msg)
         task.error and d.update(error = task.error)
 
         self._db_oper.add_user_notification(task.owner, json.dumps(d))
