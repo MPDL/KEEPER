@@ -97,7 +97,7 @@ You've got {{num}} new notices on {{ site_name }}:
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{archive_msg.msg}}</p>
                     {% endif %}
                     {% json_to_var notice.detail as archive_msg %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">Archive for <b>{{archive_msg.msg}}</b> is {{archive_msg.status}}</p>
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">Archive for <b>{{archive_msg.repo_name}}</b> is {{archive_msg.status}}</p>
 
                 {% endif %}
             </td>
