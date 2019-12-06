@@ -7,12 +7,13 @@ import traceback
 
 from seaserv import get_commits, get_commit, get_repo_owner, seafile_api
 from seafobj import fs_mgr
-from seahub.settings import ARCHIVE_METADATA_TARGET, KEEPER_MPG_IP_LIST_URL
+from seahub.settings import ARCHIVE_METADATA_TARGET, KEEPER_MPG_IP_LIST_URL, SERVICE_URL
 
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
 from keeper.common import parse_markdown, get_user_name, print_json
 
 from keeper.models import Catalog, DoiRepo
+from seafevents.keeper_archiving.db_oper import DBOper
 
 import logging
 import json
@@ -184,22 +185,25 @@ def get_catalog(filter='all'):
     reconnect_db()
     if filter == 'with_certificate':
 
-        return add_doi_entry(Catalog.objects.get_certified())
+        return add_landing_page_entry(Catalog.objects.get_certified())
     elif filter == 'with_metadata':
-        return add_doi_entry(Catalog.objects.get_with_metadata())
+        return add_landing_page_entry(Catalog.objects.get_with_metadata())
     else:
-        return add_doi_entry(Catalog.objects.get_all_mds_ordered())
+        return add_landing_page_entry(Catalog.objects.get_all_mds_ordered())
 
-def add_doi_entry(catalogs):
+def add_landing_page_entry(catalogs):
 
     for catalog in catalogs:
         repo_id = catalog.get('id')
 
         doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-        if doi_repos:
-            doi = doi_repos[0].doi
-            logging.error("doi: " + doi_repos[0].doi)
-            catalog['doi'] = doi
+        archive_repos = DBOper().get_archives(repo_id=repo_id)
+        if archive_repos == None:
+            archive_repos = []
+
+        if doi_repos or len(archive_repos) > 0:
+            url = SERVICE_URL + '/landing-page/libs/' + repo_id + '/'
+            catalog['landing_page_url'] = url
 
     return catalogs
 

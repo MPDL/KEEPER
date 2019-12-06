@@ -168,7 +168,7 @@
                         <p>%author%</p>
                         %year%
                         <p>Contact: %contact%</p>
-                        %doi%
+                        %landing_page_url%
                     </div>
                     {/dataset}
                     {dataset_certified}
@@ -179,13 +179,13 @@
                         <p>%author%</p>
                         %year%
                         <p>Contact: %contact%</p>
-                        %doi%
+                        %landing_page_url%
                     </div>
                     {/dataset_certified}
 
-                    {fdoi}
-                        <p>DOI: <a href="%doi%">%doi%</a></p>
-                    {/fdoi}
+                    {flanding_page_url}
+                        <p>Landing Page: <a href="%landing_page_url%">%landing_page_url%</a></p>
+                    {/flanding_page_url}
 
                     {fyear}
                     <p>Year: %year%</p>

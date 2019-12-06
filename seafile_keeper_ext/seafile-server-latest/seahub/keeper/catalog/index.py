@@ -127,7 +127,6 @@ def application(env, start_response):
 
         results = []
         if (is_valid_user == 1 and len(errmsg) <= 0):
-
             get_params = parse_qs(env['QUERY_STRING'])
 
 			# pars request params
@@ -300,9 +299,9 @@ def application(env, start_response):
                 if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
                     slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
 
-                slots['doi'] = ''
-                if ('doi' in tmpresult):
-                    slots['doi'] = tmpl.format('fdoi', doi=tmpresult['doi'])
+                slots['landing_page_url'] = ''
+                if ('landing_page_url' in tmpresult):
+                    slots['landing_page_url'] = tmpl.format('flanding_page_url', landing_page_url=tmpresult['landing_page_url'])
 
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)
