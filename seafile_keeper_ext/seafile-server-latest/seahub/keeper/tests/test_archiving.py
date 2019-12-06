@@ -113,11 +113,8 @@ def test_huge_repo_archiving():
     assert os.path.getsize(path) > 0L
 
 
-
-
 # @pytest.mark.skip
 def test_new_archiving(mocker):
-   # from seafevents.app.config import load_config
 
     try:
         # config_file = get_config(os.path.join(os.environ['SEAFILE_CENTRAL_CONF_DIR'], 'seafevents.conf'))
@@ -139,7 +136,7 @@ def test_new_archiving(mocker):
         # with mock.patch('django.core.mail.EmailMessage') as mocked_email:
         with mock.patch('seafevents.tasks.seahub_email_sender.SendSeahubEmailTimer') as mocked_email:
 
-            repo_id = 'c61cdb5e-2829-4a12-8d30-db421324a84d'
+            repo_id = '1c13f29b-f4bc-45d6-bfbb-6974320f04ec'
             owner = 'makarenko@mpdl.mpg.de'
             # owner = 'vlamak868@gmail.com'
 

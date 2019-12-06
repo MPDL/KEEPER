@@ -516,7 +516,7 @@ class TaskManager(object):
         task.msg and d.update(msg = task.msg)
         task.error and d.update(error = task.error)
 
-        self._db_oper.add_user_notification(task.owner, json.dumps(d))
+        # self._db_oper.add_user_notification(task.owner, json.dumps(d))
 
 
     def add_task(self, repo_id, owner):
@@ -588,7 +588,7 @@ class TaskManager(object):
                     'error': MSG_DB_ERROR
                 })
                 return resp
-            curr_ver = 1 if curr_ver == -1 else curr_ver
+            curr_ver = 0 if curr_ver == -1 else curr_ver
             # get quota from db or from config
             quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
             resp.update({
