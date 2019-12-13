@@ -7,10 +7,9 @@ from .task_manager import task_manager
 from .rpc import KeeperArchivingRpcClient, KEEPER_ARCHIVING_RPC_SERVICE_NAME
 from .db_oper import DBOper
 import config as _cfg
-from config import parse_workers, parse_archives_per_library, parse_max_size, parse_bool
 
 __all__ = [
-    'keeper_archiving',
+    'KeeperArchiving',
     'KeeperArchivingRpcClient',
 ]
 
@@ -63,7 +62,7 @@ class KeeperArchiving(object):
     def start(self):
         task_manager.init(db_oper=self._db_oper,
                           num_workers=self._conf[_cfg.key_workers],
-                          archiving_storage=self._conf[_cfg.key_archiving_storage],
+                          local_storage=self._conf[_cfg.key_local_storage],
                           archive_max_size=self._conf[_cfg.key_archive_max_size],
                           archives_per_library=self._conf[_cfg.key_archives_per_library],
                           hpss_enabled=self._conf[_cfg.key_hpss_enabled],

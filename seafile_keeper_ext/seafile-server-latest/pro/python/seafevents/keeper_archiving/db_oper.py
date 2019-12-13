@@ -1,9 +1,9 @@
-#coding: utf-8
+# coding: utf-8
 
 import logging
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
-from models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase
+from models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
 from urllib import quote_plus
 from sqlalchemy.orm import sessionmaker
 from seafevents.db import ping_connection
@@ -16,17 +16,25 @@ from seahub_settings import CACHES, DATABASES
 from datetime import datetime
 
 import pylibmc
+
 # from seahub.notifications.models import get_cache_key_of_unseen_notifications
 USER_NOTIFICATION_COUNT_CACHE_PREFIX = 'USER_NOTIFICATION_COUNT_'
 
 MSG_TYPE_KEEPER_ARCHIVING_MSG = 'keeper_archiving_msg'
+
+def _prepare_md(md):
+    # cut too long md
+    if len(md) > MAX_UNICODE_TEXT_LEN:
+        md = md[:MAX_UNICODE_TEXT_LEN - 3] + '...'
+    # convert to unicode
+    return unicode(md, 'utf-8')
 
 def create_db_session(host, port, username, passwd, dbname):
     db_url = "mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
     logging.info(db_url)
-    kwargs = dict(pool_recycle=300, echo=False, echo_pool=False )
+    kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
     engine = create_engine(db_url, **kwargs)
 
@@ -41,10 +49,12 @@ def create_db_session(host, port, username, passwd, dbname):
 
     return scoped_session(sessionmaker(bind=engine, autocommit=True, expire_on_commit=False))
 
+
 class DBOper(object):
     '''
     Class for keeper db operations
     '''
+
     def __init__(self):
         self.is_enabled = False
         self.kdb_session = None
@@ -79,7 +89,6 @@ class DBOper(object):
             self.kdb_session.remove()
             self.edb_session.remove()
 
-
     def add_user_notification(self, to_user, detail):
         '''
         Add seafile user notification entry,  refresh notices counter
@@ -97,7 +106,7 @@ class DBOper(object):
                 # add notification to gui
                 cache = pylibmc.Client([CACHES['default']['LOCATION']])
                 cache_key = normalize_cache_key(to_user, USER_NOTIFICATION_COUNT_CACHE_PREFIX)
-                #django specific versioning
+                # django specific versioning
                 cache.delete(':1:' + cache_key)
 
             except Exception as e:
@@ -106,10 +115,10 @@ class DBOper(object):
             finally:
                 self.edb_session.remove()
 
-
     def add_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id):
         try:
-            a = KeeperArchive(repo_id, owner, version, checksum, external_path, md, repo_name, commit_id)
+            a = KeeperArchive(repo_id, owner, version, checksum, external_path,
+                              _prepare_md(md), repo_name, commit_id)
             self.kdb_session.add(a)
             self.kdb_session.flush()
             return 0
@@ -120,18 +129,18 @@ class DBOper(object):
         finally:
             self.kdb_session.remove()
 
-
     def update_archive(self, repo_id, owner, version, checksum, external_path, md, ts, repo_name, commit_id):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id, KeeperArchive.version == version)
+            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
+                                                             KeeperArchive.version == version)
             a = q.first()
             if not a:
-                self.add_archive(repo_id, owner, version, checksum, external_path, md, repo_name, commit_id)
+                self.add_archive(repo_id, owner, version, checksum, external_path, _prepare_md(md), repo_name, commit_id)
             else:
                 a.owner = owner
                 a.checksum = checksum
                 a.external_path = external_path
-                a.md = md
+                a.md = _prepare_md(md)
                 a.timestamp = ts
                 a.commit()
                 self.kdb_session.flush()
@@ -140,7 +149,6 @@ class DBOper(object):
             logging.warning('Failed to update keeper archive record from db: {}.'.format(e))
         finally:
             self.kdb_session.remove()
-
 
     def get_archive_by_id(self, aid):
         try:
@@ -152,10 +160,22 @@ class DBOper(object):
         finally:
             self.kdb_session.remove()
 
+    def is_snapshot_archived(self, repo_id, commit_id):
+        try:
+            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
+                                                             KeeperArchive.commit_id == commit_id).first()
+            return q is not None
+        except Exception as e:
+            logging.warning('Failed to get keeper archive: {}.'.format(e))
+            return None
+        finally:
+            self.kdb_session.remove()
 
     def get_max_archive_version(self, repo_id, owner):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id, KeeperArchive.owner == owner).order_by(desc(KeeperArchive.version)).first()
+            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
+                                                             KeeperArchive.owner == owner).order_by(
+                desc(KeeperArchive.version)).first()
             if not q:
                 return -1
             else:
@@ -168,7 +188,8 @@ class DBOper(object):
 
     def get_quota(self, repo_id, owner):
         try:
-            q = self.kdb_session.query(KeeperArchiveOwnerQuota).filter(KeeperArchiveOwnerQuota.repo_id == repo_id, KeeperArchiveOwnerQuota.owner == owner).first()
+            q = self.kdb_session.query(KeeperArchiveOwnerQuota).filter(KeeperArchiveOwnerQuota.repo_id == repo_id,
+                                                                       KeeperArchiveOwnerQuota.owner == owner).first()
             if not q:
                 return None
             else:
@@ -178,7 +199,6 @@ class DBOper(object):
             return None
         finally:
             self.kdb_session.remove()
-
 
     def get_archives(self, repo_id=None, version=None, owner=None):
         try:
@@ -191,8 +211,9 @@ class DBOper(object):
                 q = q.filter(KeeperArchive.owner == owner)
             return q.all()
         except Exception as e:
-            logging.warning('Failed to get keeper archives for repo {}, version {}, owner {}: {}.'.format(repo_id, version, owner, e))
+            logging.warning(
+                'Failed to get keeper archives for repo {}, version {}, owner {}: {}.'.format(repo_id, version, owner,
+                                                                                              e))
             return None
         finally:
             self.kdb_session.remove()
-

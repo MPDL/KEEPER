@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, CHAR, Text, Boolean, SmallInteger, DateTime
+from sqlalchemy import Column, Integer, String, CHAR, Text, UnicodeText, SmallInteger, DateTime
 from sqlalchemy import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.automap import automap_base
@@ -6,6 +6,8 @@ from sqlalchemy.schema import UniqueConstraint
 
 # KeeperBase = automap_base()
 KeeperBase = declarative_base()
+
+MAX_UNICODE_TEXT_LEN = 2**24-1
 
 class KeeperArchive(KeeperBase):
     __tablename__ = 'keeper_archive'
@@ -18,7 +20,8 @@ class KeeperArchive(KeeperBase):
     version = Column(SmallInteger, index=True, nullable=False)
     checksum = Column(String(length=100), nullable=False)
     external_path = Column(Text, nullable=False)
-    md = Column(Text, nullable=False)
+    #like mediumtext, 16 MB
+    md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN), nullable=False)
     created = Column(DateTime, server_default=func.now(), index=True)
     UniqueConstraint(repo_id, owner, version, name='unq_keeper_archive_repo_id_version')
     __table_args__ = {'extend_existing': True}
