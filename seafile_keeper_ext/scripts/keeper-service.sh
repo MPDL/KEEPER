@@ -33,6 +33,8 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
+RUN_CTX="sudo -u ${user} pipenv run"
+ENV_CTX="pipenv run"
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -148,9 +150,9 @@ case "$1" in
             fi
             
             if [ ${__NODE_TYPE__} == "APP" ]; then
-                sudo -u ${user} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${seafile_dir}/scripts/catalog-service.sh ${1}
+                ${RUN_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
@@ -158,18 +160,18 @@ case "$1" in
                     sleep 3
                     echo "Starting..."
                 fi
-                sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${RUN_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop
                     echo "Starting..."
                 fi
-                sudo -u ${user} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-                ${seafile_dir}/scripts/catalog-service.sh start 
+                ${RUN_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
             sleep 3
@@ -178,18 +180,18 @@ case "$1" in
         stop)
             echo "Stopping..."
             if [ ${__NODE_TYPE__} == "APP" ]; then
-                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                ${seafile_dir}/scripts/catalog-service.sh stop 
+                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
-                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
-                sudo -u ${user} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                sudo -u ${user} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                sudo -u ${user} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-                ${seafile_dir}/scripts/catalog-service.sh stop
+                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
             fi
             echo "Done"
             #systemctl ${1} memcached.service

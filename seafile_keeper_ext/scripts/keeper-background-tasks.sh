@@ -107,6 +107,7 @@ function prepare_log_dir() {
             exit 1
         fi
     fi
+    export SEAHUB_LOG_DIR=${logdir}
 }
 
 function before_start() {
@@ -126,6 +127,7 @@ function before_start() {
     export PYTHONPATH=$PYTHONPATH:${central_config_dir}
     # KEEPER: added due to keeper deps
     export PYTHONPATH=$PYTHONPATH:$SEAHUB_DIR
+    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
     export SEAFES_DIR=$pro_pylibs_dir/seafes
 }
 
