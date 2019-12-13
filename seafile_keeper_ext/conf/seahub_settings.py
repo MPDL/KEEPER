@@ -17,7 +17,7 @@ DATABASES = {
         'HOST': '__DB_HOST__',
         'PORT': '__DB_PORT__',
         'OPTIONS': {
-            'init_command': 'SET storage_engine=INNODB',
+            'init_command': 'SET default_storage_engine=INNODB',
         }
     },
     'keeper': {
@@ -28,7 +28,7 @@ DATABASES = {
         'HOST': '__DB_HOST__',
         'PORT': '__DB_PORT__',
         'OPTIONS': {
-            'init_command': 'SET storage_engine=INNODB',
+            'init_command': 'SET default_storage_engine=INNODB',
         }
     }
 }
