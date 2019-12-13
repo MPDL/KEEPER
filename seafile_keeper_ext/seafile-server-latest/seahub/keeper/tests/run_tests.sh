@@ -27,12 +27,16 @@ export CCNET_CONF_DIR=${default_ccnet_conf_dir}
 export SEAFILE_CONF_DIR=${seafile_data_dir}
 export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
 export SEAFES_DIR=${INSTALLPATH}/pro/python/seafes
+export SEAHUB_LOG_DIR=${SEAFILE_DIR}/logs
+
+export PATH=${VIRTUAL_ENV}/bin:$PATH
 
 export PYTHONPATH=${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seahub-extra:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
+[export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH]
 export PYTHONPATH="..:${PYTHONPATH}"
 
 OPTS=""
