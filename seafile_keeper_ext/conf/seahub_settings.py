@@ -1,5 +1,8 @@
 SECRET_KEY = __SECRET_KEY__
 
+# Debug mode
+DEBUG = __DEBUG__
+
 ##########################################################################
 #### Databases
 
@@ -122,9 +125,6 @@ LOGGING = {
         },
     }
 }
-
-# Debug mode
-DEBUG = True
 
 
 # KEEPER Service URL

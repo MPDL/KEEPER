@@ -33,8 +33,10 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
-RUN_CTX="sudo -u ${user} pipenv run"
-ENV_CTX="pipenv run"
+#RUN_CTX="sudo -u ${user} pipenv run"
+#ENV_CTX="pipenv run"
+RUN_CTX="sudo -u ${user}"
+ENV_CTX=""
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"

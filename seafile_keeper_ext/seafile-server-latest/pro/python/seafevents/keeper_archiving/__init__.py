@@ -38,6 +38,12 @@ class KeeperArchiving(object):
                 raise Exception('invalid repo id by query_task: {}'.format(repo_id))
         return task_manager.query_task_status(repo_id, version)
 
+    def is_snapshot_archived(self, repo_id, owner):
+        if not _valid_repo_id(repo_id):
+                raise Exception('invalid repo id by is_snapshot_archived: {}'.format(repo_id))
+        return task_manager.is_snapshot_archived(repo_id, owner)
+
+
     def get_quota(self, repo_id, owner):
         if not _valid_repo_id(repo_id):
                 raise Exception('invalid repo id {} for owner {} by get_quota'.format(repo_id, owner))
@@ -58,6 +64,9 @@ class KeeperArchiving(object):
 
         searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
                                         self.get_quota)
+
+        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
+                                        self.is_snapshot_archived)
 
     def start(self):
         task_manager.init(db_oper=self._db_oper,

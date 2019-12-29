@@ -373,4 +373,9 @@ def get_keeper_archiving_quota(repo_id, owner):
     ret = rpc.get_quota(repo_id, owner)
     return ret
 
+def is_snapshot_archived(repo_id, owner):
+    rpc = _get_keeper_archiving_rpc()
+    ret = rpc.is_snapshot_archived(repo_id, owner)
+    return ret
+
 

@@ -26,10 +26,10 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota
+from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota, is_snapshot_archived
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL
+from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +246,7 @@ def LandingPageView(request, repo_id):
         'cdc': cdc,
         'owner_contact_email':  repo_contact_email
     })
-    
+
 
 def ArchiveView(request, repo_id, version_id):
     archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
@@ -303,12 +303,19 @@ class CanArchive(APIView):
         if resp_quota.remains <= 0:
             return JsonResponse({
                 'status': "quota_expired"
-            }) 
+            })
+
+        resp_is_archived = is_snapshot_archived(repo_id, user_email)
+        if resp_is_archived.is_snapshot_archived == 'true':
+            return JsonResponse({
+                'status': "snapshot_archived"
+            })
+
 
         return JsonResponse({
             'quota': resp_quota.remains,
             'status': "success"
-        }) 
+        })
 
 
 class ArchiveLib(APIView):
@@ -317,24 +324,26 @@ class ArchiveLib(APIView):
     def __init__(self):
         self.db_oper = DBOper()
         self.msg_dict = {
-        MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
-        MSG_ADD_TASK: 'Cannot start archiving, please try later.',
-        MSG_WRONG_OWNER: 'Only the owner can start archiving, please contact the library owner.',
-        MSG_MAX_NUMBER_ARCHIVES_REACHED: 'Please contact support if you want to have more archives',
-        MSG_CANNOT_GET_QUOTA: 'Cannot find archive quota for this library.',
-        MSG_LIBRARY_TOO_BIG: '"Archive is only available for Libraries under 500G.',
-        MSG_EXTRACT_REPO: 'Cannot extract current library, please contact support',
-        MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
-        MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
-        MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
-        MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.'
-    }
+            MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
+            MSG_ADD_TASK: 'Cannot start archiving, please try later.',
+            MSG_WRONG_OWNER: 'Only the owner can start archiving, please contact the library owner.',
+            MSG_MAX_NUMBER_ARCHIVES_REACHED: 'Please contact support if you want to have more archives',
+            MSG_CANNOT_GET_QUOTA: 'Cannot find archive quota for this library.',
+            MSG_LIBRARY_TOO_BIG: '"Archive is only available for Libraries under 500G.',
+            MSG_EXTRACT_REPO: 'Cannot extract current library, please contact support',
+            MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
+            MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
+            MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
+            MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.',
+            MSG_CANNOT_FIND_ARCHIVE: MSG_CANNOT_FIND_ARCHIVE,
+            MSG_SNAPSHOT_ALREADY_ARCHIVED: MSG_SNAPSHOT_ALREADY_ARCHIVED,
+        }
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
         resp_archive = add_keeper_archiving_task(repo_id, user_email)
-        
+
         if resp_archive.status == 'ERROR':
             msg = self.msg_dict[resp_archive.error]
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, user_email)

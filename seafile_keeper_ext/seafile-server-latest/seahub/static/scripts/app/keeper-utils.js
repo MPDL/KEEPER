@@ -21,9 +21,11 @@ define([
         if (data.status === "success") {
           keeperUtils.archive(repo_name, repo_id, data.quota);
         } else if (data.status === "quota_expired") {
-          keeperUtils.archive_failed(repo_name, "quota_expired", "");
+          keeperUtils.archive_failed(repo_name, data.status, "");
+        } else if (data.status === "snapshot_archived") {
+          keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "metadata_error") {
-          keeperUtils.archive_failed(repo_name, "metadata_error", data.msg);
+          keeperUtils.archive_failed(repo_name, data.status, data.msg);
         }
       },
       error: function (error) {
@@ -73,6 +75,9 @@ define([
     switch (error_type) {
       case "quota_expired":
         archive_info = "Can not archive due to quota expired, please contact support.";
+        break;
+      case "snapshot_archived":
+        archive_info = "Can not archive, the library snapshot is already archived.";
         break;
       case "metadata_error":
         archive_info = error_msg;

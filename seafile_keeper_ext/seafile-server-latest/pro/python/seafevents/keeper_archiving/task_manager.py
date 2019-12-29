@@ -674,6 +674,41 @@ class TaskManager(object):
             })
             return resp
 
+    def is_snapshot_archived(self, repo_id, owner):
+        """TODO:
+        """
+        resp = {'repo_id': repo_id, 'owner': owner}
+        try:
+            repo = seafile_api.get_repo(repo_id)
+            if owner != seafile_api.get_repo_owner(repo_id):
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_WRONG_OWNER
+                })
+                return resp
+
+            # get root commit_id
+            commit_id = get_commit_root_id(repo)
+            is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
+            if is_archived is None:
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_DB_ERROR
+                })
+                return resp
+            resp.update({
+                'is_snapshot_archived': 'true' if is_archived else 'false',
+            })
+            return resp
+        except Exception as e:
+            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
+            resp.update({
+                'status': 'ERROR',
+                'error': MSG_CANNOT_GET_QUOTA
+            })
+            return resp
+
+
     def run(self):
         assert self._tasks_map is not None
         assert self._tasks_map_lock is not None
