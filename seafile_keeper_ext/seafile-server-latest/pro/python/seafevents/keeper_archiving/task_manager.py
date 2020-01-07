@@ -84,7 +84,7 @@ def _get_archive_path(storage_path, owner, repo_id, version):
     return os.path.join(storage_path, owner, '{}_ver{}.tar.gz'.format(repo_id, version))
 
 
-def get_commit_root_id(repo):
+def get_commit(repo):
     """
     Get commit_root_id
     """
@@ -95,7 +95,7 @@ def get_commit_root_id(repo):
         _l.error('exception: {}'.format(e))
 
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
-    return commit.root_id
+    return commit
 
 def get_root_dir(repo, commit_root_id):
     """
@@ -139,7 +139,7 @@ class KeeperArchivingTask(object):
 
         self._repo = None
 
-        self._commit_id = None
+        self._commit = None
 
         self._status = 'QUEUED'
 
@@ -203,10 +203,10 @@ class Worker(threading.Thread):
 
         """
         assert task._repo is not None
-        assert task._commit_id is not None
+        assert task._commit is not None
         assert task.owner is not None
 
-        seaf_dir = get_root_dir(task._repo, task._commit_id)
+        seaf_dir = get_root_dir(task._repo, task._commit.root_id)
         owner = task.owner
         task._extracted_tmp_dir = os.path.join(self.local_storage, owner, task._repo.id)
 
@@ -447,7 +447,7 @@ class Worker(threading.Thread):
         ## Put into DB, if success
         task_manager._db_oper.add_archive(task.repo_id, task.owner, task.version,
                                           task._checksum, task._archive_path, task._md, task._repo.name,
-                                          task._commit_id)
+                                          task._commit.commit_id)
 
         task.status = 'DONE'
         task.msg = MSG_ARCHIVING_SUCCESSFUL
@@ -541,11 +541,11 @@ class TaskManager(object):
         at.owner = owner
 
         # check repo snapshot is already archived
-        commit_id = get_commit_root_id(at._repo)
-        if self._db_oper.is_snapshot_archived(repo_id, commit_id):
-            _set_error(at, MSG_SNAPSHOT_ALREADY_ARCHIVED, 'Snapshot {} of library {} is already archived'.format(commit_id, repo_id))
+        commit = get_commit(at._repo)
+        if self._db_oper.is_snapshot_archived(repo_id, commit.commit_id):
+            _set_error(at, MSG_SNAPSHOT_ALREADY_ARCHIVED, 'Snapshot {} of library {} is already archived'.format(commit.commit_id, repo_id))
             return at
-        at._commit_id = commit_id
+        at._commit = commit
 
         # check version
         max_ver = self._db_oper.get_max_archive_version(repo_id, owner)
@@ -688,7 +688,7 @@ class TaskManager(object):
                 return resp
 
             # get root commit_id
-            commit_id = get_commit_root_id(repo)
+            commit_id = get_commit(repo).commit_id
             is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
             if is_archived is None:
                 resp.update({
