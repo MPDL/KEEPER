@@ -151,10 +151,16 @@ def generate_catalog_entry(repo):
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
+
                 # Year
                 y = strip_uni(md.get("Year"))
                 if y:
                     proj["year"] = y
+
+                # Institute
+                i = strip_uni(md.get("Institute"))
+                if i:
+                    proj["institute"] = i
 
                 proj["is_certified"] = is_certified_by_repo_id(repo.id)
 
@@ -184,7 +190,6 @@ def get_catalog(filter='all'):
     """
     reconnect_db()
     if filter == 'with_certificate':
-
         return add_landing_page_entry(Catalog.objects.get_certified())
     elif filter == 'with_metadata':
         return add_landing_page_entry(Catalog.objects.get_with_metadata())

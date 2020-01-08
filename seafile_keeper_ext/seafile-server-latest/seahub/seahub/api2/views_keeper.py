@@ -4,7 +4,7 @@ from rest_framework import status
 from seahub import settings
 from seahub.auth.decorators import login_required
 from seahub.base.decorators import user_mods_check
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seahub.share.models import FileShare
@@ -14,7 +14,7 @@ from seaserv import seafile_api
 from keeper.catalog.catalog_manager import get_catalog
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
-from keeper.models import CDC, DoiRepo
+from keeper.models import CDC, DoiRepo, Catalog
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -221,7 +221,7 @@ def get_cdc_id_by_repo(repo_id):
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
     if repo_owner is None:    # Library is deleted
-        repo_contact_email = "keeper@mpdl.mpg.de"
+        repo_contact_email = SERVER_EMAIL
     elif repo_owner == request.user.username:  # Show LandingPage only to repo_owner
         repo_contact_email = email2contact_email(repo_owner)
     else:
@@ -231,21 +231,33 @@ def LandingPageView(request, repo_id):
     archive_repos = DBOper().get_archives(repo_id=repo_id)
     if archive_repos is not None and len(archive_repos) == 0:
         archive_repos = None
-    if doi_repos:
-        md = doi_repos[0].md
-    elif archive_repos:
-        md = parse_markdown_doi((archive_repos[0].md).encode("utf-8"))
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+
+    catalog = Catalog.objects.get_by_repo_id(repo_id)
+    md = catalog.md
+    hasCDC = False if get_cdc_id_by_repo(repo_id) is None else True
 
     return render(request, './catalog_detail/lib_detail_landing_page.html', {
-        'authors': '; '.join(get_authors_from_md(md)),
-        'institute': md.get("Institute").replace(";", "; "),
-        'doi_dict': md,
+        'authors': get_authors_from_catalog_md(md),
+        'md': md,
         'doi_repos': doi_repos,
         'archive_repos': archive_repos,
-        'cdc': cdc,
+        'hasCDC': hasCDC,
         'owner_contact_email':  repo_contact_email
     })
+
+def get_authors_from_catalog_md(md):
+    result_authors = []
+    for author in md.get("authors"):
+        name_array = author.get("name").split(", ")
+        tmp = name_array[0]
+        if name_array[1]:
+            tmp += ', ' + name_array[1][:1] + '.'
+        affs = author.get("affs")
+        if affs:
+            tmp += " (" + ", ".join(map(unicode.strip, affs)) + ")"
+        result_authors.append(tmp)
+
+    return "; ".join(result_authors)
 
 
 def ArchiveView(request, repo_id, version_id):
@@ -257,7 +269,7 @@ def ArchiveView(request, repo_id, version_id):
     repo_owner = get_repo_owner(repo_id)
     archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
     if repo_owner is None:
-        repo_owner_email = "keeper@mpdl.mpg.de"
+        repo_owner_email = SERVER_EMAIL
         return render(request, './catalog_detail/tombstone_page.html', {
             'md_dict': archive_md,
             'authors': '; '.join(get_authors_from_md(archive_md)),

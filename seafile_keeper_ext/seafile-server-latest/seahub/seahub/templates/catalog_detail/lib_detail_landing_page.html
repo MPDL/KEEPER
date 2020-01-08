@@ -17,17 +17,17 @@
 
 		<div class="container doi_root">
 			<div>
-				{% if cdc == True %}
+				{% if hasCDC == True %}
 				<img id="cared" src="/catalog/static/certified.png" />
 				{% endif %}
 			</div>
 			<div>
-				<h1 class="doi_title">{{doi_dict.Title}}</h1>
-				<p class="doi_desc">{{doi_dict.Description}}</p>
+				<h1 class="doi_title">{{md.title}}</h1>
+				<p class="doi_desc">{{md.description}}</p>
 
 				<div class="doi_table_row"><b>Author(s): </b>{{authors}}</div>
-				<div class="doi_table_row"><b>Institute: </b>{{institute}}</div>
-				<div class="doi_table_row"><b>Published: </b>{{doi_dict.Year}}</div>
+				<div class="doi_table_row"><b>Institute: </b>{{md.institute}}</div>
+				<div class="doi_table_row"><b>Published: </b>{{md.year}}</div>
 				<br />
 
 				{% if archive_repos.count > 0 %}
