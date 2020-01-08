@@ -219,29 +219,25 @@ def get_cdc_id_by_repo(repo_id):
 
 @login_required
 def LandingPageView(request, repo_id):
+
     repo_owner = get_repo_owner(repo_id)
-    if repo_owner is None:    # Library is deleted
-        repo_contact_email = SERVER_EMAIL
-    elif repo_owner == request.user.username:  # Show LandingPage only to repo_owner
-        repo_contact_email = email2contact_email(repo_owner)
-    else:
-        return render(request, '404.html')
+    repo_contact_email = SERVER_EMAIL if repo_owner is None else request.user.username
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
+
     archive_repos = DBOper().get_archives(repo_id=repo_id)
     if archive_repos is not None and len(archive_repos) == 0:
         archive_repos = None
 
     catalog = Catalog.objects.get_by_repo_id(repo_id)
     md = catalog.md
-    hasCDC = False if get_cdc_id_by_repo(repo_id) is None else True
 
     return render(request, './catalog_detail/lib_detail_landing_page.html', {
         'authors': get_authors_from_catalog_md(md),
         'md': md,
         'doi_repos': doi_repos,
         'archive_repos': archive_repos,
-        'hasCDC': hasCDC,
+        'hasCDC': get_cdc_id_by_repo(repo_id) is not None,
         'owner_contact_email':  repo_contact_email
     })
 
