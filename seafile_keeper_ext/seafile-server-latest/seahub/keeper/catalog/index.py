@@ -302,6 +302,7 @@ def application(env, start_response):
                 slots['landing_page_url'] = ''
                 if ('landing_page_url' in tmpresult):
                     slots['landing_page_url'] = tmpl.format('flanding_page_url', landing_page_url=tmpresult['landing_page_url'])
+                    slots['title'] = tmpl.format('ftitle', title=slots['title'], landing_page_url=tmpresult['landing_page_url'])
 
                 if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
                     main_layer.write_layer('dataset_certified', **slots)

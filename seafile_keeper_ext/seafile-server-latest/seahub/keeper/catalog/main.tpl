@@ -184,8 +184,12 @@
                     {/dataset_certified}
 
                     {flanding_page_url}
-                        <p>Landing Page: <a href="%landing_page_url%">%landing_page_url%</a></p>
+                        <p><a href="%landing_page_url%">Landing Page</a></p>
                     {/flanding_page_url}
+
+                    {ftitle}
+                        <a href="%landing_page_url%">%title%</a>
+                    {/ftitle}
 
                     {fyear}
                     <p>Year: %year%</p>
