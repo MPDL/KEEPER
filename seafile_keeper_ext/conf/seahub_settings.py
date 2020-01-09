@@ -77,7 +77,7 @@ LOGGING = {
      },
     'handlers': {
         'default': {
-            'level':'DEBUG',
+            'level':'DEBUG' if DEBUG.lower() == 'true' else 'INFO',
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB

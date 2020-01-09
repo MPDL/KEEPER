@@ -428,9 +428,6 @@ class Worker(threading.Thread):
         """
         task.status = 'PROCESSING'
 
-        ##DEBUG!!!!
-        time.sleep(60 * 60)
-
         success = self._extract_repo(task)
         if not success:
             return
