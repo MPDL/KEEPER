@@ -156,7 +156,7 @@ class KeeperArchivingTask(object):
         return self._status
 
     def set_status(self, status):
-        assert status in ('QUEUED', 'PROCESSING', 'DONE', 'ERROR')
+        assert status in ('NOT_QUEUED', 'QUEUED', 'PROCESSING', 'DONE', 'ERROR')
 
         # Remove temporary file when done or error
         # path = self._extracted_tmp_dir
@@ -428,6 +428,9 @@ class Worker(threading.Thread):
         """
         task.status = 'PROCESSING'
 
+        ##DEBUG!!!!
+        time.sleep(60 * 60)
+
         success = self._extract_repo(task)
         if not success:
             return
@@ -598,6 +601,7 @@ class TaskManager(object):
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
                 ret['version'] = task.version
+                ret['in_task_map'] = 'true'
                 if task.error:
                     ret['msg'] = task.msg
                     ret['error'] = task.error
@@ -616,19 +620,23 @@ class TaskManager(object):
             ret['status'] = task.status
         return ret
 
-    def query_task_status(self, repo_id, version):
-        ret = {'repo_id': repo_id, 'version': version}
+    def query_task_status(self, repo_id, version=None):
+        """Query archiving task"""
+        ret = {'repo_id': repo_id}
         with self._tasks_map_lock:
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
                 ret['status'] = task.status
+                ret['version'] = task.version
                 if task.status == 'ERROR':
                     ret.update({
                         'msg': task.msg,
                         'error': task.error
                     })
             else:
-                if self._archive_exists(repo_id, version):
+                if not version:
+                    ret['status'] = 'NOT_QUEUED'
+                elif self._archive_exists(repo_id, version):
                     ret['status'] = 'DONE'
                 else:
                     ret.update({

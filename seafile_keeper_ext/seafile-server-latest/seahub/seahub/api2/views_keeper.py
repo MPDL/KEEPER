@@ -26,7 +26,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota, is_snapshot_archived
+from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota, is_snapshot_archived, query_keeper_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
@@ -300,6 +300,15 @@ class CanArchive(APIView):
         user_email = request.user.username
         repo = get_repo(repo_id)
 
+        # library is already in the task query
+        resp_query = query_keeper_archiving_status(repo_id, None)
+        if resp_query.status in ('QUEUED', 'PROCESSING'):
+            msg = "Library is already in archiving task queue, status: " + resp_query.status
+            return JsonResponse({
+                'msg': msg,
+                'status': 'in_processing'
+            })
+
         metadata = get_metadata(repo_id, user_email, "archive library")
         if 'error' in metadata:
             return JsonResponse({
@@ -350,8 +359,10 @@ class ArchiveLib(APIView):
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        resp_archive = add_keeper_archiving_task(repo_id, user_email)
 
+
+        # add new archiving task
+        resp_archive = add_keeper_archiving_task(repo_id, user_email)
         if resp_archive.status == 'ERROR':
             msg = self.msg_dict[resp_archive.error]
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, user_email)
