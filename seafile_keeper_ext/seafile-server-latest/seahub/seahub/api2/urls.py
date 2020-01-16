@@ -133,7 +133,6 @@ if KEEPER_ARCHIVING_NODE:
     ]
 
 
-
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER
 if HAS_OFFICE_CONVERTER:

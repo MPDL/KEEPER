@@ -38,16 +38,14 @@ class KeeperArchiving(object):
                 raise Exception('invalid repo id by query_task: {}'.format(repo_id))
         return task_manager.query_task_status(repo_id, version)
 
-    def is_snapshot_archived(self, repo_id, owner):
+    def check_repo_archiving_status(self, repo_id, owner, action):
         if not _valid_repo_id(repo_id):
-                raise Exception('invalid repo id by is_snapshot_archived: {}'.format(repo_id))
-        return task_manager.is_snapshot_archived(repo_id, owner)
-
-
-    def get_quota(self, repo_id, owner):
-        if not _valid_repo_id(repo_id):
-                raise Exception('invalid repo id {} for owner {} by get_quota'.format(repo_id, owner))
-        return task_manager.get_quota(repo_id, owner)
+            raise Exception('invalid repo id {}'.format(repo_id))
+        if not owner:
+            raise Exception('No owner defined for repo {}'.format(repo_id))
+        if not action:
+            raise Exception('No action defined for  for repo: {} and owner: {}'.format(repo_id, owner))
+        return task_manager.check_repo_archiving_status(repo_id, owner, action)
 
     def register_rpc(self, ccnet_client):
         '''Register archiving rpc service'''
@@ -63,10 +61,7 @@ class KeeperArchiving(object):
                                         self.add_task)
 
         searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.get_quota)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.is_snapshot_archived)
+                                        self.check_repo_archiving_status)
 
     def start(self):
         task_manager.init(db_oper=self._db_oper,

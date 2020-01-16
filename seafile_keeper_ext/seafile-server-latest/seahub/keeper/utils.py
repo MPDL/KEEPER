@@ -309,7 +309,7 @@ def archiving_cluster_delegate(delegate_func):
     return decorated
 
 def delegate_add_keeper_archiving_task(repo_id, owner):
-    url = urljoin(KEEPER_ARCHIVING_ROOT, '/archiving/internal/add-task/')
+    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/add-task/')
     data = urllib.urlencode({
         'repo_id': repo_id,
         'owner': owner,
@@ -319,8 +319,8 @@ def delegate_add_keeper_archiving_task(repo_id, owner):
 
 
 def delegate_query_keeper_archiving_status(repo_id, version):
-    url = urljoin(KEEPER_ARCHIVING_ROOT, '/archiving/internal/status/')
-    url += '?repo_id={}&version={}'.format(repo_id, version)
+    url = urljoin(KEEPER_ARCHIVING_ROOT,
+        '/api2/archiving/internal/status/{}/{}'.format(repo_id, version))
     ret = do_urlopen(url).read()
     return json.loads(ret)
 
@@ -337,14 +337,19 @@ def query_keeper_archiving_status(repo_id, version):
     ret = rpc.query_task_status(repo_id, version)
     return ret
 
-def get_keeper_archiving_quota(repo_id, owner):
-    rpc = _get_keeper_archiving_rpc()
-    ret = rpc.get_quota(repo_id, owner)
-    return ret
+# def get_keeper_archiving_quota(repo_id, owner):
+    # rpc = _get_keeper_archiving_rpc()
+    # ret = rpc.get_quota(repo_id, owner)
+    # return ret
 
-def is_snapshot_archived(repo_id, owner):
+# def is_snapshot_archived(repo_id, owner):
+    # rpc = _get_keeper_archiving_rpc()
+    # ret = rpc.is_snapshot_archived(repo_id, owner)
+    # return ret
+
+def check_keeper_repo_archiving_status(repo_id, owner, action):
     rpc = _get_keeper_archiving_rpc()
-    ret = rpc.is_snapshot_archived(repo_id, owner)
+    ret = rpc.check_repo_archiving_status(repo_id, owner, action)
     return ret
 
 

@@ -22,6 +22,8 @@ MSG_ADD_TASK = 'Cannot add task.'
 MSG_WRONG_OWNER = 'Wrong owner of the library.'
 MSG_MAX_NUMBER_ARCHIVES_REACHED = 'Max number of archives for library is reached.'
 MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota.'
+MSG_CANNOT_CHECK_REPO_SIZE = 'Cannot check library size.'
+MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check snapshot archiving status.'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
 MSG_ADD_MD = 'Cannot attach metadata file to library archive.'
@@ -660,46 +662,37 @@ class TaskManager(object):
                     })
         return ret
 
-    def get_quota(self, repo_id, owner):
-        """Get archiving quota from DB and config
-        """
-        resp = {'repo_id': repo_id, 'owner': owner}
-        try:
-            repo = seafile_api.get_repo(repo_id)
-            if owner != seafile_api.get_repo_owner(repo_id):
-                resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_WRONG_OWNER
-                })
-                return resp
-            # get current version
-            curr_ver = self._db_oper.get_max_archive_version(repo_id, owner)
-            if curr_ver is None:
-                resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_DB_ERROR
-                })
-                return resp
-            curr_ver = 0 if curr_ver == -1 else curr_ver
-            # get quota from db or from config
-            quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
-            resp.update({
-                'curr_ver': curr_ver,
-                'remains': quota - curr_ver
-            })
-            return resp
-        except Exception as e:
-            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
-            resp.update({
-                'status': 'ERROR',
-                'error': MSG_CANNOT_GET_QUOTA
-            })
-            return resp
 
-    def is_snapshot_archived(self, repo_id, owner):
+    ACTION_ERROR_MSG = {
+        'is_snapshot_archived': ['Cannot check snapshot archiving status for library {} and owner {}: {}', MSG_CANNOT_CHECK_SNAPSHOT_STATUS],
+        'get_quota': ['Cannot get archiving quota for library {} and owner {}: {}', MSG_CANNOT_GET_QUOTA],
+        'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
+    }
+    def check_repo_archiving_status(self, **kwargs):
         """TODO:
         """
-        resp = {'repo_id': repo_id, 'owner': owner}
+        repo_id = kwargs.pop('repo_id', None)
+        if not repo_id:
+            return {
+                'status': 'ERROR',
+                'error': 'No repo_id is defined.'
+            }
+
+        owner = kwargs.pop('owner', None)
+        if not owner:
+            return {
+                'status': 'ERROR',
+                'error': 'No owner is defined.'
+            }
+
+        action = kwargs.pop('action', None)
+        if not action:
+            return {
+                'status': 'ERROR',
+                'error': 'No action is defined.'
+            }
+
+        resp = {'repo_id': repo_id, 'owner': owner, 'action': action}
         try:
             repo = seafile_api.get_repo(repo_id)
             if owner != seafile_api.get_repo_owner(repo_id):
@@ -709,26 +702,64 @@ class TaskManager(object):
                 })
                 return resp
 
-            # get root commit_id
-            commit_id = get_commit(repo).commit_id
-            is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
-            if is_archived is None:
+            ####### is_snapshot_archived
+            if action == 'is_snapshot_archived':
+                # get root commit_id
+                commit_id = get_commit(repo).commit_id
+                is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
+                if is_archived is None:
+                    resp.update({
+                        'status': 'ERROR',
+                        'error': MSG_DB_ERROR
+                    })
+                    return resp
                 resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_DB_ERROR
+                    'is_snapshot_archived': 'true' if is_archived else 'false',
                 })
                 return resp
-            resp.update({
-                'is_snapshot_archived': 'true' if is_archived else 'false',
-            })
-            return resp
+
+            ####### get_quota
+            if action == 'get_quota':
+                # get current version
+                curr_ver = self._db_oper.get_max_archive_version(repo_id, owner)
+                if curr_ver is None:
+                    resp.update({
+                        'status': 'ERROR',
+                        'error': MSG_DB_ERROR
+                    })
+                    return resp
+                curr_ver = 0 if curr_ver == -1 else curr_ver
+                # get quota from db or from config
+                quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
+                resp.update({
+                    'curr_ver': curr_ver,
+                    'remains': quota - curr_ver
+                })
+                return resp
+
+
+            ####### max_repo_size
+            if action == 'is_repo_too_big':
+                repo_size = seafile_api.get_repo_size(repo_id)
+                resp.update({
+                    'is_repo_too_big': 'true' if repo_size > self.archive_max_size else 'false',
+                })
+                return resp
+
+            ##### no action found!!!!
+            return {
+                'status': 'ERROR',
+                'error': 'Unknown action: ' + action
+            }
+
         except Exception as e:
-            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
+            _l.error(ACTION_ERROR_MSG[action][0].format(repo_id, owner, e))
             resp.update({
                 'status': 'ERROR',
-                'error': MSG_CANNOT_GET_QUOTA
+                'error': ACTION_ERROR_MSG[action][1]
             })
             return resp
+
 
 
     def run(self):

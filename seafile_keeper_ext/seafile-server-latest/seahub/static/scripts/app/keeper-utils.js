@@ -26,6 +26,8 @@ define([
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "snapshot_archived") {
           keeperUtils.archive_failed(repo_name, data.status, "");
+        } else if (data.status === "is_too_big") {
+          keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "metadata_error") {
           keeperUtils.archive_failed(repo_name, data.status, data.msg);
         }
@@ -80,6 +82,9 @@ define([
         break;
       case "snapshot_archived":
         archive_info = "Can not archive, the library snapshot is already archived.";
+        break;
+      case "is_too_big":
+        archive_info = "Can not archive, the library is too big.";
         break;
       case "metadata_error":
         archive_info = error_msg;
