@@ -56,9 +56,14 @@ html, body {
 
 .doi_desc{
 	font-weight: normal;
-	max-height: 410px;
-	overflow-y: scroll;
 	margin-bottom: 2.4rem;
+}
+
+.morecontent span {
+	display: none;
+}
+.morelink {
+	display: block;
 }
 
 .doi_link{
