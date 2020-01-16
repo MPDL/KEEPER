@@ -34,7 +34,7 @@
 				{% if archive_repos.count > 0 %}
 					<b>Archives</b><br />
 					{% for archive_repo in archive_repos%}
-					<a href="/archive/libs/{{archive_repo.repo_id}}/{{archive_repo.version}}/">Archive {{archive_repo.created}}</a><br />
+					<a href="/archive/libs/{{archive_repo.repo_id}}/{{archive_repo.version}}/0/">Archive {{archive_repo.created}}</a><br />
 					{% endfor %}
 					<br />
 				{% endif %}

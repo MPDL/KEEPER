@@ -509,7 +509,7 @@ urlpatterns = [
     url(r'^client-login/$', client_token_login, name='client_token_login'),
     url(r'^doi/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<commit_id>[0-9a-f]{40})/$', DoiView, name='doi_page'),
     url(r'^landing-page/libs/(?P<repo_id>[-0-9a-f]{36})/$', LandingPageView, name='landing_page'),
-    url(r'^archive/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<version_id>\d+)/$', ArchiveView, name='Archive_page')
+    url(r'^archive/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<version_id>\d+)/(?P<is_tombstone>\d+)/$', ArchiveView, name='Archive_page')
 ]
 
 from seahub.utils import EVENTS_ENABLED

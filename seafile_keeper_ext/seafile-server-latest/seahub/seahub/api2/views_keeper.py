@@ -258,7 +258,7 @@ def get_authors_from_catalog_md(md):
 
 
 
-def ArchiveView(request, repo_id, version_id):
+def ArchiveView(request, repo_id, version_id, is_tombstone):
     archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
     if archive_repos is None or len(archive_repos) == 0:
         return render(request, '404.html')
@@ -266,20 +266,23 @@ def ArchiveView(request, repo_id, version_id):
     archive_repo = archive_repos[0]
     repo_owner = get_repo_owner(repo_id)
     archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
+    commit_id = archive_repo.commit_id
+    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+
     if repo_owner is None:
+        if is_tombstone == '1':
+            return render(request, './catalog_detail/tombstone_page.html', {
+                    'md_dict': archive_md,
+                    'authors': '; '.join(get_authors_from_md(archive_md)),
+                    'institute': archive_md.get("Institute").replace(";", "; "),
+                    'library_name': archive_repo.repo_name,
+                    'owner_contact_email': email2contact_email(repo_owner) })
+
         repo_owner_email = SERVER_EMAIL
-        return render(request, './catalog_detail/tombstone_page.html', {
-            'md_dict': archive_md,
-            'authors': '; '.join(get_authors_from_md(archive_md)),
-            'institute': archive_md.get("Institute").replace(";", "; "),
-            'library_name': archive_repo.repo_name,
-            'owner_contact_email': email2contact_email(repo_owner) })
+        link = SERVICE_URL + '/archive/libs/' + repo_id + '/' + version_id + '/1/'
     else:
         repo_owner_email = email2contact_email(repo_owner)
-
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-    commit_id = archive_repo.commit_id
-    link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+        link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,

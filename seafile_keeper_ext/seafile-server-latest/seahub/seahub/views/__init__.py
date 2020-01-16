@@ -712,19 +712,13 @@ def libraries(request):
 
 
     landing_pages = []
-    doi_repos = DoiRepo.objects.get_doi_by_owner(username)
-    if doi_repos:
-        for doi_repo in doi_repos:
-            repo_name = doi_repo.repo_name if get_repo(doi_repo.repo_id) is None else get_repo(doi_repo.repo_id).name
-            landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": repo_name })
 
     archive_repos = DBOper().get_archives(owner = username)
     if archive_repos:
         for archive_repo in archive_repos:
-            archive_repo_id = archive_repo.repo_id
             has_landing_page = False
             for landing_page in landing_pages:
-                if landing_page["repo_id"] == archive_repo_id:
+                if landing_page["repo_id"] == archive_repo.repo_id:
                     has_landing_page = True
                     break
             if  has_landing_page == False:
