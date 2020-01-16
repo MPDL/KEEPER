@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
+from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive, internal_add_keeper_archiving_task, internal_query_keeper_archiving_task
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -122,7 +122,17 @@ urlpatterns = [
     # Archive Library
     url(r'^ajax/archive/$', ArchiveLib.as_view(), name='archive_lib'),
     url(r'^ajax/can-archive/$', CanArchive.as_view(), name='can_archive')
+
 ]
+
+from seahub.settings import KEEPER_ARCHIVING_NODE
+if KEEPER_ARCHIVING_NODE:
+    urlpatterns += [
+        url(r'^archiving/internal/add-task/$', internal_add_keeper_archiving_task),
+        url(r'^archiving/internal/status/(?P<repo_id>[-0-9a-f]{36})/(?P<version>[0-9]+)$', internal_query_keeper_archiving_task),
+    ]
+
+
 
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER

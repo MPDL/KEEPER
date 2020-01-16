@@ -18,6 +18,7 @@ from keeper.models import CDC, DoiRepo, Catalog
 
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_POST
 
 from django.utils.translation import ugettext as _
 
@@ -256,6 +257,7 @@ def get_authors_from_catalog_md(md):
     return "; ".join(result_authors)
 
 
+
 def ArchiveView(request, repo_id, version_id):
     archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
     if archive_repos is None or len(archive_repos) == 0:
@@ -333,6 +335,22 @@ class CanArchive(APIView):
             'quota': resp_quota.remains,
             'status': "success"
         })
+
+
+@require_POST
+@json_response
+def internal_add_keeper_archiving_task(requets):
+    try:
+        repo_id = request.POST.get('repo_id')
+        owner = request.POST.get('owner')
+    except KeyError:
+        return HttpResponseBadRequest('invalid params')
+    #TODO: check repo_id
+    return add_keeper_archiving_task(repo_id, owner)
+
+@json_response
+def internal_query_keeper_archiving_task(requets, repo_id, version):
+    return query_keeper_archiving_status(repo_id, version)
 
 
 class ArchiveLib(APIView):

@@ -181,6 +181,8 @@ function start_seahub () {
     check_init_admin;
 
     export DJANGO_SETTINGS_MODULE=seahub.settings
+    #if seahub cannot start, use this command:
+    #$PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload --check-config
     $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload
 
     # Ensure seahub is started successfully

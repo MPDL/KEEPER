@@ -81,7 +81,8 @@ def _generate_file_md5(path, blocksize=5 * 2 ** 20):
 def _get_archive_path(storage_path, owner, repo_id, version):
     """Construct full path to archive in fs
     """
-    return os.path.join(storage_path, owner, '{}_ver{}.tar.gz'.format(repo_id, version))
+    # return os.path.join(storage_path, owner, '{}_ver{}.tar.gz'.format(repo_id, version))
+    return os.path.join(storage_path, owner, '{}_ver{}.tar'.format(repo_id, version))
 
 
 def get_commit(repo):
@@ -334,22 +335,27 @@ class Worker(threading.Thread):
         """
         Create tar file for extracted repo
         """
-        _l.debug('Start create tar for repo: {}'.format(task.repo_id))
+        _l.info('Start creating a tar for repo: {}'.format(task.repo_id))
         assert task._extracted_tmp_dir is not None
         try:
             task._archive_path = _get_archive_path(self.local_storage, task.owner, task.repo_id, task.version)
-            with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
+            # with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
+            with tarfile.open(task._archive_path, mode='w:', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
         except Exception as e:
             _set_error(task, MSG_CREATE_TAR,
                        'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
                                                                                    task._archive_path, task, e))
             # clean up
+            if archive:
+                archive.close()
             self._clean_up(task)
             return False
         else:
             archive.close()
+            _l.info('Calculate tar checksum for repo: {}...'.format(task.repo_id))
             task._checksum = _generate_file_md5(task._archive_path)
+            _l.info('Checksum for repo {}: '.format(task._checksum))
 
         return True
 
@@ -370,15 +376,21 @@ class Worker(threading.Thread):
 
             ssh = SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            # ssh.load_system_host_keys()
+            ### ssh.load_system_host_keys() ### no keys, do not load
 
             ssh.connect(self.hpss_url, username=self.hpss_user, password=self.hpss_password)
 
-            sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
+            transport = ssh.get_transport()
+            transport.set_keepalive(0)
+            # best performance options
+            transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
+            transport.use_compression(False)
+
+            sftp = paramiko.SFTPClient.from_transport(transport)
 
             # create dirs on remote
             remote_dir = self.hpss_storage_path
-            for dir in (task.owner, task.repo_id):
+            for dir in (task.owner, ):
                 remote_dir = os.path.join(remote_dir, dir)
                 try:
                     sftp.mkdir(remote_dir)
@@ -394,31 +406,36 @@ class Worker(threading.Thread):
             sftp.put(task._md_path, remotepath=os.path.join(remote_dir, os.path.basename(task._md_path)))
 
             # calc checksum remotely
+            _l.info('Calculate checksum for {} on remote...'.format(task._archive_path))
             stdin, stdout, stderr = ssh.exec_command('md5sum {}'.format(remote_archive_path))
             # block until command finished
             stdout.channel.recv_exit_status()
             resp = ''.join(stdout.read())
             remote_checksum = resp.split()[0]
-            _l.info('remote checksum: {}'.format(remote_checksum))
+            _l.info('Remote checksum: {}'.format(remote_checksum))
 
             # check checksums
             if task._checksum == remote_checksum:
-                _l.info('Remote checksum matches local checksum')
+                _l.info('Remote checksum equals to local checksum')
             else:
-                #TODO:
                 _l.error('Remote checksum {} does not match local checksum {}'.format(remote_checksum, task._checksum))
-
-            sftp.close()
-
-            ssh.close()
+                # TODO: Do not clean tmp files/dirs, try to resume or notify
+                # keeper admin
+                return False
 
             _l.info('Successfully pushed archive to HPSS')
 
         except Exception as e:
             _set_error(task, MSG_PUSH_TO_HPSS,
-                       'Failed by pushing archive {} to HPSS for task {}: {}'.format(task._archive_path, task, e))
-            # TODO: Do not clean tmp files/dirs, try to resume
+                       'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, e))
+            # TODO: Do not clean tmp files/dirs, try to resume or notify
+            # keeper admin
             return False
+        finally:
+            if sftp:
+                sftp.close()
+            if ssh:
+                ssh.close()
 
         return True
 
