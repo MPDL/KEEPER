@@ -77,7 +77,7 @@ LOGGING = {
      },
     'handlers': {
         'default': {
-            'level':'DEBUG' if DEBUG.lower() == 'true' else 'INFO',
+            'level':'DEBUG' if DEBUG else 'INFO',
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB
@@ -567,6 +567,10 @@ DOI_SERVER = '__DOI_SERVER__'
 DOI_USER = '__DOI_USER__'
 DOI_PASSWORD = '__DOI_PASSWORD__'
 DOI_TIMEOUT = __DOI_TIMEOUT__
+
+# archiving
+KEEPER_ARCHIVING_ROOT = '__KEEPER_ARCHIVING_ROOT__'
+KEEPER_ARCHIVING_NODE = KEEPER_ARCHIVING_ROOT == SERVICE_URL
 
 # KEEPER external resources
 KEEPER_MPG_DOMAINS_URL = '__KEEPER_MPG_DOMAINS_URL__'
