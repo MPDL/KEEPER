@@ -31,12 +31,13 @@ class CatalogManager(models.Manager):
         if c:
             # don not delete the entry, set it to rm
             # return c.delete()
-            c.update(rm=datetime.now())
+            c.rm=datetime.now()
+            c.save()
         return None
 
     def get_all_mds_ordered(self):
         mds = []
-        for c in self.order_by('-modified').all():
+        for c in self.exclude(rm__isnull=False, is_archived=False).order_by('-modified').all():
             c.md['catalog_id'] = c.catalog_id
             mds.append(c.md)
         return mds
@@ -84,6 +85,13 @@ class CatalogManager(models.Manager):
         catalog.save()
         return catalog
 
+    def set_archived(self, repo_id):
+        c = self.get_by_repo_id(repo_id)
+        if c:
+            c.is_archived = True
+            c.save()
+
+
 
 class Catalog(models.Model):
 
@@ -95,8 +103,9 @@ class Catalog(models.Model):
     owner = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    rm = models.DateTimeField(blank=True, default=None, null=True)
     md = PickledObjectField()
+    rm = models.DateTimeField(blank=True, default=None, null=True)
+    is_archived = models.BooleanField(default=False)
     objects = CatalogManager()
 
 
@@ -156,7 +165,6 @@ class CDC(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     objects = CDCManager()
-
 
 
 ###### signal handlers
