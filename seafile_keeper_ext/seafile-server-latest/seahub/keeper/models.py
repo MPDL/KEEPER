@@ -29,7 +29,9 @@ class CatalogManager(models.Manager):
     def delete_by_repo_id(self, repo_id):
         c = self.get_by_repo_id(repo_id)
         if c:
-            return c.delete()
+            # don not delete the entry, set it to rm
+            # return c.delete()
+            c.update(rm=datetime.now())
         return None
 
     def get_all_mds_ordered(self):
@@ -93,6 +95,7 @@ class Catalog(models.Model):
     owner = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    rm = models.DateTimeField(blank=True, default=None, null=True)
     md = PickledObjectField()
     objects = CatalogManager()
 

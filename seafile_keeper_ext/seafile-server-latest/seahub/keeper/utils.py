@@ -331,7 +331,7 @@ def add_keeper_archiving_task(repo_id, owner):
     ret = rpc.add_task(repo_id, owner)
     return ret
 
-@archiving_cluster_delegate(delegate_query_keeper_archiving_task)
+@archiving_cluster_delegate(delegate_query_keeper_archiving_status)
 def query_keeper_archiving_status(repo_id, version):
     rpc = _get_keeper_archiving_rpc()
     ret = rpc.query_task_status(repo_id, version)
