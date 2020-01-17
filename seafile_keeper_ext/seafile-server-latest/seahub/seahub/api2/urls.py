@@ -18,7 +18,7 @@ from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
-from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive, internal_add_keeper_archiving_task, internal_query_keeper_archiving_task
+from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -128,8 +128,10 @@ urlpatterns = [
 from seahub.settings import KEEPER_ARCHIVING_NODE
 if KEEPER_ARCHIVING_NODE:
     urlpatterns += [
-        url(r'^archiving/internal/add-task/$', internal_add_keeper_archiving_task),
-        url(r'^archiving/internal/status/(?P<repo_id>[-0-9a-f]{36})/(?P<version>[0-9]+)$', internal_query_keeper_archiving_task),
+        # url(r'^archiving/internal/add-task/$', internal_add_keeper_archiving_task),
+        # url(r'^archiving/internal/status/$', internal_query_keeper_archiving_task),
+        url(r'^archiving/internal/add-task/$', ArchiveLib.as_view(), name='archive_lib'),
+        url(r'^archiving/internal/status/$', CanArchive.as_view(), name='can_archive'),
     ]
 
 

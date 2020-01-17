@@ -294,16 +294,15 @@ def ArchiveView(request, repo_id, version_id):
 class CanArchive(APIView):
 
     "Quota checking before adding archiving"
-    def __init__(self):
-        self.db_oper = DBOper()
+    # def __init__(self):
+        # self.db_oper = DBOper()
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        repo = get_repo(repo_id)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, None)
+        resp_query = query_keeper_archiving_status(repo_id, user_email, 0)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
             msg = "Library is already in archiving task queue, status: " + resp_query.status
             return JsonResponse({
@@ -344,28 +343,28 @@ class CanArchive(APIView):
         })
 
 
-@require_POST
-@json_response
-def internal_add_keeper_archiving_task(requets):
-    try:
-        repo_id = request.POST.get('repo_id')
-        owner = request.POST.get('owner')
-    except KeyError:
-        return HttpResponseBadRequest('invalid params')
-    #TODO: check repo_id
-    resp = vars(add_keeper_archiving_task(repo_id, owner))
-    return resp['_dict']
+# @require_POST
+# @json_response
+# def internal_add_keeper_archiving_task(requets):
+    # try:
+        # repo_id = request.POST.get('repo_id')
+        # owner = request.POST.get('owner')
+    # except KeyError:
+        # return HttpResponseBadRequest('invalid params')
+    # #TODO: check repo_id
+    # resp = vars(add_keeper_archiving_task(repo_id, owner))
+    # return resp['_dict']
 
-@json_response
-def internal_query_keeper_archiving_task(requets, repo_id, version):
-    resp = vars(query_keeper_archiving_status(repo_id, version))
-    return resp['_dict']
+# @json_response
+# def internal_query_keeper_archiving_task(requets, repo_id, version):
+    # resp = vars(query_keeper_archiving_status(repo_id, version))
+    # return resp['_dict']
 
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
     def __init__(self):
-        self.db_oper = DBOper()
+        # self.db_oper = DBOper()
         self.msg_dict = {
             MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
             MSG_ADD_TASK: 'Cannot start archiving, please try later.',

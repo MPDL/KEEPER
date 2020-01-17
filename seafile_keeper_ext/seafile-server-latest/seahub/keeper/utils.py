@@ -241,14 +241,6 @@ def is_in_mpg_domain_list(email):
         return False
     return domain in get_domain_list()
 
-# def is_in_mpg_domain_list(email):
-#   # flag = False
-#   # try:
-#       # flag = re.match(COMPILED_PATTERN, email)
-#   # except Exception as e:
-#       # logging.error("Cannot match pattern: {}".format(e))
-#
-#   # return flag
 
 def account_can_be_auto_activated(email):
     """
@@ -318,10 +310,14 @@ def delegate_add_keeper_archiving_task(repo_id, owner):
     return json.loads(ret)
 
 
-def delegate_query_keeper_archiving_status(repo_id, version):
-    url = urljoin(KEEPER_ARCHIVING_ROOT,
-        '/api2/archiving/internal/status/{}/{}'.format(repo_id, version))
-    ret = do_urlopen(url).read()
+def delegate_query_keeper_archiving_status(repo_id, owner, version):
+    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/query/')
+    data = urllib.urlencode({
+        'repo_id': repo_id,
+        'owner': owner,
+        'version': version,
+    })
+    ret = do_urlopen(url, data=data).read()
     return json.loads(ret)
 
 
@@ -332,20 +328,10 @@ def add_keeper_archiving_task(repo_id, owner):
     return ret
 
 @archiving_cluster_delegate(delegate_query_keeper_archiving_status)
-def query_keeper_archiving_status(repo_id, version):
+def query_keeper_archiving_status(repo_id, owner, version):
     rpc = _get_keeper_archiving_rpc()
-    ret = rpc.query_task_status(repo_id, version)
+    ret = rpc.query_task_status(repo_id, owner, version)
     return ret
-
-# def get_keeper_archiving_quota(repo_id, owner):
-    # rpc = _get_keeper_archiving_rpc()
-    # ret = rpc.get_quota(repo_id, owner)
-    # return ret
-
-# def is_snapshot_archived(repo_id, owner):
-    # rpc = _get_keeper_archiving_rpc()
-    # ret = rpc.is_snapshot_archived(repo_id, owner)
-    # return ret
 
 def check_keeper_repo_archiving_status(repo_id, owner, action):
     rpc = _get_keeper_archiving_rpc()
