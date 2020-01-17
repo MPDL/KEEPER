@@ -392,11 +392,18 @@ class ArchiveLib(APIView):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
 
+        return JsonResponse(add_keeper_archiving_task(repo_id, user_email))
+
+
+    def post(self, request):
+        repo_id = request.POST.get('repo_id', None)
+        owner = request.POST.get('owner', None)
+
         # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, user_email)
+        resp_archive = add_keeper_archiving_task(repo_id, owner)
         if resp_archive.status == 'ERROR':
             msg = self.msg_dict[resp_archive.error]
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, user_email)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, owner)
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'

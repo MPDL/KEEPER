@@ -31,11 +31,13 @@ class KeeperArchiving(object):
     def add_task(self, repo_id, owner):
         if not _valid_repo_id(repo_id):
             raise Exception('invalid repo id by add_task')
+        if not owner:
+            raise Exception('No owner defined for repo {}'.format(repo_id))
         return task_manager.add_task(repo_id, owner)
 
     def query_task_status(self, repo_id, owner, version):
         if not _valid_repo_id(repo_id):
-                raise Exception('invalid repo id by query_task: {}'.format(repo_id))
+            raise Exception('invalid repo id by query_task: {}'.format(repo_id))
         if not owner:
             raise Exception('No owner defined for repo {}'.format(repo_id))
         return task_manager.query_task_status(repo_id, version)

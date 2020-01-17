@@ -636,7 +636,7 @@ class TaskManager(object):
             ret['status'] = task.status
         return ret
 
-    def query_task_status(self, repo_id, version=None):
+    def query_task_status(self, repo_id, owner=None, version=None):
         """Query archiving task"""
         ret = {'repo_id': repo_id}
         with self._tasks_map_lock:
