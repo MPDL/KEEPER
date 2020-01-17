@@ -301,7 +301,7 @@ class CanArchive(APIView):
         repo_id = request.GET.get('repo_id', None)
         version = request.GET.get('version', None)
         owner = request.user.username
-        return query_keeper_archiving_status(repo_id, owner, version)
+        return JsonResponse(query_keeper_archiving_status(repo_id, owner, version))
 
 
     def post(self, request):
