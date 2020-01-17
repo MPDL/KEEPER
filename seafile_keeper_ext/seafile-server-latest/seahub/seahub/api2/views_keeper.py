@@ -299,10 +299,18 @@ class CanArchive(APIView):
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
-        user_email = request.user.username
+        version = request.GET.get('version', None)
+        owner = request.user.username
+        return query_keeper_archiving_status(repo_id, owner, version)
+
+
+    def post(self, request):
+        repo_id = request.POST.get('repo_id', None)
+        version = request.POST.get('version', None)
+        owner = request.POST.get('owner', None)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, user_email, 0)
+        resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
             msg = "Library is already in archiving task queue, status: " + resp_query.status
             return JsonResponse({
@@ -310,31 +318,30 @@ class CanArchive(APIView):
                 'status': 'in_processing'
             })
 
-        metadata = get_metadata(repo_id, user_email, "archive library")
+        metadata = get_metadata(repo_id, owner, "archive library")
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
                 'status': 'metadata_error',
             })
 
-        resp_quota = check_keeper_repo_archiving_status(repo_id, user_email, 'get_quota')
+        resp_quota = check_keeper_repo_archiving_status(repo_id, owner, 'get_quota')
         if resp_quota.remains <= 0:
             return JsonResponse({
                 'status': "quota_expired"
             })
 
-        resp_is_archived = check_keeper_repo_archiving_status(repo_id, user_email, 'is_snapshot_archived')
+        resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
         if resp_is_archived.is_snapshot_archived == 'true':
             return JsonResponse({
                 'status': "snapshot_archived"
             })
 
-        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, user_email, 'is_repo_too_big')
+        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
         if resp_is_repo_too_big.is_repo_too_big == 'true':
             return JsonResponse({
                 'status': "is_too_big"
             })
-
 
 
         return JsonResponse({
@@ -384,7 +391,6 @@ class ArchiveLib(APIView):
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-
 
         # add new archiving task
         resp_archive = add_keeper_archiving_task(repo_id, user_email)
