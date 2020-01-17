@@ -668,25 +668,22 @@ class TaskManager(object):
         'get_quota': ['Cannot get archiving quota for library {} and owner {}: {}', MSG_CANNOT_GET_QUOTA],
         'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
     }
-    def check_repo_archiving_status(self, **kwargs):
+    def check_repo_archiving_status(self, repo_id, owner, action):
         """TODO:
         """
-        repo_id = kwargs.pop('repo_id', None)
-        if not repo_id:
+        if repo_id is None:
             return {
                 'status': 'ERROR',
                 'error': 'No repo_id is defined.'
             }
 
-        owner = kwargs.pop('owner', None)
-        if not owner:
+        if owner is None:
             return {
                 'status': 'ERROR',
                 'error': 'No owner is defined.'
             }
 
-        action = kwargs.pop('action', None)
-        if not action:
+        if action is None:
             return {
                 'status': 'ERROR',
                 'error': 'No action is defined.'
