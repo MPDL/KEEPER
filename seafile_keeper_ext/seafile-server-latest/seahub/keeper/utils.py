@@ -311,7 +311,7 @@ def delegate_add_keeper_archiving_task(repo_id, owner):
 
 
 def delegate_query_keeper_archiving_status(repo_id, owner, version):
-    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/query/')
+    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/status/')
     data = urllib.urlencode({
         'repo_id': repo_id,
         'owner': owner,
