@@ -378,14 +378,14 @@ class Worker(threading.Thread):
 
             ssh = SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ### ssh.load_system_host_keys() ### no keys, do not load
+            # ssh.load_system_host_keys()### no keys, do not load
 
             ssh.connect(self.hpss_url, username=self.hpss_user, password=self.hpss_password)
 
             transport = ssh.get_transport()
             transport.set_keepalive(0)
             # best performance options
-            transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
+            # transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
             transport.use_compression(False)
 
             sftp = paramiko.SFTPClient.from_transport(transport)
@@ -398,9 +398,28 @@ class Worker(threading.Thread):
                     sftp.mkdir(remote_dir)
                     _l.info("Dir {} is created on HPSS".format(remote_dir))
                 except IOError as e:
-                    _l.error("Cannot create dir {} on HPSS: {}, dir already exists?".format(remote_dir, e))
+                    _l.info("Cannot create dir {} on HPSS: {}, dir already exists?".format(remote_dir, e))
 
-            # push archive tar and md file
+            # push archive tar
+
+            ###### subprocess.Popen implementation
+            # remote_archive_path = remote_dir
+            # import subprocess
+
+            # args = [ "sshpass", "-p",  "'"+ self.hpss_password +"'",  "scp", "-c", "aes128-gcm@openssh.com", task._archive_path,
+                    # # "{}:{}@{}:{}".format(self.hpss_user, self.hpss_password, self.hpss_url, remote_archive_path)]
+                    # "{}@{}:{}".format(self.hpss_user, self.hpss_url, remote_archive_path)]
+            # _l.info(" ".join(args))
+            # p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # for line in p.stderr:
+                # _l.info(line)
+            # for line in p.stdout:
+                # _l.info(line)
+
+            # sts = os.waitpid(p.pid, 0)
+            # _l.info("scp status: {}".format(sts))
+            ###### end of subprocess.Popen implementation
+
             remote_archive_path = os.path.join(remote_dir, os.path.basename(task._archive_path))
             sftp.put(task._archive_path, remotepath=remote_archive_path)
 
