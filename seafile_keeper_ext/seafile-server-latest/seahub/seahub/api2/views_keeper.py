@@ -27,7 +27,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task, get_keeper_archiving_quota, is_snapshot_archived, query_keeper_archiving_status
+from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
@@ -297,16 +297,23 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 class CanArchive(APIView):
 
     "Quota checking before adding archiving"
-    def __init__(self):
-        self.db_oper = DBOper()
+    # def __init__(self):
+        # self.db_oper = DBOper()
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
-        user_email = request.user.username
-        repo = get_repo(repo_id)
+        version = request.GET.get('version', None)
+        owner = request.user.username
+        return JsonResponse(query_keeper_archiving_status(repo_id, owner, version))
+
+
+    def post(self, request):
+        repo_id = request.POST.get('repo_id', None)
+        version = request.POST.get('version', None)
+        owner = request.POST.get('owner', None)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, None)
+        resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
             msg = "Library is already in archiving task queue, status: " + resp_query.status
             return JsonResponse({
@@ -314,23 +321,29 @@ class CanArchive(APIView):
                 'status': 'in_processing'
             })
 
-        metadata = get_metadata(repo_id, user_email, "archive library")
+        metadata = get_metadata(repo_id, owner, "archive library")
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
                 'status': 'metadata_error',
             })
 
-        resp_quota = get_keeper_archiving_quota(repo_id, user_email)
+        resp_quota = check_keeper_repo_archiving_status(repo_id, owner, 'get_quota')
         if resp_quota.remains <= 0:
             return JsonResponse({
                 'status': "quota_expired"
             })
 
-        resp_is_archived = is_snapshot_archived(repo_id, user_email)
+        resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
         if resp_is_archived.is_snapshot_archived == 'true':
             return JsonResponse({
                 'status': "snapshot_archived"
+            })
+
+        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
+        if resp_is_repo_too_big.is_repo_too_big == 'true':
+            return JsonResponse({
+                'status': "is_too_big"
             })
 
 
@@ -340,27 +353,28 @@ class CanArchive(APIView):
         })
 
 
-@require_POST
-@json_response
-def internal_add_keeper_archiving_task(requets):
-    try:
-        repo_id = request.POST.get('repo_id')
-        owner = request.POST.get('owner')
-    except KeyError:
-        return HttpResponseBadRequest('invalid params')
-    #TODO: check repo_id
-    return add_keeper_archiving_task(repo_id, owner)
+# @require_POST
+# @json_response
+# def internal_add_keeper_archiving_task(requets):
+    # try:
+        # repo_id = request.POST.get('repo_id')
+        # owner = request.POST.get('owner')
+    # except KeyError:
+        # return HttpResponseBadRequest('invalid params')
+    # #TODO: check repo_id
+    # resp = vars(add_keeper_archiving_task(repo_id, owner))
+    # return resp['_dict']
 
-@json_response
-def internal_query_keeper_archiving_task(requets, repo_id, version):
-    return query_keeper_archiving_status(repo_id, version)
-
+# @json_response
+# def internal_query_keeper_archiving_task(requets, repo_id, version):
+    # resp = vars(query_keeper_archiving_status(repo_id, version))
+    # return resp['_dict']
 
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
     def __init__(self):
-        self.db_oper = DBOper()
+        # self.db_oper = DBOper()
         self.msg_dict = {
             MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
             MSG_ADD_TASK: 'Cannot start archiving, please try later.',
@@ -381,12 +395,18 @@ class ArchiveLib(APIView):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
 
+        return JsonResponse(add_keeper_archiving_task(repo_id, user_email))
+
+
+    def post(self, request):
+        repo_id = request.POST.get('repo_id', None)
+        owner = request.POST.get('owner', None)
 
         # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, user_email)
+        resp_archive = add_keeper_archiving_task(repo_id, owner)
         if resp_archive.status == 'ERROR':
             msg = self.msg_dict[resp_archive.error]
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, user_email)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, owner)
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'

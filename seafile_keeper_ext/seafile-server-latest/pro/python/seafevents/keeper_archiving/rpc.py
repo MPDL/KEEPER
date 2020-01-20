@@ -12,14 +12,10 @@ class KeeperArchivingRpcClient(ccnet.RpcClientBase):
     def add_task(self, repo_id, owner):
         pass
 
-    @searpc_func("object", ["string", "string"])
-    def query_task_status(self, repo_id, version):
+    @searpc_func("object", ["string", "string", "string"])
+    def query_task_status(self, repo_id, owner, version):
         pass
 
-    @searpc_func("object", ["string", "string"])
-    def get_quota(self, repo_id, owner):
-        pass
-
-    @searpc_func("object", ["string", "string"])
-    def is_snapshot_archived(self, repo_id, owner):
+    @searpc_func("object", ["strng", "string", "string"])
+    def check_repo_archiving_status(self, repo_id, owner, action):
         pass

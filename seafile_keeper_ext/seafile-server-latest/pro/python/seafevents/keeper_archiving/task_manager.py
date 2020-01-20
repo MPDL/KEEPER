@@ -22,6 +22,8 @@ MSG_ADD_TASK = 'Cannot add task.'
 MSG_WRONG_OWNER = 'Wrong owner of the library.'
 MSG_MAX_NUMBER_ARCHIVES_REACHED = 'Max number of archives for library is reached.'
 MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota.'
+MSG_CANNOT_CHECK_REPO_SIZE = 'Cannot check library size.'
+MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check snapshot archiving status.'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
 MSG_ADD_MD = 'Cannot attach metadata file to library archive.'
@@ -376,14 +378,14 @@ class Worker(threading.Thread):
 
             ssh = SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ### ssh.load_system_host_keys() ### no keys, do not load
+            # ssh.load_system_host_keys()### no keys, do not load
 
             ssh.connect(self.hpss_url, username=self.hpss_user, password=self.hpss_password)
 
             transport = ssh.get_transport()
             transport.set_keepalive(0)
             # best performance options
-            transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
+            # transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
             transport.use_compression(False)
 
             sftp = paramiko.SFTPClient.from_transport(transport)
@@ -396,9 +398,28 @@ class Worker(threading.Thread):
                     sftp.mkdir(remote_dir)
                     _l.info("Dir {} is created on HPSS".format(remote_dir))
                 except IOError as e:
-                    _l.error("Cannot create dir {} on HPSS: {}, dir already exists?".format(remote_dir, e))
+                    _l.info("Cannot create dir {} on HPSS: {}, dir already exists?".format(remote_dir, e))
 
-            # push archive tar and md file
+            # push archive tar
+
+            ###### subprocess.Popen implementation
+            # remote_archive_path = remote_dir
+            # import subprocess
+
+            # args = [ "sshpass", "-p",  "'"+ self.hpss_password +"'",  "scp", "-c", "aes128-gcm@openssh.com", task._archive_path,
+                    # # "{}:{}@{}:{}".format(self.hpss_user, self.hpss_password, self.hpss_url, remote_archive_path)]
+                    # "{}@{}:{}".format(self.hpss_user, self.hpss_url, remote_archive_path)]
+            # _l.info(" ".join(args))
+            # p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # for line in p.stderr:
+                # _l.info(line)
+            # for line in p.stdout:
+                # _l.info(line)
+
+            # sts = os.waitpid(p.pid, 0)
+            # _l.info("scp status: {}".format(sts))
+            ###### end of subprocess.Popen implementation
+
             remote_archive_path = os.path.join(remote_dir, os.path.basename(task._archive_path))
             sftp.put(task._archive_path, remotepath=remote_archive_path)
 
@@ -634,7 +655,7 @@ class TaskManager(object):
             ret['status'] = task.status
         return ret
 
-    def query_task_status(self, repo_id, version=None):
+    def query_task_status(self, repo_id, owner=None, version=None):
         """Query archiving task"""
         ret = {'repo_id': repo_id}
         with self._tasks_map_lock:
@@ -660,46 +681,34 @@ class TaskManager(object):
                     })
         return ret
 
-    def get_quota(self, repo_id, owner):
-        """Get archiving quota from DB and config
-        """
-        resp = {'repo_id': repo_id, 'owner': owner}
-        try:
-            repo = seafile_api.get_repo(repo_id)
-            if owner != seafile_api.get_repo_owner(repo_id):
-                resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_WRONG_OWNER
-                })
-                return resp
-            # get current version
-            curr_ver = self._db_oper.get_max_archive_version(repo_id, owner)
-            if curr_ver is None:
-                resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_DB_ERROR
-                })
-                return resp
-            curr_ver = 0 if curr_ver == -1 else curr_ver
-            # get quota from db or from config
-            quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
-            resp.update({
-                'curr_ver': curr_ver,
-                'remains': quota - curr_ver
-            })
-            return resp
-        except Exception as e:
-            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
-            resp.update({
-                'status': 'ERROR',
-                'error': MSG_CANNOT_GET_QUOTA
-            })
-            return resp
 
-    def is_snapshot_archived(self, repo_id, owner):
+    ACTION_ERROR_MSG = {
+        'is_snapshot_archived': ['Cannot check snapshot archiving status for library {} and owner {}: {}', MSG_CANNOT_CHECK_SNAPSHOT_STATUS],
+        'get_quota': ['Cannot get archiving quota for library {} and owner {}: {}', MSG_CANNOT_GET_QUOTA],
+        'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
+    }
+    def check_repo_archiving_status(self, repo_id, owner, action):
         """TODO:
         """
-        resp = {'repo_id': repo_id, 'owner': owner}
+        if repo_id is None:
+            return {
+                'status': 'ERROR',
+                'error': 'No repo_id is defined.'
+            }
+
+        if owner is None:
+            return {
+                'status': 'ERROR',
+                'error': 'No owner is defined.'
+            }
+
+        if action is None:
+            return {
+                'status': 'ERROR',
+                'error': 'No action is defined.'
+            }
+
+        resp = {'repo_id': repo_id, 'owner': owner, 'action': action}
         try:
             repo = seafile_api.get_repo(repo_id)
             if owner != seafile_api.get_repo_owner(repo_id):
@@ -709,26 +718,64 @@ class TaskManager(object):
                 })
                 return resp
 
-            # get root commit_id
-            commit_id = get_commit(repo).commit_id
-            is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
-            if is_archived is None:
+            ####### is_snapshot_archived
+            if action == 'is_snapshot_archived':
+                # get root commit_id
+                commit_id = get_commit(repo).commit_id
+                is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)
+                if is_archived is None:
+                    resp.update({
+                        'status': 'ERROR',
+                        'error': MSG_DB_ERROR
+                    })
+                    return resp
                 resp.update({
-                    'status': 'ERROR',
-                    'error': MSG_DB_ERROR
+                    'is_snapshot_archived': 'true' if is_archived else 'false',
                 })
                 return resp
-            resp.update({
-                'is_snapshot_archived': 'true' if is_archived else 'false',
-            })
-            return resp
+
+            ####### get_quota
+            if action == 'get_quota':
+                # get current version
+                curr_ver = self._db_oper.get_max_archive_version(repo_id, owner)
+                if curr_ver is None:
+                    resp.update({
+                        'status': 'ERROR',
+                        'error': MSG_DB_ERROR
+                    })
+                    return resp
+                curr_ver = 0 if curr_ver == -1 else curr_ver
+                # get quota from db or from config
+                quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
+                resp.update({
+                    'curr_ver': curr_ver,
+                    'remains': quota - curr_ver
+                })
+                return resp
+
+
+            ####### max_repo_size
+            if action == 'is_repo_too_big':
+                repo_size = seafile_api.get_repo_size(repo_id)
+                resp.update({
+                    'is_repo_too_big': 'true' if repo_size > self.archive_max_size else 'false',
+                })
+                return resp
+
+            ##### no action found!!!!
+            return {
+                'status': 'ERROR',
+                'error': 'Unknown action: ' + action
+            }
+
         except Exception as e:
-            _l.error('Cannot get archiving quota for library {} and owner {}: {}'.format(repo_id, owner, e))
+            _l.error(ACTION_ERROR_MSG[action][0].format(repo_id, owner, e))
             resp.update({
                 'status': 'ERROR',
-                'error': MSG_CANNOT_GET_QUOTA
+                'error': ACTION_ERROR_MSG[action][1]
             })
             return resp
+
 
 
     def run(self):
