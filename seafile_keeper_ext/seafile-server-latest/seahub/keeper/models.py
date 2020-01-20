@@ -237,8 +237,8 @@ class DoiRepoManager(models.Manager):
     def get_doi_by_commit_id(self, repo_id, commit_id):
         return super(DoiRepoManager, self).filter(repo_id=repo_id, commit_id=commit_id)
 
-    def get_doi_by_owner(self, owner):
-        return super(DoiRepoManager, self).filter(owner=owner)
+    def get_active_doi_by_owner(self, owner):
+        return super(DoiRepoManager, self).exclude(rm__isnull=False).filter(owner=owner)
 
     def get_doi_repos_by_repo_id(self, repo_id):
         return super(DoiRepoManager, self).filter(repo_id=repo_id)
