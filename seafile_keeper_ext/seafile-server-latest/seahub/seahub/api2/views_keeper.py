@@ -192,7 +192,7 @@ def get_authors_from_md(md):
     for author in authors:
         author_array = author.split(";")
         author_name = author_array[0].strip()
-        name_array = author_name.split(", ")
+        name_array = author_name.split(",")
         tmpauthor = ''
         for i in xrange(len(name_array)):
             if ( i <= 0 and len(name_array[i].strip()) > 1 ):
@@ -245,10 +245,10 @@ def LandingPageView(request, repo_id):
 def get_authors_from_catalog_md(md):
     result_authors = []
     for author in md.get("authors"):
-        name_array = author.get("name").split(", ")
-        tmp = name_array[0]
+        name_array = author.get("name").split(",")
+        tmp = name_array[0].strip()
         if name_array[1]:
-            tmp += ', ' + name_array[1][:1] + '.'
+            tmp += ', ' + name_array[1].strip()[:1] + '.'
         affs = author.get("affs")
         if affs:
             tmp += " (" + ", ".join(map(unicode.strip, affs)) + ")"
