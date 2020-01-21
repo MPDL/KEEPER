@@ -128,8 +128,6 @@ urlpatterns = [
 from seahub.settings import KEEPER_ARCHIVING_NODE
 if KEEPER_ARCHIVING_NODE:
     urlpatterns += [
-        # url(r'^archiving/internal/add-task/$', internal_add_keeper_archiving_task),
-        # url(r'^archiving/internal/status/$', internal_query_keeper_archiving_task),
         url(r'^archiving/internal/add-task/$', ArchiveLib.as_view(), name='archive_lib'),
         url(r'^archiving/internal/status/$', CanArchive.as_view(), name='can_archive'),
     ]
