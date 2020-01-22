@@ -28,6 +28,7 @@ MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
 MSG_ADD_MD = 'Cannot attach metadata file to library archive.'
 MSG_CREATE_TAR = 'Cannot create tar file for archive.'
+MSG_CALC_CHECKSUM = 'Cannot cannot calculate checksum for archive.'
 MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS.'
 MSG_ARCHIVING_SUCCESSFUL = 'Library is successfully archived.'
 MSG_CANNOT_FIND_ARCHIVE = 'Cannot find archive.'
@@ -172,11 +173,24 @@ class KeeperArchivingTask(object):
     status = property(get_status, set_status, None, "status of this task")
 
 
-def _set_error(task, msg, error):
+def _update_archive_db_on_error(task, error_msg):
+    assert task.repo_id is not None
+    assert task._repo is not None
+    assert task.owner is not None
+    assert task._commit is not None
+    assert task.version is not None
+
+    task_manager._db_oper.add_or_update_archive(task.repo_id, task.owner, task.version,
+        task.checksum, task.external_path, task.md, task.repo_name, task._commit.commit_id,
+        task.status, error_msg)
+
+
+def _set_error(task, msg, error_msg):
     task.msg = msg
     task.error = error
     task.status = 'ERROR'
     _l.error(task.error)
+    # _update_archive_db_on_error(task, error_msg)
 
 
 class Worker(threading.Thread):
@@ -276,8 +290,6 @@ class Worker(threading.Thread):
         # if self.hpss_enabled and task.status == 'DONE':
         # _remove_dir_or_file(task._archive_path)
         # task._archive_path = None
-        # TODO: md can be stored in archived_storage to make archive search faster
-        # _remove_dir_or_file(task._md_path)
         # task._md_path = None
 
     def _extract_repo(self, task):
@@ -311,7 +323,7 @@ class Worker(threading.Thread):
                     shutil.copyfile(md_path, new_md_path)
                     task._md_path = new_md_path
                 except Exception as e:
-                    _set_error(task, MSG_EXTRACT_REPO,
+                    _set_error(task, MSG_ADD_MD,
                                'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
                     return False
                 try:
@@ -320,14 +332,14 @@ class Worker(threading.Thread):
                     task._md = md.read()
                     md.close()
                 except Exception as e:
-                    _set_error(task, MSG_EXTRACT_REPO,
+                    _set_error(task, MSG_ADD_MD,
                                'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
                     return False
             else:
-                _set_error(task, MSG_EXTRACT_REPO, 'Cannot find md file {} for task {}'.format(md_path, task))
+                _set_error(task, MSG_ADD_MD, 'Cannot find md file {} for task {}'.format(md_path, task))
                 return False
         else:
-            _set_error(task,
+            _set_error(task, MSG_ADD_MD,
                        'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
             return False
 
@@ -356,7 +368,12 @@ class Worker(threading.Thread):
         else:
             archive.close()
             _l.info('Calculate tar checksum for repo: {}...'.format(task.repo_id))
-            task._checksum = _generate_file_md5(task._archive_path)
+            try:
+                task._checksum = _generate_file_md5(task._archive_path)
+            except Exception as e:
+                _set_error(task, MSG_CALC_CHECKSUM,
+                           'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, e))
+
             _l.info('Checksum for repo {}: '.format(task._checksum))
 
         return True
@@ -366,7 +383,6 @@ class Worker(threading.Thread):
         Push created archive tar to HPSS
         """
         assert task._archive_path is not None
-
 
         if not self.hpss_enabled:
             _l.info('HPSS is not enabled, do not push archive to it')
@@ -465,6 +481,7 @@ class Worker(threading.Thread):
         extract repo from object storage to tmp dir ==> create tar.gz ==> put to archive storage
         """
         task.status = 'PROCESSING'
+
 
         success = self._extract_repo(task)
         if not success:

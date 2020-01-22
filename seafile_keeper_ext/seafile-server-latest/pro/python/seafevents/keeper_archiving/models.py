@@ -18,10 +18,12 @@ class KeeperArchive(KeeperBase):
     repo_name = Column(String(length=255), nullable=False)
     owner = Column(String(length=255), nullable=False, index=True)
     version = Column(SmallInteger, index=True, nullable=False)
-    checksum = Column(String(length=100), nullable=False)
-    external_path = Column(Text, nullable=False)
+    checksum = Column(String(length=100))
+    external_path = Column(Text)
+    status = Column(String(length=30), default='NOT_QUEUED')
+    error = Column(Text)
     #like mediumtext, 16 MB
-    md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN), nullable=False)
+    md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN))
     created = Column(DateTime, server_default=func.now(), index=True)
     UniqueConstraint(repo_id, owner, version, name='unq_keeper_archive_repo_id_version')
     __table_args__ = {'extend_existing': True}
