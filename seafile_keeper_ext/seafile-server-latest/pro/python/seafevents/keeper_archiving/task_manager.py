@@ -11,6 +11,7 @@ import threading
 import json
 import paramiko
 from paramiko import SSHClient
+import subprocess
 
 from seafobj import commit_mgr, fs_mgr
 from seahub_settings import ARCHIVE_METADATA_TARGET
@@ -173,7 +174,7 @@ class KeeperArchivingTask(object):
     status = property(get_status, set_status, None, "status of this task")
 
 
-def _update_archive_db_on_error(task, error_msg):
+def _update_archive_db_on_error(task, error):
     assert task.repo_id is not None
     assert task._repo is not None
     assert task.owner is not None
@@ -182,14 +183,14 @@ def _update_archive_db_on_error(task, error_msg):
 
     task_manager._db_oper.add_or_update_archive(task.repo_id, task.owner, task.version,
         task.checksum, task.external_path, task.md, task.repo_name, task._commit.commit_id,
-        task.status, error_msg)
+        task.status, error)
 
 
-def _set_error(task, msg, error_msg):
+def _set_error(task, msg, error):
     task.msg = msg
     task.error = error
     task.status = 'ERROR'
-    _l.error(task.error)
+    _l.error(json.dumps({'message' : msg, 'error' : error}))
     # _update_archive_db_on_error(task, error_msg)
 
 
@@ -373,7 +374,6 @@ class Worker(threading.Thread):
             except Exception as e:
                 _set_error(task, MSG_CALC_CHECKSUM,
                            'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, e))
-
             _l.info('Checksum for repo {}: '.format(task._checksum))
 
         return True
@@ -414,30 +414,27 @@ class Worker(threading.Thread):
                     sftp.mkdir(remote_dir)
                     _l.info("Dir {} is created on HPSS".format(remote_dir))
                 except IOError as e:
-                    _l.info("Cannot create dir {} on HPSS: {}, dir already exists?".format(remote_dir, e))
+                    _l.info("Cannot create dir {} on HPSS: {}, dir already exists? Trying process further... ".format(remote_dir, e))
 
             # push archive tar
 
-            ###### subprocess.Popen implementation
-            # remote_archive_path = remote_dir
-            # import subprocess
+            ###### subprocess.Popen fast implementation
+            remote_archive_path = os.path.join(remote_dir, os.path.basename(task._archive_path))
 
-            # args = [ "sshpass", "-p",  "'"+ self.hpss_password +"'",  "scp", "-c", "aes128-gcm@openssh.com", task._archive_path,
-                    # # "{}:{}@{}:{}".format(self.hpss_user, self.hpss_password, self.hpss_url, remote_archive_path)]
-                    # "{}@{}:{}".format(self.hpss_user, self.hpss_url, remote_archive_path)]
-            # _l.info(" ".join(args))
-            # p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # for line in p.stderr:
-                # _l.info(line)
-            # for line in p.stdout:
-                # _l.info(line)
+            args = [ "scp", "-c", "aes128-gcm@openssh.com", "-o", "StrictHostKeyChecking=no",
+                    task._archive_path, "{}@{}:{}".format(self.hpss_user, self.hpss_url, remote_archive_path) ]
 
-            # sts = os.waitpid(p.pid, 0)
-            # _l.info("scp status: {}".format(sts))
+            _l.info(" ".join(args))
+            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            sts = os.waitpid(p.pid, 0)
+
+            if sts[1] != 0:
+                raise Exception('Error by {}, error code: {}'.format(" ".join(args), sts[1]))
+
             ###### end of subprocess.Popen implementation
 
-            remote_archive_path = os.path.join(remote_dir, os.path.basename(task._archive_path))
-            sftp.put(task._archive_path, remotepath=remote_archive_path)
+            # remote_archive_path = os.path.join(remote_dir, os.path.basename(task._archive_path))
+            # sftp.put(task._archive_path, remotepath=remote_archive_path)
 
             # push md file
             sftp.put(task._md_path, remotepath=os.path.join(remote_dir, os.path.basename(task._md_path)))
@@ -446,7 +443,10 @@ class Worker(threading.Thread):
             _l.info('Calculate checksum for {} on remote...'.format(task._archive_path))
             stdin, stdout, stderr = ssh.exec_command('md5sum {}'.format(remote_archive_path))
             # block until command finished
-            stdout.channel.recv_exit_status()
+            exit_status = stdout.channel.recv_exit_status()
+            if exit_status != 0:
+                raise Exception('Cannot calculate checksum: {}, exit_status: {}'.format(''.join(stderr.read()), exit_status))
+
             resp = ''.join(stdout.read())
             remote_checksum = resp.split()[0]
             _l.info('Remote checksum: {}'.format(remote_checksum))
@@ -465,8 +465,6 @@ class Worker(threading.Thread):
         except Exception as e:
             _set_error(task, MSG_PUSH_TO_HPSS,
                        'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, e))
-            # TODO: Do not clean tmp files/dirs, try to resume or notify
-            # keeper admin
             return False
         finally:
             if sftp:
@@ -608,6 +606,7 @@ class TaskManager(object):
             _set_error(at, MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
             return at
         owner_quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
+        _l.info("db_quota;{},archives_per_library:{}".format(self._db_oper.get_quota(repo_id, owner),self.archives_per_library))
         if max_ver >= owner_quota:
             _set_error(at, MSG_MAX_NUMBER_ARCHIVES_REACHED,
                        'Max number of archives {} for library {} and owner {} is reached'.format(max_ver, repo_id,

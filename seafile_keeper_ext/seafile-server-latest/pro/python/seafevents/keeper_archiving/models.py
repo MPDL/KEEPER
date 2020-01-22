@@ -21,7 +21,7 @@ class KeeperArchive(KeeperBase):
     checksum = Column(String(length=100))
     external_path = Column(Text)
     status = Column(String(length=30), default='NOT_QUEUED')
-    error = Column(Text)
+    error_msg = Column(Text)
     #like mediumtext, 16 MB
     md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN))
     created = Column(DateTime, server_default=func.now(), index=True)

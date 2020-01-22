@@ -18,11 +18,11 @@ def parse_workers(workers, default_workers):
     try:
         workers = int(workers)
     except ValueError:
-        logging.warning('invalid workers value "%s"' % workers)
+        logging.warning('invalid workers value "{}"'.format(workers))
         workers = default_workers
 
     if workers <= 0 or workers > 5:
-        logging.warning('insane workers value "%s"' % workers)
+        logging.warning('insane workers value "{}"'.format(workers))
         workers = default_workers
 
     return workers
