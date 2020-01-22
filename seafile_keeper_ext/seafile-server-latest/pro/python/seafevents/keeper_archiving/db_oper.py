@@ -129,19 +129,23 @@ class DBOper(object):
         finally:
             self.kdb_session.remove()
 
-    def update_archive(self, repo_id, owner, version, checksum, external_path, md, ts, repo_name, commit_id):
+    def add_or_update_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id, status, error_msg):
         try:
             q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
                                                              KeeperArchive.version == version)
             a = q.first()
             if not a:
-                self.add_archive(repo_id, owner, version, checksum, external_path, _prepare_md(md), repo_name, commit_id)
+                self.add_archive(repo_id, owner, version, checksum, external_path, _prepare_md(md), repo_name, commit_id, status, error_msg)
             else:
-                a.owner = owner
+                a.status = status
+                # if checksum is not None:
                 a.checksum = checksum
+                # if external_path is not None:
                 a.external_path = external_path
+                # if md is not None:
                 a.md = _prepare_md(md)
-                a.timestamp = ts
+                # if error_msg is not None:
+                a.error_msg = error_msg
                 a.commit()
                 self.kdb_session.flush()
         except Exception as e:
