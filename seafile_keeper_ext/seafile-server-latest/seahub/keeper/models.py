@@ -75,11 +75,12 @@ class CatalogManager(models.Manager):
         else:
             return None
 
-    def add_or_update_by_repo_id(self, repo_id, owner, proj_md):
+    def add_or_update_by_repo_id(self, repo_id, owner, proj_md, repo_name):
         try:
             catalog = self.get(repo_id=repo_id)
             catalog.md = proj_md
             catalog.owner = owner
+            catalog.repo_name = repo_name
         except Catalog.DoesNotExist:
             catalog = self.model(repo_id=repo_id, owner=owner, md=proj_md)
         catalog.save()
@@ -106,6 +107,7 @@ class Catalog(models.Model):
     md = PickledObjectField()
     rm = models.DateTimeField(blank=True, default=None, null=True)
     is_archived = models.BooleanField(default=False)
+    repo_name = models.CharField(max_length=255, null=False)
     objects = CatalogManager()
 
 

@@ -30,7 +30,7 @@ from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task, delegate_query_keeper_archiving_status, query_keeper_archiving_status, check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
+from seafevents.keeper_archiving.task_manager import MSG_LIBRARY_TOO_BIG, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
 
@@ -362,19 +362,7 @@ class ArchiveLib(APIView):
     """ create keeper archive for a library """
     def __init__(self):
         self.msg_dict = {
-            MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
-            MSG_ADD_TASK: 'Cannot start archiving, please try later.',
-            MSG_WRONG_OWNER: 'Only the owner can start archiving, please contact the library owner.',
-            MSG_MAX_NUMBER_ARCHIVES_REACHED: 'Please contact support if you want to have more archives',
-            MSG_CANNOT_GET_QUOTA: 'Cannot find archive quota for this library.',
-            MSG_LIBRARY_TOO_BIG: '"Archive is only available for Libraries under 500G.',
-            MSG_EXTRACT_REPO: 'Cannot extract current library, please contact support',
-            MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
-            MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
-            MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
-            MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.',
-            MSG_CANNOT_FIND_ARCHIVE: MSG_CANNOT_FIND_ARCHIVE,
-            MSG_SNAPSHOT_ALREADY_ARCHIVED: MSG_SNAPSHOT_ALREADY_ARCHIVED,
+            MSG_SNAPSHOT_ALREADY_ARCHIVED: 'The snapshot of the library is already archived.',
         }
 
     def get(self, request):
@@ -389,15 +377,16 @@ class ArchiveLib(APIView):
         # add new archiving task
         resp_archive = add_keeper_archiving_task(repo_id, owner)
         if resp_archive.status == 'ERROR':
-            msg = self.msg_dict[resp_archive.error]
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, owner)
+            if resp_archive.error in self.msg_dict:
+                msg = self.msg_dict[resp_archive.error]
+            else:
+                msg = resp_archive.msg
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
             })
 
         # status for "QUEUED" and "DONE"
-        # TODO: add notification here if it is needed
         msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
                 'msg': msg,
