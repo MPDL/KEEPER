@@ -30,7 +30,9 @@ define([
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "metadata_error") {
           keeperUtils.archive_failed(repo_name, data.status, data.msg);
-        }
+        } else if (data.status === "system_error") {
+          keeperUtils.archive_failed(repo_name, data.status, data.msg);
+         }
       },
       error: function (error) {
         keeperUtils.archive_failed(repo_name, "unknown", "");
@@ -87,6 +89,9 @@ define([
         archive_info = "Can not archive, the library is too big.";
         break;
       case "metadata_error":
+        archive_info = error_msg;
+        break;
+      case "system_error":
         archive_info = error_msg;
         break;
       default:

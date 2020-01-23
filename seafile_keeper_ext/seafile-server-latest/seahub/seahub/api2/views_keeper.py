@@ -30,7 +30,7 @@ from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task, delegate_query_keeper_archiving_status, query_keeper_archiving_status, check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
+from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
 
@@ -317,11 +317,19 @@ class CanArchive(APIView):
         # library is already in the task query
         resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = "Library is already in archiving task queue, status: " + resp_query.status
+            msg = "Library is already processed: " + resp_query.msg
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
+        elif resp_query.status == 'ERROR':
+            #TODO: correct message
+            msg = "Cannot archive the library, Keeper Team is already notified and looking for solution!"
+            return JsonResponse({
+                'msg': msg,
+                'status': 'system_error'
+            })
+
 
         resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
         if resp_is_archived.is_snapshot_archived == 'true':
@@ -353,7 +361,6 @@ class CanArchive(APIView):
             'status': "success"
         })
 
-
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
@@ -369,7 +376,7 @@ class ArchiveLib(APIView):
             MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
             MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
             MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
-            MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.',
+            MSG_ARCHIVED: 'Library is successfully archived.',
             MSG_CANNOT_FIND_ARCHIVE: MSG_CANNOT_FIND_ARCHIVE,
             MSG_SNAPSHOT_ALREADY_ARCHIVED: MSG_SNAPSHOT_ALREADY_ARCHIVED,
         }
@@ -393,8 +400,6 @@ class ArchiveLib(APIView):
                 'status': 'error'
             })
 
-        # status for "QUEUED" and "DONE"
-        # TODO: add notification here if it is needed
         msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
                 'msg': msg,
