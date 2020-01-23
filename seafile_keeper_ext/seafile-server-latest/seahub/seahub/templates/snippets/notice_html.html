@@ -62,8 +62,9 @@
         {% json_to_var notice.detail as archive_msg %}
         {% if archive_msg.status == "prepare" %}
         <p class="brief">{{archive_msg.msg}}</p>
-        {% endif %}
+        {% else %}
         <p class="brief">Archive for <b>{{archive_msg.repo_name}}</b> is {{archive_msg.status}}</p>
+        {% endif %}
 
     {% endif %}
 

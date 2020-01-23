@@ -30,7 +30,7 @@ from requests.exceptions import ConnectionError, Timeout
 from keeper.utils import add_keeper_archiving_task, delegate_query_keeper_archiving_status, query_keeper_archiving_status, check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVING_SUCCESSFUL, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
+from seafevents.keeper_archiving.task_manager import MSG_LIBRARY_TOO_BIG, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +192,7 @@ def get_authors_from_md(md):
     for author in authors:
         author_array = author.split(";")
         author_name = author_array[0].strip()
-        name_array = author_name.split(", ")
+        name_array = author_name.split(",")
         tmpauthor = ''
         for i in xrange(len(name_array)):
             if ( i <= 0 and len(name_array[i].strip()) > 1 ):
@@ -245,10 +245,10 @@ def LandingPageView(request, repo_id):
 def get_authors_from_catalog_md(md):
     result_authors = []
     for author in md.get("authors"):
-        name_array = author.get("name").split(", ")
-        tmp = name_array[0]
+        name_array = author.get("name").split(",")
+        tmp = name_array[0].strip()
         if name_array[1]:
-            tmp += ', ' + name_array[1][:1] + '.'
+            tmp += ', ' + name_array[1].strip()[:1] + '.'
         affs = author.get("affs")
         if affs:
             tmp += " (" + ", ".join(map(unicode.strip, affs)) + ")"
@@ -258,7 +258,7 @@ def get_authors_from_catalog_md(md):
 
 
 
-def ArchiveView(request, repo_id, version_id):
+def ArchiveView(request, repo_id, version_id, is_tombstone):
     archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
     if archive_repos is None or len(archive_repos) == 0:
         return render(request, '404.html')
@@ -266,20 +266,23 @@ def ArchiveView(request, repo_id, version_id):
     archive_repo = archive_repos[0]
     repo_owner = get_repo_owner(repo_id)
     archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
+    commit_id = archive_repo.commit_id
+    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+
     if repo_owner is None:
+        if is_tombstone == '1':
+            return render(request, './catalog_detail/tombstone_page.html', {
+                    'md_dict': archive_md,
+                    'authors': '; '.join(get_authors_from_md(archive_md)),
+                    'institute': archive_md.get("Institute").replace(";", "; "),
+                    'library_name': archive_repo.repo_name,
+                    'owner_contact_email': email2contact_email(repo_owner) })
+
         repo_owner_email = SERVER_EMAIL
-        return render(request, './catalog_detail/tombstone_page.html', {
-            'md_dict': archive_md,
-            'authors': '; '.join(get_authors_from_md(archive_md)),
-            'institute': archive_md.get("Institute").replace(";", "; "),
-            'library_name': archive_repo.repo_name,
-            'owner_contact_email': email2contact_email(repo_owner) })
+        link = SERVICE_URL + '/archive/libs/' + repo_id + '/' + version_id + '/1/'
     else:
         repo_owner_email = email2contact_email(repo_owner)
-
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-    commit_id = archive_repo.commit_id
-    link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+        link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,
@@ -359,19 +362,7 @@ class ArchiveLib(APIView):
     """ create keeper archive for a library """
     def __init__(self):
         self.msg_dict = {
-            MSG_DB_ERROR: 'There is a little problem with the server, please try later.',
-            MSG_ADD_TASK: 'Cannot start archiving, please try later.',
-            MSG_WRONG_OWNER: 'Only the owner can start archiving, please contact the library owner.',
-            MSG_MAX_NUMBER_ARCHIVES_REACHED: 'Please contact support if you want to have more archives',
-            MSG_CANNOT_GET_QUOTA: 'Cannot find archive quota for this library.',
-            MSG_LIBRARY_TOO_BIG: '"Archive is only available for Libraries under 500G.',
-            MSG_EXTRACT_REPO: 'Cannot extract current library, please contact support',
-            MSG_ADD_MD: 'Cannot attack metadata file to library archive, please contact support.',
-            MSG_CREATE_TAR: 'Cannot create tar file for archive, please contact support.',
-            MSG_PUSH_TO_HPSS: 'Cannot push archive to HPSS, please contact support.',
-            MSG_ARCHIVING_SUCCESSFUL: 'Library is successfully archived.',
-            MSG_CANNOT_FIND_ARCHIVE: MSG_CANNOT_FIND_ARCHIVE,
-            MSG_SNAPSHOT_ALREADY_ARCHIVED: MSG_SNAPSHOT_ALREADY_ARCHIVED,
+            MSG_SNAPSHOT_ALREADY_ARCHIVED: 'The snapshot of the library is already archived.',
         }
 
     def get(self, request):
@@ -386,15 +377,16 @@ class ArchiveLib(APIView):
         # add new archiving task
         resp_archive = add_keeper_archiving_task(repo_id, owner)
         if resp_archive.status == 'ERROR':
-            msg = self.msg_dict[resp_archive.error]
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_ARCHIVING_MSG, owner)
+            if resp_archive.error in self.msg_dict:
+                msg = self.msg_dict[resp_archive.error]
+            else:
+                msg = resp_archive.msg
             return JsonResponse({
                 'msg': msg,
                 'status': 'error'
             })
 
         # status for "QUEUED" and "DONE"
-        # TODO: add notification here if it is needed
         msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
                 'msg': msg,

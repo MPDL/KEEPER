@@ -165,7 +165,7 @@ def generate_catalog_entry(repo):
                 proj["is_certified"] = is_certified_by_repo_id(repo.id)
 
         # add or update project metadata in DB
-        c = Catalog.objects.add_or_update_by_repo_id(repo.id, email, proj)
+        c = Catalog.objects.add_or_update_by_repo_id(repo.id, email, proj, repo.name)
         # Catalog_id
         proj["catalog_id"] = str(c.catalog_id)
 
