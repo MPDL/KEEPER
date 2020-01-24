@@ -7961,4 +7961,11 @@ msgstr "DOI erfolgreich zugewiesen"
 msgid "Please check out notifications for more details."
 msgstr "Bitte beachten Sie die Benachrichtigungen für weitere Details."
 
+msgid "Library Details"
+msgstr "Bibliotheksdetails"
 
+msgid "Archive Library"
+msgstr "Bibliothek archivieren"
+
+msgid "Archive"
+msgstr "Archivieren"

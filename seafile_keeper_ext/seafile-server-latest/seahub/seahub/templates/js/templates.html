@@ -1528,10 +1528,10 @@
 
         <li class="tab" id="keeper-landing-page-nav">
             <% if (show_landing_page_list) { %>
-            <a href="#" class="ellipsis" title="Landing Pages"><span class="toggle-icon icon-caret-down fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-folder"></span>Landing Pages</a>
+            <a href="#" class="ellipsis" title="Library Details"><span class="toggle-icon icon-caret-down fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-folder"></span>{% trans "Library Details" %}</a>
             <ul class="keeper-landing-page-list">
             <% } else { %>
-            <a href="#" class="ellipsis" title="Landing Pages"><span class="toggle-icon icon-caret-left fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-list-view"></span>Landing Pages</a>
+            <a href="#" class="ellipsis" title="Library Details"><span class="toggle-icon icon-caret-left fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-list-view"></span>{% trans "Library Details" %}</a>
             <ul class="keeper-landing-page-list hide">
             <% } %>
                 <% for (var i = 0, len = landing_pages.length; i < len; i++) { %>
