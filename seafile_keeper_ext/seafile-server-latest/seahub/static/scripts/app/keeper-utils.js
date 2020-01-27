@@ -21,7 +21,7 @@ define([
         if (data.status === "success") {
           keeperUtils.archive(repo_name, repo_id, data.quota);
         } else if (data.status === "in_processing") {
-            Common.feedback(data.msg, data.status, 8000);
+            Common.feedback(data.msg, 'success', 8000);
         } else if (data.status === "quota_expired") {
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "snapshot_archived") {

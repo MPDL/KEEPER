@@ -9,9 +9,8 @@ import shutil
 import tarfile
 import threading
 import json
-import paramiko
-from paramiko import SSHClient
 import subprocess
+from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
 from seafobj import commit_mgr, fs_mgr
 from seahub_settings import ARCHIVE_METADATA_TARGET
@@ -35,12 +34,19 @@ MSG_ARCHIVED = 'The library is successfully archived.'
 MSG_CANNOT_FIND_ARCHIVE = 'Cannot find archive.'
 MSG_SNAPSHOT_ALREADY_ARCHIVED = 'The snapshot of the library is already archived.'
 MSG_LAST_TASK_FAILED = 'The last archiving task is failed.'
+MSG_CANNOT_QUERY_TASK = 'Cannot query archiving task.'
 MSG_UNKNOWN_STATUS = 'Unknown status of archiving task.'
 MSG_PROCESSING_STATUS = {
+    'BUILD_TASK': 'Starting archiving task...',
     'EXTRACT_REPO': 'Extracting library from object storage...',
     'ADD_MD': 'Adding metadata file to the archive...',
     'CREATE_TAR': 'Creating archiving tar from extracted library...',
     'PUSH_TO_HPSS': 'Pushing archive to High Performance Storage System...',
+}
+ACTION_ERROR_MSG = {
+    'is_snapshot_archived': ['Cannot check snapshot archiving status for library {} and owner {}: {}', MSG_CANNOT_CHECK_SNAPSHOT_STATUS],
+    'get_quota': ['Cannot get archiving quota for library {} and owner {}: {}', MSG_CANNOT_GET_QUOTA],
+    'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
 }
 
 __all__ = ["task_manager"]
@@ -115,6 +121,33 @@ def get_root_dir(repo, commit_root_id):
     Get root commit dir
     """
     return fs_mgr.load_seafdir(repo.id, repo.version, commit_root_id)
+
+
+def _get_messages_part(task):
+    """
+    Populate messages part of response for task
+    """
+    resp = {}
+    if task.status == 'ERROR':
+        resp.update({
+            'msg': task.msg,
+            'status': 'ERROR',
+            'error': task.error
+        })
+    elif task.status in ('BUILD_TASK', 'EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS'):
+        resp.update({
+            'msg': MSG_PROCESSING_STATUS[task.status],
+            'status': 'PROCESSING'
+        })
+    else:
+        resp.update({
+            'msg': MSG_UNKNOWN_STATUS,
+            'status': 'ERROR',
+            'error': "Unknown status {} of archiving task".format(task.status),
+        })
+
+    return resp
+
 
 class KeeperArchivingTask(object):
     """ A task is in one of these status:
@@ -218,8 +251,6 @@ class Worker(threading.Thread):
 
         self._tasks_queue = tasks_queue
 
-        self._index = index
-
         self.local_storage = local_storage
 
         self.hpss_enabled = hpss_params[_cfg.key_hpss_enabled]
@@ -229,6 +260,8 @@ class Worker(threading.Thread):
             self.hpss_user = hpss_params[_cfg.key_hpss_user]
             self.hpss_password = hpss_params[_cfg.key_hpss_password]
             self.hpss_storage_path = hpss_params[_cfg.key_hpss_storage_path]
+
+        self.my_task = None
 
     def copy_repo_into_tmp_dir(self, task):
         """TODO: Docstring for copy_repo_into_tmp_dir.
@@ -311,13 +344,11 @@ class Worker(threading.Thread):
         """
         Extract repo from object storage to tmp directory
         """
-        task.status = 'EXTRACT_REPO'
-        _l.info('Extracting repo for task: {}...'.format(task))
 
-        # import time;
-        # time.sleep(60*3)
+        task.status = 'EXTRACT_REPO'
 
         try:
+            _l.info('Extracting repo for task: {}...'.format(task))
             self.copy_repo_into_tmp_dir(task)
         except Exception as e:
             _set_error(task, MSG_EXTRACT_REPO,
@@ -332,38 +363,46 @@ class Worker(threading.Thread):
         """
         Add metadata markdown file of archive
         """
+
         task.status = 'ADD_MD'
-        _l.info('Adding md to repo: {}...'.format(task.repo_id))
-        if task._extracted_tmp_dir is not None:
-            arch_path = _get_archive_path(self.local_storage, task.owner, task.repo_id, task.version)
-            md_path = os.path.join(task._extracted_tmp_dir, ARCHIVE_METADATA_TARGET)
-            # check if md file exists
-            if os.path.exists(md_path) and os.path.isfile(md_path):
-                new_md_path = arch_path + '.md'
-                try:
-                    # copy to new place
-                    shutil.copyfile(md_path, new_md_path)
-                    task._md_path = new_md_path
-                except Exception as e:
-                    _set_error(task, MSG_ADD_MD,
-                               'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
-                    return False
-                try:
-                    # save content for DB
-                    md = open(md_path, "r")
-                    task.md = md.read()
-                    md.close()
-                except Exception as e:
-                    _set_error(task, MSG_ADD_MD,
-                               'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
+
+        try:
+            _l.info('Adding md to repo: {}...'.format(task.repo_id))
+            if task._extracted_tmp_dir is not None:
+                arch_path = _get_archive_path(self.local_storage, task.owner, task.repo_id, task.version)
+                md_path = os.path.join(task._extracted_tmp_dir, ARCHIVE_METADATA_TARGET)
+                # check if md file exists
+                if os.path.exists(md_path) and os.path.isfile(md_path):
+                    new_md_path = arch_path + '.md'
+                    try:
+                        # copy to new place
+                        shutil.copyfile(md_path, new_md_path)
+                        task._md_path = new_md_path
+                    except Exception as e:
+                        _set_error(task, MSG_ADD_MD,
+                                'Cannot copy md file {} to {} for task {}: {}'.format(md_path, new_md_path, task, e))
+                        return False
+                    try:
+                        # save content for DB
+                        md = open(md_path, "r")
+                        task.md = md.read()
+                        md.close()
+                    except Exception as e:
+                        _set_error(task, MSG_ADD_MD,
+                                'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
+                        return False
+                else:
+                    _set_error(task, MSG_ADD_MD, 'Cannot find md file {} for task {}'.format(md_path, task))
                     return False
             else:
-                _set_error(task, MSG_ADD_MD, 'Cannot find md file {} for task {}'.format(md_path, task))
+                _set_error(task, MSG_ADD_MD,
+                        'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
                 return False
-        else:
+        except Exception as e:
             _set_error(task, MSG_ADD_MD,
-                       'Extracted library tmp dir {} for task {} is not defined'.format(task._extracted_tmp_dir, task))
+                       'Cannot add md file for task {} to archive: {}'.format(task, e))
             return False
+
 
         return True
 
@@ -371,32 +410,34 @@ class Worker(threading.Thread):
         """
         Create tar file for extracted repo
         """
+
         task.status = 'CREATE_TAR'
-        _l.info('Creating a tar for repo: {}...'.format(task.repo_id))
-        assert task._extracted_tmp_dir is not None
+
         try:
+            _l.info('Creating a tar for repo: {}...'.format(task.repo_id))
             task._archive_path = _get_archive_path(self.local_storage, task.owner, task.repo_id, task.version)
             # with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
             with tarfile.open(task._archive_path, mode='w:', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
-        except Exception as e:
-            _set_error(task, MSG_CREATE_TAR,
-                       'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
-                                                                                   task._archive_path, task, e))
-            # clean up
-            if archive:
-                archive.close()
-            self._clean_up(task)
-            return False
-        else:
+
             archive.close()
             _l.info('Calculate tar checksum for repo: {}...'.format(task.repo_id))
             try:
                 task.checksum = _generate_file_md5(task._archive_path)
             except Exception as e:
                 _set_error(task, MSG_CALC_CHECKSUM,
-                           'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, e))
-            _l.info('Checksum for repo {}: '.format(task.checksum))
+                            'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, e))
+                _l.info('Checksum for repo {}: '.format(task.checksum))
+        except Exception as e:
+            _set_error(task, MSG_CREATE_TAR,
+                       'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
+                                                                                   task._archive_path, task, e))
+            return False
+        finally:
+            # clean up
+            if archive:
+                archive.close()
+            self._clean_up(task)
 
         return True
 
@@ -404,17 +445,25 @@ class Worker(threading.Thread):
         """
         Push created archive tar to HPSS
         """
+
+        task.status = 'PUSH_TO_HPSS'
+
         if not self.hpss_enabled:
             _l.info('HPSS is not enabled, skip the action.')
             return True
 
-        task.status = 'PUSH_TO_HPSS'
-        _l.info('Pushing archive to HPSS: {}...'.format(task._archive_path))
         try:
-            # scp to HPSS
+
+
+            _l.info('Pushing archive to HPSS: {}...'.format(task._archive_path))
+
+            import time
+            time.sleep(60*5)
+
+
 
             ssh = SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.set_missing_host_key_policy(AutoAddPolicy())
             # ssh.load_system_host_keys()### no keys, do not load
 
             ssh.connect(self.hpss_url, username=self.hpss_user, password=self.hpss_password)
@@ -425,7 +474,7 @@ class Worker(threading.Thread):
             # transport.get_security_options().ciphers = ('aes128-gcm@openssh.com', )
             transport.use_compression(False)
 
-            sftp = paramiko.SFTPClient.from_transport(transport)
+            sftp = SFTPClient.from_transport(transport)
 
             # create dirs on remote
             remote_dir = self.hpss_storage_path
@@ -492,6 +541,7 @@ class Worker(threading.Thread):
             _l.info('Successfully pushed archive to HPSS')
 
         except Exception as e:
+            # All error in _push_to_hpss are CRITICAL!!!
             _set_critical_error(task, MSG_PUSH_TO_HPSS,
                        'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, e))
             return False
@@ -507,6 +557,9 @@ class Worker(threading.Thread):
         """
         extract repo from object storage to tmp dir ==> create tar.gz ==> put to archive storage
         """
+
+        self.my_task = task
+
         try:
             success = self._extract_repo(task)
             if not success:
@@ -535,6 +588,7 @@ class Worker(threading.Thread):
 
         finally:
             _update_archive_db_and_notify(task)
+            self.my_task = None
 
         return
 
@@ -572,8 +626,6 @@ class TaskManager(object):
         self.archives_per_library = 5
 
         self._db_oper = None
-
-        # TODO: Connection to HPSS
 
     def init(self, db_oper, num_workers,
              local_storage, archive_max_size, archives_per_library,
@@ -670,95 +722,79 @@ class TaskManager(object):
 
     def add_task(self, repo_id, owner):
         """Create an archiving task and dispatch it to worker threads"""
-        ret = {}
+        resp = {}
         with self._tasks_map_lock:
             # task is already in queue, return this one
-            ret['repo_id'] = repo_id
+            resp['repo_id'] = repo_id
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
-                ret['version'] = task.version
-                ret['in_task_map'] = 'true'
-                if task.error:
-                    ret['msg'] = task.msg
-                    ret['error'] = task.error
+                resp['version'] = task.version
+                resp['in_task_map'] = 'true'
+                resp.update(_get_messages_part(task))
             else:
                 # add new task
                 task = self._build_task(repo_id, owner, self.local_storage)
                 if task.status == 'ERROR':
                     # notify user!!!
                     self._notify_user(task)
-                    ret['msg'] = task.msg
-                    ret['error'] = task.error
                 else:
                     self._tasks_map[repo_id] = task
                     self._tasks_queue.put(task)
-                    ret['version'] = task.version
-            ret['status'] = task.status
-        return ret
+                    resp['version'] = task.version
+                resp.update(_get_messages_part(task))
+            resp['status'] = task.status
+        return resp
 
     def query_task_status(self, repo_id, owner=None, version=None):
         """Query archiving task"""
-        ret = {'repo_id': repo_id}
+        resp = {'repo_id': repo_id}
         with self._tasks_map_lock:
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
-                ret['status'] = task.status
-                ret['version'] = task.version
-                if task.status == 'ERROR':
-                    ret.update({
-                        'msg': task.msg,
-                        'status': 'ERROR',
-                        'error': task.error
-                    })
-                elif task.status in ('EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS'):
-                    ret.update({
-                        'msg': MSG_PROCESSING_STATUS[task.status],
-                        'status': 'PROCESSING'
-                    })
-                else:
-                    ret.update({
-                        'msg': MSG_UNKNOWN_STATUS,
-                        'status': 'ERROR',
-                        'error': "Unknown status {} of archiving task".format(task.status),
-                    })
-
+                resp['status'] = task.status
+                resp['version'] = task.version
+                resp.update(_get_messages_part(task))
             else:
-                latest_archive = self._db_oper.get_latest_archive(repo_id, version)
-                if latest_archive is None:
-                    ret.update({
-                        'msg': MSG_CANNOT_FIND_ARCHIVE,
-                        'status': 'NOT_FOUND',
-                    })
-                elif latest_archive.status == 'ERROR':
-                     ret.update({
-                        'msg': MSG_LAST_TASK_FAILED,
+                try:
+                    latest_archive = self._db_oper.get_latest_archive(repo_id, version)
+                    if latest_archive is None:
+                        resp.update({
+                            'msg': MSG_CANNOT_FIND_ARCHIVE,
+                            'status': 'NOT_FOUND',
+                        })
+                    elif latest_archive.status == 'ERROR':
+                        resp.update({
+                            'msg': MSG_LAST_TASK_FAILED,
+                            'status': 'ERROR',
+                            'error': latest_archive.error_msg,
+                        })
+                    elif latest_archive.status == 'DONE':
+                        resp.update({
+                            'msg': MSG_ARCHIVED,
+                            'status': 'DONE',
+                        })
+                    elif latest_archive.status in ('BUILD_TASK', 'EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS'):
+                        resp.update({
+                            'msg': MSG_PROCESSING_STATUS[latest_archive.status],
+                            'status': 'PROCESSING',
+                        })
+                    else:
+                        resp.update({
+                            'msg': MSG_UNKNOWN_STATUS,
+                            'status': 'ERROR',
+                            'error': "Unknown status {} of archiving task".format(latest_archive.status),
+                        })
+                except Exception as e:
+                    error_msg = "Cannot query archiving task: {}".format(e)
+                    _l.error(error_msg)
+                    resp.update({
+                        'msg': MSG_CANNOT_QUERY_TASK,
                         'status': 'ERROR',
-                        'error': latest_archive.error_msg,
+                        'error': error_msg,
                     })
-                elif latest_archive.status == 'DONE':
-                     ret.update({
-                        'msg': MSG_ARCHIVED,
-                        'status': 'DONE',
-                    })
-                elif latest_archive.status in ('EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS'):
-                     ret.update({
-                        'msg': MSG_PROCESSING_STATUS[latest_archive.status],
-                        'status': 'PROCESSING',
-                    })
-                else:
-                    ret.update({
-                        'msg': MSG_UNKNOWN_STATUS,
-                        'status': 'ERROR',
-                        'error': "Unknown status {} of archiving task".format(latest_archive.status),
-                    })
-        return ret
+            return resp
 
 
-    ACTION_ERROR_MSG = {
-        'is_snapshot_archived': ['Cannot check snapshot archiving status for library {} and owner {}: {}', MSG_CANNOT_CHECK_SNAPSHOT_STATUS],
-        'get_quota': ['Cannot get archiving quota for library {} and owner {}: {}', MSG_CANNOT_GET_QUOTA],
-        'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
-    }
     def check_repo_archiving_status(self, repo_id, owner, action):
         """TODO:
         """
@@ -875,9 +911,23 @@ class TaskManager(object):
             self._workers.append(t)
 
     def stop(self):
-        # stop HPSS session
-        #_l.info('stop HPSS session...')
-        pass
+
+        # if background stopped, dump running tasks in DB
+        _l.info("Shutdown has been forced, trying to save active archiving tasks into DB...")
+        has_active_task = False
+        for worker in self._workers:
+            my_task = worker.my_task
+            if my_task is not None:
+                has_active_task = True
+                _l.info("Found task {} in processing, saving...".format(my_task))
+                my_task.error = 'FORCED_SHUTDOWN: Task interrupted by Keeper Background Service shutdown.'
+                _update_archive_db_and_notify(my_task)
+                _l.info("Task has been saved.")
+
+        if not has_active_task:
+            _l.info("No active archiving tasks have been found.")
+
+
 
 
 task_manager = TaskManager()

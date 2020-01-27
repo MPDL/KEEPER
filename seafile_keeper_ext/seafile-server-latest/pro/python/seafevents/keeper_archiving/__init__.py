@@ -84,6 +84,7 @@ class KeeperArchiving(object):
 
     def stop(self):
         task_manager.stop()
+        logging.info('keeper archiving stopped')
 
     def is_enabled(self):
         return self._enabled

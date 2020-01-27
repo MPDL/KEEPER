@@ -24,6 +24,8 @@ MSG_TYPE_KEEPER_ARCHIVING_MSG = 'keeper_archiving_msg'
 
 def _prepare_md(md):
     # cut too long md
+    if md is None:
+        return None;
     if len(md) > MAX_UNICODE_TEXT_LEN:
         md = md[:MAX_UNICODE_TEXT_LEN - 3] + '...'
     # convert to unicode
