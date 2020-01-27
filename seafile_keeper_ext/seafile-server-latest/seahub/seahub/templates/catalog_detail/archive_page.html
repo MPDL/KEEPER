@@ -4,6 +4,7 @@
 		<meta charset="UTF-8" />
 		<link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}css/landing_page.css"/>
 		<link rel="stylesheet" type="text/css" href="/media/assets/css/bootstrap.min.css"/>
+		<script type="text/javascript" src="/media/assets/scripts/lib/jquery.min.js" id="jquery"></script>
 
 		<title>Archive Page</title>
 		<link rel="icon" type="image/x-icon" href="/media/img/favicon.png" />
@@ -25,7 +26,7 @@
 				<div>
 					<h1 class="doi_title">{{md_dict.Title}}</h1>
 				</div>
-				<p class="doi_desc">{{md_dict.Description}}</p>
+				<p class="doi_desc more">{{md_dict.Description}}</p>
 
 				<div class="doi_table_row"><b>Author(s): </b>{{authors}}</div>
 				<div class="doi_table_row"><b>Institute: </b>{{institute}}</div>
@@ -37,5 +38,6 @@
 			</div>
 		</div>
 		{% include "keeper_footer.html" %}
+		{% include "show_more.html" %}
 	</body>
 </html>

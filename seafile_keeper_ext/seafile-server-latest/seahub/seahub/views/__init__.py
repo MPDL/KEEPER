@@ -66,8 +66,7 @@ LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
 from constance import config
 
 # Landing Pages add DoiRepo
-from keeper.models import DoiRepo
-from seafevents.keeper_archiving.db_oper import DBOper
+from keeper.models import DoiRepo, Catalog
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -710,27 +709,10 @@ def libraries(request):
         logger.error(e)
         expire_days = -1
 
-
     landing_pages = []
-    doi_repos = DoiRepo.objects.get_doi_by_owner(username)
-    if doi_repos:
-        for doi_repo in doi_repos:
-            repo_name = doi_repo.repo_name if get_repo(doi_repo.repo_id) is None else get_repo(doi_repo.repo_id).name
-            landing_pages.append({"repo_id": doi_repo.repo_id, "repo_name": repo_name })
-
-    archive_repos = DBOper().get_archives(owner = username)
-    if archive_repos:
-        for archive_repo in archive_repos:
-            archive_repo_id = archive_repo.repo_id
-            has_landing_page = False
-            for landing_page in landing_pages:
-                if landing_page["repo_id"] == archive_repo_id:
-                    has_landing_page = True
-                    break
-            if  has_landing_page == False:
-                repo_name = archive_repo.repo_name if get_repo(archive_repo.repo_id) is None else get_repo(archive_repo.repo_id).name
-                landing_pages.append({"repo_id": archive_repo.repo_id, "repo_name": repo_name })
-
+    catalogs = list(Catalog.objects.raw('SELECT * from keeper_catalog WHERE owner="' + username + '" and (EXISTS (SELECT repo_id FROM doi_repos where doi_repos.repo_id= keeper_catalog.repo_id and doi_repos.rm is NULL) or keeper_catalog.is_archived=1)'))
+    for catalog in catalogs:
+        landing_pages.append({"repo_id": catalog.repo_id, "repo_name": catalog.repo_name })
 
     return render(request, 'libraries.html', {
             "allow_public_share": allow_public_share,

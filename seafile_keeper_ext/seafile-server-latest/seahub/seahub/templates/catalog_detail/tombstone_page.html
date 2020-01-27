@@ -20,15 +20,16 @@
 			{% if doi %}
 			<p> The dataset with identifier <strong class="doi_link">{{doi}}</strong> was removed along with removal of the library <strong>{{library_name}}</strong>.</p>
 			{% else %}
-			<p>The library does not exist anymore within the Keeper live system. An archived version can be requested by the library owner. For more information, please contact <a href="mailto:keeper@mpdl.mpg.de">keeper@mpdl.mpg.de.</a></p>
+			<p>The library has been removed, but an archive exists. Please contact the library owner or Keeper support in order to retrieve the data.</p>
 			{% endif %}
 
 
-			<div class="doi_table_row"><strong>Description: </strong>{{md_dict.Description}}</div>
+			<div class="doi_table_row more"><strong>Description: </strong>{{md_dict.Description}}</div>
 			<div class="doi_table_row"><strong>Author(s): </strong>{{authors}}</div>
 			<div class="doi_table_row"><strong>Institute: </strong>{{institute}}</div>
 			<div class="doi_table_row"><strong>Published: </strong>{{md_dict.Year}}</div>
 		</div>
 		{% include "keeper_footer.html" %}
+		{% include "show_more.html" %}
 	</body>
 </html>

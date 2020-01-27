@@ -8200,3 +8200,26 @@ msgstr ""
 msgid "Assign DOI"
 msgstr ""
 
+msgid "Library Details"
+msgstr ""
+
+msgid "Archive Library"
+msgstr ""
+
+msgid "Archive {library_name}"
+msgstr ""
+
+msgid "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: {archive_info_link} This library can be archived {quota} more times."
+msgstr ""
+
+msgid "Information on Archiving"
+msgstr ""
+
+msgid "Cannot archive, since the library snapshot has already been archived."
+msgstr ""
+
+msgid "Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support."
+msgstr ""
+
+msgid "Cannot archive, since the library is too large."
+msgstr ""
