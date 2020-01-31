@@ -84,7 +84,7 @@ def test_tmp_repo_archiving(create_tmp_repo):
 
 
     assert os.path.isfile(path)
-    assert os.path.getsize(path) > 0L
+    assert os.path.getsize(path)>0
 
     #clean up
     # os.remove(path)
@@ -110,8 +110,7 @@ def test_huge_repo_archiving():
     path = arch_mgr.get_archive_path(seafile_api.get_repo_owner(repo.id), repo.id, 1)
 
     assert os.path.isfile(path)
-    assert os.path.getsize(path) > 0L
-
+    assert os.path.getsize(path)>0
 
 # @pytest.mark.skip
 def test_new_archiving(mocker):

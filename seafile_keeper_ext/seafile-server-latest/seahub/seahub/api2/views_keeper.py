@@ -296,8 +296,6 @@ def ArchiveView(request, repo_id, version_id):
 class CanArchive(APIView):
 
     "Quota checking before adding archiving"
-    # def __init__(self):
-        # self.db_oper = DBOper()
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
@@ -307,7 +305,7 @@ class CanArchive(APIView):
             resp = delegate_query_keeper_archiving_status(repo_id, owner, version)
         else:
             resp = query_keeper_archiving_status(repo_id, owner, version)
-        logger.info("RESP:{}".format(resp))
+        # logger.info("RESP:{}".format(resp))
         return JsonResponse(resp)
 
 
@@ -319,16 +317,14 @@ class CanArchive(APIView):
         # library is already in the task query
         resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = "Library is already processed: " + resp_query.msg
+            msg = "Archiving is in progress: " + resp_query.msg
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
         elif resp_query.status == 'ERROR':
-            #TODO: correct message
-            msg = "Cannot archive the library, Keeper Team is already notified and looking for solution!"
             return JsonResponse({
-                'msg': msg,
+                'msg': resp_query.msg,
                 'status': 'system_error'
             })
 
