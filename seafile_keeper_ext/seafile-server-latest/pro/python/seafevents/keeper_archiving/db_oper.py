@@ -24,6 +24,8 @@ MSG_TYPE_KEEPER_ARCHIVING_MSG = 'keeper_archiving_msg'
 
 def _prepare_md(md):
     # cut too long md
+    if md is None:
+        return None;
     if len(md) > MAX_UNICODE_TEXT_LEN:
         md = md[:MAX_UNICODE_TEXT_LEN - 3] + '...'
     # convert to unicode
@@ -116,6 +118,23 @@ class DBOper(object):
             finally:
                 self.edb_session.remove()
 
+    def delete_archive(self, repo_id, version):
+        try:
+            a = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id,
+                        KeeperArchive.version == version)\
+                .first()
+            if a:
+                self.kdb_session.delete(a)
+                self.kdb_session.commit()
+            return 0
+        except Exception as e:
+            self.kdb_session.rollback()
+            logging.warning('Failed to delete keeper archive record from db: {}.'.format(e))
+            return -1
+        finally:
+            self.kdb_session.remove()
+
     def add_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id,
                     status, error_msg):
         try:
@@ -141,7 +160,6 @@ class DBOper(object):
                 self.add_archive(repo_id, owner, version, checksum, external_path, md,
                                  repo_name, commit_id, status, error_msg)
             else:
-                logging.info("HERE, locals:{}".format(locals()))
                 archive.status = status
                 archive.checksum = checksum
                 archive.external_path = external_path

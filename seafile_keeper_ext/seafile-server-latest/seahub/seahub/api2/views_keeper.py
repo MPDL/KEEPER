@@ -27,7 +27,9 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task, delegate_query_keeper_archiving_status, query_keeper_archiving_status, check_keeper_repo_archiving_status
+from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
+    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
+    check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
@@ -297,8 +299,6 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 class CanArchive(APIView):
 
     "Quota checking before adding archiving"
-    # def __init__(self):
-        # self.db_oper = DBOper()
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
@@ -308,7 +308,7 @@ class CanArchive(APIView):
             resp = delegate_query_keeper_archiving_status(repo_id, owner, version)
         else:
             resp = query_keeper_archiving_status(repo_id, owner, version)
-        logger.info("RESP:{}".format(resp))
+        # logger.info("RESP:{}".format(resp))
         return JsonResponse(resp)
 
 
@@ -320,16 +320,14 @@ class CanArchive(APIView):
         # library is already in the task query
         resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = "Library is already processed: " + resp_query.msg
+            msg = "Archiving is in progress: " + resp_query.msg
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
         elif resp_query.status == 'ERROR':
-            #TODO: correct message
-            msg = "Cannot archive the library, Keeper Team is already notified and looking for solution!"
             return JsonResponse({
-                'msg': msg,
+                'msg': resp_query.msg,
                 'status': 'system_error'
             })
 
@@ -387,7 +385,12 @@ class ArchiveLib(APIView):
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        return JsonResponse(add_keeper_archiving_task(repo_id, user_email))
+        if SINGLE_MODE:
+            resp = delegate_add_keeper_archiving_task(repo_id, user_email)
+        else:
+            resp = add_keeper_archiving_task(repo_id, user_email)
+        # logger.info("RESP:{}".format(vars(resp)))
+        return JsonResponse(resp)
 
     def post(self, request):
         repo_id = request.POST.get('repo_id', None)
@@ -405,8 +408,7 @@ class ArchiveLib(APIView):
                 'status': 'error'
             })
 
-        msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
-                'msg': msg,
+                'msg': resp_archive.msg,
                 'status': 'success'
             })

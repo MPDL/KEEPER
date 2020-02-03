@@ -48,8 +48,7 @@ class Utils(object):
     @staticmethod
     def error(msg):
         '''Print error and exit'''
-        print
-        print Utils.red('Error: ' + msg)
+        print(Utils.red('Error: ' + msg))
         sys.exit(1)
 
     @staticmethod
@@ -121,7 +120,7 @@ class Utils(object):
         try:
             if not os.path.exists(path):
                 os.makedirs(path)
-        except OSError, e:
+        except OSError as e:
             Utils.error('failed to create directory %s:%s' % (path, e))
 
     @staticmethod
