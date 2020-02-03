@@ -24,6 +24,8 @@ MSG_TYPE_KEEPER_ARCHIVING_MSG = 'keeper_archiving_msg'
 
 def _prepare_md(md):
     # cut too long md
+    if md is None:
+        return None;
     if len(md) > MAX_UNICODE_TEXT_LEN:
         md = md[:MAX_UNICODE_TEXT_LEN - 3] + '...'
     # convert to unicode
@@ -47,7 +49,7 @@ def create_db_session(host, port, username, passwd, dbname):
         # multipe times in the same process.
         add_event_listener(Pool, 'checkout', ping_connection)
 
-    return scoped_session(sessionmaker(bind=engine, autocommit=True, expire_on_commit=False))
+    return scoped_session(sessionmaker(bind=engine, autocommit=False, expire_on_commit=False))
 
 
 class DBOper(object):
@@ -102,6 +104,7 @@ class DBOper(object):
                     datetime.now(),
                 )
                 self.edb_session.execute(cmd)
+                self.edb_session.commit()
 
                 # add notification to gui
                 cache = pylibmc.Client([CACHES['default']['LOCATION']])
@@ -115,12 +118,30 @@ class DBOper(object):
             finally:
                 self.edb_session.remove()
 
-    def add_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id):
+    def delete_archive(self, repo_id, version):
+        try:
+            a = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id,
+                        KeeperArchive.version == version)\
+                .first()
+            if a:
+                self.kdb_session.delete(a)
+                self.kdb_session.commit()
+            return 0
+        except Exception as e:
+            self.kdb_session.rollback()
+            logging.warning('Failed to delete keeper archive record from db: {}.'.format(e))
+            return -1
+        finally:
+            self.kdb_session.remove()
+
+    def add_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id,
+                    status, error_msg):
         try:
             a = KeeperArchive(repo_id, owner, version, checksum, external_path,
-                              _prepare_md(md), repo_name, commit_id)
+                              _prepare_md(md), repo_name, commit_id, status, error_msg)
             self.kdb_session.add(a)
-            self.kdb_session.flush()
+            self.kdb_session.commit()
             return 0
         except Exception as e:
             self.kdb_session.rollback()
@@ -131,23 +152,21 @@ class DBOper(object):
 
     def add_or_update_archive(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id, status, error_msg):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
-                                                             KeeperArchive.version == version)
-            a = q.first()
-            if not a:
-                self.add_archive(repo_id, owner, version, checksum, external_path, _prepare_md(md), repo_name, commit_id, status, error_msg)
+            q = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id,
+                        KeeperArchive.version == version)
+            archive = q.first()
+            if not archive:
+                self.add_archive(repo_id, owner, version, checksum, external_path, md,
+                                 repo_name, commit_id, status, error_msg)
             else:
-                a.status = status
-                # if checksum is not None:
-                a.checksum = checksum
-                # if external_path is not None:
-                a.external_path = external_path
-                # if md is not None:
-                a.md = _prepare_md(md)
-                # if error_msg is not None:
-                a.error_msg = error_msg
-                a.commit()
-                self.kdb_session.flush()
+                archive.status = status
+                archive.checksum = checksum
+                archive.external_path = external_path
+                archive.md = _prepare_md(md)
+                archive.error_msg = error_msg
+                self.kdb_session.add(archive)
+                self.kdb_session.commit()
         except Exception as e:
             self.kdb_session.rollback()
             logging.warning('Failed to update keeper archive record from db: {}.'.format(e))
@@ -166,9 +185,12 @@ class DBOper(object):
 
     def is_snapshot_archived(self, repo_id, commit_id):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
-                                                             KeeperArchive.commit_id == commit_id).first()
-            return q is not None
+            archive = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id,
+                        KeeperArchive.commit_id == commit_id,
+                        KeeperArchive.status == 'DONE')\
+                .first()
+            return archive is not None
         except Exception as e:
             logging.warning('Failed to get keeper archive: {}.'.format(e))
             return None
@@ -177,32 +199,56 @@ class DBOper(object):
 
     def get_max_archive_version(self, repo_id, owner):
         try:
-            q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.repo_id == repo_id,
-                                                             KeeperArchive.owner == owner).order_by(
-                desc(KeeperArchive.version)).first()
-            if not q:
+            archive = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id,
+                    KeeperArchive.owner == owner,
+                    KeeperArchive.status == 'DONE')\
+                .order_by(desc(KeeperArchive.version))\
+                .first()
+            if not archive:
                 return -1
             else:
-                return q.version
+                return archive.version
         except Exception as e:
-            logging.warning('Failed to get max version of keeper archive for repo {}: {}.'.format(repo_id, e))
+            logging.warning('Failed to get max version of keeper archive for repo {}: {}.'\
+                            .format(repo_id, e))
             return None
         finally:
             self.kdb_session.remove()
 
     def get_quota(self, repo_id, owner):
         try:
-            q = self.kdb_session.query(KeeperArchiveOwnerQuota).filter(KeeperArchiveOwnerQuota.repo_id == repo_id,
-                                                                       KeeperArchiveOwnerQuota.owner == owner).first()
-            if not q:
+            archive = self.kdb_session.query(KeeperArchiveOwnerQuota)\
+                .filter(KeeperArchiveOwnerQuota.repo_id == repo_id,
+                        KeeperArchiveOwnerQuota.owner == owner,
+                        KeeperArchive.status == 'DONE')\
+                .first()
+            if not archive:
                 return None
             else:
-                return q.quota
+                return archive.quota
         except Exception as e:
-            logging.warning('Failed to get archiving quota for library {} and owner {}: {}.'.format(repo_id, owner, e))
+            logging.warning('Failed to get archiving quota for library {} and owner {}: {}.'\
+                            .format(repo_id, owner, e))
             return None
         finally:
             self.kdb_session.remove()
+
+    def get_latest_archive(self, repo_id, version=None):
+        try:
+            q = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.repo_id == repo_id)
+            if version:
+                q = q.filter(KeeperArchive.version == version)
+            q = q.order_by(desc(KeeperArchive.version))
+            return q.first()
+        except Exception as e:
+            logging.warning('Failed to get latest archive for library {}: {}.'\
+                            .format(repo_id, e))
+            return None
+        finally:
+            self.kdb_session.remove()
+
 
     def get_archives(self, repo_id=None, version=None, owner=None):
         try:
@@ -216,8 +262,8 @@ class DBOper(object):
             return q.all()
         except Exception as e:
             logging.warning(
-                'Failed to get keeper archives for repo {}, version {}, owner {}: {}.'.format(repo_id, version, owner,
-                                                                                              e))
+                'Failed to get keeper archives for repo {}, version {}, owner {}: {}.'\
+                .format(repo_id, version, owner, e))
             return None
         finally:
             self.kdb_session.remove()

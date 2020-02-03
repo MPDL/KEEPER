@@ -21,7 +21,7 @@ define([
         if (data.status === "success") {
           keeperUtils.archive(repo_name, repo_id, data.quota);
         } else if (data.status === "in_processing") {
-          Common.feedback(data.msg, 'error', 8000);
+            Common.feedback(data.msg, 'success', 8000);
         } else if (data.status === "quota_expired") {
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "snapshot_archived") {
@@ -30,7 +30,9 @@ define([
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "metadata_error") {
           keeperUtils.archive_failed(repo_name, data.status, data.msg);
-        }
+        } else if (data.status === "system_error") {
+          keeperUtils.archive_failed(repo_name, data.status, data.msg);
+         }
       },
       error: function (error) {
         keeperUtils.archive_failed(repo_name, "unknown", "");
@@ -88,6 +90,9 @@ define([
         archive_info = gettext("Cannot archive, since the library is too large.");
         break;
       case "metadata_error":
+        archive_info = error_msg;
+        break;
+      case "system_error":
         archive_info = error_msg;
         break;
       default:
