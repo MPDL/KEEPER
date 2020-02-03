@@ -962,3 +962,36 @@ class TaskManager(object):
 
 
 task_manager = TaskManager()
+
+if __name__ == "__main__":
+    print("TUTA")
+    kw = {
+        'format': '[%(asctime)s] [%(levelname)s] %(message)s',
+        'datefmt': '%m/%d/%Y %H:%M:%S',
+        'level': logging.DEBUG,
+        'stream': sys.stdout
+    }
+    logging.basicConfig(**kw)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config-file',
+                        default=os.path.join(os.path.abspath('..'), 'events.conf'),
+                        help='seafevents config file')
+    parser.add_argument('-p', '--processes',  action='store_true')
+    args = parser.parse_args()
+
+    # from seafevents.utils import get_config
+    # from seafevents.keeper_archiving.config import get_keeper_archiving_conf
+    # cfg = get_config(args.config_file)
+    # cfg = get_keeper_archiving_conf(cfg)
+    # # from seafevents.app.config import load_env_config
+    # # load_env_config()
+
+    # # setting = Settings(args.config_file)
+    # # # setting.rescan = args.rescan
+
+    # if cfg[_cfg.key_enabled]:
+        # print("Start keeper -p")
+        # # VirusScan(setting).start()
+    # else:
+        # logging.info('Keeper Archiving is disabled.')

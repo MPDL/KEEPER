@@ -85,7 +85,7 @@ class Utils(object):
     def error(msg):
         '''Print error and exit'''
         print
-        print 'Error: ' + msg
+        print ('Error: ' + msg)
         sys.exit(1)
 
     @staticmethod
@@ -104,6 +104,8 @@ class Utils(object):
                 stderr = devnull
             else:
                 stderr = sys.stderr
+
+            print(argv, cwd, env)
 
             proc = subprocess.Popen(argv,
                                     cwd=cwd,
@@ -156,7 +158,7 @@ class Utils(object):
         '''Create a directory, exit on failure'''
         try:
             os.mkdir(path)
-        except OSError, e:
+        except OSError as e:
             Utils.error('failed to create directory %s:%s' % (path, e))
 
     @staticmethod
@@ -258,7 +260,7 @@ class Utils(object):
             # Have user input: validate answer
             if yes_or_no:
                 if answer not in ['yes', 'no']:
-                    print Utils.highlight('\nPlease answer yes or no\n')
+                    print (Utils.highlight('\nPlease answer yes or no\n'))
                     continue
                 else:
                     return answer == 'yes'
@@ -266,8 +268,8 @@ class Utils(object):
                 if validate:
                     try:
                         return validate(answer)
-                    except InvalidAnswer, e:
-                        print Utils.highlight('\n%s\n' % e)
+                    except InvalidAnswer as e:
+                        print (Utils.highlight('\n%s\n' % e))
                         continue
                 else:
                     return answer
@@ -371,6 +373,7 @@ class EnvManager(object):
             os.path.join(self.install_path, 'seafile/lib64/python2.6/site-packages'),
             os.path.join(self.install_path, 'seafile/lib/python2.7/site-packages'),
             os.path.join(self.install_path, 'seafile/lib64/python2.7/site-packages'),
+
         ]
 
         for path in extra_python_path:
@@ -475,22 +478,22 @@ class MySQLDBConf(DBConf):
             if not sql:
                 continue
 
-            print '>>> sql is', sql, len(sql)
+            print ('>>> sql is', sql, len(sql))
             self.exec_sql(sql)
 
     def exec_sql(self, sql):
         cursor = self.conn.cursor()
         try:
             cursor.execute(sql)
-        except Exception, e:
+        except Exception as e:
             if isinstance(e, MySQLdb.OperationalError):
                 Utils.error('Failed to create extra tables: %s' % e.args[1])
             else:
                 Utils.error('Failed to create extra tables: %s' % e)
 
     def get_conn(self):
-        print 'host is', self.mysql_host
-        print 'port is', self.mysql_port
+        print ('host is'), self.mysql_host
+        print ('port is'), self.mysql_port
         kwargs = dict(user=self.mysql_user,
                       passwd=self.mysql_password,
                       db=self.mysql_db)
@@ -501,7 +504,7 @@ class MySQLDBConf(DBConf):
 
         try:
             self.conn = MySQLdb.connect(**kwargs)
-        except Exception, e:
+        except Exception as e:
             if isinstance(e, MySQLdb.OperationalError):
                 Utils.error('Failed to connect to mysql database %s: %s' % (self.mysql_db, e.args[1]))
             else:
@@ -779,7 +782,7 @@ def handle_ldap_sync_commands(args):
 
 def handle_virus_scan_commands(args):
     env_mgr.read_seafile_conf_dir()
-    
+
     if args.rescan:
         argv = [
             Utils.get_python_executable(),
@@ -795,6 +798,47 @@ def handle_virus_scan_commands(args):
         ]
 
     Utils.run_argv(argv, env=env_mgr.get_seahub_env())
+
+def handle_archive_commands(args):
+    env_mgr.read_seafile_conf_dir()
+
+    m = 'seafevents.keeper_archiving.task_manager'
+    c = os.path.join(env_mgr.central_config_dir, 'seafevents.conf')
+
+
+    if args.processes:
+        argv = [
+            Utils.get_python_executable(),
+            '-m', m,
+            '-c', c,
+            '-p',
+        ]
+    elif args.task:
+        argv = [
+            Utils.get_python_executable(),
+            '-m', m,
+            '-c', c,
+            '-t', args.task,
+        ]
+    elif args.resume:
+        argv = [
+            Utils.get_python_executable(),
+            '-m', m,
+            '-c', c,
+            '-r', args.resume,
+        ]
+    else:
+        argv = [
+            Utils.get_python_executable(),
+            '-m', m,
+            '-c', c,
+            '-p',
+        ]
+
+    env = env_mgr.get_seahub_env()
+    env['PYTHONPATH'] += ':' + os.path.join(env_mgr.install_path, 'seahub')
+    Utils.run_argv(argv, env=env)
+
 
 pro_config = None
 env_mgr = EnvManager()
@@ -837,6 +881,13 @@ def main():
     parser_virus_scan = subparsers.add_parser('virus_scan', help='virus scan commands')
     parser_virus_scan.add_argument('-r', '--rescan', help='rescans viruses', action='store_true')
     parser_virus_scan.set_defaults(func=handle_virus_scan_commands)
+
+    # keeper archiving
+    parser_archive = subparsers.add_parser('archive', help='keeper archiving commands')
+    parser_archive.add_argument('-p', '--processes', help='list of processed keeper archiving tasks', action='store_true')
+    parser_archive.add_argument('-t', '--task', help='print task(s) details', nargs='+')
+    parser_archive.add_argument('-r', '--resume', help='resume task(s)', nargs='+')
+    parser_archive.set_defaults(func=handle_archive_commands)
 
     if len(sys.argv) == 1:
         print parser.format_help()
