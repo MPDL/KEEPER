@@ -232,6 +232,7 @@ function prepare_env() {
         export LC_ALL='en_US.UTF-8'
     fi
 
+    export PYTHON_EGG_CACHE=${seafile_data_dir}/.cache/Python-Egg
     export CCNET_CONF_DIR=${default_ccnet_conf_dir}
     export SEAFILE_CONF_DIR=${seafile_data_dir}
     export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
