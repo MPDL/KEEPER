@@ -93,12 +93,8 @@ You've got {{num}} new notices on {{ site_name }}:
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{ doi_msg.message }} <a href="{{doi_msg.doi_link}}" target="_new">{{ doi_msg.doi }}</a></p>
 
                 {% elif notice.msg_type == "keeper_archiving_msg" %}
-                    {% if archive_msg.status == "prepare" %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{{archive_msg.msg}}</p>
-                    {% else %}
                     {% json_to_var notice.detail as archive_msg %}
-                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">Archive for <b>{{archive_msg.repo_name}}</b> is {{archive_msg.status}}</p>
-                    {% endif %}
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{% trans archive_msg.msg %}</p>
 
                 {% endif %}
             </td>

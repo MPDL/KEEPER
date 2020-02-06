@@ -6,7 +6,7 @@ from seafobj import commit_mgr, fs_mgr
 from seaserv import seafile_api, get_repo
 from seahub.api2.utils import json_response
 from seahub.settings import SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
-from keeper.common import parse_markdown_doi
+from keeper.common import parse_markdown
 from keeper.cdc.cdc_manager import validate_year, validate_author, validate_institute, has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
 from seahub.utils import send_html_email, get_site_name
@@ -64,7 +64,7 @@ def get_metadata(repo_id, user_email, action_type):
             }
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
-        doi_dict = parse_markdown_doi(file.get_content())
+        doi_dict = parse_markdown(file.get_content())
         ## Add hardcoded DOI metadata
         ## TODO: will be editable in next DOI releases
         doi_dict.update({
