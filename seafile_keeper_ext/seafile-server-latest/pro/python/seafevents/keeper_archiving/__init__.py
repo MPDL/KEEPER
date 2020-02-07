@@ -15,8 +15,6 @@ __all__ = [
 
 REPO_ID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 def _valid_repo_id(repo_id):
-    if not isinstance(repo_id, basestring):
-        return False
     return REPO_ID_PATTERN.match(str(repo_id)) is not None
 
 class KeeperArchiving(object):
@@ -51,6 +49,16 @@ class KeeperArchiving(object):
             raise Exception('No action defined for  for repo: {} and owner: {}'.format(repo_id, owner))
         return task_manager.check_repo_archiving_status(repo_id, owner, action)
 
+    def get_running_tasks(self):
+        return task_manager.get_running_tasks()
+
+    def restart_task(self, archive_id):
+        if not archive_id:
+            raise Exception('archive_id is not defined')
+        return task_manager.restart_task(archive_id)
+
+
+
     def register_rpc(self, ccnet_client):
         '''Register archiving rpc service'''
         searpc_server.create_service(KEEPER_ARCHIVING_RPC_SERVICE_NAME)
@@ -66,6 +74,12 @@ class KeeperArchiving(object):
 
         searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
                                         self.check_repo_archiving_status)
+
+        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
+                                        self.get_running_tasks)
+
+        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
+                                        self.restart_task)
 
     def start(self):
         task_manager.init(db_oper=self._db_oper,
