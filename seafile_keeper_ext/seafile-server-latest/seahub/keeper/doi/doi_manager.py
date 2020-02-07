@@ -57,7 +57,7 @@ def get_metadata(repo_id, user_email, action_type):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = _(u'Cannot ' + action_type +' if archive-metadata.md file is not filled.')
+            msg = _(u'Cannot ' + action_type +' if archive-metadata.md file is not filled or missing.')
             send_notification(msg, repo_id, notification_type, user_email)
             return {
                 'error': msg,

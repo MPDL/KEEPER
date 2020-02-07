@@ -1130,7 +1130,7 @@ msgid "Archive {library_name}"
 msgstr "Archivierung von {library_name}"
 
 msgid "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: {archive_info_link} This library can be archived {quota} more times."
-msgstr "Durch die Archivierung der Bibliothek wird ein Snapshot der Bilbiothek und deren Inhalt in ein dediziertes Archivierungssystem kopiert. Für mehr Informationen folgen Sie bitte dem nachfolgenden Link: {archive_info_link} Diese Biliothek kann noch {quota} Mal archiviert werden."
+msgstr "Durch die Archivierung der Bibliothek wird die aktuelle Version der ausgewählten Bibliothek (Schnappschuss) und deren Inhalt in ein dediziertes Archivierungssystem kopiert. Für mehr Informationen folgen Sie bitte dem nachfolgenden Link: {archive_info_link} Diese Bibliothek kann noch {quota} Mal archiviert werden."
 
 msgid "Information on Archiving"
 msgstr "Informationen zur Archivierung"
@@ -1143,3 +1143,6 @@ msgstr "Archivierung nicht möglich, da die maximal Anzahl der Archive für dies
 
 msgid "Cannot archive, since the library is too large."
 msgstr "Archivierung nicht möglich, da die Biliothek zu groß ist."
+
+msgid "Archive"
+msgstr "Archivierung"
