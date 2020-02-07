@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import logging
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
@@ -10,9 +8,8 @@ from seafevents.db import ping_connection
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
 from sqlalchemy.pool import Pool
 
-from seahub.utils import normalize_cache_key
 from seahub_settings import CACHES, DATABASES
-
+from django.utils.http import urlquote
 from datetime import datetime
 
 import pylibmc
@@ -21,6 +18,14 @@ import pylibmc
 USER_NOTIFICATION_COUNT_CACHE_PREFIX = 'USER_NOTIFICATION_COUNT_'
 
 MSG_TYPE_KEEPER_ARCHIVING_MSG = 'keeper_archiving_msg'
+
+def normalize_cache_key(value, prefix=None, token=None, max_length=200):
+    """Returns a cache key consisten of ``value`` and ``prefix`` and ``token``. Cache key
+    must not include control characters or whitespace.
+    """
+    key = value if prefix is None else prefix + value
+    key = key if token is None else key + '_' + token
+    return urlquote(key)[:max_length]
 
 def _prepare_md(md):
     # cut too long md
@@ -155,17 +160,19 @@ class DBOper(object):
             q = self.kdb_session.query(KeeperArchive)\
                 .filter(KeeperArchive.repo_id == repo_id,
                         KeeperArchive.version == version)
-            archive = q.first()
-            if not archive:
+            a = q.first()
+            if not a:
                 self.add_archive(repo_id, owner, version, checksum, external_path, md,
                                  repo_name, commit_id, status, error_msg)
             else:
-                archive.status = status
-                archive.checksum = checksum
-                archive.external_path = external_path
-                archive.md = _prepare_md(md)
-                archive.error_msg = error_msg
-                self.kdb_session.add(archive)
+                a.status = status
+                if status == 'DONE':
+                    a.archived = datetime.now()
+                a.checksum = checksum
+                a.external_path = external_path
+                a.md = _prepare_md(md)
+                a.error_msg = error_msg
+                self.kdb_session.add(a)
                 self.kdb_session.commit()
         except Exception as e:
             self.kdb_session.rollback()
@@ -173,7 +180,7 @@ class DBOper(object):
         finally:
             self.kdb_session.remove()
 
-    def get_archive_by_id(self, aid):
+    def get_archive(self, aid):
         try:
             q = self.kdb_session.query(KeeperArchive).filter(KeeperArchive.aid == aid)
             return q.first()
@@ -250,6 +257,19 @@ class DBOper(object):
             self.kdb_session.remove()
 
 
+    def get_not_completed_tasks(self):
+        try:
+            q = self.kdb_session.query(KeeperArchive)\
+                .filter(KeeperArchive.status != 'DONE')\
+                .order_by(desc(KeeperArchive.created))
+            return q.all()
+        except Exception as e:
+            logging.warning('Failed to get not completed tasks: {}.'\
+                            .format(e))
+            return None
+        finally:
+            self.kdb_session.remove()
+
     def get_archives(self, repo_id=None, version=None, owner=None):
         try:
             q = self.kdb_session.query(KeeperArchive)
@@ -267,3 +287,5 @@ class DBOper(object):
             return None
         finally:
             self.kdb_session.remove()
+
+
