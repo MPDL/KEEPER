@@ -12,6 +12,7 @@ import tarfile
 import threading
 import json
 import subprocess
+import traceback
 from datetime import datetime
 from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
@@ -549,14 +550,14 @@ class Worker(threading.Thread):
         except Exception as e:
             # All error in _push_to_hpss are CRITICAL!!!
             _set_critical_error(task, MSG_PUSH_TO_HPSS,
-                       'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, e))
+                       'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
             # clean up hpss!!!
             try:
                 if sftp:
                     remote_archive_path and sftp.remove(remote_archive_path)
                     remote_md_path and sftp.remove(remote_md_path)
             except Exception as e:
-                _l.error('Cannot clean up HPSS: {}'.format(e))
+                _l.error('Cannot clean up HPSS: {}'.format(traceback.format_exc()))
 
             return False
 
