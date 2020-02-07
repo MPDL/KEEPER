@@ -31,17 +31,17 @@ MSG_CANNOT_CHECK_REPO_SIZE = 'Cannot check library size.'
 MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check archiving status of the snapshot.'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
-MSG_ADD_MD = 'Cannot attach metadata file to the library archive.'
+MSG_ADD_MD = 'Cannot archive library if archive-metadata.md file is not filled or missing.'
 MSG_CREATE_TAR = 'Cannot create tar file for the archive.'
 MSG_CALC_CHECKSUM = 'Cannot calculate checksum for the archive.'
 MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS.'
-MSG_ARCHIVED = 'The library has been successfully archived.'
+MSG_ARCHIVED = 'Archive for %s has been successfully created.'
 MSG_CANNOT_FIND_ARCHIVE = 'Cannot find archive.'
 MSG_SNAPSHOT_ALREADY_ARCHIVED = 'The snapshot of the library has already been archived.'
 MSG_LAST_TASK_FAILED = 'The last archiving task has failed.'
 MSG_CANNOT_QUERY_TASK = 'Cannot query archiving task.'
 MSG_UNKNOWN_STATUS = 'Unknown status of archiving task.'
-MSG_CANNOT_ARCHIVE_TRY_LATER = 'Archiving has failed.'
+MSG_CANNOT_ARCHIVE_TRY_LATER = 'Archiving has failed. Please try again in a few minutes.'
 MSG_CANNOT_ARCHIVE_CRITICAL = 'Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution.'
 PROCESSING_STATUSES = ('BUILD_TASK', 'EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS')
 MSG_PROCESSING_STATUS = {
@@ -545,6 +545,7 @@ class Worker(threading.Thread):
 
             _l.info('Successfully pushed archive to HPSS')
 
+
             return True
 
         except Exception as e:
@@ -652,10 +653,12 @@ class TaskManager(object):
             (True, hpss_url, hpss_user, hpss_password, hpss_storage_path) if hpss_enabled else (
             False, None, None, None, None)
 
+
     def _set_local_storage(self, arch_dir):
         """Check the directory to store archive"""
         _check_dir(arch_dir)
         self.local_storage = arch_dir
+
 
     def _last_version_is_ok_(self, repo_id, version):
         """Archive has been successfully created and stored in HPSS and DB """
@@ -663,15 +666,17 @@ class TaskManager(object):
         _l.debug(a)
         return a is not None and a.status == 'DONE'
 
-    def _get_task_from_db(self, archive_id):
+
+    def _try_rebuild_task_from_db(self, archive_id):
         """
-        Get archiving task from db
+        Try rebuild archiving task from db
         """
 
         a = self._db_oper.get_archive(archive_id)
-        at = KeeperArchivingTask(a.repo_id, a.owner, self.local_storage)
+        at = None
 
         if a is not None:
+            at = KeeperArchivingTask(a.repo_id, a.owner, self.local_storage)
             at.status = a.status
             repo_id = a.repo_id
             if repo_id is not None:
@@ -681,7 +686,8 @@ class TaskManager(object):
                     _set_error(at, MSG_ADD_TASK, 'Cannot get library {}: {}'.format(repo_id, e))
                     return at
             else:
-                _set_error(at, 'repo_id is not defined', 'repo_id is not defined')
+                msg = 'repo_id is not defined'
+                _set_error(at, msg, msg)
                 return at
 
             owner = a.owner
@@ -691,7 +697,8 @@ class TaskManager(object):
                     _set_error(at, MSG_WRONG_OWNER, 'Wrong owner of library {}: {}'.format(repo_id, owner))
                     return at
             else:
-                _set_error(at, 'owner is not defined', 'owner is not defined')
+                msg = 'owner is not defined'
+                _set_error(at, msg, msg)
                 return at
 
             commit_id = a.commit_id
@@ -702,26 +709,28 @@ class TaskManager(object):
                     _set_error(at, 'Cannot find commit in library.', 'Cannot find commit {} in library {}.'.format(commit_id, repo_id))
                     return at
             else:
-                _set_error(at, 'commit_id is not defined', 'commit_id is not defined')
+                msg = 'commit_id is not defined'
+                _set_error(at, msg, msg)
                 return at
             at._commit = commit
 
             # check version
             if a.version is None:
-                _set_error(at, 'version is not defined', 'version is not defined')
+                msg = 'version is not defined'
+                _set_error(at, msg, msg)
                 return at
             at.version = a.version
 
         return at
 
-	def send_email(self):
-		# args = ["%s:%s" % (e[0], e[2]) for e in vrecords]
-		cmd = [
-			get_python_executable(),
-			os.path.join(self.settings.seahub_dir, 'manage.py'),
-			'notify_admins_on_virus',
-		] + args
-		subprocess.Popen(cmd, cwd=self.settings.seahub_dir)
+    # def send_email(self):
+		# # args = ["%s:%s" % (e[0], e[2]) for e in vrecords]
+		# cmd = [
+			# get_python_executable(),
+			# os.path.join(self.settings.seahub_dir, 'manage.py'),
+			# 'notify_admins_on_virus',
+		# ] + args
+		# subprocess.Popen(cmd, cwd=self.settings.seahub_dir)
 
 
 
@@ -804,7 +813,6 @@ class TaskManager(object):
         else:
             d.update(msg=MSG_UNKNOWN_STATUS, error='Unknown status: ' + task.status)
 
-
         self._db_oper.add_user_notification(task.owner, json.dumps(d))
 
         ### Admin
@@ -834,7 +842,7 @@ class TaskManager(object):
             # restart failed task
             return self.restart_task(resp['archive_id'])
         else:
-            # add new task
+            # build new task
             task = self._build_task(repo_id, owner, self.local_storage)
 
             if task.status == 'ERROR':
@@ -848,16 +856,18 @@ class TaskManager(object):
                 _update_archive_db(task)
 
             resp['version'] = task.version
-
             resp.update(_get_messages_part(task))
+
         resp['status'] = task.status
 
         return resp
 
     def restart_task(self, archive_id):
-        """Restart an archiving task and dispatch it to worker threads"""
+        """
+        Restart an archiving task and dispatch it to worker threads
+        """
         resp = {'archive_id' : archive_id}
-        task = self._get_task_from_db(archive_id)
+        task = self._try_rebuild_task_from_db(archive_id)
         if task is not None:
             resp.update(
                 status=task.status,
@@ -880,7 +890,9 @@ class TaskManager(object):
 
 
     def query_task_status(self, repo_id, owner=None, version=None):
-        """Query archiving task"""
+        """
+        Query archiving task
+        """
         resp = {'repo_id': repo_id}
         with self._tasks_map_lock:
             if repo_id in self._tasks_map:
@@ -907,6 +919,7 @@ class TaskManager(object):
             elif a.status == 'DONE':
                 resp.update({
                     'msg': MSG_ARCHIVED,
+                    'repo_name': a.repo_name,
                     'status': 'DONE',
                 })
             elif a.status in PROCESSING_STATUSES:

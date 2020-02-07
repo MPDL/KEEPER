@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import logging
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
