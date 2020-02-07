@@ -105,8 +105,6 @@ class Utils(object):
             else:
                 stderr = sys.stderr
 
-            print(argv, cwd, env)
-
             proc = subprocess.Popen(argv,
                                     cwd=cwd,
                                     stdout=stdout,
@@ -801,39 +799,20 @@ def handle_virus_scan_commands(args):
 
 def handle_archive_commands(args):
     env_mgr.read_seafile_conf_dir()
-
-    m = 'seafevents.keeper_archiving.task_manager'
-    c = os.path.join(env_mgr.central_config_dir, 'seafevents.conf')
-
-
-    if args.processes:
-        argv = [
+    argv = [
             Utils.get_python_executable(),
-            '-m', m,
-            '-c', c,
-            '-p',
+            '-m', 'seafevents.keeper_archiving.task_manager',
+            '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
         ]
-    elif args.task:
-        argv = [
-            Utils.get_python_executable(),
-            '-m', m,
-            '-c', c,
-            '-t', args.task,
-        ]
-    elif args.resume:
-        argv = [
-            Utils.get_python_executable(),
-            '-m', m,
-            '-c', c,
-            '-r', args.resume,
-        ]
+    if args.is_processing:
+        argv.append('--is-processing')
+    elif args.list_tasks:
+        argv.append('-ls')
+    elif args.restart:
+        argv.append('-r')
+        argv.extend(args.restart)
     else:
-        argv = [
-            Utils.get_python_executable(),
-            '-m', m,
-            '-c', c,
-            '-p',
-        ]
+        argv.append('-ls')
 
     env = env_mgr.get_seahub_env()
     env['PYTHONPATH'] += ':' + os.path.join(env_mgr.install_path, 'seahub')
@@ -884,9 +863,9 @@ def main():
 
     # keeper archiving
     parser_archive = subparsers.add_parser('archive', help='keeper archiving commands')
-    parser_archive.add_argument('-p', '--processes', help='list of processed keeper archiving tasks', action='store_true')
-    parser_archive.add_argument('-t', '--task', help='print task(s) details', nargs='+')
-    parser_archive.add_argument('-r', '--resume', help='resume task(s)', nargs='+')
+    parser_archive.add_argument('--is-processing', help='returns true if keeper archiving is PROCESSING or tasks QUEUE is not empty, false otherwise', action='store_true')
+    parser_archive.add_argument('-ls', '--list-tasks', help='list of running and not compeleted keeper archiving tasks', action='store_true')
+    parser_archive.add_argument('-r', '--restart', help='restart task(s)', nargs='+')
     parser_archive.set_defaults(func=handle_archive_commands)
 
     if len(sys.argv) == 1:

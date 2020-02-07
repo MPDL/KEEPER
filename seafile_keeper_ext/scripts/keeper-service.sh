@@ -137,6 +137,22 @@ function check_seahub_running () {
     fi
 }
 
+function keeper_archiving_status () {
+    ${seafile_dir}/scripts/run_keeper_script.sh ${script_path}/pro/pro.py archive -ls
+    echo "Note: use ${script_path}/pro/pro.py archive [command] for more archiving actions"
+}
+
+function check_and_exit_keeper_archiving_running () {
+    result=$(${seafile_dir}/scripts/run_keeper_script.sh ${script_path}/pro/pro.py archive --is-processing)
+    if [ $result == "true" ]; then
+        echo_red "Cannot stop, archiving is currently running."
+        keeper_archiving_status
+        exit 1
+    fi
+}
+
+
+
 #echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
 #echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
 
@@ -158,6 +174,9 @@ case "$1" in
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
+                    if [ "$2" != "--force" ]; then
+                        check_and_exit_keeper_archiving_running
+                    fi
                     $0 stop
                     sleep 3
                     echo "Starting..."
@@ -167,6 +186,9 @@ case "$1" in
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$1" == "restart" ]; then
+                    if [ "$2" != "--force" ]; then
+                        check_and_exit_keeper_archiving_running
+                    fi
                     $0 stop
                     echo "Starting..."
                 fi
@@ -186,10 +208,16 @@ case "$1" in
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
+                if [ "$2" != "--force" ]; then
+                    check_and_exit_keeper_archiving_running
+                fi
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
+                if [ "$2" != "--force" ]; then
+                    check_and_exit_keeper_archiving_running
+                fi
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
@@ -198,16 +226,22 @@ case "$1" in
             echo "Done"
             #systemctl ${1} memcached.service
         ;;
+        archiving-status)
+        keeper_archiving_status
+        ;;
+        archiving-kill)
+            keeper_archiving_kill
+        ;;
         cluster-restart|cluster-status)
             nodes=($(echo ${__CLUSTER_NODES__}))
             for i in "${nodes[@]}"; do
                 ssh ${i} "keeper-service ${1#cluster-}"
             done
-       ;;
-       restart-gpfs)
+        ;;
+        restart-gpfs)
             restart_gpfs
         ;;
-       switch-maintenance-mode)
+        switch-maintenance-mode)
             check_en_dis_nginx
             switch_maintenance_mode
         ;;
@@ -235,7 +269,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: ./$(basename $(readlink -f $0)) {start|stop|restart|status|restart-gpfs|switch-maintenance-mode}"
+            echo "Usage: ./$(basename $(readlink -f $0)) {start|stop[ --force]|restart[ --force]|status|restart-gpfs|switch-maintenance-mode|archiving-status}"
             exit 1
         ;;
 esac

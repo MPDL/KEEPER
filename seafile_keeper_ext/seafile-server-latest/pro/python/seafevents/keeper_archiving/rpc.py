@@ -19,3 +19,12 @@ class KeeperArchivingRpcClient(ccnet.RpcClientBase):
     @searpc_func("object", ["strng", "string", "string"])
     def check_repo_archiving_status(self, repo_id, owner, action):
         pass
+
+    @searpc_func("object", [])
+    def get_running_tasks(self):
+        pass
+
+    @searpc_func("object", ["strng"])
+    def restart_task(self, archive_id):
+        pass
+

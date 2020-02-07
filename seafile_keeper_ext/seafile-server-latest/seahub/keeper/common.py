@@ -90,33 +90,3 @@ def parse_markdown (md):
                 else:
                     stack.pop()
     return res
-
-def parse_markdown_doi (md):
-    res = {}
-    stack = []
-    content = []
-    parsed = md_processor.render(md)
-
-    for i in range(0, len(parsed)-1, 2):
-        str = parsed[i]
-        h = parsed[i+1]
-        if str == 'header':
-            if len(stack) > 0:
-                header = stack.pop()
-                res[header] = "\n".join(content)
-                content = []
-            if h[2] in md_headers and h[1] == HEADER_STEP:
-                stack.append(h[2])
-        elif str == 'paragraph':
-            if len(stack) > 0:
-                txt_list = []
-                for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] in ['text', 'autolink']:
-                        txt_list.append(h[0][i1+1][0])
-                val = ''.join(txt_list).strip()
-                if val:
-                    content.append(val)
-        
-    if len(stack) > 0:
-        res[stack.pop()] = "\n".join(content)
-    return res

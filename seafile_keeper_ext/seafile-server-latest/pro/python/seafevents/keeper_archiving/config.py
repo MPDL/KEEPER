@@ -21,7 +21,7 @@ def parse_workers(workers, default_workers):
         logging.warning('invalid workers value "{}"'.format(workers))
         workers = default_workers
 
-    if workers <= 0 or workers > 5:
+    if workers <= 0 or workers > 10:
         logging.warning('insane workers value "{}"'.format(workers))
         workers = default_workers
 
@@ -34,7 +34,7 @@ def parse_archives_per_library(archs, default_archs):
         logging.warning('invalid archives_per_library value "%s"' % archs)
         archs = default_archs
 
-    if archs <= 0 or archs > 5:
+    if archs <= 0 or archs > 20:
         logging.warning('insane archives_per_library value "%s"' % archs)
         archs = default_archs
 

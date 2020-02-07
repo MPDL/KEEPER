@@ -25,6 +25,7 @@ class KeeperArchive(KeeperBase):
     #like mediumtext, 16 MB
     md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN))
     created = Column(DateTime, server_default=func.now(), index=True)
+    archived = Column(DateTime)
     UniqueConstraint(repo_id, owner, version, name='unq_keeper_archive_repo_id_version')
     __table_args__ = {'extend_existing': True}
 

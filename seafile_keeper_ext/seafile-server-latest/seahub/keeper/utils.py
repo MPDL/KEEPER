@@ -300,35 +300,37 @@ def archiving_cluster_delegate(delegate_func):
 
     return decorated
 
-def delegate_add_keeper_archiving_task(repo_id, owner):
+def delegate_add_keeper_archiving_task(repo_id, owner, language_code):
     url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/add-task/')
     data = urllib.urlencode({
         'repo_id': repo_id,
         'owner': owner,
+        'language_code': language_code,
     })
     ret = do_urlopen(url, data=data).read()
     return json.loads(ret)
 
 
-def delegate_query_keeper_archiving_status(repo_id, owner, version):
+def delegate_query_keeper_archiving_status(repo_id, owner, version, language_code):
     url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/status/')
     data = urllib.urlencode({
         'repo_id': repo_id,
         'owner': owner,
         'version': version,
+        'language_code': language_code,
     })
     ret = do_urlopen(url, data=data).read()
     return json.loads(ret)
 
 
 @archiving_cluster_delegate(delegate_add_keeper_archiving_task)
-def add_keeper_archiving_task(repo_id, owner):
+def add_keeper_archiving_task(repo_id, owner, language_code):
     rpc = _get_keeper_archiving_rpc()
     ret = rpc.add_task(repo_id, owner)
     return ret
 
 @archiving_cluster_delegate(delegate_query_keeper_archiving_status)
-def query_keeper_archiving_status(repo_id, owner, version):
+def query_keeper_archiving_status(repo_id, owner, version, language_code):
     rpc = _get_keeper_archiving_rpc()
     ret = rpc.query_task_status(repo_id, owner, version)
     return ret
