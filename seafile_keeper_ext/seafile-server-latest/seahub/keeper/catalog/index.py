@@ -121,8 +121,9 @@ def application(env, start_response):
            is_valid_user = 1
 
         # allow all
-        # is_valid_user = 1
-        # errmsg = ''
+        if DEBUG:
+            is_valid_user = 1
+            errmsg = ''
 
 
         results = []
