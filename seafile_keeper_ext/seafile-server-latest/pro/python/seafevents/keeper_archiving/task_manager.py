@@ -23,33 +23,32 @@ from seafevents.utils import get_python_executable
 
 MSG_DB_ERROR = 'Error by DB query.'
 MSG_ADD_TASK = 'Cannot add task.'
-MSG_WRONG_OWNER = 'Wrong owner of the library.'
-MSG_MAX_NUMBER_ARCHIVES_REACHED = 'Max number of archives for library is reached.'
+MSG_WRONG_OWNER = 'Cannot archive. User is not the owner of the library.'
+MSG_MAX_NUMBER_ARCHIVES_REACHED = 'Maximum number of archives for the library has been reached.'
 MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota.'
 MSG_CANNOT_CHECK_REPO_SIZE = 'Cannot check library size.'
-MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check snapshot archiving status.'
+MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check archiving status of the snapshot.'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
-MSG_ADD_MD = 'Cannot attach metadata file to library archive.'
-MSG_CREATE_TAR = 'Cannot create tar file for archive.'
-MSG_CALC_CHECKSUM = 'Cannot cannot calculate checksum for archive.'
+MSG_ADD_MD = 'Cannot attach metadata file to the library archive.'
+MSG_CREATE_TAR = 'Cannot create tar file for the archive.'
+MSG_CALC_CHECKSUM = 'Cannot calculate checksum for the archive.'
 MSG_PUSH_TO_HPSS = 'Cannot push archive to HPSS.'
-MSG_ARCHIVED = 'The library is successfully archived.'
+MSG_ARCHIVED = 'The library has been successfully archived.'
 MSG_CANNOT_FIND_ARCHIVE = 'Cannot find archive.'
-MSG_SNAPSHOT_ALREADY_ARCHIVED = 'The snapshot of the library is already archived.'
-MSG_LAST_TASK_FAILED = 'The last archiving task is failed.'
+MSG_SNAPSHOT_ALREADY_ARCHIVED = 'The snapshot of the library has already been archived.'
+MSG_LAST_TASK_FAILED = 'The last archiving task has failed.'
 MSG_CANNOT_QUERY_TASK = 'Cannot query archiving task.'
 MSG_UNKNOWN_STATUS = 'Unknown status of archiving task.'
-MSG_CANNOT_ARCHIVE_TRY_LATER = 'An error occured during archiving. Please try later.'
-MSG_CANNOT_ARCHIVE_CRITICAL = 'Archiving task is failed due to system error, Keeper Team is informed and looking for solution.'
-
+MSG_CANNOT_ARCHIVE_TRY_LATER = 'Archiving has failed.'
+MSG_CANNOT_ARCHIVE_CRITICAL = 'Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution.'
 PROCESSING_STATUSES = ('BUILD_TASK', 'EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS')
 MSG_PROCESSING_STATUS = {
-    'BUILD_TASK': 'Archiving task is started.',
-    'EXTRACT_REPO': 'Extract library from object storage.',
-    'ADD_MD': 'Add metadata file to archive.',
-    'CREATE_TAR': 'Create archive tar from extracted library.',
-    'PUSH_TO_HPSS': 'Push archive to HPSS.',
+    'BUILD_TASK': 'Archiving has started.',
+    'EXTRACT_REPO': 'Extracting library from object storage.',
+    'ADD_MD': 'Adding metadata file to archive.',
+    'CREATE_TAR': 'Creating archive tar file from extracted library.',
+    'PUSH_TO_HPSS': 'Pushing archive to HPSS.',
 }
 
 ACTION_ERROR_MSG = {

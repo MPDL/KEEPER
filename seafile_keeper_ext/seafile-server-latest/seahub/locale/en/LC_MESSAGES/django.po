@@ -8176,7 +8176,13 @@ msgstr ""
 msgid "Cannot assign DOI if the library has no content."
 msgstr ""
 
+msgid "Cannot archive library if the library has no content."
+msgstr ""
+
 msgid "Cannot assign DOI if archive-metadata.md file does not exist."
+msgstr ""
+
+msgid "Cannot archive library if archive-metadata.md file does not exist."
 msgstr ""
 
 msgid "%(field)s field is either invalid or not filled."
@@ -8222,4 +8228,85 @@ msgid "Cannot archive, since the maximum number of archives for this library has
 msgstr ""
 
 msgid "Cannot archive, since the library is too large."
+msgstr ""
+
+msgid "Error by DB query."
+msgstr ""
+
+msgid "Cannot add task."
+msgstr ""
+
+msgid "Cannot archive. User is not the owner of the library."
+msgstr ""
+
+msgid "Maximum number of archives for the library has been reached."
+msgstr ""
+
+msgid "Cannot get archiving quota."
+msgstr ""
+
+msgid "Cannot check library size."
+msgstr ""
+
+msgid "Cannot check archiving status of the snapshot."
+msgstr ""
+
+msgid "The library is too big to be archived."
+msgstr ""
+
+msgid "Cannot extract library."
+msgstr ""
+
+msgid "Cannot attach metadata file to the library archive."
+msgstr ""
+
+msgid "Cannot create tar file for the archive."
+msgstr ""
+
+msgid "Cannot calculate checksum for the archive."
+msgstr ""
+
+msgid "Cannot push archive to HPSS."
+msgstr ""
+
+msgid "The library has been successfully archived."
+msgstr ""
+
+msgid "Cannot find archive."
+msgstr ""
+
+msgid "The snapshot of the library has already been archived."
+msgstr ""
+
+msgid "The last archiving task has failed."
+msgstr ""
+
+msgid "Cannot query archiving task."
+msgstr ""
+
+msgid "Unknown status of archiving task."
+msgstr ""
+
+msgid "Archiving has failed."
+msgstr ""
+
+msgid "Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution."
+msgstr ""
+
+msgid "Archiving has started."
+msgstr ""
+
+msgid "Extracting library from object storage."
+msgstr ""
+
+msgid "Adding metadata file to archive."
+msgstr ""
+
+msgid "Creating archive tar file from extracted library."
+msgstr ""
+
+msgid "Pushing archive to HPSS."
+msgstr ""
+
+msgid "This library is currently being archived."
 msgstr ""
