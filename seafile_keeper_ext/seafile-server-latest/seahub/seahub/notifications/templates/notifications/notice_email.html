@@ -94,7 +94,11 @@ You've got {{num}} new notices on {{ site_name }}:
 
                 {% elif notice.msg_type == "keeper_archiving_msg" %}
                     {% json_to_var notice.detail as archive_msg %}
+                    {% if archive_msg.msg == "Archive for %(name)s has been successfully created."%}
+                    <p style="line-height:1.5; margin:.2em 10px .2em 0;">{% blocktrans with name=archive_msg.repo_name %}Archive for {{name}} has been successfully created.{% endblocktrans %}</p>
+                    {% else %}
                     <p style="line-height:1.5; margin:.2em 10px .2em 0;">{% trans archive_msg.msg %}</p>
+                    {% endif %}
 
                 {% endif %}
             </td>
