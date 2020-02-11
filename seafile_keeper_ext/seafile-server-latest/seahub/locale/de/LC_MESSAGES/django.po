@@ -8067,7 +8067,7 @@ msgid "Your library has been successfully archived. While you have access to Kee
 msgstr "Ihre Bibliothek wurde erfolgreich archiviert. So lange Sie Zugang zu Keeper haben, finden Sie die archivierte Version der Bibliothek (Schnappschuss) unter Bibliotheksdetails in der Seitenleiste. Für den Fall, dass Sie zu einem späteren Zeitpunkt das Archiv aus der dedizierten Archivablage wiederherstellen möchten, dann kontaktieren Sie bitte den Keeper Support."
 
 msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
-msgstr "Sie können mehr Informationen über die Archivierungsfunktion in unserer knowledge base (in englischer Sprache) finden. Gerne können Sie auch Fragen in deutscher Sprache an den Support richten. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
+msgstr "Sie können mehr Informationen über die Archivierungsfunktion in unserer <a href=\"https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving\" target=\"_blank\">knowledge base</a> (in englischer Sprache) finden. Gerne können Sie auch Fragen in deutscher Sprache an den Support richten."
 
 msgid "You can use this email to request your archive later from the Keeper Support."
 msgstr "Sie können diese Email nutzen, um Ihr Archiv zu einem späteren Zeitpunkt durch das Keeper Team wiederherstellen zu lassen."
