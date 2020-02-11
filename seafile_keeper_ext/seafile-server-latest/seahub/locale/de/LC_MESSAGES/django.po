@@ -8056,3 +8056,15 @@ msgstr "Archiv wird zu HPSS transferiert."
 
 msgid "This library is currently being archived."
 msgstr "Diese Biliothek wird derzeit bereits archiviert."
+
+msgid "Your request to archive has encountered an unexpected error. The Keeper team has been informed and is going to look into it. The archiving functionality for this library (and only this library) has been deactivated in the meanwhile. You can still work and use Keeper without any restrictions."
+msgstr "Ihre Archivierungsanfrage ist auf einen unerwarteten Fehler gestoßen. Das Keeperteam ist informiert worden und sieht sich das Problem an. Die Archivierungsfunktion für diese Bibliothek (und nur diese Bibliothek) wurde in der Zwischenzeit aktiviert. Sie können Keeper weiterhin ganz normal und ohne Einschränkungen weiter benutzen."
+
+msgid "We will be in touch. You can also ask us for a status update by sending an email to the Keeper Support."
+msgstr "Wir melden uns. Bei Rückfragen können Sie gerne eine Email an den Keeper Support senden."
+
+msgid "Your library has been successfully archived. While you have access to Keeper, you can find the archived snapshot under Library Details in the sidebar. In case you want to restore it at a later stage from the dedicated archive, please contact Keeper Support."
+msgstr "Ihre Bibliothek wurde erfolgreich archiviert. So lange Sie Zugang zu Keeper haben, finden Sie die archivierte Version der Bibliothek (Schnappschuss) unter Bibliotheksdetails in der Seitenleiste. Für den Fall, dass Sie zu einem späteren Zeitpunkt das Archiv aus der dedizierten Archivablage wiederherstellen möchten, dann kontaktieren Sie bitte den Keeper Support."
+
+msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
+msgstr "Sie können mehr Informationen über die Archivierungsfunktion in unserer knowledge base (in englischer Sprache) finden. Gerne können Sie auch Fragen in deutscher Sprache an den Support richten. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"

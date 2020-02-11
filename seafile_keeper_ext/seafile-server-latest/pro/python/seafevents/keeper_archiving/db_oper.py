@@ -147,7 +147,7 @@ class DBOper(object):
                               _prepare_md(md), repo_name, commit_id, status, error_msg)
             self.kdb_session.add(a)
             self.kdb_session.commit()
-            return 0
+            return a
         except Exception as e:
             self.kdb_session.rollback()
             logging.warning('Failed to add keeper archive record to db: {}.'.format(e))
@@ -162,7 +162,7 @@ class DBOper(object):
                         KeeperArchive.version == version)
             a = q.first()
             if not a:
-                self.add_archive(repo_id, owner, version, checksum, external_path, md,
+                return self.add_archive(repo_id, owner, version, checksum, external_path, md,
                                  repo_name, commit_id, status, error_msg)
             else:
                 a.status = status
@@ -174,6 +174,7 @@ class DBOper(object):
                 a.error_msg = error_msg
                 self.kdb_session.add(a)
                 self.kdb_session.commit()
+                return a
         except Exception as e:
             self.kdb_session.rollback()
             logging.warning('Failed to update keeper archive record from db: {}.'.format(e))

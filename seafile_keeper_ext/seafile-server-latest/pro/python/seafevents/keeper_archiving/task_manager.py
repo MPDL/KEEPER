@@ -135,7 +135,7 @@ def get_root_dir(repo, commit_root_id):
     return fs_mgr.load_seafdir(repo.id, repo.version, commit_root_id)
 
 
-def _get_messages_part(task):
+def _get_msg_part(task):
     """
     Populate messages part of response for task
     """
@@ -215,17 +215,19 @@ class KeeperArchivingTask(object):
 
 def _update_archive_db(task):
 
+    a = None
     try:
         # update db
-        task_manager._db_oper.add_or_update_archive(task.repo_id, task.owner, task.version,
+        a = task_manager._db_oper.add_or_update_archive(task.repo_id, task.owner, task.version,
             task.checksum, task.external_path, task.md, task._repo.name, task._commit.commit_id,
             task.status, task.error)
-
     except Exception as e:
         msg = "Cannot update archiving task {}: {}".format(task, e)
         _l.critical(msg)
         #TODO: send msg to admin!!!
+        return None
 
+    return a
 
 
 def _set_error(task, msg, error):
@@ -294,7 +296,7 @@ class Worker(threading.Thread):
                 return True
             except Exception as e:
                 _set_critical_error(task, MSG_EXTRACT_REPO,
-                                    u'Failed to write extracted file {}: {}'.format(to_path, e))
+                        u'Failed to write extracted file {}: {}'.format(to_path, traceback.format_exc()))
                 return False
 
         def copy_dirent(obj, repo, owner, path):
@@ -352,11 +354,13 @@ class Worker(threading.Thread):
 
         except Exception as e:
             _set_critical_error(task, MSG_EXTRACT_REPO,
-                       u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, e))
+                       u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, traceback.format_exc()))
             return False
 
         finally:
-            _update_archive_db(task)
+            a = _update_archive_db(task)
+            if a is not None and a.aid:
+                task.archive_id = a.aid
 
 
     def _add_md(self, task):
@@ -434,15 +438,17 @@ class Worker(threading.Thread):
                 _l.info('Checksum for repo {}: '.format(task.checksum))
             except Exception as e:
                 _set_critical_error(task, MSG_CALC_CHECKSUM,
-                            'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, e))
+                    'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
                 return False
+
+            # raise Exception("BREAK TAR!")
 
             return True
 
         except Exception as e:
             _set_critical_error(task, MSG_CREATE_TAR,
-                       'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
-                                                                                   task._archive_path, task, e))
+                'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
+                                                            task._archive_path, task, traceback.format_exc()))
             return False
 
         finally:
@@ -545,13 +551,12 @@ class Worker(threading.Thread):
 
             _l.info('Successfully pushed archive to HPSS')
 
-
             return True
 
         except Exception as e:
             # All error in _push_to_hpss are CRITICAL!!!
             _set_critical_error(task, MSG_PUSH_TO_HPSS,
-                       'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
+                    'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
             # clean up hpss!!!
             try:
                 if sftp:
@@ -703,7 +708,6 @@ class TaskManager(object):
 
             commit_id = a.commit_id
             if commit_id is not None:
-                #TODO: check
                 commit = get_commit(at._repo, commit_id)
                 if commit is None:
                     _set_error(at, 'Cannot find commit in library.', 'Cannot find commit {} in library {}.'.format(commit_id, repo_id))
@@ -723,14 +727,37 @@ class TaskManager(object):
 
         return at
 
-    # def send_email(self):
-		# # args = ["%s:%s" % (e[0], e[2]) for e in vrecords]
-		# cmd = [
-			# get_python_executable(),
-			# os.path.join(self.settings.seahub_dir, 'manage.py'),
-			# 'notify_admins_on_virus',
-		# ] + args
-		# subprocess.Popen(cmd, cwd=self.settings.seahub_dir)
+    def send_archiving_email(self, task):
+        """
+        Send emails on archiving ERROR or DONE
+        """
+        try:
+            seahub_dir = os.environ['SEAHUB_DIR']
+            args = None
+            if task.status == 'DONE':
+                args = "|".join((task.status, task.owner, task.repo_id,
+                                 task._repo.name, str(task.version)))
+            elif task.status == 'ERROR':
+                args = "|".join((task.status, task.owner, str(task.archive_id),
+                                 task.repo_id, task._repo.name, task.error))
+            else:
+                _l.error("Unknown status: {}, direct email will not be sent.".format(task.status))
+                return
+
+            cmd = [
+                get_python_executable(),
+                os.path.join(seahub_dir, 'manage.py'),
+                'notify_on_archiving',
+                args,
+            ]
+            _l.debug("CMD: {}".format(cmd))
+            p = subprocess.Popen(cmd, cwd=seahub_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            for line in iter(p.stdout.readline, ''):
+                line = line.replace('\r', '').replace('\n', '')
+                _l.debug(line)
+                sys.stdout.flush()
+        except Exception as e:
+            _l.error("Cannot execute send_email: {}".format(e))
 
 
 
@@ -794,34 +821,32 @@ class TaskManager(object):
 
         return at
 
+
     def _notify(self, task):
         """
-        Notify user and keeper admin
+        Notify user and keeper admin, send direct emails
         """
-        ### User
         d = {'status': task.status, 'repo_id': task.repo_id, 'version': task.version}
         task._repo and d.update(repo_name=task._repo.name)
 
         if task.status == 'ERROR':
             d.update(msg=MSG_CANNOT_ARCHIVE_CRITICAL)
             task.msg and d.update(error=task.msg)
+            task.error and d.update(error=task.error)
+            # send email
+            self.send_archiving_email(task)
         elif task.status != 'DONE' and task.error is not None:
             d.update(msg=MSG_CANNOT_ARCHIVE_TRY_LATER)
             task.msg and d.update(error=task.msg)
         elif task.status == 'DONE':
             d.update(msg=MSG_ARCHIVED)
+            # send email
+            self.send_archiving_email(task)
         else:
             d.update(msg=MSG_UNKNOWN_STATUS, error='Unknown status: ' + task.status)
 
         self._db_oper.add_user_notification(task.owner, json.dumps(d))
 
-        ### Admin
-        if task.status == 'ERROR':
-            # send email to admin
-            task.msg and d.update(msg=task.msg)
-            task.error and d.update(error=task.error)
-            # send email to admin directly
-            self._db_oper.add_user_notification(SERVER_EMAIL, json.dumps(d))
 
 
     def add_task(self, repo_id, owner):
@@ -833,8 +858,7 @@ class TaskManager(object):
             if repo_id in self._tasks_map:
                 task = self._tasks_map[repo_id]
                 resp['version'] = task.version
-                resp['in_task_map'] = 'true'
-                resp.update(_get_messages_part(task))
+                resp.update(_get_msg_part(task))
                 return resp
 
         resp = self.query_task_status(repo_id, owner)
@@ -844,7 +868,6 @@ class TaskManager(object):
         else:
             # build new task
             task = self._build_task(repo_id, owner, self.local_storage)
-
             if task.status == 'ERROR':
                 # notify user!!!
                 self._notify(task)
@@ -856,9 +879,8 @@ class TaskManager(object):
                 _update_archive_db(task)
 
             resp['version'] = task.version
-            resp.update(_get_messages_part(task))
 
-        resp['status'] = task.status
+        resp.update(_get_msg_part(task))
 
         return resp
 
@@ -899,7 +921,7 @@ class TaskManager(object):
                 task = self._tasks_map[repo_id]
                 resp['status'] = task.status
                 resp['version'] = task.version
-                resp.update(_get_messages_part(task))
+                resp.update(_get_msg_part(task))
                 return resp
 
         try:
@@ -1096,7 +1118,6 @@ class TaskManager(object):
                 _l.info("Found task {} in processing, saving...".format(my_task))
                 my_task.error = 'FORCED_SHUTDOWN: Task interrupted by Keeper Background Service shutdown.'
                 _update_archive_db(my_task)
-                # TODO: Notify admin
                 _l.info("Task has been saved.")
 
         if not has_active_task:
@@ -1204,7 +1225,7 @@ if __name__ == "__main__":
             print("Usage: {}".format(parser.format_help()))
 
     else:
-        print('Wrong parameter.')
+        print('Wrong argument.')
 
 
     exit(0)

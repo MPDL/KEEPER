@@ -8310,3 +8310,15 @@ msgstr ""
 
 msgid "This library is currently being archived."
 msgstr ""
+
+msgid "Your request to archive has encountered an unexpected error. The Keeper team has been informed and is going to look into it. The archiving functionality for this library (and only this library) has been deactivated in the meanwhile. You can still work and use Keeper without any restrictions."
+msgstr ""
+
+msgid "We will be in touch. You can also ask us for a status update by sending an email to the Keeper Support."
+msgstr ""
+
+msgid "Your library has been successfully archived. While you have access to Keeper, you can find the archived snapshot under Library Details in the sidebar. In case you want to restore it at a later stage from the dedicated archive, please contact Keeper Support."
+msgstr ""
+
+msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
+msgstr ""
