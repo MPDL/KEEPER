@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import logging
 import mistune
 import json
@@ -21,7 +20,7 @@ def get_logger(name, logfile):
     return logger
 
 def print_json(obj):
-    print json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
+    print(json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': ')))
 
 def get_db(db_name):
     """Get DB connection"""
@@ -111,3 +110,13 @@ def parse_markdown_doi (md):
     if len(stack) > 0 and "\n".join(content):
         res[stack.pop()] = "\n".join(content)
     return res
+
+
+def truncate_str(s, max_len=256, sfx='...'):
+    """
+    Cut too long str
+    """
+    if s is None:
+        return None;
+    return (s[:max_len - len(sfx)] + sfx) if len(s) > max_len else s
+

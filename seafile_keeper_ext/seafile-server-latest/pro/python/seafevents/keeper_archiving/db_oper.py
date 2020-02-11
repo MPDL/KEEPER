@@ -12,6 +12,8 @@ from seahub_settings import CACHES, DATABASES
 from django.utils.http import urlquote
 from datetime import datetime
 
+from keeper.common import truncate_str
+
 import pylibmc
 
 # from seahub.notifications.models import get_cache_key_of_unseen_notifications
@@ -28,13 +30,9 @@ def normalize_cache_key(value, prefix=None, token=None, max_length=200):
     return urlquote(key)[:max_length]
 
 def _prepare_md(md):
-    # cut too long md
     if md is None:
         return None;
-    if len(md) > MAX_UNICODE_TEXT_LEN:
-        md = md[:MAX_UNICODE_TEXT_LEN - 3] + '...'
-    # convert to unicode
-    return unicode(md, 'utf-8')
+    return unicode(truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN), 'utf-8')
 
 def create_db_session(host, port, username, passwd, dbname):
     db_url = "mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)

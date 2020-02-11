@@ -18,12 +18,12 @@ from datetime import datetime
 from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
 from seafobj import commit_mgr, fs_mgr
-from seahub_settings import ARCHIVE_METADATA_TARGET, SERVER_EMAIL
+from seahub_settings import ARCHIVE_METADATA_TARGET
 from seaserv import seafile_api
 import config as _cfg
 from seafevents.utils import get_python_executable
 
-from keeper.common import parse_markdown_doi
+from keeper.common import parse_markdown_doi, truncate_str
 
 MSG_DB_ERROR = 'Error by DB query.'
 MSG_ADD_TASK = 'Cannot add task.'
@@ -47,8 +47,9 @@ MSG_UNKNOWN_STATUS = 'Unknown status of archiving task.'
 MSG_CANNOT_ARCHIVE_TRY_LATER = 'Archiving has failed. Please try again in a few minutes.'
 MSG_CANNOT_ARCHIVE_CRITICAL = 'Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution.'
 PROCESSING_STATUSES = ('BUILD_TASK', 'EXTRACT_REPO', 'ADD_MD', 'CREATE_TAR', 'PUSH_TO_HPSS')
+MSG_ARCHIVING_STARTED = 'Archiving has started.'
 MSG_PROCESSING_STATUS = {
-    'BUILD_TASK': 'Archiving has started.',
+    'BUILD_TASK': 'Task has been built.',
     'EXTRACT_REPO': 'Extracting library from object storage.',
     'ADD_MD': 'Adding metadata file to archive.',
     'CREATE_TAR': 'Creating archive tar file from extracted library.',
@@ -107,12 +108,6 @@ def _generate_file_md5(path, blocksize=5 * 2 ** 20):
             m.update(buf)
     return m.hexdigest()
 
-def _trunc(s, max_len=256):
-    # cut too long str
-    if s is None:
-        return None;
-    s = (s[:max_len - 3] + '...') if len(s) > max_len else s
-    return s
 
 def _get_archive_path(storage_path, owner, repo_id, version):
     """Construct full path to archive in fs
@@ -156,7 +151,7 @@ def _get_msg_part(task):
         })
     elif task.status in PROCESSING_STATUSES:
         resp.update({
-            'msg': MSG_PROCESSING_STATUS[task.status],
+            'msg': MSG_ARCHIVING_STARTED,
             'status': 'PROCESSING'
         })
     else:
@@ -303,9 +298,9 @@ class Worker(threading.Thread):
                             break
                         target.write(data)
                 return True
-            except Exception as e:
+            except Exception:
                 _set_critical_error(task, MSG_EXTRACT_REPO,
-                        u'Failed to write extracted file {}: {}'.format(to_path, traceback.format_exc()))
+                        u'Faled to write extracted file {}: {}'.format(to_path, traceback.format_exc()))
                 return False
 
         def copy_dirent(obj, repo, owner, path):
@@ -361,7 +356,7 @@ class Worker(threading.Thread):
             self.copy_repo_into_tmp_dir(task)
             return True
 
-        except Exception as e:
+        except Exception:
             _set_critical_error(task, MSG_EXTRACT_REPO,
                        u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, traceback.format_exc()))
             return False
@@ -447,7 +442,7 @@ class Worker(threading.Thread):
             try:
                 task.checksum = _generate_file_md5(task._archive_path)
                 _l.info('Checksum for repo {}: '.format(task.checksum))
-            except Exception as e:
+            except Exception:
                 _set_critical_error(task, MSG_CALC_CHECKSUM,
                     'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
                 return False
@@ -456,7 +451,7 @@ class Worker(threading.Thread):
 
             return True
 
-        except Exception as e:
+        except Exception:
             _set_critical_error(task, MSG_CREATE_TAR,
                 'Failed to archive dir {} to tar {} for task {}: {}'.format(task._extracted_tmp_dir,
                                                             task._archive_path, task, traceback.format_exc()))
@@ -564,7 +559,7 @@ class Worker(threading.Thread):
 
             return True
 
-        except Exception as e:
+        except Exception:
             # All error in _push_to_hpss are CRITICAL!!!
             _set_critical_error(task, MSG_PUSH_TO_HPSS,
                     'Failed to push archive {} to HPSS for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
@@ -573,7 +568,7 @@ class Worker(threading.Thread):
                 if sftp:
                     remote_archive_path and sftp.remove(remote_archive_path)
                     remote_md_path and sftp.remove(remote_md_path)
-            except Exception as e:
+            except Exception:
                 _l.error('Cannot clean up HPSS: {}'.format(traceback.format_exc()))
 
             return False
@@ -748,9 +743,9 @@ class TaskManager(object):
             if task.status == 'DONE':
                 md = task.md_dict
                 md = dict(
-                    Title=_trunc(md.get('Title')),
-                    Author=_trunc(md.get('Author')),
-                    Year=_trunc(md.get('Year')),
+                    Title=truncate_str(md.get('Title')),
+                    Author=truncate_str(md.get('Author')),
+                    Year=truncate_str(md.get('Year')),
                 )
                 args = "|".join((task.status, task.owner, task.repo_id,
                                  task._repo.name, str(task.version), str(task.archive_id),
@@ -1247,4 +1242,3 @@ if __name__ == "__main__":
 
 
     exit(0)
-
