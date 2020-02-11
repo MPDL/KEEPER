@@ -12,3 +12,22 @@
 </p>
 
 {% endblock %}
+
+{% block email_extra_con %}
+    <div style="border-top:2px solid #efefef">
+        <br>
+        <p style="font-size:14px;color:#434144;">
+            {% trans "You can use this email to request your archive later from the Keeper Support." %}
+        </p>
+        <br><br>
+
+        <div><b>Title: </b>{{Title}}</div>
+        <div><b>Author(s): </b>{{authors}}</div>
+        <div><b>Year: </b>{{md.year}}</div>
+        <div><b>Repo_ID: </b>{{repo_id}}</div>
+        <div><b>Version: </b>{{version}}</div>
+        <div><b>Archive_ID: </b>{{archive_id}}</div>
+        <br>
+        <a href="Link to archive">Link to archive</a>
+    </div>
+{% endblock %}
