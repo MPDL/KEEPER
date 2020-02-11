@@ -5,7 +5,6 @@ import logging
 import mistune
 import json
 
-from seahub.profile.models import Profile
 
 import MySQLdb
 from seahub.settings import DATABASES
@@ -23,15 +22,6 @@ def get_logger(name, logfile):
 
 def print_json(obj):
     print json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
-
-def get_user_name(user):
-    """Get user name"""
-    # default name is user id
-    name = user
-    p = Profile.objects.get_profile_by_user(user)
-    if p and p.nickname:
-        name = p.nickname
-    return name
 
 def get_db(db_name):
     """Get DB connection"""

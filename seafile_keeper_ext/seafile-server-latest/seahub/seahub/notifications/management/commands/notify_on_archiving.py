@@ -6,6 +6,9 @@ from seahub.profile.models import Profile
 from django.core.management.base import BaseCommand
 import seaserv
 
+import json
+import base64
+
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 
 # Get an instance of a logger
@@ -74,6 +77,8 @@ class Command(BaseCommand):
             user_language =  get_user_language(args[1])
             translation.activate(user_language)
 
+            md = json.loads(base64.b64decode(args[6]))
+
             send_html_email_with_dj_template(
                 args[1], dj_template='notifications/notify_user_on_successfull_archiving.html',
                 context = {
@@ -82,6 +87,7 @@ class Command(BaseCommand):
                     'repo_name': args[3],
                     'version': args[4],
                     'archive_id': args[5],
+                    'md': md,
                 },
                 subject="Your library has been successfully archived",
                 priority=MAIL_PRIORITY.now

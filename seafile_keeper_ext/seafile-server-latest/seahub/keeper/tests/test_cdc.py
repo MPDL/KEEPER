@@ -11,7 +11,8 @@ django.setup()
 
 from seaserv import seafile_api
 from seafobj import commit_mgr, fs_mgr
-from common import get_user_name, parse_markdown
+from common import parse_markdown
+from utils import get_user_name
 from cdc.cdc_manager import quote_arg, validate, validate_institute, validate_author, CDC_PDF_PREFIX
 from default_library_manager import copy_keeper_default_library, get_keeper_default_library
 from seahub.settings import SERVER_EMAIL, ARCHIVE_METADATA_TARGET

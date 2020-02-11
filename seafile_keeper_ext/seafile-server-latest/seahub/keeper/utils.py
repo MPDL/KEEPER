@@ -10,6 +10,7 @@ from datetime import datetime
 from django.core.cache import cache
 
 from seahub.invitations.models import Invitation
+from seahub.profile.models import Profile
 
 from seahub.settings import KEEPER_MPG_DOMAINS_URL
 
@@ -177,7 +178,6 @@ def has_to_be_updated(domains_dict):
 
     return True
 
-
 def get_domain_list_from_cache():
     """
     Get domain list from cache. If cache is empty, get the list from hardcoded
@@ -265,6 +265,16 @@ def user_can_invite(email):
     User can invite if he/she is in the mpg domain
     """
     return is_in_mpg_domain_list(email)
+
+
+def get_user_name(user):
+    """Get user name"""
+    # default name is user id
+    name = user
+    p = Profile.objects.get_profile_by_user(user)
+    if p and p.nickname:
+        name = p.nickname
+        return name
 
 
 # KEEPER ARCHIVING

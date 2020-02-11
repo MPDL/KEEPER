@@ -5,7 +5,9 @@ import time
 
 
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog, \
-        get_user_name, generate_catalog, clean_up_catalog
+        generate_catalog, clean_up_catalog
+
+from keeper.utils import get_user_name
 
 from keeper.common import print_json
 # @pytest.mark.skip

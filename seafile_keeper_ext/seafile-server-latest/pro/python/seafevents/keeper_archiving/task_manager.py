@@ -11,6 +11,7 @@ import shutil
 import tarfile
 import threading
 import json
+from base64 import b64encode
 import subprocess
 import traceback
 from datetime import datetime
@@ -21,6 +22,8 @@ from seahub_settings import ARCHIVE_METADATA_TARGET, SERVER_EMAIL
 from seaserv import seafile_api
 import config as _cfg
 from seafevents.utils import get_python_executable
+
+from keeper.common import parse_markdown_doi
 
 MSG_DB_ERROR = 'Error by DB query.'
 MSG_ADD_TASK = 'Cannot add task.'
@@ -104,7 +107,12 @@ def _generate_file_md5(path, blocksize=5 * 2 ** 20):
             m.update(buf)
     return m.hexdigest()
 
-
+def _trunc(s, max_len=256):
+    # cut too long str
+    if s is None:
+        return None;
+    s = (s[:max_len - 3] + '...') if len(s) > max_len else s
+    return s
 
 def _get_archive_path(storage_path, owner, repo_id, version):
     """Construct full path to archive in fs
@@ -192,6 +200,7 @@ class KeeperArchivingTask(object):
 
         # md content
         self.md = None
+        self.md_dict = None
 
         self.checksum = None
 
@@ -391,6 +400,8 @@ class Worker(threading.Thread):
                         # prepare content for DB
                         with open(md_path, "r") as md:
                             task.md = md.read()
+                            task.md_dict = parse_markdown_doi(task.md)
+                            _l.debug("md_dict:{}".format(task.md_dict))
                     except Exception as e:
                         _set_error(task, MSG_ADD_MD,
                                 'Cannot get content of md file {} for task {}: {}'.format(md_path, task, e))
@@ -735,8 +746,15 @@ class TaskManager(object):
             seahub_dir = os.environ['SEAHUB_DIR']
             args = None
             if task.status == 'DONE':
+                md = task.md_dict
+                md = dict(
+                    Title=_trunc(md.get('Title')),
+                    Author=_trunc(md.get('Author')),
+                    Year=_trunc(md.get('Year')),
+                )
                 args = "|".join((task.status, task.owner, task.repo_id,
-                                 task._repo.name, str(task.version), str(task.archive_id)))
+                                 task._repo.name, str(task.version), str(task.archive_id),
+                                 b64encode(json.dumps(md))))
             elif task.status == 'ERROR':
                 args = "|".join((task.status, task.owner, str(task.archive_id),
                                  task.repo_id, task._repo.name, task.error))
