@@ -8179,10 +8179,10 @@ msgstr ""
 msgid "Cannot archive library if the library has no content."
 msgstr ""
 
-msgid "Cannot assign DOI if archive-metadata.md file does not exist."
+msgid "Cannot assign DOI  if archive-metadata.md file is not filled or missing."
 msgstr ""
 
-msgid "Cannot archive library if archive-metadata.md file does not exist."
+msgid "Cannot archive library  if archive-metadata.md file is not filled or missing."
 msgstr ""
 
 msgid "%(field)s field is either invalid or not filled."
@@ -8269,8 +8269,8 @@ msgstr ""
 msgid "Cannot push archive to HPSS."
 msgstr ""
 
-msgid "The library has been successfully archived."
-msgstr ""
+msgid "Archive for %(name)s has been successfully created."
+msgstr "Archive for %(name)s has been successfully created."
 
 msgid "Cannot find archive."
 msgstr ""
@@ -8278,7 +8278,7 @@ msgstr ""
 msgid "The snapshot of the library has already been archived."
 msgstr ""
 
-msgid "The last archiving task has failed."
+msgid "Archiving has failed. Please try again in a few minutes."
 msgstr ""
 
 msgid "Cannot query archiving task."
