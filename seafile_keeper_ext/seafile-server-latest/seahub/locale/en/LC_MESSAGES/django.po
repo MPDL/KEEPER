@@ -8322,3 +8322,6 @@ msgstr ""
 
 msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
 msgstr ""
+
+msgid "You can use this email to request your archive later from the Keeper Support."
+msgstr ""

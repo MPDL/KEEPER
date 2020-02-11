@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
     def do_emails(self, args_str):
 
-        args = args_str.split('|', 5)
+        args = args_str.split('|', 6)
 
         if args[0] == 'ERROR':
 
@@ -81,6 +81,7 @@ class Command(BaseCommand):
                     'repo_id': args[2],
                     'repo_name': args[3],
                     'version': args[4],
+                    'archive_id': args[5],
                 },
                 subject="Your library has been successfully archived",
                 priority=MAIL_PRIORITY.now

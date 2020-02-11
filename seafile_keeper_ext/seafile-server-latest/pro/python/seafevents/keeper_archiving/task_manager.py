@@ -736,7 +736,7 @@ class TaskManager(object):
             args = None
             if task.status == 'DONE':
                 args = "|".join((task.status, task.owner, task.repo_id,
-                                 task._repo.name, str(task.version)))
+                                 task._repo.name, str(task.version), str(task.archive_id)))
             elif task.status == 'ERROR':
                 args = "|".join((task.status, task.owner, str(task.archive_id),
                                  task.repo_id, task._repo.name, task.error))
