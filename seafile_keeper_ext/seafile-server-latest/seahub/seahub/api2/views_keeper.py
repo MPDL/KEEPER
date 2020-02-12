@@ -224,7 +224,7 @@ def get_cdc_id_by_repo(repo_id):
 def LandingPageView(request, repo_id):
 
     repo_owner = get_repo_owner(repo_id)
-    repo_contact_email = SERVER_EMAIL if repo_owner is None else request.user.username
+    repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
 
