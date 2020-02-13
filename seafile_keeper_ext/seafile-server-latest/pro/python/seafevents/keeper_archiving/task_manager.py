@@ -1194,12 +1194,14 @@ if __name__ == "__main__":
 
     # IS PROCESSING
     if args.is_processing:
+
         try:
             tasks = rpc.get_running_tasks()
+            tasks = tasks._dict
         except:
             print("false")
+            exit(0)
 
-        tasks = tasks._dict
         if ('QUEUED' in tasks and tasks['QUEUED'] > 0) or ('PROCESSED' in tasks and len(tasks['PROCESSED']) > 0):
             print("true")
         else:

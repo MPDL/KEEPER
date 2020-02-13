@@ -33,8 +33,8 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
-RUN_CTX="sudo -Eu ${user}"
-CTLG_CTX="sudo -E"
+USR_CTX="sudo -Eu ${user}"
+ROOT_CTX="sudo -E"
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -166,9 +166,9 @@ case "$1" in
             fi
             
             if [ ${__NODE_TYPE__} == "APP" ]; then
-                ${RUN_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
+                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
@@ -179,9 +179,9 @@ case "$1" in
                     sleep 3
                     echo "Starting..."
                 fi
-                ${RUN_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$1" == "restart" ]; then
                     if [ "$2" != "--force" ]; then
@@ -190,10 +190,10 @@ case "$1" in
                     $0 stop
                     echo "Starting..."
                 fi
-                ${RUN_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
+                ${USR_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
             sleep 3
@@ -202,24 +202,24 @@ case "$1" in
         stop)
             echo "Stopping..."
             if [ ${__NODE_TYPE__} == "APP" ]; then
-                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
+                ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$2" != "--force" ]; then
                     check_and_exit_keeper_archiving_running
                 fi
-                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$2" != "--force" ]; then
                     check_and_exit_keeper_archiving_running
                 fi
-                ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
             fi
             echo "Done"
             #systemctl ${1} memcached.service
