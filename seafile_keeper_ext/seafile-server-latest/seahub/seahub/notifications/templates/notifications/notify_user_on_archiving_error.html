@@ -1,0 +1,14 @@
+{% extends 'email_base.html' %}
+
+{% load i18n seahub_tags %}
+
+{% block email_con %}
+
+<p style="color:#121214;font-size:14px;">Hallo, {{ email }} </p>
+
+<p style="font-size:14px;color:#434144;">
+    {% trans "Your request to archive has encountered an unexpected error. The Keeper team has been informed and is going to look into it. The archiving functionality for this library (and only this library) has been deactivated in the meanwhile. You can still work and use Keeper without any restrictions." %} <br/><br/>
+    {% trans "We will be in touch. You can also ask us for a status update by sending an email to the Keeper Support." %}  
+</p>
+
+{% endblock %}

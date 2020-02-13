@@ -1,0 +1,32 @@
+{% extends 'email_base.html' %}
+
+{% load i18n seahub_tags %}
+
+{% block email_con %}
+
+<p style="color:#121214;font-size:14px;">Hallo, {{ email }} </p>
+
+<p style="font-size:14px;color:#434144;">
+    {% trans "Your library has been successfully archived. While you have access to Keeper, you can find the archived snapshot under Library Details in the sidebar. In case you want to restore it at a later stage from the dedicated archive, please contact Keeper Support." %} <br/><br/> 
+    {% trans "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)" %}
+</p>
+
+{% endblock %}
+
+{% block email_extra_con %}
+    <div style="border-top:2px solid #efefef">
+        <br>
+        <p style="font-size:14px;color:#434144;">
+            {% trans "You can use this email to request your archive later from the Keeper Support." %}
+        </p>
+        <br><br>
+
+        <div><b>Title: </b>{{ md.Title }}</div>
+        <div><b>Author(s): </b>{{ md.Author }}</div>
+        <div><b>Year: </b>{{ md.Year }}</div>
+        <div><b>Repo_ID: </b>{{ repo_id }}</div>
+        <div><b>Version: </b>{{ version }}</div>
+        <div><b>Archive_ID: </b>{{ archive_id }}</div>
+        {% comment %}<a href="Link to archive">Link to archive</a>{% endcomment %}
+    </div>
+{% endblock %}

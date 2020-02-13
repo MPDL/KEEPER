@@ -7946,8 +7946,14 @@ msgstr "DOI der aktuellen Version zuweisen"
 msgid "Cannot assign DOI if the library has no content."
 msgstr "DOI kann nicht zugewiesen werden, wenn die Bibliothek keinen Inhalt hat."
 
-msgid "Cannot assign DOI if archive-metadata.md file does not exist."
-msgstr "DOI kann nicht zugewiesen werden, wenn die archive-metadata.md Datei nicht existiert."
+msgid "Cannot archive library if the library has no content."
+msgstr "Archivierung ist nicht möglich, wenn die Bibliothek keinen Inhalt hat."
+
+msgid "Cannot assign DOI if archive-metadata.md file is not filled or missing."
+msgstr "DOI kann nicht zugewiesen werden, sofern die archive-metadata.md Datei nicht ausgefüllt oder nicht vorhanden ist."
+
+msgid "Cannot archive library if archive-metadata.md file is not filled or missing."
+msgstr "Die Bibliothek kann nicht archiviert werden, sofern die archive-metadata.md Datei nicht ausgefüllt oder nicht vorhanden ist."
 
 msgid "%(field)s field is either invalid or not filled."
 msgstr "Das Feld %(field)s ist entweder ungültig oder nicht ausgefüllt."
@@ -7969,3 +7975,99 @@ msgstr "Bibliothek archivieren"
 
 msgid "Archive"
 msgstr "Archivieren"
+
+msgid "Error by DB query."
+msgstr "Error by DB query"
+
+msgid "Cannot add task."
+msgstr "Cannot add task."
+
+msgid "Cannot archive. User is not the owner of the library."
+msgstr "Archivierung nicht möglich. Der Nutzer ist nicht der Eigentümer der Bibliothek."
+
+msgid "Maximum number of archives for the library has been reached."
+msgstr "Die maximal Anzahl der Archive für die Bibliothek wurde erreicht."
+
+msgid "Cannot get archiving quota."
+msgstr "Cannot get archiving quota."
+
+msgid "Cannot check library size."
+msgstr "Größe der Bibliothek kann nicht ermittelt werden."
+
+msgid "Cannot check archiving status of the snapshot."
+msgstr "Cannot check archiving status of the snapshot."
+
+msgid "The library is too big to be archived."
+msgstr "Die Bibliothek ist zu groß um archiviert werden zu können."
+
+msgid "Cannot extract library."
+msgstr "Die Bibliothek kann nicht extrahiert werden."
+
+msgid "Cannot attach metadata file to the library archive."
+msgstr "Metadaten können dem Archiv nicht hinzugefügt werden."
+
+msgid "Cannot create tar file for the archive."
+msgstr "Cannot create tar file for the archive."
+
+msgid "Cannot calculate checksum for the archive."
+msgstr "Cannot calculate checksum for the archive."
+
+msgid "Cannot push archive to HPSS."
+msgstr "Cannot push archive to HPSS."
+
+msgid "Archive for %(name)s has been successfully created."
+msgstr "Archiv für %(name)s wurde erfolgreich archiviert."
+
+msgid "Cannot find archive."
+msgstr "Archiv kann nicht gefunden werden."
+
+msgid "The snapshot of the library has already been archived."
+msgstr "Der Schnappschuss der Bibliothek wurde bereits archiviert."
+
+msgid "Archiving has failed. Please try again in a few minutes."
+msgstr "Archivierung fehlgeschlagen. Bitte versuchen Sie es in ein paar Minuten nochmals."
+
+msgid "Cannot query archiving task."
+msgstr "Cannot query archiving task."
+
+msgid "Unknown status of archiving task."
+msgstr "Unknown status of archiving task."
+
+msgid "Archiving has failed."
+msgstr "Archivierung ist fehlgeschlagen."
+
+msgid "Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution."
+msgstr "Archivierung ist bedingt durch einen Systemfehler fehlgeschlagen. Das Keeper Team wurde informiert und sucht bereits nach einer Lösung."
+
+msgid "Archiving has started."
+msgstr "Archivierung wurde gestartet."
+
+msgid "Extracting library from object storage."
+msgstr "Extrahiere Bibliothek aus dem Objektspeicher."
+
+msgid "Adding metadata file to archive."
+msgstr "Metadaten werden dem Archiv hinzugefügt."
+
+msgid "Creating archive tar file from extracted library."
+msgstr "Tar-Archiv wird aus der extrahierten Bibliothek erstellt."
+
+msgid "Pushing archive to HPSS."
+msgstr "Archiv wird zu HPSS transferiert."
+
+msgid "This library is currently being archived."
+msgstr "Diese Biliothek wird derzeit bereits archiviert."
+
+msgid "Your request to archive has encountered an unexpected error. The Keeper team has been informed and is going to look into it. The archiving functionality for this library (and only this library) has been deactivated in the meanwhile. You can still work and use Keeper without any restrictions."
+msgstr "Ihre Archivierungsanfrage ist auf einen unerwarteten Fehler gestoßen. Das Keeperteam ist informiert worden und sieht sich das Problem an. Die Archivierungsfunktion für diese Bibliothek (und nur diese Bibliothek) wurde in der Zwischenzeit aktiviert. Sie können Keeper weiterhin ganz normal und ohne Einschränkungen weiter benutzen."
+
+msgid "We will be in touch. You can also ask us for a status update by sending an email to the Keeper Support."
+msgstr "Wir melden uns. Bei Rückfragen können Sie gerne eine Email an den Keeper Support senden."
+
+msgid "Your library has been successfully archived. While you have access to Keeper, you can find the archived snapshot under Library Details in the sidebar. In case you want to restore it at a later stage from the dedicated archive, please contact Keeper Support."
+msgstr "Ihre Bibliothek wurde erfolgreich archiviert. So lange Sie Zugang zu Keeper haben, finden Sie die archivierte Version der Bibliothek (Schnappschuss) unter Bibliotheksdetails in der Seitenleiste. Für den Fall, dass Sie zu einem späteren Zeitpunkt das Archiv aus der dedizierten Archivablage wiederherstellen möchten, dann kontaktieren Sie bitte den Keeper Support."
+
+msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
+msgstr "Sie können mehr Informationen über die Archivierungsfunktion in unserer <a href=\"https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving\" target=\"_blank\">knowledge base</a> (in englischer Sprache) finden. Gerne können Sie auch Fragen in deutscher Sprache an den Support richten."
+
+msgid "You can use this email to request your archive later from the Keeper Support."
+msgstr "Sie können diese Email nutzen, um Ihr Archiv zu einem späteren Zeitpunkt durch das Keeper Team wiederherstellen zu lassen."

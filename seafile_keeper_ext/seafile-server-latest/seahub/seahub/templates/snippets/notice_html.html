@@ -60,12 +60,11 @@
 
     {% elif notice.msg_type == "keeper_archiving_msg" %}
         {% json_to_var notice.detail as archive_msg %}
-        {% if archive_msg.status == "prepare" %}
-        <p class="brief">{{archive_msg.msg}}</p>
+        {% if archive_msg.msg == "Archive for %(name)s has been successfully created."%}
+        <p class="brief"> {% blocktrans with name=archive_msg.repo_name %}Archive for {{name}} has been successfully created.{% endblocktrans %}</p>
         {% else %}
-        <p class="brief">Archive for <b>{{archive_msg.repo_name}}</b> is {{archive_msg.status}}</p>
+        <p class="brief">{% trans archive_msg.msg %}</p>
         {% endif %}
-
     {% endif %}
 
         <p class="time">{{ notice.timestamp|translate_seahub_time }}</p>

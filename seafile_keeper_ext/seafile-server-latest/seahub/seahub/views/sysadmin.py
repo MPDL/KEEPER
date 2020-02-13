@@ -350,7 +350,7 @@ def sys_user_admin(request):
             profile = Profile.objects.get_profile_by_user(user.email)
             user.institution =  profile.institution if profile else ''
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_useradmin.html', {
             'users': users,
             'current_page': current_page,
@@ -553,7 +553,7 @@ def sys_user_admin_ldap_imported(request):
             profile = Profile.objects.get_profile_by_user(user.email)
             user.institution =  profile.institution if profile else ''
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_user_admin_ldap_imported.html', {
             'users': users,
             'current_page': current_page,
@@ -604,7 +604,7 @@ def sys_user_admin_ldap(request):
             if last_login.username == user.email:
                 user.last_login = last_login.last_login
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_useradmin_ldap.html', {
             'users': users,
             'current_page': current_page,
@@ -663,7 +663,7 @@ def sys_user_admin_admins(request):
     extra_admin_roles = [x for x in get_available_admin_roles()
                         if x not in get_basic_admin_roles()]
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_useradmin_admins.html', {
             'users': admin_users,
             'not_admin_users': not_admin_users,
@@ -806,7 +806,7 @@ def user_info(request, email):
 
     force_2fa = UserOptions.objects.is_force_2fa(user.username)
 
-    return render(request, 
+    return render(request,
         'sysadmin/userinfo.html', {
             'owned_repos': owned_repos,
             'space_quota': space_quota,
@@ -1153,7 +1153,7 @@ def send_user_add_mail(request, email, password):
 
     # KEEPER
     try:
-        from keeper.common import get_user_name
+        from keeper.utils import get_user_name
         c['user'] = get_user_name(c['user'])
     except Exception as e:
         raise e
@@ -1386,7 +1386,7 @@ def sys_org_search(request):
                 if creator in o.creator.lower():
                     orgs.append(o)
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_org_search.html', {
             'orgs': orgs,
             'name': org_name,
@@ -1637,7 +1637,7 @@ def sys_publink_admin(request):
         else:
             l.name = os.path.dirname(l.path)
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_publink_admin.html', {
             'publinks': publinks,
             'current_page': current_page,
@@ -1678,7 +1678,7 @@ def sys_upload_link_admin(request):
     else:
         page_next = False
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_upload_link_admin.html', {
             'uploadlinks': uploadlinks,
             'current_page': current_page,
@@ -1742,7 +1742,7 @@ def sys_link_search(request):
         else:
             l.name = os.path.dirname(l.path)
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_link_search.html', {
             'publinks': publinks,
             'token': token
@@ -1892,7 +1892,7 @@ def sys_virus_scan_records(request):
         r.repo.owner = seafile_api.get_repo_owner(r.repo.repo_id)
         records.append(r)
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_virus_scan_records.html', {
             'records': records,
             'current_page': current_page,
@@ -1963,7 +1963,7 @@ def batch_add_user_example(request):
     if not next:
         next = SITE_ROOT
     data_list = []
-    head = [_('Email'), _('Password'), _('Name')+ '(' + _('Optional') + ')', 
+    head = [_('Email'), _('Password'), _('Name')+ '(' + _('Optional') + ')',
             _('Role') + '(' + _('Optional') + ')', _('Space Quota') + '(MB, ' + _('Optional') + ')']
     for i in xrange(5):
         username = "test" + str(i) +"@example.com"
@@ -2122,7 +2122,7 @@ def sys_sudo_mode(request):
 
     enable_shib_login = getattr(settings, 'ENABLE_SHIB_LOGIN', False)
     enable_adfs_login = getattr(settings, 'ENABLE_ADFS_LOGIN', False)
-    return render(request, 
+    return render(request,
         'sysadmin/sudo_mode.html', {
             'password_error': password_error,
             'enable_sso': enable_shib_login or enable_adfs_login,
@@ -2268,7 +2268,7 @@ def sys_inst_admin(request):
     else:
         page_next = False
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_inst_admin.html', {
             'insts': insts[:per_page],
             'current_page': current_page,
@@ -2555,7 +2555,7 @@ def sys_invitation_admin(request):
     else:
         page_next = False
 
-    return render(request, 
+    return render(request,
         'sysadmin/sys_invitations_admin.html', {
             'invitations': invitations,
             'current_page': current_page,

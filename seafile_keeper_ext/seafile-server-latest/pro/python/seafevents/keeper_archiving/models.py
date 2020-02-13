@@ -25,10 +25,12 @@ class KeeperArchive(KeeperBase):
     #like mediumtext, 16 MB
     md = Column(UnicodeText(length=MAX_UNICODE_TEXT_LEN))
     created = Column(DateTime, server_default=func.now(), index=True)
+    archived = Column(DateTime)
     UniqueConstraint(repo_id, owner, version, name='unq_keeper_archive_repo_id_version')
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id):
+    def __init__(self, repo_id, owner, version, checksum, external_path, md, repo_name, commit_id,
+                 status, error_msg):
         self.repo_id = repo_id
         self.owner = owner
         self.version = version
@@ -37,6 +39,8 @@ class KeeperArchive(KeeperBase):
         self.md = md
         self.repo_name = repo_name
         self.commit_id = commit_id
+        self.status = status
+        self.error_msg = error_msg
 
 class KeeperArchiveOwnerQuota(KeeperBase):
     __tablename__ = 'keeper_archive_owner_quota'

@@ -22,7 +22,9 @@ import subprocess
 # from subprocess import STDOUT, call
 
 from keeper.default_library_manager import get_keeper_default_library
-from keeper.common import parse_markdown, get_user_name, get_logger
+from keeper.common import parse_markdown, get_logger
+
+from keeper.utils import get_user_name
 
 from keeper.models import Catalog
 
@@ -259,7 +261,7 @@ def get_authors_for_email(authors):
     return "; ".join(auths)
 
 def print_OK():
-    print "In cdc_manager"
+    print("In cdc_manager")
 
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
@@ -436,7 +438,7 @@ def generate_certificate(repo, commit):
 # test
 if DEBUG:
     event = EVENT.db_update
-    print event
+    print(event)
     """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')

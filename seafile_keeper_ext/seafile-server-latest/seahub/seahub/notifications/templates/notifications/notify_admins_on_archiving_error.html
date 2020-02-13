@@ -1,0 +1,26 @@
+{% extends 'email_base.html' %}
+
+{% load i18n seahub_tags %}
+
+{% block email_con %}
+
+{% autoescape off %}
+
+<p style="color:#121214;font-size:14px;">{% trans "Hi," %}</p>
+
+<p style="font-size:14px;color:#434144;">
+An error occured during Keeper Archiving:
+</p>
+
+<p>
+    <strong>archive_id</strong>: {{ archive_id }}<br/>
+    <strong>Error message</strong>:<br/>
+    {{ error_msg }}
+</p>
+<p>
+    <strong>Note:</strong> please use <code>./pro/pro.py arhcive [command] to resolve the error</code> 
+</p>
+
+{% endautoescape %}
+
+{% endblock %}

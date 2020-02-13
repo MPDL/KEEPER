@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os
 import logging
 import mistune
 import json
 
-from seahub.profile.models import Profile
 
 import MySQLdb
 from seahub.settings import DATABASES
@@ -22,16 +20,7 @@ def get_logger(name, logfile):
     return logger
 
 def print_json(obj):
-    print json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
-
-def get_user_name(user):
-    """Get user name"""
-    # default name is user id
-    name = user
-    p = Profile.objects.get_profile_by_user(user)
-    if p and p.nickname:
-        name = p.nickname
-    return name
+    print(json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': ')))
 
 def get_db(db_name):
     """Get DB connection"""
@@ -103,7 +92,8 @@ def parse_markdown_doi (md):
         if str == 'header':
             if len(stack) > 0:
                 header = stack.pop()
-                res[header] = "\n".join(content)
+                if "\n".join(content):
+                    res[header] = "\n".join(content)
                 content = []
             if h[2] in md_headers and h[1] == HEADER_STEP:
                 stack.append(h[2])
@@ -116,7 +106,17 @@ def parse_markdown_doi (md):
                 val = ''.join(txt_list).strip()
                 if val:
                     content.append(val)
-        
-    if len(stack) > 0:
+
+    if len(stack) > 0 and "\n".join(content):
         res[stack.pop()] = "\n".join(content)
     return res
+
+
+def truncate_str(s, max_len=256, sfx='...'):
+    """
+    Cut too long str
+    """
+    if s is None:
+        return None;
+    return (s[:max_len - len(sfx)] + sfx) if len(s) > max_len else s
+

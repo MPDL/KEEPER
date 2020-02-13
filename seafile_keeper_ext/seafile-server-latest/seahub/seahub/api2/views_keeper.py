@@ -21,16 +21,18 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 from django.utils.translation import ugettext as _
-
+from django.utils.translation import get_language, activate
 
 import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import add_keeper_archiving_task, delegate_query_keeper_archiving_status, query_keeper_archiving_status, check_keeper_repo_archiving_status
+from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
+    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
+    check_keeper_repo_archiving_status
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_LIBRARY_TOO_BIG, MSG_SNAPSHOT_ALREADY_ARCHIVED
+from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,7 @@ def get_cdc_id_by_repo(repo_id):
 def LandingPageView(request, repo_id):
 
     repo_owner = get_repo_owner(repo_id)
-    repo_contact_email = SERVER_EMAIL if repo_owner is None else request.user.username
+    repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
 
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
 
@@ -297,34 +299,42 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 class CanArchive(APIView):
 
     "Quota checking before adding archiving"
-    # def __init__(self):
-        # self.db_oper = DBOper()
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         version = request.GET.get('version', None)
         owner = request.user.username
         if SINGLE_MODE:
-            resp = delegate_query_keeper_archiving_status(repo_id, owner, version)
+            resp = delegate_query_keeper_archiving_status(repo_id, owner, version, get_language())
         else:
-            resp = query_keeper_archiving_status(repo_id, owner, version)
-        logger.info("RESP:{}".format(resp))
+            resp = query_keeper_archiving_status(repo_id, owner, version, get_language())
+        # logger.info("RESP:{}".format(resp))
         return JsonResponse(resp)
+
 
 
     def post(self, request):
         repo_id = request.POST.get('repo_id', None)
         version = request.POST.get('version', None)
         owner = request.POST.get('owner', None)
+        language_code = request.POST.get('language_code', None)
+        if language_code == 'de':
+            activate(language_code)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, owner, version)
+        resp_query = query_keeper_archiving_status(repo_id, owner, version, get_language())
         if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = "Library is already in archiving task queue, status: " + resp_query.status
+            msg = _(u'This library is currently being archived.')
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
+        elif resp_query.status == 'ERROR':
+            return JsonResponse({
+                'msg': resp_query.msg,
+                'status': 'system_error'
+            })
+
 
         resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
         if resp_is_archived.is_snapshot_archived == 'true':
@@ -356,39 +366,35 @@ class CanArchive(APIView):
             'status': "success"
         })
 
-
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
-    def __init__(self):
-        self.msg_dict = {
-            MSG_SNAPSHOT_ALREADY_ARCHIVED: 'The snapshot of the library is already archived.',
-        }
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        return JsonResponse(add_keeper_archiving_task(repo_id, user_email))
+        if SINGLE_MODE:
+            resp = delegate_add_keeper_archiving_task(repo_id, user_email, get_language())
+        else:
+            resp = add_keeper_archiving_task(repo_id, user_email, get_language())
+        # logger.info("RESP:{}".format(vars(resp)))
+        return JsonResponse(resp)
 
     def post(self, request):
         repo_id = request.POST.get('repo_id', None)
         owner = request.POST.get('owner', None)
+        language_code = request.POST.get('language_code', None)
+        if language_code == 'de':
+            activate(language_code)
 
         # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, owner)
+        resp_archive = add_keeper_archiving_task(repo_id, owner, get_language())
         if resp_archive.status == 'ERROR':
-            if resp_archive.error in self.msg_dict:
-                msg = self.msg_dict[resp_archive.error]
-            else:
-                msg = resp_archive.msg
             return JsonResponse({
-                'msg': msg,
+                'msg': _(resp_archive.msg),
                 'status': 'error'
             })
-
-        # status for "QUEUED" and "DONE"
-        msg = "Archive for current library is " + resp_archive.status
         return JsonResponse({
-                'msg': msg,
+                'msg':  _(resp_archive.msg),
                 'status': 'success'
             })

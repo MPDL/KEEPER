@@ -10,7 +10,9 @@ from seafobj import fs_mgr
 from seahub.settings import ARCHIVE_METADATA_TARGET, KEEPER_MPG_IP_LIST_URL, SERVICE_URL
 
 from keeper.cdc.cdc_manager import is_certified_by_repo_id
-from keeper.common import parse_markdown, get_user_name, print_json
+from keeper.common import parse_markdown, print_json
+
+from keeper.utils import get_user_name
 
 from keeper.models import Catalog, DoiRepo
 from seafevents.keeper_archiving.db_oper import DBOper
@@ -247,7 +249,7 @@ def clean_up_catalog():
 
 
 def usage():
-    print 'Usage: catalog_manager.py (sync-db|gen-db)'
+    print('Usage: catalog_manager.py (sync-db|gen-db)')
 
 if __name__ == "__main__":
 
@@ -258,10 +260,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if param == 'clean-db':
-        print '%s catalog entries have been cleaned up' % clean_up_catalog()
+        print ('%s catalog entries have been cleaned up' % clean_up_catalog())
     elif param == 'gen-db':
-        print 'Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog())
+        print ('Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog()))
     else:
-        print str(sys.argv)
+        print (str(sys.argv))
         usage()
         sys.exit(1)

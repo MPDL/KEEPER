@@ -17,6 +17,7 @@ define([
       },
       cache: false,
       dataType: 'json',
+      beforeSend: Common.prepareCSRFToken,
       success: function (data) {
         if (data.status === "success") {
           keeperUtils.archive(repo_name, repo_id, data.quota);
@@ -30,6 +31,8 @@ define([
           keeperUtils.archive_failed(repo_name, data.status, "");
         } else if (data.status === "metadata_error") {
           keeperUtils.archive_failed(repo_name, data.status, data.msg);
+        } else if (data.status === "system_error") {
+          keeperUtils.archive_failed(repo_name, data.status, data.msg);
         }
       },
       error: function (error) {
@@ -41,9 +44,9 @@ define([
 
 
   keeperUtils.archive = function (repo_name, repo_id, quota) {
-    var info_archiving_link = "<a href=https://mpdl.zendesk.com/knowledge/articles/360011432700/en-us?brand_id=360000413560 target=\"_blank\">" + gettext("Information on Archiving") + "</a>."
+    var info_archiving_link = "<a href=https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving target=\"_blank\">" + gettext("Information on Archiving") + "</a>."
     var archive_info = gettext("By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: {archive_info_link} This library can be archived {quota} more times.").replace("{archive_info_link}", info_archiving_link).replace("{quota}", quota);
-    var $form = $('<form action="" method=""><h3 id="dialogTitle">' + gettext("Archive {library_name}").replace("{library_name}", '<span style="color:#57a5b8;">' + repo_name + '</span></h3><p>') + archive_info + '</p><button type="submit" class="submit">Archive</button></form>');
+    var $form = $('<form action="" method=""><h3 id="dialogTitle">' + gettext("Archive {library_name}").replace("{library_name}", '<span style="color:#57a5b8;">' + repo_name + '</span></h3><p>') + archive_info + '</p><button type="submit" class="submit">' + gettext("Archive") + '</button></form>');
 
     var $el = $('<div><span class="loading-icon loading-tip"></span></div>');
     $el.modal({ focus: false, minWidth: 400 });
@@ -88,6 +91,9 @@ define([
         archive_info = gettext("Cannot archive, since the library is too large.");
         break;
       case "metadata_error":
+        archive_info = error_msg;
+        break;
+      case "system_error":
         archive_info = error_msg;
         break;
       default:
