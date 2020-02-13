@@ -43,9 +43,13 @@ export PYTHONPATH=${INSTALLPATH}/seahub-extra:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python/seafevents/virus_scanner:$PYTHONPATH
 
-#export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+if [[ -n $VIRTUAL_ENV ]]; then
+    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+fi
 
 export PYTHONIOENCODING=utf-8
+
+echo $PYTHONPATH
 
 python $*  
 

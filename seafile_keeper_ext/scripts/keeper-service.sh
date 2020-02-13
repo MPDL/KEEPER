@@ -33,10 +33,8 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
-#RUN_CTX="sudo -u ${user} pipenv run"
-#ENV_CTX="pipenv run"
-RUN_CTX="sudo -u ${user}"
-ENV_CTX=""
+RUN_CTX="sudo -Eu ${user}"
+CTLG_CTX="sudo -E"
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -154,7 +152,7 @@ case "$1" in
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${RUN_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
+                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
@@ -173,7 +171,7 @@ case "$1" in
                 ${RUN_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
                 ${RUN_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
+                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
             fi
             echo "Done"
             sleep 3
@@ -184,7 +182,7 @@ case "$1" in
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
-                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
+                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh stop 
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
@@ -193,7 +191,7 @@ case "$1" in
                 ${RUN_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${RUN_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${RUN_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
-                ${ENV_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
+                ${CTLG_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
             fi
             echo "Done"
             #systemctl ${1} memcached.service

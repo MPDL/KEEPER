@@ -62,6 +62,12 @@ function run_catalog_manager() {
     echo $RESULT
 }
 
+if [[ -n $VIRTUAL_ENV ]]; then
+    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+    export PATH=${VIRTUAL_ENV}/bin:$PATH
+fi
+
+
 case "$1" in
         start|restart)
             if [ "$1" = "restart" ]; then

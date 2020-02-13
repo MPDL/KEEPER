@@ -127,7 +127,11 @@ function before_start() {
     export PYTHONPATH=$PYTHONPATH:${central_config_dir}
     # KEEPER: added due to keeper deps
     export PYTHONPATH=$PYTHONPATH:$SEAHUB_DIR
-    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+
+    if [[ -n $VIRTUAL_ENV ]]; then
+        export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+    fi
+
     export SEAFES_DIR=$pro_pylibs_dir/seafes
 }
 

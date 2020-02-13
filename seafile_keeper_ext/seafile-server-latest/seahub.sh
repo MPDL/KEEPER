@@ -172,6 +172,13 @@ function before_start() {
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
+
+    if [[ -n $VIRTUAL_ENV ]]; then
+        export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+    fi
+
+
+
     export SEAFES_DIR=$pro_pylibs_dir/seafes
 }
 
