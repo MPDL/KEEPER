@@ -1185,13 +1185,20 @@ if __name__ == "__main__":
         print ('Keeper Archiving is disabled.')
         exit(0)
 
-
-    db = DBOper()
-    rpc = _get_keeper_archiving_rpc()
+    try:
+        db = DBOper()
+        rpc = _get_keeper_archiving_rpc()
+    except Exception as e:
+        print('Cannot run command: {}'.format(e))
+        exit(1)
 
     # IS PROCESSING
     if args.is_processing:
-        tasks = rpc.get_running_tasks()
+        try:
+            tasks = rpc.get_running_tasks()
+        except:
+            print("false")
+
         tasks = tasks._dict
         if ('QUEUED' in tasks and tasks['QUEUED'] > 0) or ('PROCESSED' in tasks and len(tasks['PROCESSED']) > 0):
             print("true")
@@ -1201,7 +1208,12 @@ if __name__ == "__main__":
     # LIST OF PROCESSED AND NOT COMPLETED TASKS
     elif args.list_tasks:
         if rpc is not None:
-            tasks = rpc.get_running_tasks()
+            try:
+                tasks = rpc.get_running_tasks()
+            except Exception as e:
+                print("Cannot call rpc: {}".format(e))
+                exit(1)
+
             tasks = tasks._dict
             # queued tasks
             if 'QUEUED' in tasks:
@@ -1231,9 +1243,12 @@ if __name__ == "__main__":
         print("Restart task(s)")
         if args.restart and len(args.restart) > 0:
             for aid in args.restart:
-                task = rpc.restart_task(aid)
-                if task:
-                    print( task._dict )
+                try:
+                    task = rpc.restart_task(aid)
+                    if task:
+                        print( task._dict )
+                except Exception as e:
+                    print("Cannot restart task: {}".format(e))
         else:
             print("Usage: {}".format(parser.format_help()))
 

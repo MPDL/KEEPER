@@ -49,7 +49,7 @@ fi
 
 export PYTHONIOENCODING=utf-8
 
-echo $PYTHONPATH
+#echo $PYTHONPATH
 
 python $*  
 
