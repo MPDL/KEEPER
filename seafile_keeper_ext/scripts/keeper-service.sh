@@ -142,7 +142,7 @@ function keeper_archiving_status () {
 
 function check_and_exit_keeper_archiving_running () {
     result=$(${seafile_dir}/scripts/run_keeper_script.sh ${script_path}/pro/pro.py archive --is-processing)
-    if [ $result == "true" ]; then
+    if [ "$result" != "false" ]; then
         echo_red "Cannot stop, archiving is currently running."
         keeper_archiving_status
         exit 1

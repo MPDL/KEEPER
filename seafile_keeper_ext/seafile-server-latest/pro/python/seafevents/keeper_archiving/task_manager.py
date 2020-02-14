@@ -1257,5 +1257,4 @@ if __name__ == "__main__":
     else:
         print('Wrong argument.')
 
-
     exit(0)
