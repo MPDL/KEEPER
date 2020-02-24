@@ -412,6 +412,7 @@ class EnvManager(object):
                 'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
                 'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
+		'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
                 'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
                 'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
                 'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
@@ -729,6 +730,7 @@ def deploy_system_conf():
     deploy_file('system/rsyslog.conf', expand=True)
     deploy_file('system/my.cnf', expand=True)
     deploy_file('system/nagios.keeper.cfg',expand=True)
+    deploy_file('system/keeper-env-vars.sh',expand=True)
 
     # deploy http confs
     deploy_http_conf()
