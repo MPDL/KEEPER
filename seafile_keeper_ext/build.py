@@ -748,9 +748,12 @@ def deploy_system_conf():
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
-        deploy_file('system/my.cnf@single', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
+
+    if node_type in ('SINGLE'):
+        deploy_file('system/my.cnf@single', expand=True)
+
 
     # deploy CRON node conf
     cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')

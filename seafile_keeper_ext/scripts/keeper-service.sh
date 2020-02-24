@@ -33,8 +33,8 @@ seahub_init_log=${seafile_dir}/logs/seahub.init.log
 background_init_log=${seafile_dir}/logs/background.init.log
 default_ccnet_conf_dir=${seafile_dir}/ccnet
 
-USR_CTX="sudo -Eu ${user}"
-ROOT_CTX="sudo -E"
+USR_CTX="sudo -iu ${user}"
+ROOT_CTX="sudo -i"
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -164,7 +164,9 @@ case "$1" in
             else
                 echo "Starting..."
             fi
-            
+
+	    cd ${seafile_dir}
+
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
