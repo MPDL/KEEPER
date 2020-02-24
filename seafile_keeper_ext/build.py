@@ -226,7 +226,7 @@ class Utils(object):
                 # Have user input: validate answer
                 if yes_or_no:
                     if answer not in ['yes', 'no', 'y', 'n', 'all']:
-                        print Utils.highlight('\nPlease answer yes, no or all\n')
+                        print(Utils.highlight('\nPlease answer yes, no or all\n'))
                         continue
                     else:
                         if answer == 'all':
@@ -236,8 +236,8 @@ class Utils(object):
                     if validate:
                         try:
                             return validate(answer)
-                        except InvalidAnswer, e:
-                            print Utils.highlight('\n%s\n' % e)
+                        except InvalidAnswer as e:
+                            print(Utils.highlight('\n{}\n'.format(e)))
                             continue
                     else:
                         return answer
@@ -305,17 +305,17 @@ class Utils(object):
         uid = pwd.getpwnam(user).pw_uid
         for dir in dirs:
             os.chown(dir, gid, uid)
-            os.chmod(dir, 0755)
+            os.chmod(dir, 0o755)
             for root, ds, fs in os.walk(dir):
                 for d in ds:
                     p = os.path.join(root, d)
                     os.chown(p, gid, uid)
-                    os.chmod(p, 0755)
+                    os.chmod(p, 0o755)
                 for f in fs:
                     p = os.path.join(root, f)
                     os.chown(p, gid, uid)
                     if p.endswith(('py', 'sh')):
-                        os.chmod(p, 0755)
+                        os.chmod(p, 0o755)
 
 
     @staticmethod
@@ -741,7 +741,7 @@ def deploy_system_conf():
         deploy_file('system/memcached.service.d.local.conf', expand=True)
         deploy_file('system/journald.conf', expand=True)
         deploy_file('system/keeper-oos-log.service', expand=True)
-        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service'], 0755)
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service'], 0o755)
         do_links((
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
@@ -759,7 +759,7 @@ def deploy_system_conf():
 
     # deploy keeper.service systemd
     deploy_file('system/keeper.service')
-    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0755)
+    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
 
     # create system symlinks
     do_links((
@@ -852,12 +852,12 @@ def do_generate(args):
 def do_upgrade(args):
     print('Upgrade')
 
-    print env_mgr.keeper_ext_dir
+    print(env_mgr.keeper_ext_dir)
     # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
         for root, dirs, files in os.walk('seafile-server-latest'):
-            print root, dirs, files
+            print (root, dirs, files)
             if  files and \
                 not ('/keeper' in root
                     or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
@@ -927,7 +927,7 @@ def main():
 
 
     if len(sys.argv) == 1:
-        print parser.format_help()
+        print (parser.format_help())
         return
 
     args = parser.parse_args()
