@@ -112,7 +112,7 @@ CREATE TABLE `keeper_archive` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `update_catalog_archive_status` AFTER UPDATE ON `keeper_archive` FOR EACH ROW UPDATE keeper_catalog SET is_archived=1 WHERE repo_id=NEW.repo_id AND is_archived=0 AND NEW.status='DONE' */;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`seafile`@`localhost`*/ /*!50003 TRIGGER `update_catalog_archive_status` AFTER UPDATE ON `keeper_archive` FOR EACH ROW UPDATE keeper_catalog SET is_archived=1 WHERE repo_id=NEW.repo_id AND is_archived=0 AND NEW.status='DONE' */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
