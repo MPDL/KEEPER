@@ -177,9 +177,9 @@ function before_start() {
         export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
     fi
 
-
-
     export SEAFES_DIR=$pro_pylibs_dir/seafes
+
+    export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 }
 
 function start_seahub () {
