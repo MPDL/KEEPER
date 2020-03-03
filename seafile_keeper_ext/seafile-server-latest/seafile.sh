@@ -83,6 +83,8 @@ if [[ -n $VIRTUAL_ENV ]]; then
     export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
 fi
 
+export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
+
 function validate_ccnet_conf_dir () {
     if [[ ! -d ${default_ccnet_conf_dir} ]]; then
         echo "Error: there is no ccnet config directory."

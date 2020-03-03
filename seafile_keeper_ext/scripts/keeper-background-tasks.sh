@@ -133,6 +133,8 @@ function before_start() {
     fi
 
     export SEAFES_DIR=$pro_pylibs_dir/seafes
+
+    export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 }
 
 function start_seafile_background_tasks () {

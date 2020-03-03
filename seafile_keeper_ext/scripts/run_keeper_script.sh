@@ -47,6 +47,8 @@ if [[ -n $VIRTUAL_ENV ]]; then
     export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
 fi
 
+export PYTHON_EGG_CACHE=$SEAFILE_DIR/.cache/Python-Eggs
+
 export PYTHONIOENCODING=utf-8
 
 #echo $PYTHONPATH
