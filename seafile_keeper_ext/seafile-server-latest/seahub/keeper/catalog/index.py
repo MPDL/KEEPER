@@ -107,23 +107,21 @@ def application(env, start_response):
         # get HTTP_X_FORWARDED_FOR (i.e. servier is clustered), otherwise remote address
         remote_addr = env['HTTP_X_FORWARDED_FOR'] if 'HTTP_X_FORWARDED_FOR' in env else env['REMOTE_ADDR']
 
-        # test for valid IP
         is_valid_user = 0 # default 0 not valid
-        for allowed_ip_prefix in allowed_ip_prefixes:
-            if (remote_addr.startswith(allowed_ip_prefix)):
-                errmsg = ''
-                is_valid_user = 1
-                break
-        # change this or add code to support sigle-sign-on or session based authentification
-
-        if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
-           errmsg = ''
-           is_valid_user = 1
-
         # allow all
         if DEBUG:
             is_valid_user = 1
             errmsg = ''
+        else: 
+            # test for valid IP
+            for allowed_ip_prefix in allowed_ip_prefixes:
+                if (remote_addr.startswith(allowed_ip_prefix)):
+                    errmsg = ''
+                    is_valid_user = 1
+                    break
+            if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
+               errmsg = ''
+               is_valid_user = 1
 
 
         results = []
