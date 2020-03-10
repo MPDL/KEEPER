@@ -3,10 +3,10 @@ import os
 import sys
 import glob
 import subprocess
-import StringIO
+from io import StringIO
 import shutil
 import re
-import ConfigParser
+import configparser
 import pwd, grp
 import getpass
 import traceback
@@ -144,7 +144,7 @@ class Utils(object):
     @staticmethod
     def read_config(fn=None):
         '''Return a case sensitive ConfigParser by reading the file "fn"'''
-        cp = ConfigParser.ConfigParser()
+        cp = configparser.ConfigParser(interpolation=None)
         cp.optionxform = str
         if fn:
             cp.read(fn)
@@ -214,7 +214,7 @@ class Utils(object):
                 if password:
                     answer = getpass.getpass(desc).strip()
                 else:
-                    answer = raw_input(desc).strip()
+                    answer = input(desc).strip()
 
                 # No user input: use default
                 if not answer:
@@ -347,7 +347,7 @@ class EnvManager(object):
         if not conf_files:
             Utils.error('Cannot find KEEPER config files')
 
-        self.keeper_config = ConfigParser.ConfigParser()
+        self.keeper_config = configparser.ConfigParser(interpolation=None)
         self.keeper_config.optionxform = str
         self.keeper_config.readfp(open(conf_files[0]))
 
@@ -377,11 +377,13 @@ class EnvManager(object):
 
     def read_seafile_conf_dir(self):
         '''Read seafile conf dir from ccnet/seafile.ini'''
-        seafile_ini = os.path.join(self.ccnet_dir, 'seafile.ini')
-        with open(seafile_ini, 'r') as fp:
-            path = fp.read()
+        #TODO
+        # seafile_ini = os.path.join(self.ccnet_dir, 'seafile.ini')
+        # with open(seafile_ini, 'r') as fp:
+        #     path = fp.read()
 
-        self.seafile_dir = path.strip()
+        #self.seafile_dir = path.strip()
+        self.seafile_dir = "/opt/seafile/seafile-data"
 
     def get_seahub_env(self):
         '''Prepare for seahub syncdb'''
@@ -611,7 +613,7 @@ def deploy_file(path, expand=False, dest_dir=None):
             Utils.info("Create dir <{}>".format(dest_dir))
             Utils.must_mkdir(dest_dir)
 
-    fin = open(path, 'r')
+    fin = open(path, 'r', errors='ignore')
     content = fin.read()
     fin.close()
 
@@ -669,7 +671,7 @@ def deploy_ext():
 
     ### create ext-deploymnet related symlinks
     do_links((
-        (env_mgr.django_admin_link, env_mgr.django_admin_path),
+        #(env_mgr.django_admin_link, env_mgr.django_admin_path),
         (env_mgr.custom_link, env_mgr.custom_dir),
         (env_mgr.avatars_link, env_mgr.avatars_dir),
     ))
