@@ -3,6 +3,7 @@ SEAFILE_DIR=__SEAFILE_DIR__
 INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
 default_ccnet_conf_dir=${SEAFILE_DIR}/ccnet
 central_config_dir=${SEAFILE_DIR}/conf
+default_seafile_data_dir=${SEAFILE_DIR}/seafile-data
 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
@@ -11,25 +12,8 @@ if [ $? -ne 0  ]; then
     exit 1
 fi
 
-#get path of seafile.conf
-function read_seafile_data_dir () {
-    seafile_ini=${default_ccnet_conf_dir}/seafile.ini
-    if [[ ! -f ${seafile_ini} ]]; then
-        echo "${seafile_ini} not found. Now quit"
-        exit 1
-    fi
-    seafile_data_dir=$(cat "${seafile_ini}")
-    if [[ ! -d ${seafile_data_dir} ]]; then
-        echo "Your seafile server data directory \"${seafile_data_dir}\" is invalid or doesn't exits."
-        echo "Please check it first, or create this directory yourself."
-        echo ""
-        exit 1;
-    fi
-}
-
-read_seafile_data_dir;
 export CCNET_CONF_DIR=${default_ccnet_conf_dir}
-export SEAFILE_CONF_DIR=${seafile_data_dir}
+export SEAFILE_CONF_DIR=${default_seafile_data_dir}
 export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
 export SEAFES_DIR=${INSTALLPATH}/pro/python/seafes
 export SEAHUB_DIR=${INSTALLPATH}/seahub

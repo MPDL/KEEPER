@@ -247,10 +247,8 @@ class Utils(object):
     def get_python_executable():
         '''Find a suitable python executable'''
         try_list = [
-            'python2.7',
-            'python27',
-            'python2.6',
-            'python26',
+            'python3',
+            'python3.6',
         ]
 
 
@@ -336,7 +334,6 @@ class EnvManager(object):
         self.read_keeper_conf()
         self.set_seafile_env()
         self.set_keeper_env()
-        self.read_seafile_conf_dir()
 
     def read_keeper_conf(self):
         '''Read keeper config file and set keeper related properties
@@ -371,19 +368,9 @@ class EnvManager(object):
         self.seahub_dir = os.path.join(self.install_path, 'seahub')
 
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
-        self.seafile_dir = ''
+        self.seafile_dir = os.path.join(self.top_dir, 'seafile-data')
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
 
-
-    def read_seafile_conf_dir(self):
-        '''Read seafile conf dir from ccnet/seafile.ini'''
-        #TODO
-        # seafile_ini = os.path.join(self.ccnet_dir, 'seafile.ini')
-        # with open(seafile_ini, 'r') as fp:
-        #     path = fp.read()
-
-        #self.seafile_dir = path.strip()
-        self.seafile_dir = "/opt/seafile/seafile-data"
 
     def get_seahub_env(self):
         '''Prepare for seahub syncdb'''
@@ -395,7 +382,6 @@ class EnvManager(object):
         env['SEAHUB_DIR'] = self.seahub_dir
         self.setup_python_path(env)
         return env
-
 
     def set_keeper_env(self):
 
