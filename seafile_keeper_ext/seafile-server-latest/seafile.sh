@@ -16,9 +16,9 @@ SCRIPT=$(readlink -f "$0")
 INSTALLPATH=$(dirname "${SCRIPT}")
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
+default_seafile_data_dir=${TOPDIR}/seafile-data
 central_config_dir=${TOPDIR}/conf
 seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
-
 
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -38,7 +38,7 @@ if [[ $# != 1 || ( "$1" != "start" && "$1" != "stop" && "$1" != "restart" ) ]]; 
 fi
 
 function validate_running_user () {
-    real_data_dir=`readlink -f ${seafile_data_dir}`
+    real_data_dir=`readlink -f ${default_seafile_data_dir}`
     running_user=`id -un`
     data_dir_owner=`stat -c %U ${real_data_dir}`
 
@@ -48,42 +48,16 @@ function validate_running_user () {
     fi
 }
 
-function check_python_executable() {
-    if [[ "$PYTHON" != "" && -x $PYTHON ]]; then
-        return 0
-    fi
-
-    if which python2.7 2>/dev/null 1>&2; then
-        PYTHON=python2.7
-    elif which python27 2>/dev/null 1>&2; then
-        PYTHON=python27
-    elif which python2.6 2>/dev/null 1>&2; then
-        PYTHON=python2.6
-    elif which python26 2>/dev/null 1>&2; then
-        PYTHON=python26
-    else
-        echo
-        echo "Can't find a python executable of version 2.6 or above in PATH"
-        echo "Install python 2.6+ before continue."
-        echo "Or if you installed it in a non-standard PATH, set the PYTHON enviroment varirable to it"
-        echo
-        exit 1
-    fi
-}
-
-check_python_executable;
-
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.6/site-packages:${INSTALLPATH}/seafile/lib64/python2.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPATH}/seafile/lib64/python2.7/site-packages:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
 
-if [[ -n $VIRTUAL_ENV ]]; then
-    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
-fi
+#if [[ -n $VIRTUAL_ENV ]]; then
+#    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
+#fi
 
-export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
+#export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 
 function validate_ccnet_conf_dir () {
     if [[ ! -d ${default_ccnet_conf_dir} ]]; then
@@ -103,16 +77,10 @@ function validate_central_conf_dir () {
     fi
 }
 
-function read_seafile_data_dir () {
-    seafile_ini=${default_ccnet_conf_dir}/seafile.ini
-    if [[ ! -f ${seafile_ini} ]]; then
-        echo "${seafile_ini} not found. Now quit"
-        exit 1
-    fi
-    seafile_data_dir=$(cat "${seafile_ini}")
-    if [[ ! -d ${seafile_data_dir} ]]; then
-        echo "Your seafile server data directory \"${seafile_data_dir}\" is invalid or doesn't exits."
-        echo "Please check it first, or create this directory yourself."
+function validate_seafile_data_dir () {
+    if [[ ! -d ${default_seafile_data_dir} ]]; then
+        echo "Error: there is no seafile server data directory."
+        echo "Have you run setup-seafile.sh before this?"
         echo ""
         exit 1;
     fi
@@ -121,7 +89,7 @@ function read_seafile_data_dir () {
 function test_config() {
     if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} --test \
          -c "${default_ccnet_conf_dir}" \
-         -d "${seafile_data_dir}" \
+         -d "${default_seafile_data_dir}" \
          -F "${central_config_dir}" ; then
         exit 1;
     fi
@@ -151,7 +119,7 @@ function validate_already_running () {
     check_component_running "ccnet-server" "ccnet-server -c ${default_ccnet_conf_dir}"
     check_component_running "seaf-server" "seaf-server -c ${default_ccnet_conf_dir}"
     check_component_running "fileserver" "fileserver -c ${default_ccnet_conf_dir}"
-    check_component_running "seafdav" "wsgidav.server.run_server"
+    check_component_running "seafdav" "wsgidav.server.server_cli"
     check_component_running "seafevents" "seafevents.main --config-file ${central_config_dir}"
 }
 
@@ -166,7 +134,7 @@ function start_seafile_server () {
     validate_already_running;
     validate_central_conf_dir;
     validate_ccnet_conf_dir;
-    read_seafile_data_dir;
+    validate_seafile_data_dir;
     validate_running_user;
     test_config;
     test_java;
@@ -174,8 +142,8 @@ function start_seafile_server () {
     echo "Starting seafile server, please wait ..."
 
     mkdir -p $TOPDIR/logs
-    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${seafile_data_dir}" -F "${central_config_dir}"; then
-        controller_log="$seafile_data_dir/controller.log"
+    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}"; then
+        controller_log="$default_seafile_data_dir/controller.log"
         echo
         echo "Failed to start seafile server. See $controller_log for more details."
         echo
@@ -199,8 +167,9 @@ function kill_all () {
     pkill -f "seaf-server -c ${default_ccnet_conf_dir}"
     pkill -f "fileserver -c ${default_ccnet_conf_dir}"
     pkill -f "seafevents.main"
+    pkill -f "convert_server.py"
     pkill -f "soffice.*--invisible --nocrashreport"
-    pkill -f  "wsgidav.server.run_server"
+    pkill -f  "wsgidav.server.server_cli"
 }
 
 function stop_seafile_server () {
