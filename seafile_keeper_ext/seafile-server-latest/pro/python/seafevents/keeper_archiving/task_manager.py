@@ -220,11 +220,15 @@ class KeeperArchivingTask(object):
 def _update_archive_db(task):
 
     a = None
+    error = task.error
     try:
+        # escape error
+        if isinstance(task.error, dict): 
+            error = json.dumps(task.error).strip('\"')
         # update db
         a = task_manager._db_oper.add_or_update_archive(task.repo_id, task.owner, task.version,
             task.checksum, task.external_path, task.md, task._repo.name, task._commit.commit_id,
-            task.status, task.error)
+            task.status, error)
     except Exception as e:
         msg = "Cannot update archiving task {}: {}".format(task, e)
         _l.critical(msg)
@@ -236,11 +240,15 @@ def _update_archive_db(task):
 
 def _set_error(task, msg, error):
     task.msg = msg
-    task.error = json.dumps({
+    if error is not None and error:
+        error = json.dumps(error).strip('\"')
+    else: 
+        error = ''
+    task.error = {
         'status': task.status,
         'ts': str(datetime.now()),
-        'error': error,
-    })
+        'error': error, 
+    }
     _l.error(json.dumps({'message': msg, 'error': task.error}))
 
 def _set_critical_error(task, msg, error):
