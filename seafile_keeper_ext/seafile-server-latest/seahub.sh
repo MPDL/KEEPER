@@ -13,7 +13,7 @@
 echo ""
 
 SCRIPT=$(readlink -f "$0")
-INSTALLPATH=__SEAFILE_DIR__/__SEAFILE_SERVER_LATEST_DIR__
+INSTALLPATH=$(dirname "${SCRIPT}")
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
@@ -170,10 +170,6 @@ function before_start() {
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
-
-    #if [[ -n $VIRTUAL_ENV ]]; then
-    #    export PYTHONPATH=${VIRTUAL_ENV}/lib/python2.7/site-packages:$PYTHONPATH
-    #fi
 
     export SEAFES_DIR=$pro_pylibs_dir/seafes
 
