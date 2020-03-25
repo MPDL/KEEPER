@@ -4,11 +4,12 @@
 import os
 import json
 import logging
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import requests
 import hashlib
-import urlparse
+import urllib.parse
 import posixpath
+import datetime
 
 from rest_framework.views import APIView
 
@@ -19,10 +20,9 @@ from pysearpc import SearpcError
 from seaserv import seafile_api
 
 from seahub.base.accounts import User, ANONYMOUS_EMAIL
+from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.utils import gen_inner_file_get_url, \
     gen_inner_file_upload_url, is_pro_version
-from seahub.base.templatetags.seahub_tags import email2nickname
-
 from seahub.settings import SITE_ROOT
 
 from seahub.wopi.utils import get_file_info_by_token
@@ -32,20 +32,15 @@ json_content_type = 'application/json; charset=utf-8'
 
 WOPI_LOCK_EXPIRATION = 30 * 60
 
-def generate_repo_file_path(request):
+def generate_file_lock_key_value(request):
+
     token = request.GET.get('access_token', None)
 
     info_dict = get_file_info_by_token(token)
     repo_id = info_dict['repo_id']
     file_path= info_dict['file_path']
 
-    return repo_id, file_path
-
-def generate_file_lock_key_value(request):
-
-    repo_id, file_path = generate_repo_file_path(request)
     repo = seafile_api.get_repo(repo_id)
-
     if repo.is_virtual:
         origin_repo_id = repo.origin_repo_id
         origin_file_path = posixpath.join(repo.origin_path, file_path.strip('/'))
@@ -67,10 +62,6 @@ def lock_file(request):
 def unlock_file(request):
     key, value = generate_file_lock_key_value(request)
     cache.delete(key)
-
-def unlock_file_seafile(request):
-    repo_id, file_path = generate_repo_file_path(request)
-    seafile_api.unlock_file(repo_id, file_path)
 
 def refresh_file_lock(request):
     lock_file(request)
@@ -180,6 +171,7 @@ class WOPIFilesView(APIView):
         result['Size'] = file_size
         result['UserId'] = request_user
         result['Version'] = obj_id
+        result['LastModifiedTime'] = ''
 
         try:
             if is_pro_version():
@@ -187,6 +179,11 @@ class WOPIFilesView(APIView):
                         seafile_api.get_org_repo_owner(repo_id)
             else:
                 result['OwnerId'] = seafile_api.get_repo_owner(repo_id)
+
+            dirent = seafile_api.get_dirent_by_path(repo_id, file_path)
+            if dirent:
+                last_modified = datetime.datetime.utcfromtimestamp(dirent.mtime)
+                result['LastModifiedTime'] = last_modified.isoformat()
         except Exception as e:
             logger.error(e)
             return HttpResponse(json.dumps({}), status=500,
@@ -200,7 +197,7 @@ class WOPIFilesView(APIView):
             result['IsAnonymousUser'] = True
 
         absolute_uri = request.build_absolute_uri('/')
-        result['PostMessageOrigin'] = urlparse.urljoin(absolute_uri, SITE_ROOT).strip('/')
+        result['PostMessageOrigin'] = urllib.parse.urljoin(absolute_uri, SITE_ROOT).strip('/')
         result['HideSaveOption'] = True
         result['HideExportOption'] = True
         result['EnableOwnerTermination'] = True
@@ -210,14 +207,13 @@ class WOPIFilesView(APIView):
         result['DisablePrint'] = True if not can_download else False
         result['HidePrintOption'] = True if not can_download else False
 
+        result['SupportsUpdate'] = True if can_edit else False
         result['UserCanWrite'] = True if can_edit else False
         result['ReadOnly'] = True if not can_edit else False
 
         # new file creation feature is not implemented on wopi host(seahub)
         # hide save as button on view/edit file page
         result['UserCanNotWriteRelative'] = True
-        # putfile and putrelativefile are not supported by wopi host(seahub)
-        result['SupportsUpdate'] = False
 
         return HttpResponse(json.dumps(result), status=200,
                             content_type=json_content_type)
@@ -305,7 +301,6 @@ class WOPIFilesView(APIView):
                         refresh_file_lock(request)
                     else:
                         unlock_file(request)
-                        unlock_file_seafile(request)
 
                     return HttpResponse()
             else:
@@ -357,8 +352,8 @@ class WOPIFilesContentsView(APIView):
         inner_path = gen_inner_file_get_url(fileserver_token, file_name)
 
         try:
-            file_content = urllib2.urlopen(inner_path).read()
-        except urllib2.URLError as e:
+            file_content = urllib.request.urlopen(inner_path).read()
+        except urllib.error.URLError as e:
             logger.error(e)
             return HttpResponse(json.dumps({}), status=500,
                                 content_type=json_content_type)

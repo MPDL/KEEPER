@@ -32,11 +32,12 @@ from seahub.base.accounts import User
 from seahub.base.models import UserLastLogin
 from seahub.base.decorators import sys_staff_required, require_POST
 from seahub.base.sudo_mode import update_sudo_mode_ts
-from seahub.base.templatetags.seahub_tags import tsstr_sec, email2nickname
+from seahub.base.templatetags.seahub_tags import tsstr_sec, email2nickname, \
+    email2contact_email
 from seahub.auth import authenticate
 from seahub.auth.decorators import login_required, login_required_ajax
 from seahub.constants import GUEST_USER, DEFAULT_USER, DEFAULT_ADMIN, \
-        SYSTEM_ADMIN, DAILY_ADMIN, AUDIT_ADMIN, HASH_URLS
+        SYSTEM_ADMIN, DAILY_ADMIN, AUDIT_ADMIN, HASH_URLS, DEFAULT_ORG
 from seahub.institutions.models import (Institution, InstitutionAdmin,
                                         InstitutionQuota)
 from seahub.institutions.utils import get_institution_space_usage
@@ -75,7 +76,8 @@ import seahub.settings as settings
 from seahub.settings import INIT_PASSWD, SITE_ROOT, \
     SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER, SEND_EMAIL_ON_RESETTING_USER_PASSWD, \
     ENABLE_SYS_ADMIN_VIEW_REPO, ENABLE_GUEST_INVITATION, \
-    ENABLE_LIMIT_IPADDRESS
+    ENABLE_LIMIT_IPADDRESS, ENABLE_SHARE_LINK_REPORT_ABUSE
+
 try:
     from seahub.settings import ENABLE_TRIAL_ACCOUNT
 except:
@@ -84,19 +86,27 @@ if ENABLE_TRIAL_ACCOUNT:
     from seahub_extra.trialaccount.models import TrialAccount
 try:
     from seahub.settings import MULTI_TENANCY
+    from seahub_extra.organizations.models import OrgSettings
 except ImportError:
     MULTI_TENANCY = False
+try:
+    from seahub.settings import ENABLE_SYSADMIN_EXTRA
+except ImportError:
+    ENABLE_SYSADMIN_EXTRA = False
 from seahub.utils.two_factor_auth import has_two_factor_auth
 from termsandconditions.models import TermsAndConditions
+try:
+    from seahub.settings import ENABLE_FILE_SCAN
+except ImportError:
+    ENABLE_FILE_SCAN = False
+from seahub.work_weixin.settings import ENABLE_WORK_WEIXIN
+
 
 logger = logging.getLogger(__name__)
 
 @login_required
 @sys_staff_required
-def sysadmin(request):
-    max_upload_file_size = get_max_upload_file_size()
-
-    folder_perm_enabled = True if is_pro_version() and settings.ENABLE_FOLDER_PERM else False
+def sysadmin_react_fake_view(request, **kwargs):
 
     try:
         expire_days = seafile_api.get_server_config_int('library_trash', 'expire_days')
@@ -104,23 +114,30 @@ def sysadmin(request):
         logger.error(e)
         expire_days = -1
 
-    return render(request, 'sysadmin/sysadmin_backbone.html', {
-            'enable_sys_admin_view_repo': ENABLE_SYS_ADMIN_VIEW_REPO,
-            'enable_upload_folder': settings.ENABLE_UPLOAD_FOLDER,
-            'enable_resumable_fileupload': settings.ENABLE_RESUMABLE_FILEUPLOAD,
-            'max_number_of_files_for_fileupload': settings.MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD,
-            'enable_thumbnail': settings.ENABLE_THUMBNAIL,
-            'thumbnail_default_size': settings.THUMBNAIL_DEFAULT_SIZE,
-            'thumbnail_size_for_grid': settings.THUMBNAIL_SIZE_FOR_GRID,
-            'enable_encrypted_library': config.ENABLE_ENCRYPTED_LIBRARY,
-            'enable_repo_history_setting': config.ENABLE_REPO_HISTORY_SETTING,
-            'max_upload_file_size': max_upload_file_size,
-            'folder_perm_enabled': folder_perm_enabled,
-            'is_pro': True if is_pro_version() else False,
-            'file_audit_enabled': FILE_AUDIT_ENABLED,
-            'enable_limit_ipaddress': ENABLE_LIMIT_IPADDRESS,
-            'trash_repos_expire_days': expire_days if expire_days > 0 else 30,
-            })
+    multi_institution = getattr(dj_settings, 'MULTI_INSTITUTION', False)
+    institutions = None
+    if multi_institution:
+        institutions = [inst.name for inst in Institution.objects.all()]
+
+    return render(request, 'sysadmin/sysadmin_react_app.html', {
+        'constance_enabled': dj_settings.CONSTANCE_ENABLED,
+        'multi_tenancy': MULTI_TENANCY,
+        'multi_institution': multi_institution,
+        'institutions': institutions,
+        'send_email_on_adding_system_member': SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER,
+        'sysadmin_extra_enabled': ENABLE_SYSADMIN_EXTRA,
+        'enable_guest_invitation': ENABLE_GUEST_INVITATION,
+        'enable_terms_and_conditions': config.ENABLE_TERMS_AND_CONDITIONS,
+        'enable_file_scan': ENABLE_FILE_SCAN,
+        'enable_work_weixin': ENABLE_WORK_WEIXIN,
+        'enable_sys_admin_view_repo': ENABLE_SYS_ADMIN_VIEW_REPO,
+        'trash_repos_expire_days': expire_days if expire_days > 0 else 30,
+        'available_roles': get_available_roles(),
+        'available_admin_roles': get_available_admin_roles(),
+        'have_ldap': get_ldap_info(),
+        'two_factor_auth_enabled': has_two_factor_auth(),
+        'enable_share_link_report_abuse': ENABLE_SHARE_LINK_REPORT_ABUSE,
+    })
 
 @login_required
 @sys_staff_required
@@ -174,7 +191,7 @@ def sys_statistic_traffic(request):
         'link_file_upload', 'link_file_download',
     ]
     if order_by not in filters and \
-       order_by not in map(lambda x: x + '_desc', filters):
+       order_by not in [x + '_desc' for x in filters]:
         order_by = 'link_file_download_desc'
 
     if req_type == 'user':
@@ -225,13 +242,8 @@ def can_view_sys_admin_repo(repo):
 def populate_user_info(user):
     """Populate contact email and name to user.
     """
-    user_profile = Profile.objects.get_profile_by_user(user.email)
-    if user_profile:
-        user.contact_email = user_profile.contact_email
-        user.name = user_profile.nickname
-    else:
-        user.contact_email = ''
-        user.name = ''
+    user.contact_email = email2contact_email(user.email)
+    user.name = email2nickname(user.email)
 
 def _populate_user_quota_usage(user):
     """Populate space/share quota to user.
@@ -369,6 +381,8 @@ def sys_user_admin(request):
             'extra_user_roles': extra_user_roles,
             'show_institution': show_institution,
             'institutions': institutions,
+            'is_email_configured': IS_EMAIL_CONFIGURED,
+            'send_email_on_adding_system_member': SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER,
         })
 
 @login_required
@@ -377,17 +391,17 @@ def sys_useradmin_export_excel(request):
     """ Export all users from database to excel
     """
 
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = SITE_ROOT
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = SITE_ROOT
 
     try:
         users = ccnet_api.get_emailusers('DB', -1, -1) + \
                 ccnet_api.get_emailusers('LDAPImport', -1, -1)
     except Exception as e:
         logger.error(e)
-        messages.error(request, _(u'Failed to export Excel'))
-        return HttpResponseRedirect(next)
+        messages.error(request, _('Failed to export Excel'))
+        return HttpResponseRedirect(next_page)
 
     if is_pro_version():
         is_pro = True
@@ -492,8 +506,8 @@ def sys_useradmin_export_excel(request):
 
     wb = write_xls('users', head, data_list)
     if not wb:
-        messages.error(request, _(u'Failed to export Excel'))
-        return HttpResponseRedirect(next)
+        messages.error(request, _('Failed to export Excel'))
+        return HttpResponseRedirect(next_page)
 
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename=users.xlsx'
@@ -698,7 +712,7 @@ def user_info(request, email):
                                                           ret_corrupted=True)
         in_repos = seafile_api.get_org_share_in_repo_list(org_id, email, -1, -1)
 
-    owned_repos = filter(lambda r: not r.is_virtual, owned_repos)
+    owned_repos = [r for r in owned_repos if not r.is_virtual]
 
     # get user profile
     profile = Profile.objects.get_profile_by_user(email)
@@ -847,19 +861,19 @@ def user_set_quota(request, email):
                 org_id = org[0].org_id
                 org_quota_mb = seafserv_threaded_rpc.get_org_quota(org_id) / get_file_size_unit('MB')
                 if space_quota_mb > org_quota_mb:
-                    result['error'] = _(u'Failed to set quota: maximum quota is %d MB' % \
+                    result['error'] = _('Failed to set quota: maximum quota is %d MB' % \
                                             org_quota_mb)
                     return HttpResponse(json.dumps(result), status=400, content_type=content_type)
                 else:
                     seafile_api.set_org_user_quota(org_id, email, space_quota)
         except:
-            result['error'] = _(u'Failed to set quota: internal server error')
+            result['error'] = _('Failed to set quota: internal server error')
             return HttpResponse(json.dumps(result), status=500, content_type=content_type)
 
         result['success'] = True
         return HttpResponse(json.dumps(result), content_type=content_type)
     else:
-        result['error'] = str(f.errors.values()[0])
+        result['error'] = str(list(f.errors.values())[0])
         return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
 @login_required_ajax
@@ -879,7 +893,7 @@ def sys_org_set_quota(request, org_id):
         seafserv_threaded_rpc.set_org_quota(org_id, quota)
     except SearpcError as e:
         logger.error(e)
-        result['error'] = _(u'Failed to set quota: internal server error')
+        result['error'] = _('Failed to set quota: internal server error')
         return HttpResponse(json.dumps(result), status=500, content_type=content_type)
 
     result['success'] = True
@@ -891,18 +905,18 @@ def sys_org_set_quota(request, org_id):
 def user_remove(request, email):
     """Remove user"""
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_useradmin') if referer is None else referer
+    next_page = reverse('sys_useradmin') if referer is None else referer
 
     try:
         user = User.objects.get(email=email)
         org = ccnet_api.get_orgs_by_user(user.email)
         if org:
             if org[0].creator == user.email:
-                messages.error(request, _(u'Failed to delete: the user is an organization creator'))
-                return HttpResponseRedirect(next)
+                messages.error(request, _('Failed to delete: the user is an organization creator'))
+                return HttpResponseRedirect(next_page)
 
         user.delete()
-        messages.success(request, _(u'Successfully deleted %s') % user.username)
+        messages.success(request, _('Successfully deleted %s') % user.username)
 
         # send admin operation log signal
         admin_op_detail = {
@@ -912,9 +926,9 @@ def user_remove(request, email):
                 operation=USER_DELETE, detail=admin_op_detail)
 
     except User.DoesNotExist:
-        messages.error(request, _(u'Failed to delete: the user does not exist'))
+        messages.error(request, _('Failed to delete: the user does not exist'))
 
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 @login_required
 @sys_staff_required
@@ -929,12 +943,12 @@ def remove_trial(request, user_or_org):
         raise Http404
 
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_useradmin') if referer is None else referer
+    next_page = reverse('sys_useradmin') if referer is None else referer
 
     TrialAccount.objects.filter(user_or_org=user_or_org).delete()
 
     messages.success(request, _('Successfully remove trial for: %s') % user_or_org)
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 # @login_required
 # @sys_staff_required
@@ -962,14 +976,14 @@ def user_remove_admin(request, email):
         user = User.objects.get(email=email)
         user.is_staff = False
         user.save()
-        messages.success(request, _(u'Successfully revoke the admin permission of %s') % user.username)
+        messages.success(request, _('Successfully revoke the admin permission of %s') % user.username)
     except User.DoesNotExist:
-        messages.error(request, _(u'Failed to revoke admin: the user does not exist'))
+        messages.error(request, _('Failed to revoke admin: the user does not exist'))
 
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_useradmin') if referer is None else referer
+    next_page = reverse('sys_useradmin') if referer is None else referer
 
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 # @login_required
 # @sys_staff_required
@@ -1011,7 +1025,7 @@ def email_user_on_activation(user):
     c = {
         'username': user.email,
         }
-    send_html_email(_(u'Your account on %s is activated') % get_site_name(),
+    send_html_email(_('Your account on %s is activated') % get_site_name(),
             'sysadmin/user_activation_email.html', c, None, [user.email])
 
 @login_required_ajax
@@ -1094,7 +1108,7 @@ def send_user_reset_email(request, email, password):
         'email': email,
         'password': password,
         }
-    send_html_email(_(u'Password has been reset on %s') % get_site_name(),
+    send_html_email(_('Password has been reset on %s') % get_site_name(),
             'sysadmin/user_reset_email.html', c, None, [email])
 
 @login_required
@@ -1122,25 +1136,25 @@ def user_reset(request, email):
                     msg = _('Successfully reset password to %(passwd)s, an email has been sent to %(user)s.') % \
                         {'passwd': new_password, 'user': contact_email}
                     messages.success(request, msg)
-                except Exception, e:
+                except Exception as e:
                     logger.error(str(e))
                     msg = _('Successfully reset password to %(passwd)s, but failed to send email to %(user)s, please check your email configuration.') % \
                         {'passwd':new_password, 'user': user.email}
                     messages.success(request, msg)
             else:
-                messages.success(request, _(u'Successfully reset password to %(passwd)s for user %(user)s.') % \
+                messages.success(request, _('Successfully reset password to %(passwd)s for user %(user)s.') % \
                                      {'passwd':new_password,'user': user.email})
         else:
-            messages.success(request, _(u'Successfully reset password to %(passwd)s for user %(user)s. But email notification can not be sent, because Email service is not properly configured.') % \
+            messages.success(request, _('Successfully reset password to %(passwd)s for user %(user)s. But email notification can not be sent, because Email service is not properly configured.') % \
                                  {'passwd':new_password,'user': user.email})
     except User.DoesNotExist:
-        msg = _(u'Failed to reset password: user does not exist')
+        msg = _('Failed to reset password: user does not exist')
         messages.error(request, msg)
 
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_useradmin') if referer is None else referer
+    next_page = reverse('sys_useradmin') if referer is None else referer
 
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 def send_user_add_mail(request, email, password):
     """Send email when add new user."""
@@ -1150,15 +1164,14 @@ def send_user_add_mail(request, email, password):
         'email': email,
         'password': password,
         }
-
     # KEEPER
     try:
         from keeper.utils import get_user_name
         c['user'] = get_user_name(c['user'])
     except Exception as e:
-        raise e
+        logger.error(str(e))
 
-    send_html_email(_(u'You are invited to join %s') % get_site_name(),
+    send_html_email(_('You are invited to join %s') % get_site_name(),
             'sysadmin/user_add_email.html', c, None, [email])
 
 @login_required_ajax
@@ -1191,7 +1204,7 @@ def user_add(request):
                                             is_active=True)
         except User.DoesNotExist as e:
             logger.error(e)
-            err_msg = _(u'Fail to add user %s.') % email
+            err_msg = _('Fail to add user %s.') % email
             return HttpResponse(json.dumps({'error': err_msg}), status=403, content_type=content_type)
 
         # send admin operation log signal
@@ -1216,12 +1229,12 @@ def user_add(request):
             if IS_EMAIL_CONFIGURED:
                 try:
                     send_user_add_mail(request, email, password)
-                    messages.success(request, _(u'Successfully added user %s. An email notification has been sent.') % email)
-                except Exception, e:
+                    messages.success(request, _('Successfully added user %s. An email notification has been sent.') % email)
+                except Exception as e:
                     logger.error(str(e))
-                    messages.success(request, _(u'Successfully added user %s. An error accurs when sending email notification, please check your email configuration.') % email)
+                    messages.success(request, _('Successfully added user %s. An error accurs when sending email notification, please check your email configuration.') % email)
             else:
-                messages.success(request, _(u'Successfully added user %s.') % email)
+                messages.success(request, _('Successfully added user %s.') % email)
 
             return HttpResponse(json.dumps({'success': True}), content_type=content_type)
         else:
@@ -1229,18 +1242,18 @@ def user_add(request):
                 if SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER:
                     try:
                         send_user_add_mail(request, email, password)
-                        messages.success(request, _(u'Successfully added user %s. An email notification has been sent.') % email)
-                    except Exception, e:
+                        messages.success(request, _('Successfully added user %s. An email notification has been sent.') % email)
+                    except Exception as e:
                         logger.error(str(e))
-                        messages.success(request, _(u'Successfully added user %s. An error accurs when sending email notification, please check your email configuration.') % email)
+                        messages.success(request, _('Successfully added user %s. An error accurs when sending email notification, please check your email configuration.') % email)
                 else:
-                    messages.success(request, _(u'Successfully added user %s.') % email)
+                    messages.success(request, _('Successfully added user %s.') % email)
             else:
-                messages.success(request, _(u'Successfully added user %s. But email notification can not be sent, because Email service is not properly configured.') % email)
+                messages.success(request, _('Successfully added user %s. But email notification can not be sent, because Email service is not properly configured.') % email)
 
             return HttpResponse(json.dumps({'success': True}), content_type=content_type)
     else:
-        return HttpResponse(json.dumps({'error': str(form.errors.values()[0])}), status=400, content_type=content_type)
+        return HttpResponse(json.dumps({'error': str(list(form.errors.values())[0])}), status=400, content_type=content_type)
 
 @login_required
 @sys_staff_required
@@ -1248,16 +1261,16 @@ def sys_group_admin_export_excel(request):
     """ Export all groups to excel
     """
 
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = SITE_ROOT
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = SITE_ROOT
 
     try:
         groups = ccnet_threaded_rpc.get_all_groups(-1, -1)
     except Exception as e:
         logger.error(e)
-        messages.error(request, _(u'Failed to export Excel'))
-        return HttpResponseRedirect(next)
+        messages.error(request, _('Failed to export Excel'))
+        return HttpResponseRedirect(next_page)
 
     head = [_("Name"), _("Creator"), _("Create At")]
     data_list = []
@@ -1268,8 +1281,8 @@ def sys_group_admin_export_excel(request):
 
     wb = write_xls('groups', head, data_list)
     if not wb:
-        messages.error(request, _(u'Failed to export Excel'))
-        return HttpResponseRedirect(next)
+        messages.error(request, _('Failed to export Excel'))
+        return HttpResponseRedirect(next_page)
 
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename=groups.xlsx'
@@ -1328,6 +1341,11 @@ def sys_org_admin(request):
     else:
         trial_orgs = []
 
+    org_roles = OrgSettings.objects.get_by_orgs(orgs)
+    org_roles_dict = {}
+    for x in org_roles:
+        org_roles_dict[x.org_id] = x.role
+
     for org in orgs:
         org.quota_usage = seafserv_threaded_rpc.get_org_quota_usage(org.org_id)
         org.total_quota = seafserv_threaded_rpc.get_org_quota(org.org_id)
@@ -1349,6 +1367,11 @@ def sys_org_admin(request):
         else:
             org.is_expired = False
 
+        org.role = org_roles_dict.get(org.org_id, DEFAULT_ORG)
+        org.is_default_role = True if org.role == DEFAULT_ORG else False
+
+    extra_org_roles = [x for x in get_available_roles() if x != DEFAULT_ORG]
+
     return render(request, 'sysadmin/sys_org_admin.html', {
             'orgs': orgs,
             'current_page': current_page,
@@ -1358,6 +1381,8 @@ def sys_org_admin(request):
             'page_next': page_next,
             'enable_org_plan': enable_org_plan,
             'all_page': True,
+            'extra_org_roles': extra_org_roles,
+            'default_org': DEFAULT_ORG,
             })
 
 @login_required
@@ -1386,11 +1411,24 @@ def sys_org_search(request):
                 if creator in o.creator.lower():
                     orgs.append(o)
 
+    org_roles = OrgSettings.objects.get_by_orgs(orgs)
+    org_roles_dict = {}
+    for x in org_roles:
+        org_roles_dict[x.org_id] = x.role
+
+    for org in orgs:
+        org.role = org_roles_dict.get(org.org_id, DEFAULT_ORG)
+        org.is_default_role = True if org.role == DEFAULT_ORG else False
+
+    extra_org_roles = [x for x in get_available_roles() if x != DEFAULT_ORG]
+
     return render(request,
         'sysadmin/sys_org_search.html', {
             'orgs': orgs,
             'name': org_name,
             'creator': creator,
+            'extra_org_roles': extra_org_roles,
+            'default_org': DEFAULT_ORG,
         })
 
 @login_required
@@ -1401,18 +1439,18 @@ def sys_org_rename(request, org_id):
         raise Http404
 
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_org_admin') if referer is None else referer
+    next_page = reverse('sys_org_admin') if referer is None else referer
 
     new_name = request.POST.get('new_name', None)
     if new_name:
         try:
             ccnet_threaded_rpc.set_org_name(int(org_id), new_name)
-            messages.success(request, _(u'Success'))
+            messages.success(request, _('Success'))
         except Exception as e:
             logger.error(e)
-            messages.error(request, _(u'Failed to rename organization'))
+            messages.error(request, _('Failed to rename organization'))
 
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 @login_required
 @require_POST
@@ -1440,11 +1478,11 @@ def sys_org_remove(request, org_id):
     # remove org
     ccnet_threaded_rpc.remove_org(org_id)
 
-    messages.success(request, _(u'Successfully deleted.'))
+    messages.success(request, _('Successfully deleted.'))
 
     referer = request.META.get('HTTP_REFERER', None)
-    next = reverse('sys_org_admin') if referer is None else referer
-    return HttpResponseRedirect(next)
+    next_page = reverse('sys_org_admin') if referer is None else referer
+    return HttpResponseRedirect(next_page)
 
 @login_required_ajax
 @sys_staff_required
@@ -1464,7 +1502,7 @@ def sys_org_set_member_quota(request, org_id):
     if member_quota > 0:
         from seahub_extra.organizations.models import OrgMemberQuota
         OrgMemberQuota.objects.set_quota(org_id, member_quota)
-        messages.success(request, _(u'Success'))
+        messages.success(request, _('Success'))
         return HttpResponse(json.dumps({'success': True}), status=200,
                             content_type=content_type)
     else:
@@ -1701,7 +1739,7 @@ def sys_publink_remove(request):
 
     token = request.POST.get('t')
     if not token:
-        result = {'error': _(u"Argument missing")}
+        result = {'error': _("Argument missing")}
         return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
     FileShare.objects.filter(token=token).delete()
@@ -1719,7 +1757,7 @@ def sys_upload_link_remove(request):
 
     token = request.POST.get('t')
     if not token:
-        result = {'error': _(u"Argument missing")}
+        result = {'error': _("Argument missing")}
         return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
     UploadLinkShare.objects.filter(token=token).delete()
@@ -1773,7 +1811,7 @@ def user_search(request):
         user_emails.append(user.user)
 
     # remove duplicate emails
-    user_emails = {}.fromkeys(user_emails).keys()
+    user_emails = list({}.fromkeys(user_emails).keys())
 
     users = []
     for user_email in user_emails:
@@ -1791,7 +1829,6 @@ def user_search(request):
         trial_users = []
 
     for user in users:
-        populate_user_info(user)
         _populate_user_quota_usage(user)
 
         # check user's role
@@ -1826,13 +1863,13 @@ def user_search(request):
 def sys_repo_delete(request, repo_id):
     """Delete a repo.
     """
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = HASH_URLS['SYS_REPO_ADMIN']
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = HASH_URLS['SYS_REPO_ADMIN']
 
     if get_system_default_repo_id() == repo_id:
         messages.error(request, _('System library can not be deleted.'))
-        return HttpResponseRedirect(next)
+        return HttpResponseRedirect(next_page)
 
     repo = seafile_api.get_repo(repo_id)
     if repo:                    # Handle the case that repo is `None`.
@@ -1844,19 +1881,19 @@ def sys_repo_delete(request, repo_id):
     try:
         org_id = seafile_api.get_org_id_by_repo_id(repo_id)
         usernames = get_related_users_by_repo(repo_id,
-                org_id if org_id > 0 else None)
+                org_id if org_id and org_id > 0 else None)
     except Exception as e:
         logger.error(e)
         org_id = -1
         usernames = []
 
     seafile_api.remove_repo(repo_id)
-    repo_deleted.send(sender=None, org_id=org_id, usernames=usernames,
-                      repo_owner=repo_owner, repo_id=repo_id,
-                      repo_name=repo_name)
+    repo_deleted.send(sender=None, org_id=org_id, operator=request.user.username,
+            usernames=usernames, repo_owner=repo_owner, repo_id=repo_id,
+            repo_name=repo_name)
 
-    messages.success(request, _(u'Successfully deleted.'))
-    return HttpResponseRedirect(next)
+    messages.success(request, _('Successfully deleted.'))
+    return HttpResponseRedirect(next_page)
 
 @login_required
 @sys_staff_required
@@ -1948,9 +1985,9 @@ def batch_user_make_admin(request):
         success.append(email)
 
     for item in success:
-        messages.success(request, _(u'Successfully set %s as admin.') % item)
+        messages.success(request, _('Successfully set %s as admin.') % item)
     for item in failed:
-        messages.error(request, _(u'Failed to set %s as admin: user does not exist.') % item)
+        messages.error(request, _('Failed to set %s as admin: user does not exist.') % item)
 
     return HttpResponse(json.dumps({'success': True,}), content_type=content_type)
 
@@ -1959,13 +1996,13 @@ def batch_user_make_admin(request):
 def batch_add_user_example(request):
     """ get example file.
     """
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = SITE_ROOT
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = SITE_ROOT
     data_list = []
     head = [_('Email'), _('Password'), _('Name')+ '(' + _('Optional') + ')',
             _('Role') + '(' + _('Optional') + ')', _('Space Quota') + '(MB, ' + _('Optional') + ')']
-    for i in xrange(5):
+    for i in range(5):
         username = "test" + str(i) +"@example.com"
         password = "123456"
         name = "test" + str(i)
@@ -1975,8 +2012,8 @@ def batch_add_user_example(request):
 
     wb = write_xls('sample', head, data_list)
     if not wb:
-        messages.error(request, _(u'Failed to export Excel'))
-        return HttpResponseRedirect(next)
+        messages.error(request, _('Failed to export Excel'))
+        return HttpResponseRedirect(next_page)
 
     response = HttpResponse(content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename=users.xlsx'
@@ -1991,14 +2028,14 @@ def batch_add_user(request):
     if request.method != 'POST':
         raise Http404
 
-    next = request.META.get('HTTP_REFERER', reverse(sys_user_admin))
+    next_page = request.META.get('HTTP_REFERER', reverse(sys_user_admin))
 
     form = BatchAddUserForm(request.POST, request.FILES)
     if form.is_valid():
         content = request.FILES['file'].read()
         if str(request.FILES['file']).split('.')[-1].lower() != 'xlsx':
-            messages.error(request, _(u'Please choose a .xlsx file.'))
-            return HttpResponseRedirect(next)
+            messages.error(request, _('Please choose a .xlsx file.'))
+            return HttpResponseRedirect(next_page)
 
         try:
             fs = BytesIO(content)
@@ -2006,20 +2043,20 @@ def batch_add_user(request):
         except Exception as e:
             logger.error(e)
             messages.error(request, _('Internal Server Error'))
-            return HttpResponseRedirect(next)
+            return HttpResponseRedirect(next_page)
 
         rows = wb.worksheets[0].rows
         records = []
         # remove first row(head field).
-        rows.next()
+        next(rows)
         for row in rows:
             # value of email and password is not None
             if row[0].value and row[1].value:
                 records.append([c.value for c in row])
 
         if user_number_over_limit(new_users=len(records)):
-            messages.error(request, _(u'The number of users exceeds the limit.'))
-            return HttpResponseRedirect(next)
+            messages.error(request, _('The number of users exceeds the limit.'))
+            return HttpResponseRedirect(next_page)
 
         for row in records:
             try:
@@ -2065,7 +2102,7 @@ def batch_add_user(request):
 
                 send_html_email_with_dj_template(
                     username, dj_template='sysadmin/user_batch_add_email.html',
-                    subject=_(u'You are invited to join %s') % get_site_name(),
+                    subject=_('You are invited to join %s') % get_site_name(),
                     context={
                         'user': email2nickname(request.user.username),
                         'email': username,
@@ -2080,9 +2117,9 @@ def batch_add_user(request):
                                      operation=USER_ADD, detail=admin_op_detail)
         messages.success(request, _('Import succeeded'))
     else:
-        messages.error(request, _(u'Please choose a .xlsx file.'))
+        messages.error(request, _('Please choose a .xlsx file.'))
 
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 @login_required
 def sys_sudo_mode(request):
@@ -2093,7 +2130,7 @@ def sys_sudo_mode(request):
     if not request.user.is_staff:
         raise Http404
 
-    next = request.GET.get('next', reverse('sys_useradmin'))
+    next_page = request.GET.get('next', reverse('sys_useradmin'))
     password_error = False
     if request.method == 'POST':
         password = request.POST.get('password')
@@ -2107,7 +2144,7 @@ def sys_sudo_mode(request):
                 from seahub.auth.utils import clear_login_failed_attempts
                 clear_login_failed_attempts(request, username)
 
-                return HttpResponseRedirect(next)
+                return HttpResponseRedirect(next_page)
         password_error = True
 
         from seahub.auth.utils import get_login_failed_attempts, incr_login_failed_attempts
@@ -2126,7 +2163,7 @@ def sys_sudo_mode(request):
         'sysadmin/sudo_mode.html', {
             'password_error': password_error,
             'enable_sso': enable_shib_login or enable_adfs_login,
-            'next': next,
+            'next': next_page,
         })
 
 @login_required
@@ -2162,23 +2199,23 @@ def sys_settings(request):
         value = request.POST.get('value', None)
 
         if key not in dir(config) or value is None:
-            result['error'] = _(u'Invalid setting')
+            result['error'] = _('Invalid setting')
             return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
         if value.isdigit():
             if key in DIGIT_WEB_SETTINGS:
                 value = int(value)
             else:
-                result['error'] = _(u'Invalid value')
+                result['error'] = _('Invalid value')
                 return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
-            if key == 'USER_PASSWORD_STRENGTH_LEVEL' and value not in (1,2,3,4):
-                result['error'] = _(u'Invalid value')
+            if key == 'USER_PASSWORD_STRENGTH_LEVEL' and value not in (1, 2, 3, 4):
+                result['error'] = _('Invalid value')
                 return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
         else:
             if key not in STRING_WEB_SETTINGS:
-                result['error'] = _(u'Invalid value')
+                result['error'] = _('Invalid value')
                 return HttpResponse(json.dumps(result), status=400, content_type=content_type)
 
         try:
@@ -2187,7 +2224,7 @@ def sys_settings(request):
             return HttpResponse(json.dumps(result), content_type=content_type)
         except AttributeError as e:
             logger.error(e)
-            result['error'] = _(u'Internal server error')
+            result['error'] = _('Internal server error')
             return HttpResponse(json.dumps(result), status=500, content_type=content_type)
 
     config_dict = {}
@@ -2299,19 +2336,19 @@ def sys_inst_add_user(request, inst_id):
         try:
             User.objects.get(email=email)
         except Exception as e:
-            messages.error(request, u'Failed to add %s to the institution: user does not exist.' % email)
+            messages.error(request, 'Failed to add %s to the institution: user does not exist.' % email)
             continue
 
         profile = Profile.objects.get_profile_by_user(email)
         if not profile:
             profile = Profile.objects.add_or_update(email, email)
         if profile.institution:
-            messages.error(request, _(u"Failed to add %s to the institution: user already belongs to an institution") % email)
+            messages.error(request, _("Failed to add %s to the institution: user already belongs to an institution") % email)
             continue
         else:
             profile.institution = inst.name
         profile.save()
-        messages.success(request, _(u'Successfully added %s to the institution.') % email)
+        messages.success(request, _('Successfully added %s to the institution.') % email)
 
     return HttpResponse(json.dumps({'success': True}),
             content_type=content_type)
@@ -2478,9 +2515,9 @@ def sys_inst_toggle_admin(request, inst_id, email):
     except Institution.DoesNotExist:
         raise Http404
 
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = reverse('sys_inst_info_users', args=[inst.pk])
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = reverse('sys_inst_info_users', args=[inst.pk])
 
     try:
         u = User.objects.get(email=email)
@@ -2490,7 +2527,7 @@ def sys_inst_toggle_admin(request, inst_id, email):
     if u.is_staff:
         messages.error(
             request, 'Can not assign institutional administration roles to global administrators')
-        return HttpResponseRedirect(next)
+        return HttpResponseRedirect(next_page)
 
     res = InstitutionAdmin.objects.filter(institution=inst, user=email)
     if len(res) == 0:
@@ -2502,7 +2539,7 @@ def sys_inst_toggle_admin(request, inst_id, email):
         assert False
 
     messages.success(request, _('Success'))
-    return HttpResponseRedirect(next)
+    return HttpResponseRedirect(next_page)
 
 @login_required
 @sys_staff_required
@@ -2514,9 +2551,9 @@ def sys_inst_set_quota(request, inst_id):
     except Institution.DoesNotExist:
         raise Http404
 
-    next = request.META.get('HTTP_REFERER', None)
-    if not next:
-        next = reverse('sys_inst_info_users', args=[inst.pk])
+    next_page = request.META.get('HTTP_REFERER', None)
+    if not next_page:
+        next_page = reverse('sys_inst_info_users', args=[inst.pk])
 
     quota_mb = int(request.POST.get('space_quota', ''))
     quota = quota_mb * get_file_size_unit('MB')
@@ -2620,7 +2657,7 @@ def sys_terms_admin(request):
                                 content_type=content_type)
         else:
             return HttpResponse(json.dumps({
-                'error': str(form.errors.values()[0])
+                'error': str(list(form.errors.values())[0])
             }), status=400, content_type=content_type)
 
     tc_list = TermsAndConditions.objects.all().order_by('-date_created')
@@ -2637,4 +2674,3 @@ def sys_delete_terms(request, pk):
     messages.success(request, _('Successfully deleted 1 item'))
 
     return HttpResponseRedirect(reverse('sys_terms_admin'))
-

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # check in case a user was using this mechanism
 if [ "x$ES_CLASSPATH" != "x" ]; then
@@ -10,8 +10,10 @@ EOF
     exit 1
 fi
 
-ES_CLASSPATH="$ES_HOME/lib/elasticsearch-2.4.5.jar:$ES_HOME/lib/*"
+ES_CLASSPATH="$ES_HOME/lib/*"
 
+# TO CHECK:
+: <<'END'
 if [ "x$ES_MIN_MEM" = "x" ]; then
     #ES_MIN_MEM=256m
     ES_MIN_MEM=512m
@@ -88,3 +90,4 @@ JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8"
 
 # Use our provided JNA always versus the system one
 JAVA_OPTS="$JAVA_OPTS -Djna.nosys=true"
+END

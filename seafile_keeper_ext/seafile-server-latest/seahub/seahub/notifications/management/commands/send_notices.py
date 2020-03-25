@@ -67,19 +67,6 @@ class Command(BaseCommand):
         else:
             return ''
 
-    def format_group_message(self, notice):
-        d = notice.group_message_detail_to_dict()
-        group_id = d['group_id']
-        message = d['message']
-        group = ccnet_api.get_group(int(group_id))
-
-        notice.group_url = HASH_URLS['GROUP_DISCUSS'] % {'group_id': group.id}
-        notice.notice_from = escape(email2nickname(d['msg_from']))
-        notice.group_name = group.group_name
-        notice.avatar_src = self.get_avatar_src(d['msg_from'])
-        notice.grp_msg = message
-        return notice
-
     def format_repo_share_msg(self, notice):
         d = json.loads(notice.detail)
         repo_id = d['repo_id']
@@ -98,7 +85,8 @@ class Command(BaseCommand):
                 owner = seafile_api.get_repo_owner(repo_id)
                 repo = seafile_api.get_virtual_repo(repo_id, path, owner)
 
-        notice.repo_url = HASH_URLS["VIEW_COMMON_LIB_DIR"] % {'repo_id': repo_id, 'path': ''}
+        repo_url = reverse('lib_view', args=[repo.id, repo.name, ''])
+        notice.repo_url = repo_url
         notice.notice_from = escape(email2nickname(d['share_from']))
         notice.repo_name = repo.name
         notice.avatar_src = self.get_avatar_src(d['share_from'])
@@ -128,11 +116,12 @@ class Command(BaseCommand):
                 owner = seafile_api.get_repo_owner(repo_id)
                 repo = seafile_api.get_virtual_repo(repo_id, path, owner)
 
-        notice.repo_url = HASH_URLS["VIEW_COMMON_LIB_DIR"] % {'repo_id': repo_id, 'path': ''}
+        repo_url = reverse('lib_view', args=[repo.id, repo.name, ''])
+        notice.repo_url = repo_url
         notice.notice_from = escape(email2nickname(d['share_from']))
         notice.repo_name = repo.name
         notice.avatar_src = self.get_avatar_src(d['share_from'])
-        notice.group_url = HASH_URLS['GROUP_INFO'] % {'group_id': group.id}
+        notice.group_url = reverse('group', args=[group.id])
         notice.group_name = group.group_name
         notice.shared_type = shared_type
 
@@ -143,10 +132,12 @@ class Command(BaseCommand):
 
         file_name = d['file_name']
         repo_id = d['repo_id']
+        repo = seafile_api.get_repo(repo_id)
         uploaded_to = d['uploaded_to'].rstrip('/')
         file_path = uploaded_to + '/' + file_name
         file_link = reverse('view_lib_file', args=[repo_id, file_path])
-        folder_link = HASH_URLS["VIEW_COMMON_LIB_DIR"] % {'repo_id': repo_id, 'path': uploaded_to.strip('/')}
+
+        folder_link = reverse('lib_view', args=[repo_id, repo.name, uploaded_to.strip('/')])
         folder_name = os.path.basename(uploaded_to)
 
         notice.file_link = file_link
@@ -184,7 +175,7 @@ class Command(BaseCommand):
         notice.avatar_src = self.get_avatar_src(group_staff)
         notice.group_staff_profile_url = reverse('user_profile',
                                                   args=[group_staff])
-        notice.group_url = HASH_URLS['GROUP_INFO'] % {'group_id': group_id}
+        notice.group_url = reverse('group', args=[group.id])
         notice.group_name = group.group_name
         return notice
 
@@ -244,7 +235,7 @@ class Command(BaseCommand):
             else:
                 email_ctx[notice.to_user] = 1
 
-        for to_user, count in email_ctx.items():
+        for to_user, count in list(email_ctx.items()):
             # save current language
             cur_language = translation.get_language()
 
@@ -256,6 +247,7 @@ class Command(BaseCommand):
                 str(datetime.datetime.now()), user_language))
 
             notices = []
+            # KEEPER
             num_keeper_notices = 0
             for notice in unseen_notices:
                 logger.info('Processing unseen notice: [%s]' % (notice))
@@ -279,9 +271,6 @@ class Command(BaseCommand):
                 if notice.to_user != to_user:
                     continue
 
-                elif notice.is_group_msg():
-                    notice = self.format_group_message(notice)
-
                 elif notice.is_repo_share_msg():
                     notice = self.format_repo_share_msg(notice)
 
@@ -301,9 +290,10 @@ class Command(BaseCommand):
                     notice = self.format_file_comment_msg(notice)
 
                 elif notice.is_guest_invitation_accepted_msg():
-                    notice = self.format_guest_invitation_accepted_msg(notice) 
+                    notice = self.format_guest_invitation_accepted_msg(notice)
 
-                if notice is None or notice.msg_type  == "keeper_cdc_msg" or notice.msg_type  == "bloxberg_msg" or notice.msg_type == "doi_suc_msg":
+                # KEEPER
+                if notice is None or notice.msg_type in ("keeper_cdc_msg", "bloxberg_msg", "doi_suc_msg"):
                     num_keeper_notices += 1
                     continue
 
@@ -316,7 +306,7 @@ class Command(BaseCommand):
             to_user = contact_email  # use contact email if any
             c = {
                 'to_user': to_user,
-                'notice_count': count - num_keeper_notices,
+                'notice_count': count,
                 'notices': notices,
                 }
 

@@ -13,13 +13,11 @@ from .endpoints.file_comment import FileCommentView
 from .endpoints.file_comments import FileCommentsView
 from .endpoints.file_comments_counts import FileCommentsCounts
 from .endpoints.search_user import SearchUser
-from .endpoints.group_discussions import GroupDiscussions
-from .endpoints.group_discussion import GroupDiscussion
 from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
+# KEEPER
 from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
-
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
     url(r'^auth/ping/$', AuthPing.as_view()),
@@ -57,16 +55,18 @@ urlpatterns = [
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/update-blks-link/$', UpdateBlksLinkView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/owa-file/$', OwaFileView.as_view(), name='api2-owa-file-view'),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/$', FileView.as_view(), name='FileView'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/metadata/$', FileMetaDataView.as_view(), name='FileMetaDataView'),
     url(r'^repos/(?P<repo_id>[-0-9a-f]{36})/files/(?P<file_id>[0-9a-f]{40})/blks/(?P<block_id>[0-9a-f]{40})/download-link/$', FileBlockDownloadLinkView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/comments/$', FileCommentsView.as_view(), name='api2-file-comments'),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/comments/counts/$', FileCommentsCounts.as_view(), name='api2-file-comments-counts'),
-    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/comments/(?P<pk>\d+)/$', FileCommentView.as_view(), name='api2-file-comment'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/comments/(?P<comment_id>\d+)/$', FileCommentView.as_view(), name='api2-file-comment'),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/detail/$', FileDetailView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/history/$', FileHistory.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/revision/$', FileRevision.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/revert/$', FileRevert.as_view(), name='api2-file-revert'),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/file/shared-link/$', FileSharedLinkView.as_view()),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/$', DirView.as_view(), name='DirView'),
+    url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/metadata/$', DirMetaDataView.as_view(), name='DirMetaDataView'),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/sub_repo/$', DirSubRepoView.as_view(), name="api2-dir-sub-repo"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/shared_items/$', DirSharedItemsEndpoint.as_view(), name="api2-dir-shared-items"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/dir/revert/$', DirRevert.as_view(), name='api2-dir-revert'),
@@ -102,14 +102,11 @@ urlpatterns = [
     url(r'^groups/(?P<group_id>\d+)/members/$', GroupMembers.as_view()),
     url(r'^groups/(?P<group_id>\d+)/repos/$', GroupRepos.as_view(), name="api2-grouprepos"),
     url(r'^groups/(?P<group_id>\d+)/repos/(?P<repo_id>[-0-9a-f]{36})/$', GroupRepo.as_view(), name="api2-grouprepo"),
-    url(r'^groups/(?P<group_id>\d+)/discussions/$', GroupDiscussions.as_view(), name="api2-group-discussions"),
-    url(r'^groups/(?P<group_id>\d+)/discussions/(?P<discuss_id>\d+)/$', GroupDiscussion.as_view(), name="api2-group-discussion"),
 
     # Deprecated
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view(), name="api2-fileops-delete"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view(), name="api2-fileops-copy"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view(), name="api2-fileops-move"),
-
     # KEEPER
     url(r'^catalog/$', CatalogView.as_view()),
 
@@ -132,6 +129,7 @@ if KEEPER_ARCHIVING_NODE:
         url(r'^archiving/internal/status/$', CanArchive.as_view(), name='can_archive'),
     ]
 
+]
 
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER

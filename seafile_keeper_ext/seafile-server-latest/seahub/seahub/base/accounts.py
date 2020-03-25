@@ -6,16 +6,18 @@ import logging
 from django import forms
 from django.core.mail import send_mail
 from django.utils import translation
+from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 import seaserv
-from seaserv import ccnet_threaded_rpc, unset_repo_passwd, is_passwd_set, \
+from seaserv import ccnet_threaded_rpc, unset_repo_passwd, \
     seafile_api, ccnet_api
 from constance import config
 from registration import signals
 
 from seahub.auth import login
+from seahub.constants import DEFAULT_USER, DEFAULT_ORG, DEFAULT_ADMIN
 from seahub.profile.models import Profile, DetailedProfile
 from seahub.role_permissions.models import AdminRole
 from seahub.role_permissions.utils import get_enabled_role_permissions_by_role, \
@@ -25,8 +27,6 @@ from seahub.utils import is_user_password_strong, get_site_name, \
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 from seahub.utils.licenseparse import user_number_over_limit
 from seahub.share.models import ExtraSharePermission
-from seahub.constants import DEFAULT_ADMIN
-
 # KEEPER
 from keeper.utils import account_can_be_auto_activated, user_can_invite
 
@@ -67,7 +67,7 @@ class UserManager(object):
         """
         If user has a role, update it; or create a role for user.
         """
-        ccnet_threaded_rpc.update_role_emailuser(email, role)
+        ccnet_api.update_role_emailuser(email, role)
         return self.get(email=email)
 
     def create_superuser(self, email, password):
@@ -92,14 +92,14 @@ class UserManager(object):
 
     def get(self, email=None, id=None):
         if not email and not id:
-            raise User.DoesNotExist, 'User matching query does not exits.'
+            raise User.DoesNotExist('User matching query does not exits.')
 
         if email:
             emailuser = ccnet_threaded_rpc.get_emailuser(email)
         if id:
             emailuser = ccnet_threaded_rpc.get_emailuser_by_id(id)
         if not emailuser:
-            raise User.DoesNotExist, 'User matching query does not exits.'
+            raise User.DoesNotExist('User matching query does not exits.')
 
         user = User(emailuser.email)
         user.id = emailuser.id
@@ -129,20 +129,37 @@ class UserPermissions(object):
     def __init__(self, user):
         self.user = user
 
+    def _get_user_role(self):
+        org_role = self.user.org_role
+        if org_role is None:
+            return self.user.role
+
+        if self.user.role == '' or self.user.role == DEFAULT_USER:
+            if org_role == DEFAULT_ORG:
+                return DEFAULT_USER
+            else:
+                return org_role
+        else:
+            return self.user.role
+
+    def _get_perm_by_roles(self, perm_name):
+        role = self._get_user_role()
+        return get_enabled_role_permissions_by_role(role)[perm_name]
+
     def can_add_repo(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_add_repo']
+        return self._get_perm_by_roles('can_add_repo')
 
     def can_add_group(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_add_group']
+        return self._get_perm_by_roles('can_add_group')
 
     def can_generate_share_link(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_generate_share_link']
+        return self._get_perm_by_roles('can_generate_share_link')
 
     def can_generate_upload_link(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_generate_upload_link']
+        return self._get_perm_by_roles('can_generate_upload_link')
 
     def can_use_global_address_book(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_use_global_address_book']
+        return self._get_perm_by_roles('can_use_global_address_book')
 
     def can_view_org(self):
         if MULTI_TENANCY:
@@ -151,7 +168,7 @@ class UserPermissions(object):
         if CLOUD_MODE:
             return False
 
-        return get_enabled_role_permissions_by_role(self.user.role)['can_view_org']
+        return self._get_perm_by_roles('can_view_org')
 
     def can_add_public_repo(self):
         """ Check if user can create public repo or share existed repo to public.
@@ -166,44 +183,48 @@ class UserPermissions(object):
                 return False
         elif self.user.is_staff:
             return True
-        elif get_enabled_role_permissions_by_role(self.user.role)['can_add_public_repo']:
+        elif self._get_perm_by_roles('can_add_public_repo') and \
+                bool(config.ENABLE_USER_CREATE_ORG_REPO):
             return True
         else:
-            return bool(config.ENABLE_USER_CREATE_ORG_REPO)
+            return False
 
     def can_drag_drop_folder_to_sync(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_drag_drop_folder_to_sync']
+        return self._get_perm_by_roles('can_drag_drop_folder_to_sync')
 
     def can_connect_with_android_clients(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_connect_with_android_clients']
+        return self._get_perm_by_roles('can_connect_with_android_clients')
 
     def can_connect_with_ios_clients(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_connect_with_ios_clients']
+        return self._get_perm_by_roles('can_connect_with_ios_clients')
 
     def can_connect_with_desktop_clients(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_connect_with_desktop_clients']
+        return self._get_perm_by_roles('can_connect_with_desktop_clients')
 
     def can_invite_guest(self):
         # KEEPER
         return get_enabled_role_permissions_by_role(self.user.role)['can_invite_guest'] and user_can_invite(self.user.email)
 
     def can_export_files_via_mobile_client(self):
-        return get_enabled_role_permissions_by_role(self.user.role)['can_export_files_via_mobile_client']
+        return self._get_perm_by_roles('can_export_files_via_mobile_client')
 
-    # Add default value for compatible issue when EMAILBE_ROLE_PERMISSIONS
-    # is not updated with newly added permissions.
     def role_quota(self):
-        return get_enabled_role_permissions_by_role(self.user.role).get('role_quota', '')
+        return self._get_perm_by_roles('role_quota')
 
     def can_send_share_link_mail(self):
-
         if not IS_EMAIL_CONFIGURED:
             return False
 
-        return get_enabled_role_permissions_by_role(self.user.role).get('can_send_share_link_mail', True)
+        return self._get_perm_by_roles('can_send_share_link_mail')
 
     def storage_ids(self):
-        return get_enabled_role_permissions_by_role(self.user.role).get('storage_ids', [])
+        return self._get_perm_by_roles('storage_ids')
+
+    def can_publish_repo(self):
+        if not settings.ENABLE_WIKI:
+            return False
+
+        return self._get_perm_by_roles('can_publish_repo')
 
 class AdminPermissions(object):
     def __init__(self, user):
@@ -233,6 +254,9 @@ class AdminPermissions(object):
     def can_view_admin_log(self):
         return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_view_admin_log']
 
+    def other_permission(self):
+        return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['other_permission']
+
 
 class User(object):
     is_staff = False
@@ -241,6 +265,39 @@ class User(object):
     groups = []
     org = None
     objects = UserManager()
+
+    @property
+    def org_role(self):
+        if not MULTI_TENANCY:
+            return None
+
+        if not hasattr(self, '_cached_orgs'):
+            self._cached_orgs = ccnet_api.get_orgs_by_user(self.username)
+
+        if not self._cached_orgs:
+            return None
+
+        if not hasattr(self, '_cached_org_role'):
+            from seahub_extra.organizations.models import OrgSettings
+            self._cached_org_role = OrgSettings.objects.get_role_by_org(
+                self._cached_orgs[0])
+
+        return self._cached_org_role
+
+    @property
+    def contact_email(self):
+        if not hasattr(self, '_cached_contact_email'):
+            self._cached_contact_email = email2contact_email(self.username)
+
+        return self._cached_contact_email
+
+    @property
+    def name(self):
+        if not hasattr(self, '_cached_nickname'):
+            # convert raw string to unicode obj
+            self._cached_nickname = smart_text(email2nickname(self.username))
+
+        return self._cached_nickname
 
     class DoesNotExist(Exception):
         pass
@@ -454,7 +511,7 @@ class User(object):
         passwd_setted_repos = []
         for r in owned_repos + shared_repos + groups_repos + public_repos:
             if not has_repo(passwd_setted_repos, r) and r.encrypted and \
-                    is_passwd_set(r.id, self.email):
+                    seafile_api.is_password_set(r.id, self.email):
                 passwd_setted_repos.append(r)
 
         for r in passwd_setted_repos:
@@ -476,7 +533,7 @@ class User(object):
         passwd_setted_repos = []
         for r in owned_repos + shared_repos + groups_repos + public_repos:
             if not has_repo(passwd_setted_repos, r) and r.encrypted and \
-                    is_passwd_set(r.id, self.email):
+                    seafile_api.is_password_set(r.id, self.email):
                 passwd_setted_repos.append(r)
 
         for r in passwd_setted_repos:
@@ -487,7 +544,7 @@ class AuthBackend(object):
     def get_user_with_import(self, username):
         emailuser = seaserv.get_emailuser_with_import(username)
         if not emailuser:
-            raise User.DoesNotExist, 'User matching query does not exits.'
+            raise User.DoesNotExist('User matching query does not exits.')
 
         user = User(emailuser.email)
         user.id = emailuser.id
@@ -600,7 +657,6 @@ class RegistrationBackend(object):
         site = get_current_site(request)
 
         from registration.models import RegistrationProfile
-
         if bool(config.ACTIVATE_AFTER_REGISTRATION) is True:
             # since user will be activated after registration,
             # so we will not use email sending, just create acitvated user
@@ -820,3 +876,7 @@ class DetailedRegistrationForm(RegistrationForm):
     note = forms.CharField(widget=forms.TextInput(
             attrs=dict(attrs_dict, maxlength=100)), label=_("note"),
                            required=note_required)
+
+# Move here to avoid circular import
+from seahub.base.templatetags.seahub_tags import email2nickname, \
+    email2contact_email

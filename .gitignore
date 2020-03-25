@@ -8,3 +8,4 @@ CDCGenerator/CDCGenerator.iml
 .cache/
 __pycache__/
 package-lock.json
+.ropeproject/
