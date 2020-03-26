@@ -37,8 +37,10 @@ class CatalogManager(models.Manager):
 
     def get_all_mds_ordered(self):
         mds = []
-        for c in self.exclude(rm__isnull=False, is_archived=False).order_by('-modified').all():
+        for c in self.exclude(rm__isnull=False).order_by('-modified').all():
             c.md['catalog_id'] = c.catalog_id
+            c.md['repo_id'] = c.repo_id
+            c.md['is_archived'] = c.is_archived
             mds.append(c.md)
         return mds
 

@@ -201,16 +201,12 @@ def get_catalog(filter='all'):
 def add_landing_page_entry(catalogs):
 
     for catalog in catalogs:
-        repo_id = catalog.get('id')
-
-        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-        archive_repos = DBOper().get_archives(repo_id=repo_id)
-        if archive_repos == None:
-            archive_repos = []
-
-        if doi_repos or len(archive_repos) > 0:
-            url = SERVICE_URL + '/landing-page/libs/' + repo_id + '/'
-            catalog['landing_page_url'] = url
+        repo_id = catalog.get('repo_id')
+        if repo_id: 
+            doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+            if doi_repos or catalog.get('is_archived'):
+                url = SERVICE_URL + '/landing-page/libs/' + repo_id + '/'
+                catalog['landing_page_url'] = url
 
     return catalogs
 
