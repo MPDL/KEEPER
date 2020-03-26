@@ -11,10 +11,11 @@
 {% endblock %}
 <meta http-equiv="x-ua-compatible" content="ie=edge" />
 <link rel="shortcut icon" href="{{ MEDIA_URL }}{{ favicon_path }}" />
+{% block extra_base_style %}
 <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.min.css" %}"/>
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/jstree_default_theme/style.min.css" />
-<link rel="stylesheet" type="text/css" href="{% static "css/magnific-popup.css" %}" />
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/seahub.min.css?t=1550682750" />
+{% endblock %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/seahub.min.css?t=1582789176" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/sf_font3/iconfont.css" />
 {% block extra_style %}{% endblock %}
 {% if branding_css != '' %}<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{ branding_css }}" />{% endif %} 
 {% if enable_branding_css %}<link rel="stylesheet" type="text/css" href="{% url 'custom_css' %}" />{% endif %}
@@ -33,11 +34,7 @@
 
         <div id="header" class="{% block header_css_class %}d-flex{% endblock %}">
             <a href="{{ SITE_ROOT }}" id="logo">
-                {% if seacloud_mode %}
-                <img src="{{ MEDIA_URL }}img/seacloud_logo.png?t=1550682750" title="Seacloud" alt="logo" width="186" height="31" />
-                {% else %}
                 <img src="{{ MEDIA_URL }}{{ logo_path }}" title="{{ site_title }}" alt="logo" width="{{logo_width}}" height="{{logo_height}}" />
-                {% endif %}
             </a>
             <span class="sf2-icon-menu side-nav-toggle hidden-md-up hide" title="{% trans "Side Nav Menu" %}" id="js-toggle-side-nav" aria-label="{% trans "Side Nav Menu" %}"></span>
 
@@ -52,7 +49,7 @@
 
                 <div id="account">
                     <a id="my-info" href="#" class="account-toggle no-deco hidden-sm-down" aria-label="{% trans "View profile and more" %}">
-                        {% avatar request.user 36 %} <span class="icon-caret-down vam"></span>
+                        {% avatar request.user 32 %} <span class="icon-caret-down vam"></span>
                     </a>
                     <span class="account-toggle sf2-icon-more mobile-icon hidden-md-up" aria-label="{% trans "View profile and more" %}"></span>
                     <div id="user-info-popup" class="account-popup sf-popover hide">
@@ -65,7 +62,7 @@
                                 </div>
                             </div>
                             <span class="loading-icon loading-tip"></span>
-                            <div id="space-traffic" class="hide" data-url="{% url 'space_and_traffic' %}"></div>
+                            <div id="space-traffic" class="hide"></div>
                             <a class="item" href="{{ SITE_ROOT }}profile/">{% trans "Settings" %}</a>
                             {% block admin_link %}
                             {% if request.user.is_staff %}
@@ -142,9 +139,8 @@ var app = {
 </script>
 <script type="text/javascript" src="{% static "scripts/lib/jquery.min.js" %}" id="jquery"></script>{# 'id="jquery"' is for pdf file view with pdf2html #}
 <script type="text/javascript" src="{% static "scripts/lib/jquery.simplemodal.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/lib/jstree.min.js" %}"></script>
 <script type="text/javascript" src="{{ MEDIA_URL }}js/jq.min.js"></script>
-<script type="text/javascript" src="{{ MEDIA_URL }}js/base.js?t=1550682750"></script>
+<script type="text/javascript" src="{{ MEDIA_URL }}js/base.js?t=1582789176"></script>
 <script type="text/javascript">
 function prepareAjaxErrorMsg(xhr) {
     var error_msg;
@@ -236,11 +232,18 @@ $('#info-bar .close').on('click', function() {
 {% endif %}
 
 if ($('.side-nav').length) {
-     $('#logo').addClass('hidden-sm-down');
-     $('#js-toggle-side-nav').removeClass('hide');
+    $('#logo').addClass('hidden-sm-down');
+    $('#js-toggle-side-nav').removeClass('hide');
 }
 $('#js-toggle-side-nav').on('click', function() {
     $('.side-nav').addClass('side-nav-shown');
+    $('').modal({
+        overlayClose: true,
+        onClose: function() {
+            $('.side-nav').removeClass('side-nav-shown');
+            $.modal.close();
+        }});
+    $('#simplemodal-container').css({'display':'none'});
     return false;
 });
 $('.js-close-side-nav').on('click', function() {
@@ -249,7 +252,6 @@ $('.js-close-side-nav').on('click', function() {
 });
 </script>
 {% block extra_script %}{% endblock %}
-
 <!-- Start of mpdl Zendesk Widget script -->
 <script id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa"> </script>
 <!-- End of mpdl Zendesk Widget script -->
