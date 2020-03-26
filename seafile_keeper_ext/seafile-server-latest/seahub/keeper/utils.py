@@ -271,10 +271,13 @@ def get_user_name(user):
     """Get user name"""
     # default name is user id
     name = user
-    p = Profile.objects.get_profile_by_user(user)
-    if p and p.nickname:
-        name = p.nickname
-        return name
+    try:
+        p = Profile.objects.get_profile_by_user(user)
+        if p is not None and p.nickname:
+            name = p.nickname
+    except Exception as e:
+        logging.error(str(e))
+    return name
 
 
 # KEEPER ARCHIVING
