@@ -58,5 +58,5 @@ def copy_keeper_default_library(to_repo_id):
     except Exception as err:
         logging.error("Cannot copy KEEPER_DEFAULT_LIBRARY, err: " + str(err))
 
-if DEBUG:
-    copy_keeper_default_library('d1fe0133-25f2-4ce3-b5c1-055f1ec9716d')
+# if DEBUG:
+#     copy_keeper_default_library('d1fe0133-25f2-4ce3-b5c1-055f1ec9716d')
