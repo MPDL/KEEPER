@@ -3,13 +3,11 @@
 import logging
 import mistune
 import json
-
-
 import MySQLdb
+
 from seahub.settings import DATABASES
 
 def get_logger(name, logfile):
-
     logger = logging.getLogger(name)
     handler = logging.handlers.WatchedFileHandler(logfile)
     handler.setLevel(logging.INFO)
@@ -20,7 +18,7 @@ def get_logger(name, logfile):
     return logger
 
 def print_json(obj):
-    print(json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': ')))
+    print((json.dumps(obj, ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))))
 
 def get_db(db_name):
     """Get DB connection"""
@@ -29,7 +27,6 @@ def get_db(db_name):
          passwd=DATABASES['default']['PASSWORD'],
          db=db_name,
          charset='utf8')
-
 
 HEADER_STEP = 2
 # Headers in MD file to be processed by the parse_markdown

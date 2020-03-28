@@ -15,7 +15,7 @@ from seafevents.keeper_archiving.db_oper import MSG_TYPE_KEEPER_ARCHIVING_MSG
 
 # Get an instance of a logger
 LOGGER = logging.getLogger(__name__)
-TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
+TEMPLATE_DESC = "Template for creating 'My Libray' for users"
 MSG_TYPE_KEEPER_DOI_MSG = "doi_msg"
 MSG_TYPE_KEEPER_DOI_SUC_MSG = "doi_suc_msg"
 MSG_TYPE_INVALID_METADATA_MSG = "invalid_metadata_msg"
@@ -32,14 +32,14 @@ def get_metadata(repo_id, user_email, action_type):
     notification_type = MSG_TYPE_KEEPER_DOI_MSG if action_type == "assign DOI" else MSG_TYPE_KEEPER_ARCHIVING_MSG
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
-        msg = _(u'Cannot ' + action_type + ' if the library is system template destination.')
+        msg = _('Cannot ' + action_type + ' if the library is system template destination.')
         send_notification(msg, repo_id, notification_type, user_email)
         return {
             'error': msg,
         }
 
     if seafile_api.get_repo_history_limit(repo_id) > -1:
-        msg = _(u'Cannot ' + action_type +' because of the histroy setting.')
+        msg = _('Cannot ' + action_type +' because of the histroy setting.')
         send_notification(msg, repo_id, notification_type, user_email)
         return {
             'error': msg,
@@ -48,7 +48,7 @@ def get_metadata(repo_id, user_email, action_type):
     try:
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
         if not has_at_least_one_creative_dirent(dir):
-            msg = _(u'Cannot ' + action_type +' if the library has no content.')
+            msg = _('Cannot ' + action_type +' if the library has no content.')
             send_notification(msg, repo_id, notification_type, user_email)
             return {
                 'error': msg,
@@ -57,7 +57,7 @@ def get_metadata(repo_id, user_email, action_type):
 
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if not file:
-            msg = _(u'Cannot ' + action_type +' if archive-metadata.md file is not filled or missing.')
+            msg = _('Cannot ' + action_type +' if archive-metadata.md file is not filled or missing.')
             send_notification(msg, repo_id, notification_type, user_email)
             return {
                 'error': msg,
@@ -76,7 +76,7 @@ def get_metadata(repo_id, user_email, action_type):
         doi_msg = validate(doi_dict, repo_id, user_email)
         if len(doi_msg) > 0:
             return {
-                'error': ' '.join(doi_msg) + ' ' + _(u'Please check out notifications for more details.'),
+                'error': ' '.join(doi_msg) + ' ' + _('Please check out notifications for more details.'),
             }
         return doi_dict
 
@@ -182,9 +182,9 @@ def validate(doi_dict, repo_id, user_email):
     valid = mandatory_field_valid and year_valid and author_valid and institute_valid and resource_type_valid
     if not valid and user_email is not None:
         if len(invalid_fields) > 1:
-            msg =  _(u'%(fields)s fields are either invalid or not filled.') % { 'fields': ', '.join(invalid_fields) }
+            msg =  _('%(fields)s fields are either invalid or not filled.') % { 'fields': ', '.join(invalid_fields) }
         elif len(invalid_fields) == 1:
-            msg =  _(u'%(field)s field is either invalid or not filled.') % { 'field': invalid_fields.pop() }
+            msg =  _('%(field)s field is either invalid or not filled.') % { 'field': invalid_fields.pop() }
         doi_msg.append(msg)
         send_notification(doi_msg, repo_id, MSG_TYPE_INVALID_METADATA_MSG, user_email)
     return doi_msg

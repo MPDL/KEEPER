@@ -38,7 +38,7 @@ import json
 from keeper.models import CDC
 from seahub.notifications.models import UserNotification
 
-TEMPLATE_DESC = u"Template for creating 'My Libray' for users"
+TEMPLATE_DESC = "Template for creating 'My Libray' for users"
 
 CDC_GENERATOR_MAIN_CLASS = "de.mpg.mpdl.keeper.CDCGenerator.MainApp"
 CDC_GENERATOR_JARS =  ('CDCGenerator.jar', 'fonts-ext.jar')
@@ -338,7 +338,7 @@ def generate_certificate(repo, commit):
             cdc_id = str(cdc_id)
             LOGGER.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
-            jars = ":".join(map(lambda e : MODULE_PATH + '/' + e, CDC_GENERATOR_JARS))
+            jars = ":".join([MODULE_PATH + '/' + e for e in CDC_GENERATOR_JARS])
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
             args = [ "date;",
                     "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,

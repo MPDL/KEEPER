@@ -15,13 +15,12 @@ from keeper.common import parse_markdown, print_json
 from keeper.utils import get_user_name
 
 from keeper.models import Catalog, DoiRepo
-from seafevents.keeper_archiving.db_oper import DBOper
 
 import logging
 import json
 from netaddr import IPAddress, IPSet
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from django.core.cache import cache
 from django.db import connections
@@ -37,13 +36,13 @@ def trim_by_len(str, max_len, suffix="..."):
         str = str.strip()
         if str and len(str) > max_len:
             str = str[0:max_len] + suffix
-        str = unicode(str, 'utf-8', errors='replace')
+        str = str(str, 'utf-8', errors='replace')
     return str
 
 
 def strip_uni(str):
     if str:
-        str = unicode(str.strip(), 'utf-8', errors='replace')
+        str = str(str.strip(), 'utf-8', errors='replace')
     return str
 
 
@@ -64,12 +63,12 @@ def get_mpg_ip_set():
         logging.info("Put IPs to cache...")
         try:
             # get json from server
-            response = urllib2.urlopen(KEEPER_MPG_IP_LIST_URL)
+            response = urllib.request.urlopen(KEEPER_MPG_IP_LIST_URL)
             json_str = response.read()
             # parse json
             json_dict = json.loads(json_str)
             # get only ip ranges
-            ip_ranges = [(ipr.items())[0][0] for ipr in json_dict['details']]
+            ip_ranges = [(list(ipr.items()))[0][0] for ipr in json_dict['details']]
             ip_set = IPSet(ip_ranges)
             cache.set('KEEPER_CATALOG_MPG_IP_SET', ip_set, None)
             cache.set(
@@ -201,16 +200,12 @@ def get_catalog(filter='all'):
 def add_landing_page_entry(catalogs):
 
     for catalog in catalogs:
-        repo_id = catalog.get('id')
-
-        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-        archive_repos = DBOper().get_archives(repo_id=repo_id)
-        if archive_repos == None:
-            archive_repos = []
-
-        if doi_repos or len(archive_repos) > 0:
-            url = SERVICE_URL + '/landing-page/libs/' + repo_id + '/'
-            catalog['landing_page_url'] = url
+        repo_id = catalog.get('repo_id')
+        if repo_id:
+            doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+            if doi_repos or catalog.get('is_archived'):
+                url = SERVICE_URL + '/landing-page/libs/' + repo_id + '/'
+                catalog['landing_page_url'] = url
 
     return catalogs
 
@@ -260,10 +255,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if param == 'clean-db':
-        print ('%s catalog entries have been cleaned up' % clean_up_catalog())
+        print(('%s catalog entries have been cleaned up' % clean_up_catalog()))
     elif param == 'gen-db':
-        print ('Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog()))
+        print(('Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog())))
     else:
-        print (str(sys.argv))
+        print((str(sys.argv)))
         usage()
         sys.exit(1)

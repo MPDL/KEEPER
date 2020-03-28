@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import logging
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 from datetime import datetime
 
@@ -190,7 +189,7 @@ def get_domain_list_from_cache():
     # globvar
     if domains is None:
         logging.info("MPG DOMAIN LIST IS EMPTY, INITIALIZE FROM HARDCODED STARTER")
-        domains = map((lambda s: s.split('\t')[2]), EMAIL_DOMAIN_LIST.splitlines())
+        domains = list(map((lambda s: s.split('\t')[2]), EMAIL_DOMAIN_LIST.splitlines()))
         cache.set(KEEPER_DOMAINS_KEY, domains, None)
         cache.set(KEEPER_DOMAINS_TS_KEY, EMAIL_LIST_TIMESTAMP, None)
 
@@ -208,7 +207,7 @@ def get_domain_list():
     if cache.get(KEEPER_DOMAINS_LAST_FETCHED_KEY) is None:
         try:
             # get json from server
-            response = urllib2.urlopen(KEEPER_MPG_DOMAINS_URL)
+            response = urllib.request.urlopen(KEEPER_MPG_DOMAINS_URL)
             json_str = response.read()
             # parse json
             json_dict = json.loads(json_str)
@@ -283,8 +282,8 @@ import seaserv
 from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_NODE
 from seafevents.keeper_archiving import KeeperArchivingRpcClient
 from seahub.utils import CLUSTER_MODE, do_urlopen
-import urllib
-from urlparse import urlparse, urljoin
+import urllib.request, urllib.parse, urllib.error
+from urllib.parse import urlparse, urljoin
 
 keeper_archiving_rpc = None
 
@@ -312,7 +311,7 @@ def archiving_cluster_delegate(delegate_func):
 
 def delegate_add_keeper_archiving_task(repo_id, owner, language_code):
     url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/add-task/')
-    data = urllib.urlencode({
+    data = urllib.parse.urlencode({
         'repo_id': repo_id,
         'owner': owner,
         'language_code': language_code,
@@ -323,7 +322,7 @@ def delegate_add_keeper_archiving_task(repo_id, owner, language_code):
 
 def delegate_query_keeper_archiving_status(repo_id, owner, version, language_code):
     url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/status/')
-    data = urllib.urlencode({
+    data = urllib.parse.urlencode({
         'repo_id': repo_id,
         'owner': owner,
         'version': version,
