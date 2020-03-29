@@ -18,6 +18,7 @@ from .endpoints.send_upload_link_email import SendUploadLinkView
 
 # KEEPER
 from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
+
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
     url(r'^auth/ping/$', AuthPing.as_view()),
@@ -107,6 +108,7 @@ urlpatterns = [
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/delete/$', OpDeleteView.as_view(), name="api2-fileops-delete"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/copy/$', OpCopyView.as_view(), name="api2-fileops-copy"),
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view(), name="api2-fileops-move"),
+
     # KEEPER
     url(r'^catalog/$', CatalogView.as_view()),
 
@@ -129,7 +131,6 @@ if KEEPER_ARCHIVING_NODE:
         url(r'^archiving/internal/status/$', CanArchive.as_view(), name='can_archive'),
     ]
 
-]
 
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER
