@@ -1,3 +1,4 @@
+""""
 import re
 import logging
 from pysearpc import searpc_server
@@ -6,7 +7,7 @@ from ccnet.async import RpcServerProc
 from .task_manager import task_manager
 from .rpc import KeeperArchivingRpcClient, KEEPER_ARCHIVING_RPC_SERVICE_NAME
 from .db_oper import DBOper
-import config as _cfg
+from . import config as _cfg
 
 __all__ = [
     'KeeperArchiving',
@@ -102,3 +103,4 @@ class KeeperArchiving(object):
 
     def is_enabled(self):
         return self._enabled
+"""

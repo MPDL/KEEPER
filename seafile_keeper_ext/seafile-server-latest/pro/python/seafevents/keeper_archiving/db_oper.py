@@ -1,8 +1,8 @@
 import logging
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
-from models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
-from urllib import quote_plus
+from .models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
+from urllib.parse import quote_plus
 from sqlalchemy.orm import sessionmaker
 from seafevents.db import ping_connection
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
@@ -32,7 +32,7 @@ def normalize_cache_key(value, prefix=None, token=None, max_length=200):
 def _prepare_md(md):
     if md is None:
         return None;
-    return unicode(truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN), 'utf-8')
+    return str(truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN), 'utf-8')
 
 def create_db_session(host, port, username, passwd, dbname):
     db_url = "mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)

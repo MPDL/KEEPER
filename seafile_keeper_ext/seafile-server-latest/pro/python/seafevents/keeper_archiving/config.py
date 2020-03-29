@@ -1,6 +1,6 @@
 import os
 import logging
-import ConfigParser
+import configparser
 import tempfile
 
 key_enabled = 'enabled'
@@ -84,7 +84,7 @@ def get_keeper_archiving_conf(config):
     def get_option(key, default=None):
         try:
             value = config.get(section_name, key)
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             value = default
 
         return value

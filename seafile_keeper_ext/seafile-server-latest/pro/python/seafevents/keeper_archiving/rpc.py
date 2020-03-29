@@ -3,6 +3,7 @@ from pysearpc import searpc_func
 
 KEEPER_ARCHIVING_RPC_SERVICE_NAME = 'keeper-archiving-rpcserver'
 
+"""
 class KeeperArchivingRpcClient(ccnet.RpcClientBase):
     def __init__(self, ccnet_client_pool, *args, **kwargs):
         ccnet.RpcClientBase.__init__(self, ccnet_client_pool, KEEPER_ARCHIVING_RPC_SERVICE_NAME,
@@ -27,4 +28,4 @@ class KeeperArchivingRpcClient(ccnet.RpcClientBase):
     @searpc_func("object", ["strng"])
     def restart_task(self, archive_id):
         pass
-
+"""

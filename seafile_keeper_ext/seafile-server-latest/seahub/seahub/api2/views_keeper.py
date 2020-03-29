@@ -3,7 +3,6 @@ from rest_framework import status
 
 from seahub import settings
 from seahub.auth.decorators import login_required
-from seahub.base.decorators import user_mods_check
 from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, SINGLE_MODE
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
@@ -27,9 +26,11 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
-    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
-    check_keeper_repo_archiving_status
+
+#from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
+#    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
+#    check_keeper_repo_archiving_status
+
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
@@ -129,7 +130,7 @@ def add_doi(request):
             logger.info(doi)
             repo_owner = get_repo_owner(repo_id)
             DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = _(u'DOI successfully created') + ': '
+            msg = _('DOI successfully created') + ': '
             doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
             return JsonResponse({
@@ -196,7 +197,7 @@ def get_authors_from_md(md):
         author_name = author_array[0].strip()
         name_array = author_name.split(",")
         tmpauthor = ''
-        for i in xrange(len(name_array)):
+        for i in range(len(name_array)):
             if ( i <= 0 and len(name_array[i].strip()) > 1 ):
                 tmpauthor += name_array[i]+", "
             elif (len(name_array[i].strip()) >= 1):
@@ -253,7 +254,7 @@ def get_authors_from_catalog_md(md):
             tmp += ', ' + name_array[1].strip()[:1] + '.'
         affs = author.get("affs")
         if affs:
-            tmp += " (" + ", ".join(map(unicode.strip, affs)) + ")"
+            tmp += " (" + ", ".join(map(str.strip, affs)) + ")"
         result_authors.append(tmp)
 
     return "; ".join(result_authors)
@@ -296,9 +297,29 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
         'owner_contact_email': email2contact_email(repo_owner) })
 
 
+## DUMMY
+def delegate_query_keeper_archiving_status(repo_id, owner, version, param):
+    return {
+        'msg': 'TO_BE_IMPLEMENTED',
+        'status': 'system_error'
+    }
+
+def query_keeper_archiving_status(repo_id, owner, version, param):
+    return {
+        'msg': 'TO_BE_IMPLEMENTED',
+        'status': 'system_error'
+    }
+
+def check_keeper_repo_archiving_status(repo_id, owner, action):
+    return {
+        'status': 'ERROR',
+        'error': 'TO_BE_IMPLEMENTED'
+    }
+
+
 class CanArchive(APIView):
 
-    "Quota checking before adding archiving"
+    """Quota checking before adding archiving"""
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
@@ -312,7 +333,6 @@ class CanArchive(APIView):
         return JsonResponse(resp)
 
 
-
     def post(self, request):
         repo_id = request.POST.get('repo_id', None)
         version = request.POST.get('version', None)
@@ -324,7 +344,7 @@ class CanArchive(APIView):
         # library is already in the task query
         resp_query = query_keeper_archiving_status(repo_id, owner, version, get_language())
         if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = _(u'This library is currently being archived.')
+            msg = _('This library is currently being archived.')
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
@@ -365,6 +385,21 @@ class CanArchive(APIView):
             'quota': resp_quota.remains,
             'status': "success"
         })
+
+
+# DUMMY
+def delegate_add_keeper_archiving_task(repo_id, user_email, param):
+    return {
+        'status': 'ERROR',
+        'error': 'TO_BE_IMPLEMENTED',
+        'msg': 'TO_BE_IMPLEMENTED',
+    }
+def add_keeper_archiving_task(repo_id, owner, param):
+    return {
+        'status': 'ERROR',
+        'error': 'TO_BE_IMPLEMENTED',
+        'msg': 'TO_BE_IMPLEMENTED',
+    }
 
 class ArchiveLib(APIView):
 

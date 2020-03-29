@@ -277,6 +277,8 @@ def get_user_name(user):
 
 
 # KEEPER ARCHIVING
+
+"""
 import ccnet
 import seaserv
 from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_NODE
@@ -349,4 +351,5 @@ def check_keeper_repo_archiving_status(repo_id, owner, action):
     ret = rpc.check_repo_archiving_status(repo_id, owner, action)
     return ret
 
+"""
 

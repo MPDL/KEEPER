@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import Queue
+import queue
 import atexit
 import hashlib
 import logging as _l
@@ -20,7 +20,7 @@ from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 from seafobj import commit_mgr, fs_mgr
 from seahub_settings import ARCHIVE_METADATA_TARGET
 from seaserv import seafile_api
-import config as _cfg
+from . import config as _cfg
 from seafevents.utils import get_python_executable
 
 from keeper.common import parse_markdown_doi, truncate_str
@@ -300,7 +300,7 @@ class Worker(threading.Thread):
                 return True
             except Exception:
                 _set_critical_error(task, MSG_EXTRACT_REPO,
-                        u'Faled to write extracted file {}: {}'.format(to_path, traceback.format_exc()))
+                        'Faled to write extracted file {}: {}'.format(to_path, traceback.format_exc()))
                 return False
 
         def copy_dirent(obj, repo, owner, path):
@@ -313,7 +313,7 @@ class Worker(threading.Thread):
             if obj.is_dir():
                 dpath = path + os.sep + obj.name
                 d = fs_mgr.load_seafdir(repo.id, repo.version, obj.id)
-                for dname, dobj in d.dirents.items():
+                for dname, dobj in list(d.dirents.items()):
                     copy_dirent(dobj, repo, owner, dpath)
             elif obj.is_file():
                 plist = [p.decode('utf-8') for p in path.split(os.sep) if p]
@@ -324,12 +324,12 @@ class Worker(threading.Thread):
                 fname = obj.name.decode('utf-8')
                 to_path = os.path.join(absdirpath, fname)
                 write_seaf_to_path(seaf, to_path)
-                _l.debug(u'File: {} copied to {}'.format(fname, to_path))
+                _l.debug('File: {} copied to {}'.format(fname, to_path))
             else:
-                _l.debug(u'Wrong seafile object: {}'.format(obj))
+                _l.debug('Wrong seafile object: {}'.format(obj))
 
         # start traversing repo
-        for name, obj in seaf_dir.dirents.items():
+        for name, obj in list(seaf_dir.dirents.items()):
             copy_dirent(obj, task._repo, owner, '')
 
     def _clean_up(self, task):
@@ -358,7 +358,7 @@ class Worker(threading.Thread):
 
         except Exception:
             _set_critical_error(task, MSG_EXTRACT_REPO,
-                       u'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, traceback.format_exc()))
+                       'Failed to extract repo {} of task {}: {}'.format(task.repo_id, task, traceback.format_exc()))
             return False
 
         finally:
@@ -622,7 +622,7 @@ class Worker(threading.Thread):
         while True:
             try:
                 task = self._tasks_queue.get(timeout=1)
-            except Queue.Empty:
+            except queue.Empty:
                 continue
 
             self._handle_task(task)
@@ -642,7 +642,7 @@ class TaskManager(object):
         self._tasks_map_lock = threading.Lock()
 
         # tasks queue
-        self._tasks_queue = Queue.Queue()
+        self._tasks_queue = queue.Queue()
         self._workers = []
 
         self.local_storage = None
@@ -1141,22 +1141,22 @@ class TaskManager(object):
 task_manager = TaskManager()
 
 from seafevents.utils import get_config
-from config import get_keeper_archiving_conf
-import ccnet
-import seaserv
-from seafevents.keeper_archiving.rpc import KeeperArchivingRpcClient
-from db_oper import DBOper
+from .config import get_keeper_archiving_conf
+# import ccnet
+# import seaserv
+# from seafevents.keeper_archiving.rpc import KeeperArchivingRpcClient
+from .db_oper import DBOper
 
 keeper_archiving_rpc = None
 
 def _get_keeper_archiving_rpc():
     global keeper_archiving_rpc
-    if keeper_archiving_rpc is None:
-        pool = ccnet.ClientPool(
-                seaserv.CCNET_CONF_PATH,
-                central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
-            )
-    keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
+    # if keeper_archiving_rpc is None:
+    #     pool = ccnet.ClientPool(
+    #             seaserv.CCNET_CONF_PATH,
+    #             central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
+    #         )
+    # keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
     return keeper_archiving_rpc
 
 
@@ -1189,7 +1189,7 @@ if __name__ == "__main__":
         db = DBOper()
         rpc = _get_keeper_archiving_rpc()
     except Exception as e:
-        print('Cannot run command: {}'.format(e))
+        print(('Cannot run command: {}'.format(e)))
         exit(1)
 
     # IS PROCESSING
@@ -1213,22 +1213,22 @@ if __name__ == "__main__":
             try:
                 tasks = rpc.get_running_tasks()
             except Exception as e:
-                print("Cannot call rpc: {}".format(e))
+                print(("Cannot call rpc: {}".format(e)))
                 exit(1)
 
             tasks = tasks._dict
             # queued tasks
             if 'QUEUED' in tasks:
-                print("Number of queued tasks: {}".format(tasks['QUEUED']))
+                print(("Number of queued tasks: {}".format(tasks['QUEUED'])))
             else:
                 print('No queued tasks.')
             # currently processed tasks
             if 'PROCESSED' in tasks and len(tasks['PROCESSED']) > 0:
                 print("List of running Keeper Archiving tasks:")
                 for t in tasks['PROCESSED']:
-                    print("repo_id: {}, ver: {}, owner: {}, status: {}".format(
+                    print(("repo_id: {}, ver: {}, owner: {}, status: {}".format(
                         t['repo_id'], t['version'], t['owner'], t['status']
-                    ))
+                    )))
             else:
                 print("Number of currently proccesed tasks: 0")
 
@@ -1237,9 +1237,9 @@ if __name__ == "__main__":
         if tasks:
             print("Not completed tasks:")
             for t in tasks:
-                print("id: {}, repo_id: {}, ver: {}, owner: {}, status: {}, error: {}, created: {}".format(
+                print(("id: {}, repo_id: {}, ver: {}, owner: {}, status: {}, error: {}, created: {}".format(
                     t.aid, t.repo_id, t.version, t.owner, t.status, t.error_msg, t.created,
-                ))
+                )))
 
     elif args.restart:
         print("Restart task(s)")
@@ -1248,11 +1248,11 @@ if __name__ == "__main__":
                 try:
                     task = rpc.restart_task(aid)
                     if task:
-                        print( task._dict )
+                        print(( task._dict ))
                 except Exception as e:
-                    print("Cannot restart task: {}".format(e))
+                    print(("Cannot restart task: {}".format(e)))
         else:
-            print("Usage: {}".format(parser.format_help()))
+            print(("Usage: {}".format(parser.format_help())))
 
     else:
         print('Wrong argument.')
