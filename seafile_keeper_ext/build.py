@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import glob
 import subprocess
-from io import StringIO
 import shutil
 import re
 import configparser
@@ -48,7 +47,7 @@ class Utils(object):
     @staticmethod
     def error(msg):
         '''Print error and exit'''
-        print(Utils.red('Error: ' + msg))
+        print((Utils.red('Error: ' + msg)))
         sys.exit(1)
 
     @staticmethod
@@ -192,7 +191,7 @@ class Utils(object):
         '''
         assert key or yes_or_no
         # Format description
-        print
+        print()
         if note:
             desc += '\n' + note
 
@@ -226,7 +225,7 @@ class Utils(object):
                 # Have user input: validate answer
                 if yes_or_no:
                     if answer not in ['yes', 'no', 'y', 'n', 'all']:
-                        print(Utils.highlight('\nPlease answer yes, no or all\n'))
+                        print((Utils.highlight('\nPlease answer yes, no or all\n')))
                         continue
                     else:
                         if answer == 'all':
@@ -237,7 +236,7 @@ class Utils(object):
                         try:
                             return validate(answer)
                         except InvalidAnswer as e:
-                            print(Utils.highlight('\n{}\n'.format(e)))
+                            print((Utils.highlight('\n{}\n'.format(e))))
                             continue
                     else:
                         return answer
@@ -321,7 +320,7 @@ class Utils(object):
         """
         True if link does not exist link and target exisist
         """
-        print ("Check {}->{} ({},{})".format(link, target, not os.path.islink(link), os.path.exists(target)))
+        print(("Check {}->{} ({},{})".format(link, target, not os.path.islink(link), os.path.exists(target))))
 
         return not os.path.islink(link) and os.path.exists(target)
 
@@ -346,7 +345,7 @@ class EnvManager(object):
 
         self.keeper_config = configparser.ConfigParser(interpolation=None)
         self.keeper_config.optionxform = str
-        self.keeper_config.readfp(open(conf_files[0]))
+        self.keeper_config.read_file(open(conf_files[0]))
 
 
     def set_seafile_env(self):
@@ -842,12 +841,12 @@ def do_generate(args):
 def do_upgrade(args):
     print('Upgrade')
 
-    print(env_mgr.keeper_ext_dir)
+    print((env_mgr.keeper_ext_dir))
     # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
         for root, dirs, files in os.walk('seafile-server-latest'):
-            print (root, dirs, files)
+            print((root, dirs, files))
             if  files and \
                 not ('/keeper' in root
                     or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
@@ -917,7 +916,7 @@ def main():
 
 
     if len(sys.argv) == 1:
-        print (parser.format_help())
+        print((parser.format_help()))
         return
 
     args = parser.parse_args()
