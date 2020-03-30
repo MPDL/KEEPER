@@ -1,5 +1,5 @@
-import ccnet
-from pysearpc import searpc_func
+# import ccnet
+# from pysearpc import searpc_func
 
 KEEPER_ARCHIVING_RPC_SERVICE_NAME = 'keeper-archiving-rpcserver'
 

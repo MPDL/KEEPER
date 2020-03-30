@@ -15,8 +15,8 @@ from seafobj.commit_differ import DiffEntry
 from seafevents.events.db import save_file_audit_event, save_file_update_event, \
         save_perm_audit_event, save_user_activity, save_filehistory, update_user_activity_timestamp
 from seafevents.app.config import appconfig
-from .change_file_path import ChangeFilePathHandler
-from .models import Activity
+from seafevents.events.change_file_path import ChangeFilePathHandler
+from seafevents.events.models import Activity
 
 # KEEPER
 from keeper.cdc.cdc_manager import generate_certificate_by_commit
@@ -440,7 +440,6 @@ def FileUpdateEventHandler(session, msg):
     # KEEPER
     logging.info("FILE UPDATE EVENT: %s, try generate_certificate", commit.desc)
     generate_certificate_by_commit(commit)
-
 
     save_file_update_event(session, time, commit.creator_name, org_id,
                            repo_id, commit_id, commit.desc)
