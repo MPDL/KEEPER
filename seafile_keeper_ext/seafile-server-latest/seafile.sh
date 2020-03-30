@@ -13,7 +13,8 @@
 echo ""
 
 SCRIPT=$(readlink -f "$0")
-INSTALLPATH=$(dirname "${SCRIPT}")
+SEAFILE_DIR=__SEAFILE_DIR__
+INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
@@ -23,6 +24,7 @@ seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 export SEAFILE_LD_LIBRARY_PATH=${INSTALLPATH}/seafile/lib/:${INSTALLPATH}/seafile/lib64:${LD_LIBRARY_PATH}
+export SEAHUB_LOG_DIR=${SEAFILE_DIR}/logs
 
 script_name=$0
 function usage () {
@@ -48,9 +50,8 @@ function validate_running_user () {
     fi
 }
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
 
 #export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
