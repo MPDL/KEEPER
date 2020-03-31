@@ -97,29 +97,31 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'syslog-django_request': {
-            'level': 'INFO',
-            'class': 'logging.handlers.SysLogHandler',
-            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
-            'facility': '__SYSLOG_FACILITY__',
-            'formatter': 'syslog-django_request'
-        },
-        'syslog-seahub': {
-            'level': 'INFO',
-            'class': 'logging.handlers.SysLogHandler',
-            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
-            'facility': '__SYSLOG_FACILITY__',
-            'formatter': 'syslog-seahub'
-        },
-     },
+        # 'syslog-django_request': {
+            # 'level': 'INFO',
+            # 'class': 'logging.handlers.SysLogHandler',
+            # 'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            # 'facility': '__SYSLOG_FACILITY__',
+            # 'formatter': 'syslog-django_request'
+        # },
+        # 'syslog-seahub': {
+            # 'level': 'INFO',
+            # 'class': 'logging.handlers.SysLogHandler',
+            # 'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            # 'facility': '__SYSLOG_FACILITY__',
+            # 'formatter': 'syslog-seahub'
+        # },
+    },
     'loggers': {
         '': {
-            'handlers': ['default', 'syslog-seahub'],
+            # 'handlers': ['default', 'syslog-seahub'],
+            'handlers': ['default'],
             'level': 'INFO',
             'propagate': True
         },
         'django.request': {
-            'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
+            # 'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
+            'handlers': ['request_handler', 'mail_admins'],
             'level': 'INFO',
             'propagate': False
         },
