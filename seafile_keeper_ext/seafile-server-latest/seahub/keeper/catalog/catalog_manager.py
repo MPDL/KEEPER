@@ -40,12 +40,6 @@ def trim_by_len(str, max_len, suffix="..."):
     return str
 
 
-def strip_uni(str):
-    if str:
-        str = str(str.strip(), 'utf-8', errors='replace')
-    return str
-
-
 def reconnect_db():
     """
     Force reconnect db, a walkaround to fix (2006, 'MySQL server has gone away') issue,
@@ -76,10 +70,7 @@ def get_mpg_ip_set():
                 json_dict['timestamp'],
                 IP_SET_TTL)
         except Exception as e:
-            logging.info(
-                "Cannot get/parse MPG IPs DB: " +
-                ": ".join(
-                    str(i) for i in e))
+            logging.info("Cannot get/parse MPG IPs DB: %s", e)
             logging.info("Get IPs from old cache")
             ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
     else:
@@ -118,12 +109,13 @@ def generate_catalog_entry(repo):
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if file:
-            md = parse_markdown(file.get_content())
+            md = file.get_content().decode('utf-8')
+            md = parse_markdown(md)
             if md:
                 # Author
                 a = md.get("Author")
                 if a:
-                    a_list = strip_uni(a).split('\n')
+                    a_list = a.split('\n')
                     authors = []
                     for _ in a_list:
                         author = {}
@@ -138,28 +130,28 @@ def generate_catalog_entry(repo):
                         proj["authors"] = authors
 
                 # Description
-                d = strip_uni(md.get("Description"))
+                d = md.get("Description")
                 if d:
                     proj["description"] = d
 
                 # Comments
-                c = strip_uni(md.get("Comments"))
+                c = md.get("Comments")
                 if c:
                     proj["comments"] = c
 
                 # Title
-                t = strip_uni(md.get("Title"))
+                t = md.get("Title")
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
 
                 # Year
-                y = strip_uni(md.get("Year"))
+                y = md.get("Year")
                 if y:
                     proj["year"] = y
 
                 # Institute
-                i = strip_uni(md.get("Institute"))
+                i = md.get("Institute")
                 if i:
                     proj["institute"] = i
 

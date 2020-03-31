@@ -1,4 +1,3 @@
-
 import os
 import traceback
 
@@ -52,7 +51,7 @@ MSG_TYPE_KEEPER_CDC_MSG = 'keeper_cdc_msg'
 
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-LOGGER = get_logger('keeper.cdc', CDC_LOG)
+logger = get_logger('keeper.cdc', CDC_LOG)
 
 DEBUG = False
 
@@ -108,7 +107,7 @@ def validate_author(txt):
     if txt:
         pattern = re.compile("^(\s*[\w-]+)+,(\s*[\w.-]+)+(;\s*\S+\s*)*", re.UNICODE)
         for line in txt.splitlines():
-            if not re.match(pattern, line.decode('utf-8')):
+            if not re.match(pattern, line):
                 valid = False
                 msg = 'Wrong Author/Affiliation string: ' + line
                 CDC_MSG.append(msg)
@@ -126,7 +125,7 @@ def validate_institute(txt):
     if txt:                    # Institution      Department        Director
         pattern = re.compile("^(\s*[\w-]+\s*[;]*)+?((;\s*[\w-]+\s*)??(;\s*([\w-]+\s*)+?([\s,]+?([\w.-]+\s*)+?)??[\s;]*)??)?$", re.UNICODE)
         # pattern = re.compile("^(\s*[\w-]+\s*)+?$", re.UNICODE)
-        if not re.match(pattern, txt.decode('utf-8')):
+        if not re.match(pattern, txt):
             valid = False
             msg = 'Wrong Institution string: ' + txt
             CDC_MSG.append(msg)
@@ -155,7 +154,7 @@ def validate_year(txt):
 
 
 def validate(cdc_dict):
-    LOGGER.info("""Validate the CDC mandatory fields and content...""")
+    logger.info("""Validate the CDC mandatory fields and content...""")
 
     global CDC_MSG
     CDC_MSG = []
@@ -173,7 +172,7 @@ def validate(cdc_dict):
     valid = validate_year(cdc_dict.get('Year')) and valid
     valid = validate_author(cdc_dict.get('Author')) and valid
     valid = validate_institute(cdc_dict.get('Institute')) and valid
-    LOGGER.info('Catalog metadata are {}:\n{}'.format('valid' if valid else 'not valid', '\n'.join(CDC_MSG)))
+    logger.info('Catalog metadata are {}:\n{}'.format('valid' if valid else 'not valid', '\n'.join(CDC_MSG)))
     return valid
 
 def get_repo_share_url(repo_id, owner):
@@ -197,13 +196,13 @@ def register_cdc_in_db(repo_id, owner):
     Register in DB a new certificate or update modified field if already created
     Returns certificate id and EVENT: db_create
     """
-    LOGGER.info("Register CDC in keeper-db")
+    logger.info("Register CDC in keeper-db")
     cdc_id, event = CDC.objects.register_cdc_in_db(repo_id, owner)
-    LOGGER.info("Sucessfully %s, cdc_id: %s" % ("updated" if event == EVENT.db_update else "created", cdc_id) )
+    logger.info("Sucessfully %s, cdc_id: %s" % ("updated" if event == EVENT.db_update else "created", cdc_id))
     return cdc_id, event
 
 def send_email(to, msg_ctx):
-    LOGGER.info("Send CDC email and keeper notification...")
+    logger.info("Send CDC email and keeper notification...")
     try:
         t = loader.get_template(CDC_EMAIL_TEMPLATE)
         msg = EmailMessage(CDC_EMAIL_SUBJECT % msg_ctx['PROJECT_NAME'], t.render(msg_ctx), SERVER_EMAIL, [to, SERVER_EMAIL] )
@@ -211,10 +210,10 @@ def send_email(to, msg_ctx):
         msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
         msg.send()
     except Exception as err:
-        LOGGER.error('Cannot send email')
+        logger.error('Cannot send email')
         raise err
 
-    LOGGER.info("Sucessfully sent")
+    logger.info("Sucessfully sent")
 
 
 def has_at_least_one_creative_dirent(dir):
@@ -312,15 +311,15 @@ def generate_certificate(repo, commit):
         if not file:
             return False
 
-
         # check whether there is at least one creative dirent
         if not has_at_least_one_creative_dirent(dir):
             return False
-        LOGGER.info('Repo has creative dirents')
+        logger.info('Repo has creative dirents')
 
         owner = seafile_api.get_repo_owner(repo.id)
-        LOGGER.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
-        cdc_dict = parse_markdown(file.get_content())
+        logger.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
+        content = file.get_content().decode('utf-8')
+        cdc_dict = parse_markdown(content)
 
         status = 'metadata are not valid'
         is_successful = False
@@ -336,7 +335,7 @@ def generate_certificate(repo, commit):
                 cdc_id, event = register_cdc_in_db(repo.id, owner)
 
             cdc_id = str(cdc_id)
-            LOGGER.info("Generate CDC PDF...")
+            logger.info("Generate CDC PDF...")
             cdc_pdf =  CDC_PDF_PREFIX + cdc_id + ".pdf"
             jars = ":".join([MODULE_PATH + '/' + e for e in CDC_GENERATOR_JARS])
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
@@ -352,49 +351,49 @@ def generate_certificate(repo, commit):
                     "1>&2;",
                     ]
             try:
-                call_str = " ".join([s.decode('utf-8') for s in args])
-                LOGGER.info(call_str)
+                call_str = " ".join(args)
+                logger.info(call_str)
                 # subprocess.call(call_str, shell=True)
                 # p = subprocess.Popen(call_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 p = subprocess.Popen(call_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                 stdout, stderr = p.communicate()
                 if stdout:
-                    LOGGER.info(stdout)
+                    logger.info(stdout)
                 if stderr:
-                    LOGGER.error(stderr)
+                    logger.error(stderr)
 
             except Exception as err:
-                LOGGER.error('Cannot call command')
-                LOGGER.error(traceback.format_exc())
+                logger.error('Cannot call command')
+                logger.error(traceback.format_exc())
                 raise err
 
             if os.path.isfile(tmp_path):
-                LOGGER.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
+                logger.info("PDF sucessfully generated, tmp_path=%s" % tmp_path)
             else:
-                LOGGER.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
+                logger.error("Cannot find generated CDC PDF, tmp_path=%s, exiting..." % tmp_path)
                 if event == EVENT.db_create:
-                    # TODO: test it!
+                    # TODO: test
                     CDC.objects.get(cdc_id=cdc_id).delete()
                 return False
 
-            LOGGER.info("Add " + cdc_pdf + " to the repo...")
+            logger.info("Add " + cdc_pdf + " to the repo...")
             if event == EVENT.db_update:
                 # cdc pdf already exists, then put
                 if dir.lookup(cdc_pdf):
                     seafile_api.put_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL, None)
-                    LOGGER.info("Sucessfully updated")
+                    logger.info("Sucessfully updated")
                     status = 'updated'
                     CDC_MSG.append("Certificate has been updated")
                 # post otherwise
                 else:
                     seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
-                    LOGGER.info("Sucessfully recreated")
+                    logger.info("Sucessfully recreated")
                     status = 'recreated'
                     CDC_MSG.append("Certificate has been recreated")
                 logging.info("CDC has been successfully updated for repo %s, id: %s" % (repo.id, cdc_id) )
             else:
                 seafile_api.post_file(repo.id, tmp_path, "/", cdc_pdf, SERVER_EMAIL)
-                LOGGER.info("Sucessfully created")
+                logger.info("Sucessfully created")
                 status = 'created'
                 CDC_MSG.append("Certificate has been sucessfully created")
                 # if not DEBUG:
@@ -406,8 +405,8 @@ def generate_certificate(repo, commit):
             is_successful = True
 
         #send user notification
-        LOGGER.info("Commit desc: " + commit.desc)
-        LOGGER.info("event: {}".format(event))
+        logger.info("Commit desc: " + commit.desc)
+        logger.info("event: {}".format(event))
         if event in (EVENT.md_modified, EVENT.db_create, EVENT.db_update):
             header = "Certificate processed for library" if is_successful else "Cannot process certificate for library"
             UserNotification.objects._add_user_notification(owner, MSG_TYPE_KEEPER_CDC_MSG,
@@ -420,39 +419,29 @@ def generate_certificate(repo, commit):
                 'lib_name': repo.name
             }))
 
-
-
     except Exception as err:
-        LOGGER.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         logging.error("CDC generation for repo %s has been failed, check %s for details. \nTraceback:" % (repo.id, CDC_LOG) )
         logging.error(traceback.format_exc())
     finally:
-        # other final stuff
-        if not DEBUG:
-            if 'tmp_path' in vars() and os.path.exists(tmp_path):
-                os.remove(tmp_path)
+        if 'tmp_path' in vars() and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
     return True
 
-
-# test
+"""
 if DEBUG:
-    event = EVENT.db_update
-    print(event)
-    """
     print get_user_name('vlamak868@gmail.com')
     repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
     commits = seafile_api.get_commit_list(repo.id, 0, 1)
     commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
     print has_at_least_one_creative_dirent(dir)
-    """
-    """
+
     repo = seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')
     generate_certificate_by_repo(repo)
     pattern = re.compile(r'Modified\s+\"' + CDC_PDF_PREFIX +  r'\d+\.pdf\"$')
     print re.match(pattern, r'Modified "cared-data-certificate_2004.pdf"')
-    """
-    """
+
     send_email('vlamak868@gmail.com', {'USER_NAME': '__USER_NAME__', 'PROJECT_NAME':'repo.name', 'PROJECT_TITLE': '___project__title___', 'PROJECT_URL':'_PROJECT_URL_', 'AUTHOR_LIST':'__AUTHOR_LIST__', 'CDC_PDF_URL': '_CDC_PDF_URL_', 'CDC_ID': '__CDC_id__' })
-    """
+"""
