@@ -588,26 +588,23 @@ def deploy_file(path, expand=False, dest_dir=None):
         backup(dest_path)
     else:
         if not Utils.ask_question("Deploy file {} into {}?".format(path, dest_path),
-                                default="yes",
-                                yes_or_no=True):
+                                  default="yes",
+                                  yes_or_no=True):
             return
         if not os.path.isdir(dest_dir):
             Utils.info("Create dir <{}>".format(dest_dir))
             Utils.must_mkdir(dest_dir)
 
-    fin = open(path, 'r', errors='ignore')
-    content = fin.read()
-    fin.close()
-
     # file types not to be expanded
     expand_ignore_exts = ('.jar', '.png', '.zip', '.svg', '.pdf')
-    if expand and not path.endswith(expand_ignore_exts):
-        content = expand_properties(content, path)
-
-
-    fout = open(dest_path, 'w')
-    fout.write(content)
-    fout.close()
+    if path.endswith(expand_ignore_exts):
+        shutil.copyfile(path, dest_path)
+    else:
+        with open(path, 'r') as fin, open(dest_path, 'w') as fout:
+            content = fin.read()
+            if expand:
+                content = expand_properties(content, path)
+            fout.write(content)
     Utils.info(Utils.highlight("{} has been deployed into {}{}".format(path, dest_path, " (expanded)" if expand else "")))
 
     # Utils.info(dest_path)
