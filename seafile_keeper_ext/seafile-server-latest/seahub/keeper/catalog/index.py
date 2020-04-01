@@ -5,31 +5,31 @@ import json
 import urllib.request, urllib.error, urllib.parse
 from urllib.parse import parse_qs
 import math
-import cgi
 import sys
 import time
-import os
 import io
-
-# TODO Migrate!
-# /home/vlad/Projects/Keeper/2.1/seafile/seafile-server-latest/seahub/thirdpart/django/template/base.py
-
-from django import template
-
-from keeper.common import truncate_str
-
 import logging
 
+import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 os.environ.setdefault("CCNET_CONF_DIR", "__SEAFILE_DIR__/ccnet")
 os.environ.setdefault("SEAFILE_CONF_DIR", "__SEAFILE_DIR__/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "__SEAFILE_DIR__/conf")
 os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/python/seafes")
 
+# import django
+# django.setup()
+
+
+# TODO Migrate!
+# /home/vlad/Projects/Keeper/2.1/seafile/seafile-server-latest/seahub/thirdpart/django/template/base.py
+
+from django import template
 from django.core.cache import cache
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
+from keeper.common import truncate_str
 
 #########################
 #                       #
@@ -66,21 +66,11 @@ max_pages_in_paginator = 5 # links
 #                       #
 #########################
 
-def get_keeper_footer():
-    """Get keeper_footer from cache
-    """
-    CACHE_KEY = 'KEEPER_FOOTER_HTML'
-    keeper_footer = cache.get(CACHE_KEY)
-    if DEBUG or keeper_footer is None:
-        # read footer
-        with open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r') as f:
-            keeper_footer = str(f.read(), 'utf-8')
-        cache.set(CACHE_KEY, keeper_footer, 0)
-    return keeper_footer
 
-def applictlion(env, start_response):
+def application(env, start_response):
 
     timer = time.time()
+
 
     # check static data (e.g. images)
     if ( 'static' in str(env['REQUEST_URI']) ):
@@ -91,10 +81,10 @@ def applictlion(env, start_response):
         # image path
         tmp_static_path = install_path+str(env['REQUEST_URI'])[str(env['REQUEST_URI']).find('static'):]
 
-        with open(tmp_static_path,'r') as tmp_static:
+        with open(tmp_static_path, 'rb') as tmp_static:
 
             # send response to web-server
-            return tmp_static.read()
+            return [tmp_static.read()]
 
     else:
         # send html header
@@ -103,7 +93,9 @@ def applictlion(env, start_response):
         # start response
         # TODO: close correctly!
 
-        with open(install_path + 'templates/catalog.html', 'r') as t_file, io.StringIO as response:
+        response = io.StringIO()
+
+        with open(install_path + 'templates/catalog.html', 'r') as t_file:
 
             # default text if IP not allowed
             errmsg = 'Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.'
@@ -127,9 +119,13 @@ def applictlion(env, start_response):
                    errmsg = ''
                    is_valid_user = 1
 
-
             results = []
             t = template.Template(t_file.read())
+            ctx = {
+                'errmsg': '',
+                'logo_path' :  LOGO_PATH,
+                'footer' : SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html',
+            }
 
             if (is_valid_user == 1 and len(errmsg) <= 0):
                 get_params = parse_qs(env['QUERY_STRING'])
@@ -183,16 +179,15 @@ def applictlion(env, start_response):
 
 
 
-
                 """
                 Sample code:
                 >>> from django import template
                 >>> s = '<html>{% if test %}<h1>{{ varvalue }}</h1>{% endif %}</html>'
                 >>> t = template.Template(s)
-        
+
                 (t is now a compiled template, and its render() method can be called multiple
                 times with multiple contexts)
-        
+
                 >>> c = template.Context({'test':True, 'varvalue': 'Hello'})
                 >>> t.render(c)
                 '<html><h1>Hello</h1></html>'
@@ -201,13 +196,10 @@ def applictlion(env, start_response):
                 '<html></html>'
                 """
 
-                ctx = {
-                    'logo_path': LOGO_PATH,
-                    'errmsg': '',
-                    'footer': get_keeper_footer(),
+                ctx.update({
                     'checked_'+scope: 'checked',
                     'results': [],
-                }
+                })
 
                 for res in results:
 
@@ -289,18 +281,14 @@ def applictlion(env, start_response):
                     if pagination_current + 1 < max_pages_count:
                         ctx['page_next'].update(page=str(pagination_current + 2), scope=scope)
 
-            else:
-                # load template with error message
-                ctx = {
-                    'logo_path' :  LOGO_PATH,
-                    'errmsg' :  errmsg,
-                    'footer' : get_keeper_footer()
-                }
+                else:
+                    # load template with error message
+                    ctx.update(errmsg=errmsg)
 
             response.write(t.render(template.Context(ctx)))
 
         # send response to web-server
-        return(response.getvalue()+"\n<!-- render: "+str(time.time()-timer)+" -->\n")
+        return(str(response.getvalue()+"\n<!-- render: "+str(time.time()-timer)+" -->\n").encode('utf-8'))
 
 # end of file while is halt so
 

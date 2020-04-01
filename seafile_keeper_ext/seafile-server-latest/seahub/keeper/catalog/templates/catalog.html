@@ -156,12 +156,14 @@
                             {% if r.is_certified %}
                                 <img src="/catalog/static/certified.png" />
                             {% endif %}
-                            {{ r.title }}
-                            {{ r.description }}
-                            {{ r.author }}
-                            {{ r.year }}
-                            {{ r.contact }}
-                            {{ r.landing_page_url }}
+                            {% autoescape off %}
+                                {{ r.title }}
+                                {{ r.description }}
+                                {{ r.author }}
+                                {{ r.year }}
+                                {{ r.contact }}
+                                {{ r.landing_page_url }}
+                            {% endautoescape %}
                         </div>
                 {% endfor %}
 
@@ -207,9 +209,7 @@
     </div>
 </div>
 
-    {{ footer }}
-    <!-- %footer% -->
-
+    {% include footer %}
 
     <script type="text/javascript" src="/media/assets/scripts/lib/jquery.min.js" id="jquery"></script>
     <script type="text/javascript">
