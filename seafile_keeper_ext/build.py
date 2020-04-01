@@ -399,7 +399,7 @@ class EnvManager(object):
                 'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
                 'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
-		'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
+                'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
                 'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
                 'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
                 'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
@@ -564,7 +564,7 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     # files to be ignored
     ignore_list = ('.gitignore')
-    ignore_exts = ('.pyc', '.swp')
+    ignore_exts = ('.pyc', '.swp', '.bak')
     if os.path.basename(path) in ignore_list or path.endswith(ignore_exts):
         return
 
@@ -595,17 +595,20 @@ def deploy_file(path, expand=False, dest_dir=None):
             Utils.info("Create dir <{}>".format(dest_dir))
             Utils.must_mkdir(dest_dir)
 
-    # file types not to be expanded
-    expand_ignore_exts = ('.jar', '.png', '.zip', '.svg', '.pdf')
-    if path.endswith(expand_ignore_exts):
-        shutil.copyfile(path, dest_path)
-    else:
+    # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
+    # file types to be expanded
+    white_list_exts = ('.conf', '.cfg', '.cnf', '.py', '.html', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
+    # files to be expanded
+    white_list_names = ('Makefile')
+    if expand and (dest_path.endswith(white_list_exts) or os.path.basename(dest_path) in white_list_names):
         with open(path, 'r') as fin, open(dest_path, 'w') as fout:
             content = fin.read()
             if expand:
                 content = expand_properties(content, path)
             fout.write(content)
-    Utils.info(Utils.highlight("{} has been deployed into {}{}".format(path, dest_path, " (expanded)" if expand else "")))
+    else:
+        shutil.copyfile(path, dest_path)
+    Utils.info(Utils.highlight("%s has been deployed into %s%s" % (path, dest_path, " (expanded)" if expand else "")))
 
     # Utils.info(dest_path)
 
