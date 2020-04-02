@@ -597,20 +597,16 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
     # file types to be expanded
-    white_list_exts = ('.conf', '.cfg', '.cnf', '.py', '.html', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
     # files to be expanded
     white_list_names = ('Makefile')
-    if expand and (dest_path.endswith(white_list_exts) or os.path.basename(dest_path) in white_list_names):
+    if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
         with open(path, 'r') as fin, open(dest_path, 'w') as fout:
-            content = fin.read()
-            if expand:
-                content = expand_properties(content, path)
+            content = expand_properties(fin.read(), path)
             fout.write(content)
     else:
         shutil.copyfile(path, dest_path)
     Utils.info(Utils.highlight("%s has been deployed into %s%s" % (path, dest_path, " (expanded)" if expand else "")))
-
-    # Utils.info(dest_path)
 
 def deploy_dir(path, expand=False):
 
@@ -621,7 +617,7 @@ def deploy_dir(path, expand=False):
     if os.path.basename(path) in ignore_list:
         return
 
-    for p in [p for p in os.listdir(path) ]:
+    for p in [p for p in os.listdir(path)]:
         sub_path = os.path.join(path, p)
         if os.path.isdir(sub_path):
             deploy_dir(sub_path, expand)
