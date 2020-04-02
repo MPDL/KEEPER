@@ -146,6 +146,9 @@
 
                 </div>
                 <div class="col-md-9" id="right-panel">
+
+                    {#{ debug }#}
+
                     <div class="hd ovhd">
                         <h3 class="fleft">The Keeper Project Catalog of the Max Planck Society</h3>
                     </div>
@@ -179,9 +182,9 @@
                         <a class="group-prev" href="/catalog/index.py?page={{ group_prev.page }}&scope={{ group_prev.scope }}">...</a>
                     {% endif %}
 
-                    {% if pagination %}
-                        <a class="pagination {{ pagination.cssclass }}" href="/catalog/index.py?page={{ pagination.page }}&scope={{ pagination.scope }}">{{ pagination.page }}</a>
-                    {% endif %}
+                    {% for p in pagination %}
+                        <a class="pagination {{ p.cssclass }}" href="/catalog/index.py?page={{ p.page }}&scope={{ p.scope }}">{{ p.page }}</a>
+                    {% endfor %}
 
                     {% if group_next %}
                         <a class="group-next" href="/catalog/index.py?page={{ group_next.page }}&scope={{ group_next.scope }}">...</a>

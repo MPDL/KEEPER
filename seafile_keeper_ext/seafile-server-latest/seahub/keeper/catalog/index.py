@@ -17,15 +17,8 @@ os.environ.setdefault("SEAFILE_CONF_DIR", "__SEAFILE_DIR__/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "__SEAFILE_DIR__/conf")
 os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/python/seafes")
 
-# import django
-# django.setup()
-
-
-# TODO Migrate!
-# /home/vlad/Projects/Keeper/2.1/seafile/seafile-server-latest/seahub/thirdpart/django/template/base.py
 
 from django import template
-from django.core.cache import cache
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
@@ -54,10 +47,10 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 20 # per page
+pagination_items = 4 # per page
 
 # max pages in paginator
-max_pages_in_paginator = 5 # links
+max_pages_in_paginator = 3 # links
 
 
 #########################
@@ -136,13 +129,14 @@ def application(env, start_response):
                 except (ValueError):
                     request_body_size = 0
 
-                logging.error(env)
                 request_body = env['wsgi.input'].read()
                 post_params = parse_qs(request_body)
-                logging.error(post_params)
-                scope = post_params['cat_scope'][0] \
-                    if 'cat_scope' in post_params else get_params['scope'][0] \
-                    if 'scope' in get_params else 'with_metadata'
+
+                scope = 'with_metadata' # default
+                if b'cat_scope' in post_params:
+                    scope = post_params[b'cat_scope'][0].decode('utf-8')
+                elif 'scope' in get_params:
+                    scope = get_params['scope'][0]
 
                 # jsondata = get_catalog(filter=scope[0])
                 jsondata = get_catalog(scope)
@@ -156,7 +150,7 @@ def application(env, start_response):
                     #form = cgi.FieldStorage()
                     #pagination_current = int(form.getvalue('page'))
                     try:
-                        if 'ctl_scope' in post_params:
+                        if b'cat_scope' in post_params:
                             pagination_current = 0 # ignore error
                         elif (env['QUERY_STRING'] and 'page' in parse_qs(env['QUERY_STRING'])):
                             pagination_current = int(parse_qs(env['QUERY_STRING'])['page'][0])
@@ -171,13 +165,10 @@ def application(env, start_response):
                     pass  # ignore error
 
 
-
                 # parse json an format data
                 for i in range( (pagination_current*pagination_items), (pagination_current*pagination_items+pagination_items) ):
                     if ( i < len(jsondata) ):
                         results.append(jsondata[i])
-
-
 
                 """
                 Sample code:
@@ -259,31 +250,50 @@ def application(env, start_response):
                     ctx['data_nav'] = True
 
                     # max number of pages
-                    max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount > pagination_items else 0
 
-                    pagination_group = pagination_current / max_pages_in_paginator
+                    max_pages_count = int(totalitemscount / pagination_items)\
+                        if totalitemscount%pagination_items == 0  else\
+                        int(totalitemscount / pagination_items) + 1
+
+                    pagination_group = int(pagination_current / max_pages_in_paginator)
                     start_page = pagination_group * max_pages_in_paginator + 1
                     end_page = start_page + max_pages_in_paginator - 1
                     end_page = min(end_page, max_pages_count)
 
                     if pagination_current > 0:
-                        ctx['page_prev'].update(page=str(pagination_current), scope=scope)
+                        ctx['page_prev'] = {
+                            'page': str(pagination_current),
+                            'scope': scope
+                        }
                     if pagination_group > 1:
-                        ctx['group_prev'].update(page=str((pagination_group - 1) * max_pages_in_paginator + 1),
-                                               scope=scope)
+                        ctx['group_prev'] = {
+                            'page': str((pagination_group - 1) * max_pages_in_paginator + 1),
+                            'scope': scope
+                        }
+                    ctx['pagination'] = []
                     for i in range(start_page, end_page + 1):
-                        ctx['pagination'].update(page=str(i),
-                                               cssclass='active' if i - 1 == pagination_current else '',
-                                               scope=scope)
+                        ctx['pagination'].append({
+                            'page': str(i),
+                            'cssclass': 'active' if i - 1 == pagination_current else '',
+                            'scope': scope
+                        })
                     next_group_first_page = (pagination_group + 1) * max_pages_in_paginator + 1
                     if next_group_first_page < max_pages_count:
-                        ctx['group_next'].update(page=str(next_group_first_page), scope=scope)
+                        ctx['group_next'] = {
+                            'page': str(next_group_first_page),
+                            'scope': scope
+                        }
                     if pagination_current + 1 < max_pages_count:
-                        ctx['page_next'].update(page=str(pagination_current + 2), scope=scope)
-
+                        ctx['page_next'] = {
+                            'page': str(pagination_current + 2),
+                            'scope': scope
+                        }
                 else:
                     # load template with error message
                     ctx.update(errmsg=errmsg)
+
+                # ctx['debug'] = 'debug'
+
 
             response.write(t.render(template.Context(ctx)))
 
