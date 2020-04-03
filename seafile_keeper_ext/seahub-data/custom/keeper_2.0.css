@@ -167,7 +167,7 @@
         }
 
         @media (min-width: 1200px), (max-width: 991px) {
-            #banner img { width: 331px; }
+            #banner img { width: 330px; }
         }
         @media (max-width: 1199px) and (min-width: 992px) {
             #banner img { width: 343px; }
