@@ -452,7 +452,12 @@ class EnvManager(object):
         self.keeper_oos_log_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
         self.keeper_oos_log_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service']
 
+        self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
+        self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
 
+        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp_check.sh')
+        self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
+        
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
@@ -684,6 +689,13 @@ def deploy_ext():
     do_links((
         (env_mgr.assets_app_link, env_mgr.assets_app_dir),
         (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
+    ))
+
+    # create nagios checks links
+
+    do_links((
+        (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
+        (env_mgr.keeper_nagios_check_tmp_link, keeper_nagios_check_tmp_path)
     ))
 
     # create seafile log dir
