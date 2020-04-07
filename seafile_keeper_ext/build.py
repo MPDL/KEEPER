@@ -455,7 +455,7 @@ class EnvManager(object):
         self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
         self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
 
-        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp_check.sh')
+        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
         self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
         
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
