@@ -695,7 +695,7 @@ def deploy_ext():
 
     do_links((
         (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
-        (env_mgr.keeper_nagios_check_tmp_link, keeper_nagios_check_tmp_path)
+        (env_mgr.keeper_nagios_check_tmp_link, env_mgr.keeper_nagios_check_tmp_path)
     ))
 
     # create seafile log dir
