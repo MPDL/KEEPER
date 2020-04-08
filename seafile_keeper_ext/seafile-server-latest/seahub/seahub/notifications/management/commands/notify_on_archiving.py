@@ -11,6 +11,8 @@ import base64
 
 from seahub.utils.mail import send_html_email_with_dj_template, MAIL_PRIORITY
 
+from seahub.keeper.utils import get_user_name
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ class Command(BaseCommand):
             send_html_email_with_dj_template(
                 args[1], dj_template='notifications/notify_user_on_archiving_error.html',
                 context = {
-                    'email': args[1],
+                    'email': get_user_name(args[1]),
                     'repo_id': args[3],
                     'repo_name': args[4],
                 },
@@ -82,7 +84,7 @@ class Command(BaseCommand):
             send_html_email_with_dj_template(
                 args[1], dj_template='notifications/notify_user_on_successfull_archiving.html',
                 context = {
-                    'email': args[1],
+                    'email': get_user_name(args[1]),
                     'repo_id': args[2],
                     'repo_name': args[3],
                     'version': args[4],
