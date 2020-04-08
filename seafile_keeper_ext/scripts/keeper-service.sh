@@ -174,10 +174,7 @@ case "$1" in
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
                 if [ "$1" == "restart" ]; then
-                    if [ "$2" != "--force" ]; then
-                        check_and_exit_keeper_archiving_running
-                    fi
-                    $0 stop
+                    $0 stop $2
                     sleep 3
                     echo "Starting..."
                 fi
@@ -186,10 +183,7 @@ case "$1" in
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$1" == "restart" ]; then
-                    if [ "$2" != "--force" ]; then
-                        check_and_exit_keeper_archiving_running
-                    fi
-                    $0 stop
+                    $0 stop $2
                     echo "Starting..."
                 fi
                 ${USR_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
