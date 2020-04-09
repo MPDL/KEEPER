@@ -17,7 +17,7 @@ from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
 # KEEPER
-from .views_keeper import CatalogView, certify_file, add_doi, ArchiveLib, CanArchive
+from .views_keeper import CatalogView, BloxbergView, add_doi, ArchiveLib, CanArchive
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -113,7 +113,7 @@ urlpatterns = [
     url(r'^catalog/$', CatalogView.as_view()),
 
     # Bloxberg
-    url(r'^ajax/certify/$', certify_file, name='certify_file'),
+    url(r'^ajax/certify/$', BloxbergView.as_view()),
 
     # DOI
     url(r'^ajax/doi/$', add_doi, name='add_doi'),

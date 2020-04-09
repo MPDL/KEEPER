@@ -26,7 +26,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-
+from seahub.api2.utils import api_error
 #from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
 #    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
 #    check_keeper_repo_archiving_status
@@ -53,22 +53,27 @@ class CatalogView(APIView):
         catalog = get_catalog()
         return catalog
 
-def certify_file(request):
-    repo_id = request.GET.get('repo_id', None)
-    path = request.GET.get('path', None)
-    user_email = request.user.username
-    hash_data = hash_file(repo_id, path, user_email)
-    response_bloxberg = request_bloxberg(hash_data)
+class BloxbergView(APIView):
+    """
+    Bloxberg Certify
+    """
 
-    if response_bloxberg is not None:
-        if response_bloxberg.status_code == 200:
-            transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
-            checksum = hash_data['certifyVariables']['checksum']
-            created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
-            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
-            return JsonResponse(response_bloxberg.json())
+    def post(self, request, format=None):
+        repo_id = request.data['repo_id']
+        path = request.data['path']
 
-    return JsonResponse({'msg': 'Transaction failed'})
+        user_email = request.user.username
+        hash_data = hash_file(repo_id, path, user_email)
+        response_bloxberg = request_bloxberg(hash_data)
+
+        if response_bloxberg is not None:
+            if response_bloxberg.status_code == 200:
+                transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
+                checksum = hash_data['certifyVariables']['checksum']
+                created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
+                create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
+                return JsonResponse(response_bloxberg.json())
+        return api_error(status.HTTP_400_BAD_REQUEST, 'Transaction failed')
 
 def request_bloxberg(certify_payload):
     try:
