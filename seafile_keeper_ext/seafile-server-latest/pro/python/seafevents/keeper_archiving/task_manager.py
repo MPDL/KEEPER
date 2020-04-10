@@ -18,7 +18,7 @@ from datetime import datetime
 from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
 from seafobj import commit_mgr, fs_mgr
-from seahub_settings import ARCHIVE_METADATA_TARGET
+from seahub.settings import ARCHIVE_METADATA_TARGET
 from seaserv import seafile_api
 from . import config as _cfg
 from seafevents.utils import get_python_executable
@@ -62,6 +62,7 @@ ACTION_ERROR_MSG = {
     'max_repo_size': ['Cannot check max archiving size for library {} and owner {}: {}', MSG_CANNOT_CHECK_REPO_SIZE],
 }
 
+_l.basicConfig(level=_l.INFO)
 
 __all__ = ["task_manager"]
 
@@ -291,7 +292,7 @@ class Worker(threading.Thread):
             try:
                 stream = seaf.get_stream()
 
-                with open(to_path, "a") as target:
+                with open(to_path, "ab") as target:
                     while True:
                         data = stream.read(BUF_SIZE)
                         if not data:
@@ -316,12 +317,15 @@ class Worker(threading.Thread):
                 for dname, dobj in list(d.dirents.items()):
                     copy_dirent(dobj, repo, owner, dpath)
             elif obj.is_file():
-                plist = [p.decode('utf-8') for p in path.split(os.sep) if p]
+                #TODO ???
+                #plist = [p.decode('utf-8') for p in path.split(os.sep) if p]
+                plist = [p for p in path.split(os.sep) if p]
                 absdirpath = os.path.join(task._extracted_tmp_dir, *plist)
                 if not os.path.exists(absdirpath):
                     os.makedirs(absdirpath)
                 seaf = fs_mgr.load_seafile(repo.id, repo.version, obj.id)
-                fname = obj.name.decode('utf-8')
+                #fname = obj.name.decode('utf-8')
+                fname = obj.name
                 to_path = os.path.join(absdirpath, fname)
                 write_seaf_to_path(seaf, to_path)
                 _l.debug('File: {} copied to {}'.format(fname, to_path))
@@ -393,7 +397,7 @@ class Worker(threading.Thread):
                         return False
                     try:
                         # prepare content for DB
-                        with open(md_path, "r") as md:
+                        with open(md_path, "r", encoding='utf-8') as md:
                             task.md = md.read()
                             task.md_dict = parse_markdown_doi(task.md)
                             _l.debug("md_dict:{}".format(task.md_dict))
@@ -441,13 +445,11 @@ class Worker(threading.Thread):
             _l.info('Calculate tar checksum for repo: {}...'.format(task.repo_id))
             try:
                 task.checksum = _generate_file_md5(task._archive_path)
-                _l.info('Checksum for repo {}: '.format(task.checksum))
+                _l.info('Calculated checksum: %s', task.checksum)
             except Exception:
                 _set_critical_error(task, MSG_CALC_CHECKSUM,
                     'Failed to calculate checksum for tar {} for task {}: {}'.format(task._archive_path, task, traceback.format_exc()))
                 return False
-
-            # raise Exception("BREAK TAR!")
 
             return True
 
@@ -474,6 +476,9 @@ class Worker(threading.Thread):
         remote_md_path = None
         remote_archive_path = None
 
+        print
+
+        # TODO: no hpss_enabled!!!
         if not self.hpss_enabled:
             _l.info('HPSS is not enabled, skip the action.')
             return True
@@ -652,10 +657,10 @@ class TaskManager(object):
 
         self._db_oper = None
 
-    def init(self, db_oper, num_workers,
+    def init(self, num_workers,
              local_storage, archive_max_size, archives_per_library,
              hpss_enabled, hpss_url, hpss_user, hpss_password, hpss_storage_path):
-        self._db_oper = db_oper
+        self._db_oper = DBOper()
         self._set_local_storage(local_storage)
         self._num_workers = num_workers
         self.archive_max_size = archive_max_size
@@ -739,7 +744,6 @@ class TaskManager(object):
         """
         try:
             seahub_dir = os.environ['SEAHUB_DIR']
-            args = None
             if task.status == 'DONE':
                 md = task.md_dict
                 md = dict(
@@ -749,7 +753,7 @@ class TaskManager(object):
                 )
                 args = "|".join((task.status, task.owner, task.repo_id,
                                  task._repo.name, str(task.version), str(task.archive_id),
-                                 b64encode(json.dumps(md))))
+                                 b64encode(json.dumps(md).encode()).decode()))
             elif task.status == 'ERROR':
                 args = "|".join((task.status, task.owner, str(task.archive_id),
                                  task.repo_id, task._repo.name, task.error))
@@ -764,11 +768,10 @@ class TaskManager(object):
                 args,
             ]
             _l.debug("CMD: {}".format(cmd))
-            p = subprocess.Popen(cmd, cwd=seahub_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            for line in iter(p.stdout.readline, ''):
-                line = line.replace('\r', '').replace('\n', '')
-                _l.debug(line)
-                sys.stdout.flush()
+            with subprocess.Popen(cmd, cwd=seahub_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                  universal_newlines=True) as p:
+                for line in p.stdout:
+                    _l.debug(line)
         except Exception as e:
             _l.error("Cannot execute send_email: {}".format(e))
 
@@ -807,7 +810,6 @@ class TaskManager(object):
             _set_error(at, MSG_ADD_TASK, 'Cannot get max version of archive for library {}: {}'.format(repo_id, owner))
             return at
         owner_quota = self._db_oper.get_quota(repo_id, owner) or self.archives_per_library
-        _l.info("db_quota;{},archives_per_library:{}".format(self._db_oper.get_quota(repo_id, owner),self.archives_per_library))
         if max_ver >= owner_quota:
             _set_error(at, MSG_MAX_NUMBER_ARCHIVES_REACHED,
                        'Max number of archives {} for library {} and owner {} is reached'.format(max_ver, repo_id,
@@ -885,11 +887,10 @@ class TaskManager(object):
                 # notify user!!!
                 self._notify(task)
             else:
+                _update_archive_db(task)
                 with self._tasks_map_lock:
                     self._tasks_map[repo_id] = task
                     self._tasks_queue.put(task)
-
-                _update_archive_db(task)
 
             resp['version'] = task.version
 
@@ -1142,22 +1143,28 @@ task_manager = TaskManager()
 
 from seafevents.utils import get_config
 from .config import get_keeper_archiving_conf
-# import ccnet
-# import seaserv
-# from seafevents.keeper_archiving.rpc import KeeperArchivingRpcClient
 from .db_oper import DBOper
 
 keeper_archiving_rpc = None
 
-def _get_keeper_archiving_rpc():
-    global keeper_archiving_rpc
-    # if keeper_archiving_rpc is None:
-    #     pool = ccnet.ClientPool(
-    #             seaserv.CCNET_CONF_PATH,
-    #             central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
-    #         )
-    # keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
-    return keeper_archiving_rpc
+# def _get_keeper_archiving_rpc():
+#     global keeper_archiving_rpc
+#     # if keeper_archiving_rpc is None:
+#     #     pool = ccnet.ClientPool(
+#     #             seaserv.CCNET_CONF_PATH,
+#     #             central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
+#     #         )
+#     # keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
+#     return keeper_archiving_rpc
+
+
+def get_running_tasks():
+    raise NotImplementedError()
+    return {'ERROR': 'TO_BE_IMPLEMENTED'}
+
+def restart_task():
+    raise NotImplementedError()
+    return {'ERROR': 'TO_BE_IMPLEMENTED'}
 
 
 if __name__ == "__main__":
@@ -1170,8 +1177,8 @@ if __name__ == "__main__":
     # _l.basicConfig(**kw)
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config-file',
-                        default=os.path.join(os.path.abspath('..'), 'events.conf'),
-                        help='seafevents config file')
+                        default=os.path.join(os.path.abspath('..'), 'seafevents.conf'),
+                        help='seafevents config file path')
     parser.add_argument('--is-processing',  action='store_true')
     parser.add_argument('-ls', '--list-tasks', action='store_true')
     parser.add_argument('-r', '--restart', help='restart archiving task(s)', nargs='+')
@@ -1187,7 +1194,6 @@ if __name__ == "__main__":
 
     try:
         db = DBOper()
-        rpc = _get_keeper_archiving_rpc()
     except Exception as e:
         print(('Cannot run command: {}'.format(e)))
         exit(1)
@@ -1196,7 +1202,7 @@ if __name__ == "__main__":
     if args.is_processing:
 
         try:
-            tasks = rpc.get_running_tasks()
+            tasks = get_running_tasks()
             tasks = tasks._dict
         except:
             print("false")
@@ -1209,28 +1215,27 @@ if __name__ == "__main__":
 
     # LIST OF PROCESSED AND NOT COMPLETED TASKS
     elif args.list_tasks:
-        if rpc is not None:
-            try:
-                tasks = rpc.get_running_tasks()
-            except Exception as e:
-                print(("Cannot call rpc: {}".format(e)))
-                exit(1)
+        try:
+            tasks = get_running_tasks()
+        except Exception as e:
+            print(("Cannot get running tasks status: {}".format(e)))
+            exit(1)
 
-            tasks = tasks._dict
-            # queued tasks
-            if 'QUEUED' in tasks:
-                print(("Number of queued tasks: {}".format(tasks['QUEUED'])))
-            else:
-                print('No queued tasks.')
-            # currently processed tasks
-            if 'PROCESSED' in tasks and len(tasks['PROCESSED']) > 0:
-                print("List of running Keeper Archiving tasks:")
-                for t in tasks['PROCESSED']:
-                    print(("repo_id: {}, ver: {}, owner: {}, status: {}".format(
-                        t['repo_id'], t['version'], t['owner'], t['status']
-                    )))
-            else:
-                print("Number of currently proccesed tasks: 0")
+        tasks = tasks._dict
+        # queued tasks
+        if 'QUEUED' in tasks:
+            print(("Number of queued tasks: {}".format(tasks['QUEUED'])))
+        else:
+            print('No queued tasks.')
+        # currently processed tasks
+        if 'PROCESSED' in tasks and len(tasks['PROCESSED']) > 0:
+            print("List of running Keeper Archiving tasks:")
+            for t in tasks['PROCESSED']:
+                print(("repo_id: {}, ver: {}, owner: {}, status: {}".format(
+                    t['repo_id'], t['version'], t['owner'], t['status']
+                )))
+        else:
+            print("Number of currently proccesed tasks: 0")
 
         # not compeletd tasks in db
         tasks = db.get_not_completed_tasks()
@@ -1246,7 +1251,7 @@ if __name__ == "__main__":
         if args.restart and len(args.restart) > 0:
             for aid in args.restart:
                 try:
-                    task = rpc.restart_task(aid)
+                    task = restart_task(aid)
                     if task:
                         print(( task._dict ))
                 except Exception as e:

@@ -1,4 +1,6 @@
 import logging
+import traceback
+
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
 from .models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
@@ -32,10 +34,10 @@ def normalize_cache_key(value, prefix=None, token=None, max_length=200):
 def _prepare_md(md):
     if md is None:
         return None;
-    return str(truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN), 'utf-8')
+    return truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN)
 
 def create_db_session(host, port, username, passwd, dbname):
-    db_url = "mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
+    db_url = "mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
     logging.info(db_url)
@@ -148,7 +150,8 @@ class DBOper(object):
             return a
         except Exception as e:
             self.kdb_session.rollback()
-            logging.warning('Failed to add keeper archive record to db: {}.'.format(e))
+            logging.warning('Failed to add keeper archive record to db: %s', e.with_traceback())
+
             return -1
         finally:
             self.kdb_session.remove()
@@ -286,5 +289,3 @@ class DBOper(object):
             return None
         finally:
             self.kdb_session.remove()
-
-
