@@ -4,6 +4,8 @@ import logging
 import subprocess
 
 from seafevents.utils import run, get_python_executable
+from seahub.settings import SEAFILE_DIR
+from urllib import parse
 
 __all__ = [
     'KeeperArchiving',
@@ -17,12 +19,12 @@ def _valid_repo_id(repo_id):
 class KeeperArchiving(object):
 
     def __init__(self, conf):
+
         self._enabled = conf['enabled']
 
         if self._enabled:
-            self._conf = conf
-            self._host = conf['host'],
-            self._port = conf['port'],
+            self._host = conf['host']
+            self._port = conf['port']
             self._local_storage = conf['local_storage']
             self._workers = conf['workers']
             self._archive_max_size = conf['archive-max-size']
@@ -39,7 +41,6 @@ class KeeperArchiving(object):
 
 
     def start(self):
-        SEAFILE_DIR = '/opt/seafile'
         INSTALLPATH = SEAFILE_DIR  + '/seafile-server-latest'
 
         pp = [INSTALLPATH + p for p in (
@@ -60,11 +61,14 @@ class KeeperArchiving(object):
             'PYTHONPATH': ':'.join(pp)
         }
 
+        split = parse.urlsplit(self._host)
+        host = split.path if not split.scheme else split.netloc
+
         archiving_server_args = [
             get_python_executable(),
             self._archiving_server_py,
             '--host',
-            self._host,
+            host,
             '--port',
             self._port,
             '--local_storage',

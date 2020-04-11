@@ -40,7 +40,6 @@ def create_db_session(host, port, username, passwd, dbname):
     db_url = "mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
-    logging.info(db_url)
     kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
     engine = create_engine(db_url, **kwargs)

@@ -141,4 +141,6 @@ class BackgroundTasks(object):
         # KEEPER
         if self._keeper_archiving and self._keeper_archiving.is_enabled():
             self._keeper_archiving.start()
+        else:
+            logging.info('keeper archiving is disabled')
 

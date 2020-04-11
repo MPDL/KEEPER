@@ -11,6 +11,9 @@ import os
 import shutil
 import tempfile
 
+from keeper.models import CDC, Catalog
+from seahub.profile.models import Profile
+
 from seaserv import seafile_api
 from seahub.settings import SERVER_EMAIL
 
@@ -41,11 +44,18 @@ class TestKeeperArchiving(unittest.TestCase):
     def setUpClass(cls):
         cls.user = next(create_tmp_user())
         cls.repo = next(create_tmp_repo(cls.user))
+        with open("data/archive-metadata.md", 'r') as f:
+            seafile_api.post_file(cls.repo.id, os.path.abspath(f.name), "/", "archive-metadata.md", cls.user)
+        with open("data/sample.png", 'r') as f:
+            seafile_api.post_file(cls.repo.id, os.path.abspath(f.name), "/", "sample.png", cls.user)
+        sleep(5)
 
     @classmethod
     def tearDownClass(cls):
-        #TODO: delete repo & user
-        pass
+        seafile_api.remove_repo(cls.repo.id)
+        CDC.objects.delete_by_repo_id(cls.repo.id)
+        Catalog.objects.delete_by_repo_id(cls.repo.id)
+        Profile.objects.delete_profile_by_user(cls.user)
 
     def test_check_keeper_repo_archiving_status(self):
         """TODO: Docstring for test_archiving.
@@ -53,76 +63,51 @@ class TestKeeperArchiving(unittest.TestCase):
 
         repo_id = self.repo.id
 
-        # not archived
-        # errors
-        # resp = check_keeper_repo_archiving_status('fake_repo_id', SERVER_EMAIL, 'is_snapshot_archived')
-        # assert 'Message: invalid repo id fake_repo_id.' in resp['error']
-        #
-        # resp = check_keeper_repo_archiving_status(repo_id, "fake_owner", 'is_snapshot_archived')
-        # assert 'Cannot archive. User is not the owner of the library.' == resp['error']
-        #
-        # resp = check_keeper_repo_archiving_status(repo_id, SERVER_EMAIL, 'fake_action')
-        # assert resp['status'] == 'ERROR'
-        # assert resp['error'] == 'Unknown action: fake_action'
-        #
-        # # is_snapshot_archived
-        # resp = check_keeper_repo_archiving_status(repo_id, SERVER_EMAIL, 'is_snapshot_archived')
-        # assert resp['action'] == 'is_snapshot_archived'
-        # assert resp['is_snapshot_archived'] == 'false'
-        #
-        # # get_quota
-        # resp = check_keeper_repo_archiving_status(repo_id, SERVER_EMAIL, 'get_quota')
-        # print(resp)
-        # assert resp['curr_ver'] == 0
-        # assert resp['remains'] == 5
-        #
-        # # is_repo_too_big
-        # resp = check_keeper_repo_archiving_status(repo_id, SERVER_EMAIL, 'is_repo_too_big')
-        # print(resp)
-        # assert resp['is_repo_too_big'] == 'false'
+        # not yet archived
+        # is_snapshot_archived
+        resp = check_keeper_repo_archiving_status(repo_id, self.user, 'is_snapshot_archived')
+        assert resp['action'] == 'is_snapshot_archived'
+        assert resp['is_snapshot_archived'] == 'false'
 
-        with open("data/archive-metadata.md", 'r') as f:
-            seafile_api.post_file(repo_id, os.path.abspath(f.name), "/", "archive-metadata.md", self.user)
-        with open("data/sample.png", 'r') as f:
-            seafile_api.post_file(repo_id, os.path.abspath(f.name), "/", "sample.png", self.user)
+        # get_quota
+        resp = check_keeper_repo_archiving_status(repo_id, self.user, 'get_quota')
+        print(resp)
+        assert resp['curr_ver'] == 0
+        assert resp['remains'] == 5
 
-        sleep(5)
+        # is_repo_too_big
+        resp = check_keeper_repo_archiving_status(repo_id, self.user, 'is_repo_too_big')
+        print(resp)
+        assert resp['is_repo_too_big'] == 'false'
 
+
+        # after archiving
         resp = add_keeper_archiving_task(repo_id, self.user)
         print(resp)
         ver = resp['version']
 
-        sleep(5)
+        # wait till end of archiving
+        while True:
+            sleep(1)
+            resp = query_keeper_archiving_status(repo_id, self.user, ver)
+            print(resp)
+            if resp.get('status') == 'DONE':
+                break;
 
+        # is_snapshot_archived
         resp = check_keeper_repo_archiving_status(repo_id, self.user, 'is_snapshot_archived')
         assert 'is_snapshot_archived' in resp and resp['is_snapshot_archived'] == 'true', 'Check response: %s' % resp
 
-        resp = query_keeper_archiving_status(repo_id, SERVER_EMAIL, ver)
+        # get_quota
+        resp = check_keeper_repo_archiving_status(repo_id, self.user, 'get_quota')
         print(resp)
+        assert resp.get('curr_ver') == 1
+        assert resp.get('remains') == 4
 
-
-
-        #resp = query_keeper_archiving_status(repo_id, SERVER_EMAIL, resp['version'])
-        # print(resp)
-
-        # assert 'Cannot check archiving status of the snapshot.' == resp['error']
-
-        # resp = check_keeper_repo_archiving_status(repo.id, SERVER_EMAIL, 'get_quota')
-        # print(resp)
-        # assert 'Cannot get archiving quota.' in resp['error']
-
-
-        # arch_mgr.archive_repo(repo)
-        #
-        # path = arch_mgr.get_archive_path(seafile_api.get_repo_owner(repo.id), repo.id, 1)
-
-
-        # assert os.path.isfile(path)
-        # assert os.path.getsize(path)>0
-
-        #clean up
-        # os.remove(path)
-        # shutil.rmtree(os.path.dirname(path))
+        # is_repo_too_big
+        resp = check_keeper_repo_archiving_status(repo_id, self.user, 'is_repo_too_big')
+        print(resp)
+        assert resp.get('is_repo_too_big') == 'false'
 
     @pytest.mark.skip
     def test_tmp_repo_archiving(create_tmp_repo):
@@ -141,7 +126,6 @@ class TestKeeperArchiving(unittest.TestCase):
         f.flush()
         seafile_api.post_file(repo.id, f.name, "/", "some_file_in_root.txt", SERVER_EMAIL)
         f.close()
-
 
         seafile_api.post_dir(repo.id, "/", "sub_dir1", SERVER_EMAIL)
         seafile_api.post_dir(repo.id, "/", "sub_dir2", SERVER_EMAIL)
