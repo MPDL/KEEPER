@@ -35,9 +35,10 @@ class KeeperArchiving(object):
             self._hpss_password = conf['hpss_password']
             self._hpss_storage_path = conf['hpss_storage_path']
 
-            self._logfile = os.path.join(os.path.dirname(__file__), 'archiving_server.log')
             self._archiving_server_proc = None
             self._archiving_server_py = os.path.join(os.path.dirname(__file__), 'archiving_server.py')
+
+            self._logfile = conf['log_directory'] + '/keeper.archiving.log'
 
 
     def start(self):

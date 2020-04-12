@@ -15,6 +15,7 @@ key_hpss_url = 'hpss_url'
 key_hpss_user = 'hpss_user'
 key_hpss_password = 'hpss_password'
 key_hpss_storage_path = 'hpss_storage_path'
+key_log_directory = 'log_directory'
 
 def parse_workers(workers, default_workers):
     try:
@@ -82,6 +83,7 @@ def get_keeper_archiving_conf(config):
 
     default_hpss_storage_path = '/tmp/keeper_archiving_storage'
 
+    default_log_directory = '/tmp'
 
     d = { key_enabled: False }
     if not config.has_section(section_name):
@@ -130,8 +132,6 @@ def get_keeper_archiving_conf(config):
     if archive_max_size != default_archive_max_size:
         archive_max_size = parse_max_size(archive_max_size, default=default_archive_max_size)
 
-
-
     # hpss_enabled
     hpss_enabled = parse_bool(get_option(key_hpss_enabled, default=False))
 
@@ -147,6 +147,9 @@ def get_keeper_archiving_conf(config):
     # hpss_storage_path
     hpss_storage_path = get_option(key_hpss_storage_path, default=default_hpss_storage_path)
 
+    # log_dir
+    log_directory = get_option(key_log_directory, default=default_log_directory)
+
     # [ http server address ]
     host = get_option(key_host, default=default_host)
     port = get_option(key_port, default=default_port)
@@ -155,9 +158,10 @@ def get_keeper_archiving_conf(config):
     logging.debug('keeper archiving local_storage: {}'.format(local_storage))
     logging.debug('keeper archiving archives per library: {}'.format(archives_per_library))
     logging.debug('keeper archive max size: {} GB'.format(archive_max_size / 1024 / 1024 / 1024))
-    logging.debug('keeper hpss enabled: {} '.format(hpss_enabled))
-    logging.debug('keeper archiving http host: {} '.format(host))
-    logging.debug('keeper archiving http port: {} '.format(port))
+    logging.debug('keeper archiving http host: {}'.format(host))
+    logging.debug('keeper archiving http port: {}'.format(port))
+    logging.debug('keeper archiving log directory: {}'.format(log_directory))
+    logging.debug('keeper hpss enabled: {}'.format(hpss_enabled))
     if hpss_enabled:
         logging.debug('keeper hpss url: {} '.format(hpss_url))
         logging.debug('keeper hpss user: {} '.format(hpss_user))
@@ -173,6 +177,7 @@ def get_keeper_archiving_conf(config):
     d[key_hpss_user] = hpss_user
     d[key_hpss_password] = hpss_password
     d[key_hpss_storage_path] = hpss_storage_path
+    d[key_log_directory] = log_directory
     d[key_host] = host
     d[key_port] = port
 
