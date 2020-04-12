@@ -277,81 +277,22 @@ def get_user_name(user):
 
 
 # KEEPER ARCHIVING
-
-from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_NODE
-from seahub.utils import CLUSTER_MODE, do_urlopen
-import urllib.request, urllib.parse, urllib.error
-from urllib.parse import urlparse, urljoin
+from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_PORT, KEEPER_ARCHIVING_NODE
+from urllib.parse import urljoin
 import requests
 from http import HTTPStatus
-# keeper_archiving_rpc = None
-#
-# def _get_keeper_archiving_rpc():
-#     global keeper_archiving_rpc
-#     if keeper_archiving_rpc is None:
-#         pool = ccnet.ClientPool(
-#             seaserv.CCNET_CONF_PATH,
-#             central_config_dir=seaserv.SEAFILE_CENTRAL_CONF_DIR
-#         )
-#         keeper_archiving_rpc = KeeperArchivingRpcClient(pool)
-#
-#     return keeper_archiving_rpc
 
-def archiving_cluster_delegate(delegate_func):
-    def decorated(func):
-        def real_func(*args, **kwargs):
-            if CLUSTER_MODE and not KEEPER_ARCHIVING_NODE:
-                return delegate_func(*args)
-            else:
-                return func(*args)
-        return real_func
+def do_request(params, end_point):
+    url = urljoin(KEEPER_ARCHIVING_ROOT + ':' + KEEPER_ARCHIVING_PORT, end_point)
+    resp = requests.get(url, params)
+    return resp.json() if resp.status_code == HTTPStatus.OK \
+        else {'status': 'ERROR', 'msg': resp.text}
 
-    return decorated
+def add_keeper_archiving_task(repo_id, owner):
+    return do_request({'repo_id': repo_id, 'owner': owner}, '/add-task')
 
-def delegate_add_keeper_archiving_task(repo_id, owner, language_code):
-    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/add-task/')
-    data = urllib.parse.urlencode({
-        'repo_id': repo_id,
-        'owner': owner,
-        'language_code': language_code,
-    })
-    ret = do_urlopen(url, data=data).read()
-    return json.loads(ret)
-
-
-def delegate_query_keeper_archiving_status(repo_id, owner, version, language_code):
-    url = urljoin(KEEPER_ARCHIVING_ROOT, '/api2/archiving/internal/status/')
-    data = urllib.parse.urlencode({
-        'repo_id': repo_id,
-        'owner': owner,
-        'version': version,
-        'language_code': language_code,
-    })
-    ret = do_urlopen(url, data=data).read()
-    return json.loads(ret)
-
-@archiving_cluster_delegate(delegate_add_keeper_archiving_task)
-def add_keeper_archiving_task(repo_id, owner, language_code):
-    params = {'repo_id': repo_id, 'owner': owner}
-    # TODO: configurable port
-    url = urljoin(KEEPER_ARCHIVING_ROOT + ':6001', '/add-task')
-    d = requests.get(url, params)
-    return d.json()
-
-@archiving_cluster_delegate(delegate_query_keeper_archiving_status)
-def query_keeper_archiving_status(repo_id, owner, version, language_code):
-    params = {'repo_id': repo_id, 'owner': owner, 'version': version}
-    # TODO: configurable port
-    url = urljoin(KEEPER_ARCHIVING_ROOT + ':6001', '/query-task-status')
-    d = requests.get(url, params)
-    return d.json()
+def query_keeper_archiving_status(repo_id, owner, version):
+    return do_request({'repo_id': repo_id, 'owner': owner, 'version': version}, '/query-task-status')
 
 def check_keeper_repo_archiving_status(repo_id, owner, action):
-    params = {'repo_id': repo_id, 'owner': owner, 'action': action}
-    # TODO: configurable port
-    url = urljoin(KEEPER_ARCHIVING_ROOT + ':6001', '/check-repo-archiving-status')
-    resp = requests.get(url, params)
-    if resp.status_code == HTTPStatus.OK:
-        return resp.json()
-    else:
-        return{'error': resp.text}
+    return do_request({'repo_id': repo_id, 'owner': owner, 'action': action}, '/check-repo-archiving-status')

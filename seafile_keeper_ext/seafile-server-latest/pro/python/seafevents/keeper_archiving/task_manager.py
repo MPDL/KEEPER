@@ -33,6 +33,7 @@ MSG_CANNOT_GET_QUOTA = 'Cannot get archiving quota.'
 MSG_CANNOT_CHECK_REPO_SIZE = 'Cannot check library size.'
 MSG_CANNOT_CHECK_SNAPSHOT_STATUS = 'Cannot check archiving status of the snapshot.'
 MSG_LIBRARY_TOO_BIG = 'The library is too big to be archived.'
+MSG_CANNOT_GET_REPO = 'Cannot get library.'
 MSG_EXTRACT_REPO = 'Cannot extract library.'
 MSG_ADD_MD = 'Cannot archive library if archive-metadata.md file is not filled or missing.'
 MSG_CREATE_TAR = 'Cannot create tar file for the archive.'
@@ -78,6 +79,10 @@ def _check_dir(dname):
         _l.error(msg)
         raise RuntimeError(msg)
 
+def _is_repo_owner(repo_id, owner):
+    if repo_id is None or owner is None:
+        return False
+    return owner == seafile_api.get_repo_owner(repo_id)
 
 def _remove_dir_or_file(path):
     """Remove dir or file
@@ -708,8 +713,7 @@ class TaskManager(object):
 
             owner = a.owner
             if owner is not None:
-                ro = seafile_api.get_repo_owner(repo_id)
-                if ro != a.owner:
+                if not _is_repo_owner(repo_id, owner):
                     _set_error(at, MSG_WRONG_OWNER, 'Wrong owner of library {}: {}'.format(repo_id, owner))
                     return at
             else:
@@ -791,8 +795,7 @@ class TaskManager(object):
             return at
 
         # check owner
-        ro = seafile_api.get_repo_owner(repo_id)
-        if ro != owner:
+        if not _is_repo_owner(repo_id, owner):
             _set_error(at, MSG_WRONG_OWNER, 'Wrong owner of library {}: {}'.format(repo_id, owner))
             return at
         at.owner = owner
@@ -939,6 +942,12 @@ class TaskManager(object):
                 return resp
 
         try:
+            if not _is_repo_owner(repo_id, owner):
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_WRONG_OWNER
+                })
+                return resp
             a = self._db_oper.get_latest_archive(repo_id, version)
             if a is None:
                 resp.update({
@@ -1012,8 +1021,19 @@ class TaskManager(object):
 
         resp = {'repo_id': repo_id, 'owner': owner, 'action': action}
         try:
-            repo = seafile_api.get_repo(repo_id)
-            if owner != seafile_api.get_repo_owner(repo_id):
+            repo = None
+            try:
+                repo = seafile_api.get_repo(repo_id)
+            except:
+                pass
+            if repo is None:
+                resp.update({
+                    'status': 'ERROR',
+                    'error': MSG_CANNOT_GET_REPO,
+                })
+                return resp
+
+            if not _is_repo_owner(repo_id, owner):
                 resp.update({
                     'status': 'ERROR',
                     'error': MSG_WRONG_OWNER
@@ -1022,6 +1042,7 @@ class TaskManager(object):
 
             ####### is_snapshot_archived
             if action == 'is_snapshot_archived':
+
                 # get root commit_id
                 commit_id = get_commit(repo).commit_id
                 is_archived = self._db_oper.is_snapshot_archived(repo_id, commit_id)

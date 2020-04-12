@@ -10,7 +10,6 @@ from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from seafevents.keeper_archiving.task_manager import task_manager
-from seafevents.keeper_archiving.task_manager import DBOper
 
 logger = logging.getLogger(__name__)
 
@@ -29,25 +28,17 @@ def _valid_repo_id(repo_id):
 
 def add_task(repo_id, owner):
     if not _valid_repo_id(repo_id):
-        raise Exception('invalid repo id by add_task')
-    if not owner:
-        raise Exception('No owner defined for repo {}'.format(repo_id))
+        raise Exception('invalid repo id by add_task: %s' % repo_id)
     return task_manager.add_task(repo_id, owner)
 
 def query_task_status(repo_id, owner, version):
     if not _valid_repo_id(repo_id):
-        raise Exception('invalid repo id by query_task: {}'.format(repo_id))
-    if not owner:
-        raise Exception('No owner defined for repo {}'.format(repo_id))
-    return task_manager.query_task_status(repo_id, version)
+        raise Exception('invalid repo id by query_task: %s' % repo_id)
+    return task_manager.query_task_status(repo_id, owner, version)
 
 def check_repo_archiving_status(repo_id, owner, action):
     if not _valid_repo_id(repo_id):
-        raise Exception('invalid repo id {}'.format(repo_id))
-    if not owner:
-        raise Exception('No owner defined for repo {}'.format(repo_id))
-    if not action:
-        raise Exception('No action defined for  for repo: {} and owner: {}'.format(repo_id, owner))
+        raise Exception('invalid repo id by check_repo_archiving_status: %s' % repo_id)
     return task_manager.check_repo_archiving_status(repo_id, owner, action)
 
 def get_running_tasks():
@@ -63,8 +54,6 @@ class ArchivingRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
 
-        #path, arguments = parse.splitquery(self.path)
-        #TODO: check splitting
         urlsplit = parse.urlsplit(self.path)
         path, arguments = urlsplit[2], urlsplit[3]
         arguments = parse.parse_qs(arguments)
@@ -73,7 +62,6 @@ class ArchivingRequestHandler(SimpleHTTPRequestHandler):
                 resp = add_task(arguments['repo_id'][0], arguments['owner'][0])
             elif path == '/query-task-status':
                 resp = query_task_status(arguments['repo_id'][0], arguments['owner'][0], arguments['version'][0])
-            #TODO: endpoint
             elif path == '/check-repo-archiving-status':
                 resp = check_repo_archiving_status(arguments['repo_id'][0], arguments['owner'][0], arguments['action'][0])
             elif path == '/get-running-tasks':
