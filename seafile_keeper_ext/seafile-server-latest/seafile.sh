@@ -165,6 +165,7 @@ function kill_all () {
     pkill -f "fileserver -c ${default_ccnet_conf_dir}"
     pkill -f "seafevents.main"
     pkill -f "convert_server.py"
+    pkill -f "archiving_server.py"
     pkill -f "soffice.*--invisible --nocrashreport"
     pkill -f  "wsgidav.server.server_cli"
 }

@@ -16,12 +16,11 @@ if has_office_tools():
     from seafevents.office_converter import OfficeConverter
 
 # KEEPER
-#from seafevents.keeper_archiving import KeeperArchiving
-#from seafevents.keeper_archiving.config import get_keeper_archiving_conf
+from seafevents.keeper_archiving import KeeperArchiving
+from seafevents.keeper_archiving.config import get_keeper_archiving_conf
 
 
 Base = declarative_base()
-
 
 class App(object):
     def __init__(self, args, events_handler_enabled=True, background_tasks_enabled=True):
@@ -89,8 +88,9 @@ class BackgroundTasks(object):
         self._office_converter = None
         if has_office_tools():
             self._office_converter = OfficeConverter(get_office_converter_conf(self._app_config))
+
         # KEEPER
-        # self._keeper_archiving = KeeperArchiving(get_keeper_archiving_conf(self._app_config))
+        self._keeper_archiving = KeeperArchiving(get_keeper_archiving_conf(self._app_config))
 
 
     def start(self):
@@ -139,6 +139,8 @@ class BackgroundTasks(object):
             logging.info('office converter is disabled')
 
         # KEEPER
-        # if self._keeper_archiving and self._keeper_archiving.is_enabled():
-        #     self._keeper_archiving.start()
+        if self._keeper_archiving and self._keeper_archiving.is_enabled():
+            self._keeper_archiving.start()
+        else:
+            logging.info('keeper archiving is disabled')
 

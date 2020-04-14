@@ -209,11 +209,10 @@ def send_email(to, msg_ctx):
         msg.content_subtype = "html"
         msg.attach_file(MODULE_PATH + '/' + CDC_LOGO)
         msg.send()
-    except Exception as err:
-        logger.error('Cannot send email')
-        raise err
+        logger.info("Sucessfully sent")
+    except Exception:
+        logger.error('Cannot send email: %s', traceback.format_exc())
 
-    logger.info("Sucessfully sent")
 
 
 def has_at_least_one_creative_dirent(dir):

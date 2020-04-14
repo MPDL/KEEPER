@@ -613,7 +613,7 @@ def deploy_dir(path, expand=False):
     Utils.check_dir(path)
 
     # dirs to be ignored
-    ignore_list = ('.rope', '.cache', '__pycache__', '.git', 'tags', '.ropeproject')
+    ignore_list = ('.rope', '.cache', '__pycache__', '.git', 'tags', '.ropeproject', '.pytest_cache')
     if os.path.basename(path) in ignore_list:
         return
 

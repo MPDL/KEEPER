@@ -3,11 +3,9 @@ from rest_framework import status
 
 from seahub import settings
 from seahub.auth.decorators import login_required
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, SINGLE_MODE
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
-from seahub.share.models import FileShare
-from seahub.utils import gen_shared_link
 from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog
@@ -17,7 +15,6 @@ from keeper.models import CDC, DoiRepo, Catalog
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.http import require_POST
 
 from django.utils.translation import ugettext as _
 from django.utils.translation import get_language, activate
@@ -27,9 +24,11 @@ import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from seahub.api2.utils import api_error
-#from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
+# from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
 #    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
 #    check_keeper_repo_archiving_status
+
+from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status
 
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
@@ -39,10 +38,6 @@ logger = logging.getLogger(__name__)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
-
-def is_in_mpg_ip_range(ip):
-    # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
-    return True
 
 class CatalogView(APIView):
     """
@@ -302,26 +297,6 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
         'owner_contact_email': email2contact_email(repo_owner) })
 
 
-## DUMMY
-def delegate_query_keeper_archiving_status(repo_id, owner, version, param):
-    return {
-        'msg': 'TO_BE_IMPLEMENTED',
-        'status': 'system_error'
-    }
-
-def query_keeper_archiving_status(repo_id, owner, version, param):
-    return {
-        'msg': 'TO_BE_IMPLEMENTED',
-        'status': 'system_error'
-    }
-
-def check_keeper_repo_archiving_status(repo_id, owner, action):
-    return {
-        'status': 'ERROR',
-        'error': 'TO_BE_IMPLEMENTED'
-    }
-
-
 class CanArchive(APIView):
 
     """Quota checking before adding archiving"""
@@ -330,10 +305,7 @@ class CanArchive(APIView):
         repo_id = request.GET.get('repo_id', None)
         version = request.GET.get('version', None)
         owner = request.user.username
-        if SINGLE_MODE:
-            resp = delegate_query_keeper_archiving_status(repo_id, owner, version, get_language())
-        else:
-            resp = query_keeper_archiving_status(repo_id, owner, version, get_language())
+        resp = query_keeper_archiving_status(repo_id, owner, version)
         # logger.info("RESP:{}".format(resp))
         return JsonResponse(resp)
 
@@ -347,7 +319,7 @@ class CanArchive(APIView):
             activate(language_code)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, owner, version, get_language())
+        resp_query = query_keeper_archiving_status(repo_id, owner, version)
         if resp_query.status in ('QUEUED', 'PROCESSING'):
             msg = _('This library is currently being archived.')
             return JsonResponse({
@@ -392,20 +364,6 @@ class CanArchive(APIView):
         })
 
 
-# DUMMY
-def delegate_add_keeper_archiving_task(repo_id, user_email, param):
-    return {
-        'status': 'ERROR',
-        'error': 'TO_BE_IMPLEMENTED',
-        'msg': 'TO_BE_IMPLEMENTED',
-    }
-def add_keeper_archiving_task(repo_id, owner, param):
-    return {
-        'status': 'ERROR',
-        'error': 'TO_BE_IMPLEMENTED',
-        'msg': 'TO_BE_IMPLEMENTED',
-    }
-
 class ArchiveLib(APIView):
 
     """ create keeper archive for a library """
@@ -413,10 +371,7 @@ class ArchiveLib(APIView):
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        if SINGLE_MODE:
-            resp = delegate_add_keeper_archiving_task(repo_id, user_email, get_language())
-        else:
-            resp = add_keeper_archiving_task(repo_id, user_email, get_language())
+        resp = add_keeper_archiving_task(repo_id, user_email)
         # logger.info("RESP:{}".format(vars(resp)))
         return JsonResponse(resp)
 
@@ -428,7 +383,7 @@ class ArchiveLib(APIView):
             activate(language_code)
 
         # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, owner, get_language())
+        resp_archive = add_keeper_archiving_task(repo_id, owner)
         if resp_archive.status == 'ERROR':
             return JsonResponse({
                 'msg': _(resp_archive.msg),

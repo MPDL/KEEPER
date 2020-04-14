@@ -228,7 +228,6 @@ def application(env, start_response):
                                 break
 
                             if 'affs' in authors:
-                                # TODO check if correct format
                                 author.append(','.join(authors['affs']).title())
                     ctl['author'] = '<p>%s</p>' % ', '.join(author)
 
@@ -240,7 +239,7 @@ def application(env, start_response):
                     ctl['year'] = '<p>Year: %s</p>' % res['year'] \
                         if ('year' in res and len(res['year']) > 0) else ''
 
-                    ctl['is_certified'] = 'is_certified' in res and res['is_certified'] == True
+                    ctl['is_certified'] = 'is_certified' in res and res['is_certified']
 
                     ctx['results'].append(ctl)
 
