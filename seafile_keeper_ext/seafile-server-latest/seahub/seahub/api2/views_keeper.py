@@ -23,7 +23,7 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-
+from seahub.api2.utils import api_error
 # from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
 #    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
 #    check_keeper_repo_archiving_status
@@ -48,22 +48,27 @@ class CatalogView(APIView):
         catalog = get_catalog()
         return catalog
 
-def certify_file(request):
-    repo_id = request.GET.get('repo_id', None)
-    path = request.GET.get('path', None)
-    user_email = request.user.username
-    hash_data = hash_file(repo_id, path, user_email)
-    response_bloxberg = request_bloxberg(hash_data)
+class BloxbergView(APIView):
+    """
+    Bloxberg Certify
+    """
 
-    if response_bloxberg is not None:
-        if response_bloxberg.status_code == 200:
-            transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
-            checksum = hash_data['certifyVariables']['checksum']
-            created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
-            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
-            return JsonResponse(response_bloxberg.json())
+    def post(self, request, format=None):
+        repo_id = request.data['repo_id']
+        path = request.data['path']
 
-    return JsonResponse({'msg': 'Transaction failed'})
+        user_email = request.user.username
+        hash_data = hash_file(repo_id, path, user_email)
+        response_bloxberg = request_bloxberg(hash_data)
+
+        if response_bloxberg is not None:
+            if response_bloxberg.status_code == 200:
+                transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
+                checksum = hash_data['certifyVariables']['checksum']
+                created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
+                create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
+                return JsonResponse(response_bloxberg.json())
+        return api_error(status.HTTP_400_BAD_REQUEST, 'Transaction failed')
 
 def request_bloxberg(certify_payload):
     try:
@@ -91,70 +96,59 @@ def request_doxi(shared_link, doxi_payload):
 def get_landing_page_url(repo_id, commit_id):
     return "{}/doi/libs/{}/{}".format(SERVICE_URL, repo_id, commit_id)
 
-def add_doi(request):
-    repo_id = request.GET.get('repo_id', None)
-    user_email = request.user.username
-    repo = get_repo(repo_id)
-    doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-    if doi_repos:
-        msg = 'This library already has a DOI. '
-        url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
-        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email, doi_repos[0].doi, url_landing_page)
-        return JsonResponse({
-            'msg': msg + doi_repos[0].doi,
-            'status': 'error',
-            })
+class AddDoiView(APIView):
+    """
+    Create DOI
+    """
+    def post(self, request, format=None):
+        repo_id = request.data['repo_id']
+        user_email = request.user.username
+        repo = get_repo(repo_id)
+        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+        if doi_repos:
+            msg = 'This library already has a DOI. '
+            url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email, doi_repos[0].doi, url_landing_page)
+            return api_error(status.HTTP_400_BAD_REQUEST, msg + doi_repos[0].doi)
 
-    metadata = get_metadata(repo_id, user_email, "assign DOI")
+        metadata = get_metadata(repo_id, user_email, "assign DOI")
 
-    if 'error' in metadata:
-        return JsonResponse({
-            'msg': metadata.get('error'),
-            'status': 'error',
-            })
+        if 'error' in metadata:
+            return api_error(status.HTTP_400_BAD_REQUEST, metadata.get('error'))
 
-    metadata_xml = generate_metadata_xml(metadata)
-    commit_id = get_latest_commit_id(repo)
+        metadata_xml = generate_metadata_xml(metadata)
+        commit_id = get_latest_commit_id(repo)
 
-    url_landing_page = get_landing_page_url(repo_id, commit_id)
-    response_doxi = request_doxi(url_landing_page, metadata_xml)
+        url_landing_page = get_landing_page_url(repo_id, commit_id)
+        response_doxi = request_doxi(url_landing_page, metadata_xml)
 
-    if response_doxi is not None:
-        if response_doxi.status_code == 201:
-            doi = 'https://doi.org/' + response_doxi.text
-            logger.info(doi)
-            repo_owner = get_repo_owner(repo_id)
-            DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = _('DOI successfully created') + ': '
-            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
-            return JsonResponse({
-                'msg': msg + doi,
-                'status': 'success',
-                })
-        elif response_doxi.status_code == 408:
+        if response_doxi is not None:
+            if response_doxi.status_code == 201:
+                doi = 'https://doi.org/' + response_doxi.text
+                logger.info(doi)
+                repo_owner = get_repo_owner(repo_id)
+                DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
+                msg = _('DOI successfully created') + ': '
+                doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
+                return JsonResponse({
+                    'msg': msg + doi,
+                    'status': 'success',
+                    })
+            elif response_doxi.status_code == 408:
+                msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
+                return api_error(status.HTTP_400_BAD_REQUEST, msg)
+            else:
+                logger.info(response_doxi.status_code)
+                logger.info(response_doxi.text)
+                msg = 'Failed to create DOI, ' + response_doxi.text
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
+                return api_error(status.HTTP_400_BAD_REQUEST, msg)
+        else:
             msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-            return JsonResponse({
-                'msg': msg,
-                'status': 'error'
-            })
-        else:
-            logger.info(response_doxi.status_code)
-            logger.info(response_doxi.text)
-            msg = 'Failed to create DOI, ' + response_doxi.text
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-            return JsonResponse({
-                'msg': msg,
-                'status': 'error'
-                })
-    else:
-        msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
-        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-        return JsonResponse({
-            'msg': msg,
-            'status': 'error'
-        })
+            return api_error(status.HTTP_400_BAD_REQUEST, msg)
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
