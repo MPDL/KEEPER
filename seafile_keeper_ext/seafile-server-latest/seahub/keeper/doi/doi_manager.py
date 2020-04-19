@@ -64,7 +64,8 @@ def get_metadata(repo_id, user_email, action_type):
             }
         owner = seafile_api.get_repo_owner(repo.id)
         LOGGER.info("Assigning DOI for repo id: {}, name: {}, owner: {} ...".format(repo.id, repo.name, owner))
-        doi_dict = parse_markdown_doi(file.get_content())
+        content = file.get_content().decode('utf-8')
+        doi_dict = parse_markdown_doi(content)
         ## Add hardcoded DOI metadata
         ## TODO: will be editable in next DOI releases
         doi_dict.update({
@@ -196,7 +197,7 @@ def validate_resource_type(txt):
     valid = True
     if txt:
         pattern = re.compile("^(Library|Project)$", re.UNICODE)
-        if not re.match(pattern, txt.decode('utf-8')):
+        if not re.match(pattern, txt):
             valid = False
             msg = 'Wrong Institution string: ' + txt
             LOGGER.info(msg)

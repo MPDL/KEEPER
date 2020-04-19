@@ -139,8 +139,6 @@ from seaserv import seafserv_threaded_rpc, \
 
 from constance import config
 
-# KEEPER
-from keeper.models import DoiRepo
 
 logger = logging.getLogger(__name__)
 json_content_type = 'application/json; charset=utf-8'
@@ -715,9 +713,6 @@ class Repos(APIView):
                 if q and q.lower() not in r.name.lower():
                     continue
 
-                # KEEPER
-                doi_repos = DoiRepo.objects.get_valid_doi_repos(r.repo_id)
-                history_limit = seafile_api.get_repo_history_limit(r.repo_id)
 
                 repo = {
                     "type": "repo",
@@ -740,7 +735,6 @@ class Repos(APIView):
                     "head_commit_id": r.head_cmmt_id,
                     "version": r.version,
                     "salt": r.salt if r.enc_version == 3 else '',
-                    "doi": len(doi_repos) <= 0 and history_limit <= -1 and not r.encrypted,
                 }
 
                 if is_pro_version() and ENABLE_STORAGE_CLASSES:

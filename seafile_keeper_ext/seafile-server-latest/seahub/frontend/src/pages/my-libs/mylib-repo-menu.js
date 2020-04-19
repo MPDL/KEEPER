@@ -53,7 +53,7 @@ class MylibRepoMenu extends React.Component {
   generatorOperations = () => {
     let repo = this.props.repo;
     let showResetPasswordMenuItem = repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
-    let showAssignDoiMenuItem = !repo.encrypted; //TODO: get 'doi' from props
+    let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let operations = ['Rename', 'Transfer', 'History Setting', 'API Token'];
     if (repo.encrypted) {
       operations.push('Change Password');
