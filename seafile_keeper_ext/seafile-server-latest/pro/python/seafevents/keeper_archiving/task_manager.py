@@ -850,7 +850,7 @@ class TaskManager(object):
         if task.status == 'ERROR':
             d.update(msg=MSG_CANNOT_ARCHIVE_CRITICAL)
             task.msg and d.update(error=task.msg)
-            task.error and d.update(error=task.error)
+            task.error and d.update(error=json.dumps(task.error).strip('"'))
             # send email
             self.send_archiving_email(task)
         elif task.status != 'DONE' and task.error is not None:
