@@ -4,7 +4,7 @@ import MediaQuery from 'react-responsive';
 import moment from 'moment';
 import { Link } from '@reach/router';
 import { Utils } from '../../utils/utils';
-import { seafileAPI } from '../../utils/seafile-api';
+import {keeperAPI, seafileAPI} from '../../utils/seafile-api';
 import { gettext, siteRoot, storages } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
 import ShareDialog from '../../components/dialog/share-dialog';
@@ -20,6 +20,7 @@ import Rename from '../../components/rename';
 import MylibRepoMenu from './mylib-repo-menu';
 import RepoAPITokenDialog from '../../components/dialog/repo-api-token-dialog';
 import AssignDoiDialog from '../../components/dialog/assign-doi-dialog';
+import ArchiveLibraryDialog from '../../components/dialog/archive-library-dialog';
 
 const propTypes = {
   repo: PropTypes.object.isRequired,
@@ -31,6 +32,8 @@ const propTypes = {
   onTransferRepo: PropTypes.func.isRequired,
   onRepoClick: PropTypes.func.isRequired,
 };
+
+
 
 class MylibRepoListItem extends React.Component {
 
@@ -50,6 +53,7 @@ class MylibRepoListItem extends React.Component {
       isFolderPermissionDialogShow: false,
       isAPITokenDialogShow: false,
       isAssignDoiDialogShow: false,
+      isArchiveLibraryDialogShow: false,
     };
   }
 
@@ -109,6 +113,9 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'Assign DOI to current state':
         this.onAssignDoiToggle();
+        break;
+      case 'Archive Library':
+        this.onArchiveLibraryToggle();
         break;
       default:
         break;
@@ -187,6 +194,48 @@ class MylibRepoListItem extends React.Component {
 
   onAssignDoiToggle = () => {
     this.setState({isAssignDoiDialogShow: !this.state.isAssignDoiDialogShow});
+  }
+
+  handleCanArchiveResponse = (resp) => {
+    const d = resp.data;
+    let msg, error;
+    const default_error = "Can not archive library due to unknown reason, please contact support.";
+    //alert(JSON.stringify(d));
+    if (d.status === 'success')
+      this.setState({quota: d.quota})
+    else if (d.status === "in_processing")
+      msg = d.msg;
+    else if (d.status === "quota_expired")
+      error = gettext("Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support.");
+    else if (d.status === "snapshot_archived")
+      error = gettext("Cannot archive, since the library snapshot has already been archived.");
+    else if (d.status === "is_too_big")
+      error = gettext("Cannot archive, since the library is too large.");
+    else if (d.status === "metadata_error")
+      error = d.msg;
+    else if (d.status === "system_error")
+      error = d.msg || default_error;
+    else
+      error = default_error;
+    if (error)
+      toaster.danger(error);
+    else if (msg)
+      toaster.success(msg);
+  }
+
+  onArchiveLibraryToggle = () => {
+    keeperAPI.canArchive(this.props.repo.repo_id).then((resp) => {
+      const d = resp.data;
+      // alert(JSON.stringify(d));
+      this.handleCanArchiveResponse(resp);
+      if (d.status === 'success')
+        this.setState({
+          isArchiveLibraryDialogShow: !this.state.isArchiveLibraryDialogShow
+        });
+    }).catch((error) => {
+      let errorMsg = Utils.getErrorMsg(error);
+      this.handleCanArchiveResponse({data: {status: 'system_error', msg: errorMsg}});
+    });
   }
 
   onUnfreezedItem = () => {
@@ -404,7 +453,6 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
-
         {this.state.isLabelRepoStateDialogOpen && (
           <ModalPortal>
             <LabelRepoStateDialog
@@ -414,7 +462,6 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
-
         {this.state.isFolderPermissionDialogShow && (
           <ModalPortal>
             <LibSubFolderPermissionDialog
@@ -424,7 +471,6 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
-
         {this.state.isAPITokenDialogShow && (
           <ModalPortal>
             <RepoAPITokenDialog
@@ -433,7 +479,6 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
-
         {this.state.isAssignDoiDialogShow && (
           <ModalPortal>
             <AssignDoiDialog
@@ -443,9 +488,21 @@ class MylibRepoListItem extends React.Component {
             </AssignDoiDialog>
           </ModalPortal>
         )}
+        {this.state.isArchiveLibraryDialogShow && (
+          <ModalPortal>
+            <ArchiveLibraryDialog
+              repoID={repo.repo_id}
+              repoName={repo.repo_name}
+              quota={this.state.quota}
+              toggleDialog={this.onArchiveLibraryToggle}>
+            </ArchiveLibraryDialog>
+          </ModalPortal>
+        )}
       </Fragment>
     );
   }
+
+
 }
 
 MylibRepoListItem.propTypes = propTypes;

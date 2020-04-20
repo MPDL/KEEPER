@@ -54,6 +54,7 @@ class MylibRepoMenu extends React.Component {
     let repo = this.props.repo;
     let showResetPasswordMenuItem = repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
+    let showArchiveLibraryMenuItem = !repo.encrypted;
     let operations = ['Rename', 'Transfer', 'History Setting', 'API Token'];
     if (repo.encrypted) {
       operations.push('Change Password');
@@ -69,6 +70,9 @@ class MylibRepoMenu extends React.Component {
     }
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
+    }
+    if (showArchiveLibraryMenuItem) {
+      operations.push('Archive Library');
     }
     return operations;
   }
@@ -114,6 +118,9 @@ class MylibRepoMenu extends React.Component {
         break;
       case 'Assign DOI to current state':
         translateResult = gettext('Assign DOI to current state');
+        break;
+      case 'Archive Library':
+        translateResult = gettext('Archive Library');
         break;
       default:
         break;
