@@ -49,25 +49,27 @@ def restart_task(archive_id):
         raise Exception('archive_id is not defined')
     return task_manager.restart_task(archive_id)
 
+def _get_arg(args, key):
+    return args.get(key)[0] if key in args and len(args.get(key))>0 else None
 
 class ArchivingRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
 
         urlsplit = parse.urlsplit(self.path)
-        path, arguments = urlsplit[2], urlsplit[3]
-        arguments = parse.parse_qs(arguments)
+        path, args = urlsplit[2], urlsplit[3]
+        args = parse.parse_qs(args)
         try:
             if path == '/add-task':
-                resp = add_task(arguments['repo_id'][0], arguments['owner'][0])
+                resp = add_task(_get_arg(args, 'repo_id'), _get_arg(args, 'owner'))
             elif path == '/query-task-status':
-                resp = query_task_status(arguments['repo_id'][0], arguments['owner'][0], arguments['version'][0])
+                resp = query_task_status(_get_arg(args, 'repo_id'), _get_arg(args, 'owner'), _get_arg(args, 'version'))
             elif path == '/check-repo-archiving-status':
-                resp = check_repo_archiving_status(arguments['repo_id'][0], arguments['owner'][0], arguments['action'][0])
+                resp = check_repo_archiving_status(_get_arg(args, 'repo_id'), _get_arg(args, 'owner'), _get_arg(args, 'action'))
             elif path == '/get-running-tasks':
                 resp = get_running_tasks()
             elif path == '/restart-task':
-                resp = restart_task(arguments['archive_id'][0])
+                resp = restart_task(_get_arg(args, 'repo_id'))
             else:
                 self.send_error(400, 'path %s invalid.' % path)
                 return

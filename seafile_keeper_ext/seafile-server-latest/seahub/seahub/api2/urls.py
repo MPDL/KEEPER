@@ -119,8 +119,8 @@ urlpatterns = [
     url(r'^doi/$', AddDoiView.as_view()),
 
     # Archive Library
-    url(r'^ajax/archive/$', ArchiveLib.as_view(), name='archive_lib'),
-    url(r'^ajax/can-archive/$', CanArchive.as_view(), name='can_archive')
+    url(r'^archive/$', ArchiveLib.as_view(), name='archive_lib'),
+    url(r'^can-archive/$', CanArchive.as_view(), name='can_archive')
 
 ]
 

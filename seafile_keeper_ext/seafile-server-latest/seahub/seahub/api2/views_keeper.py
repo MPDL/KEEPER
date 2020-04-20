@@ -35,6 +35,7 @@ from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVIN
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
@@ -249,7 +250,6 @@ def get_authors_from_catalog_md(md):
     return "; ".join(result_authors)
 
 
-
 def ArchiveView(request, repo_id, version_id, is_tombstone):
     archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
     if archive_repos is None or len(archive_repos) == 0:
@@ -300,47 +300,54 @@ class CanArchive(APIView):
 
 
     def post(self, request):
-        repo_id = request.POST.get('repo_id', None)
-        version = request.POST.get('version', None)
-        owner = request.POST.get('owner', None)
-        language_code = request.POST.get('language_code', None)
+        # repo_id = request.POST.get('repo_id', None)
+        # version = request.POST.get('version', None)
+        # owner = request.POST.get('owner', None)
+        repo_id = request.data.get('repo_id', None)
+        owner = request.data.get('owner', request.user.username)
+        version = request.data.get('version', None)
+        language_code = request.data.get('language_code', None)
         if language_code == 'de':
             activate(language_code)
 
         # library is already in the task query
         resp_query = query_keeper_archiving_status(repo_id, owner, version)
-        if resp_query.status in ('QUEUED', 'PROCESSING'):
+        logger.debug('check QUEUED or PROCESSING: %s', resp_query)
+        if resp_query.get('status') in ('QUEUED', 'PROCESSING'):
             msg = _('This library is currently being archived.')
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
-        elif resp_query.status == 'ERROR':
+        elif resp_query.get('status') == 'ERROR':
             return JsonResponse({
-                'msg': resp_query.msg,
+                'msg': resp_query.get('msg') or 'system_error',
                 'status': 'system_error'
             })
 
-
         resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
-        if resp_is_archived.is_snapshot_archived == 'true':
+        logger.debug('is_snapshot_archived: %s', resp_is_archived)
+        if resp_is_archived.get('is_snapshot_archived') == 'true':
             return JsonResponse({
-                'status': "snapshot_archived"
-            })
-
-        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
-        if resp_is_repo_too_big.is_repo_too_big == 'true':
-            return JsonResponse({
-                'status': "is_too_big"
+                'status': 'snapshot_archived'
             })
 
         resp_quota = check_keeper_repo_archiving_status(repo_id, owner, 'get_quota')
-        if resp_quota.remains <= 0:
+        logger.debug('get_quota: %s', resp_quota)
+        if 'remains' in resp_quota and resp_quota.get('remains') <= 0:
             return JsonResponse({
-                'status': "quota_expired"
+                'status': 'quota_expired'
             })
 
-        metadata = get_metadata(repo_id, owner, "archive library")
+        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
+        logger.debug('is_repo_too_big: %s', resp_is_repo_too_big)
+        if resp_is_repo_too_big.get('is_repo_too_big') == 'true':
+            return JsonResponse({
+                'status': 'is_too_big'
+            })
+
+        metadata = get_metadata(repo_id, owner, 'archive library')
+        logger.debug('get metadata archive library: %s', metadata)
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
@@ -348,8 +355,8 @@ class CanArchive(APIView):
             })
 
         return JsonResponse({
-            'quota': resp_quota.remains,
-            'status': "success"
+            'quota': resp_quota.get('remains'),
+            'status': 'success'
         })
 
 
@@ -365,20 +372,29 @@ class ArchiveLib(APIView):
         return JsonResponse(resp)
 
     def post(self, request):
-        repo_id = request.POST.get('repo_id', None)
-        owner = request.POST.get('owner', None)
-        language_code = request.POST.get('language_code', None)
+
+        logger.error("RESP:{}".format(vars(request)))
+
+        # repo_id = request.POST.get('repo_id', None)
+        # owner = request.POST.get('owner', None)
+        # language_code = request.POST.get('language_code', None)
+        repo_id = request.data.get('repo_id', None)
+        owner = request.data.get('owner', request.user.username)
+        language_code = request.data.get('language_code', None)
         if language_code == 'de':
             activate(language_code)
 
+
+
         # add new archiving task
         resp_archive = add_keeper_archiving_task(repo_id, owner)
-        if resp_archive.status == 'ERROR':
+        logger.debug('resp_archive: %s', resp_archive)
+        if resp_archive.get('status') == 'ERROR':
             return JsonResponse({
-                'msg': _(resp_archive.msg),
+                'msg': _(resp_archive.get('msg')),
                 'status': 'error'
             })
         return JsonResponse({
-                'msg':  _(resp_archive.msg),
+                'msg':  _(resp_archive.get('msg')),
                 'status': 'success'
             })
