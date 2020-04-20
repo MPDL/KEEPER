@@ -223,15 +223,16 @@ class MylibRepoListItem extends React.Component {
       toaster.success(msg);
   }
 
+  onArchiveLibraryHide = () => {
+        this.setState({isArchiveLibraryDialogShow: false});
+  }
+
   onArchiveLibraryToggle = () => {
     keeperAPI.canArchive(this.props.repo.repo_id).then((resp) => {
       const d = resp.data;
-      // alert(JSON.stringify(d));
       this.handleCanArchiveResponse(resp);
       if (d.status === 'success')
-        this.setState({
-          isArchiveLibraryDialogShow: !this.state.isArchiveLibraryDialogShow
-        });
+        this.setState({isArchiveLibraryDialogShow: true});
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
       this.handleCanArchiveResponse({data: {status: 'system_error', msg: errorMsg}});
@@ -484,8 +485,7 @@ class MylibRepoListItem extends React.Component {
             <AssignDoiDialog
               repoID={repo.repo_id}
               repoName={repo.repo_name}
-              toggleDialog={this.onAssignDoiToggle}>
-            </AssignDoiDialog>
+              toggleDialog={this.onAssignDoiToggle}/>
           </ModalPortal>
         )}
         {this.state.isArchiveLibraryDialogShow && (
@@ -494,8 +494,8 @@ class MylibRepoListItem extends React.Component {
               repoID={repo.repo_id}
               repoName={repo.repo_name}
               quota={this.state.quota}
-              toggleDialog={this.onArchiveLibraryToggle}>
-            </ArchiveLibraryDialog>
+              hideDialog={this.onArchiveLibraryHide}
+              toggleDialog={this.onArchiveLibraryToggle}/>
           </ModalPortal>
         )}
       </Fragment>

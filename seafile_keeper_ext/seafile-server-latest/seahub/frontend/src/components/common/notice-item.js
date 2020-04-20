@@ -194,16 +194,17 @@ class NoticeItem extends React.Component {
     if (noticeType === MSG_KEEPER_CDC) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = detail.header + ' <a href=' + siteRoot + 'library/' + detail.lib + '/' + detail.lib_name + '/ target=_new>'+ detail.lib_name + '.</a><br/>' +
-          detail.message + '.';
+      let notice = detail.header + ' <a href=' + siteRoot + 'library/' + detail.lib + '/' + detail.lib_name + '/ target=_new>'
+          + detail.lib_name + '.</a><br/>' + detail.message + '.';
       return {avatar_url, notice};
     }
 
     if (noticeType === BLOXBERG_MSG) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = 'Your data was successfully certified. Check your transaction on Bloxberg. <a target="_blank" href="https://blockexplorer.bloxberg.org/tx/' +  detail.transaction_id + '/internal_transactions">' +
-          'View transaction</a>.';
+      let notice = 'Your data was successfully certified. Check your transaction on Bloxberg. ' +
+          '<a target="_blank" href="https://blockexplorer.bloxberg.org/tx/' +  detail.transaction_id + '/internal_transactions">'
+          + 'View transaction</a>.';
       return {avatar_url, notice};
     }
 
@@ -218,17 +219,17 @@ class NoticeItem extends React.Component {
     if (noticeType === MSG_DOI || noticeType === MSG_DOI_SUCCESS) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = detail.message + ' Check <a href=\"' + detail.doi_link + '\" target=_new>' +
+      let notice = detail.message + ' Check <a href="' + detail.doi_link + '" target=_new>' +
           detail.doi + '</a>.';
       return {avatar_url, notice};
     }
-
 
     if (noticeType === MSG_KEEPER_ARCHIVING) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice = detail.msg === 'Archive for %(name)s has been successfully created.'
-          ? gettext(detail.msg).replace('%(name)s', detail.repo_name)
+          ? gettext(detail.msg).replace('%(name)s',  '<a href="' + siteRoot + 'library/' + detail.repo_id + '/' + detail.repo_name + '/" target=_new>'
+            + detail.repo_name + '</a>')
           : gettext(detail.msg);
       return {avatar_url, notice};
     }
