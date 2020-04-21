@@ -31,7 +31,7 @@
 				<div class="doi_table_row"><b>Year: </b>{{md.year}}</div>
 				<br />
 
-				{% if archive_repos.count > 0 %}
+				{% if archive_repos|length > 0 %}
 					<b>Archives</b><br />
 					{% for archive_repo in archive_repos%}
 					<a href="/archive/libs/{{archive_repo.repo_id}}/{{archive_repo.version}}/0/">Archive {{archive_repo.created}}</a><br />
