@@ -445,11 +445,14 @@ class Worker(threading.Thread):
 
             logger.info('Creating a tar for repo: {}...'.format(task.repo_id))
             task._archive_path = _get_archive_path(self.local_storage, task.owner, task.repo_id, task.version)
-            # with tarfile.open(task._archive_path, mode='w:gz', format=tarfile.PAX_FORMAT) as archive:
             with tarfile.open(task._archive_path, mode='w:', format=tarfile.PAX_FORMAT) as archive:
                 archive.add(task._extracted_tmp_dir, '')
 
             logger.info('Calculate tar checksum for repo: {}...'.format(task.repo_id))
+
+            # import time
+            # time.sleep(120)
+
             try:
                 task.checksum = _generate_file_md5(task._archive_path)
                 logger.info('Calculated checksum: %s', task.checksum)
@@ -491,10 +494,6 @@ class Worker(threading.Thread):
         try:
 
             logger.info('Pushing archive to HPSS: {}...'.format(task._archive_path))
-
-            # import time
-            # time.sleep(60*5)
-
 
             ssh = SSHClient()
             ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -1112,7 +1111,6 @@ class TaskManager(object):
         for worker in self._workers:
             t = worker.my_task
             if t is not None:
-                # tasks.append(int(t.repo_id))
                 tasks['PROCESSED'].append({
                     'repo_id': t.repo_id,
                     'owner': t.owner,
@@ -1167,10 +1165,25 @@ class TaskManager(object):
 
 task_manager = TaskManager()
 
+# cli usage block
 from seafevents.utils import get_config
 from .config import get_keeper_archiving_conf
 from .db_oper import DBOper
 
+from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_PORT
+from urllib.parse import urljoin
+import requests
+from http import HTTPStatus
+
+def get_running_tasks():
+    url = urljoin(KEEPER_ARCHIVING_ROOT + ':' + KEEPER_ARCHIVING_PORT, '/get-running-tasks')
+    resp = requests.get(url)
+    return resp.json()
+
+def restart_task(archive_id):
+    url = urljoin(KEEPER_ARCHIVING_ROOT + ':' + KEEPER_ARCHIVING_PORT, '/restart-task')
+    resp = requests.get(url, {'archive_id': archive_id})
+    return resp.json()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -1187,73 +1200,78 @@ if __name__ == "__main__":
     cfg = get_keeper_archiving_conf(cfg)
 
     if not cfg[_cfg.key_enabled]:
-        print ('Keeper Archiving is disabled.')
+        print('Keeper Archiving is disabled.')
         exit(0)
 
+    try:
+        db = DBOper()
+    except Exception as e:
+        print('Cannot init DB: {}'.format(e))
+        exit(1)
 
     # IS PROCESSING
     if args.is_processing:
         try:
-            tasks = task_manager.get_running_tasks()
+            tasks = get_running_tasks()
         except:
-            print("false")
+            print('false')
             exit(0)
 
         if ('QUEUED' in tasks and tasks['QUEUED'] > 0) or ('PROCESSED' in tasks and len(tasks['PROCESSED']) > 0):
-            print("true")
+            print('true')
         else:
-            print("false")
+            print('false')
 
-    # LIST OF PROCESSED AND NOT COMPLETED TASKS
+        # LIST OF PROCESSED AND NOT COMPLETED TASKS
     elif args.list_tasks:
         try:
-            tasks = task_manager.get_running_tasks()
+            tasks = get_running_tasks()
         except Exception as e:
-            print("Cannot get running tasks status: %s" % e)
+            print('Cannot get running tasks status: {}'.format(e))
             exit(1)
 
         # queued tasks
         if 'QUEUED' in tasks:
-            print(("Number of queued tasks: {}".format(tasks['QUEUED'])))
+            print('Number of queued tasks: {}'.format(tasks['QUEUED']))
         else:
             print('No queued tasks.')
         # currently processed tasks
         if 'PROCESSED' in tasks and len(tasks['PROCESSED']) > 0:
-            print("List of running Keeper Archiving tasks:")
+            print('List of running Keeper Archiving tasks (from Workers):')
             for t in tasks['PROCESSED']:
-                print(("repo_id: {}, ver: {}, owner: {}, status: {}".format(
+                print('repo_id: {}, ver: {}, owner: {}, status: {}'.format(
                     t.get('repo_id'), t.get('version'), t.get('owner'), t.get('status')
-                )))
+                ))
         else:
-            print("Number of currently proccesed tasks: 0")
+            print('Number of currently proccesed tasks: 0')
 
         try:
-            tasks = DBOper().get_not_completed_tasks()
+            tasks = db.get_not_completed_tasks()
         except Exception as e:
-            print(('Cannot run command: {}'.format(e)))
+            print('Cannot run command: {}'.format(e))
             exit(1)
         # not compeletd tasks in db
 
         if tasks:
-            print("Not completed tasks:")
+            print('Not completed tasks (from DB):')
             for t in tasks:
-                print(("id: {}, repo_id: {}, ver: {}, owner: {}, status: {}, error: {}, created: {}".format(
+                print('id: {}, repo_id: {}, ver: {}, owner: {}, status: {}, error: {}, created: {}'.format(
                     t.aid, t.repo_id, t.version, t.owner, t.status, t.error_msg, t.created,
-                )))
+                ))
     # RESTART TASKS
     elif args.restart:
-        print("Restart task(s)")
+        print('Restart task(s)')
         if args.restart and len(args.restart) > 0:
             for aid in args.restart:
                 try:
-                    task = task_manager.restart_task(aid)
+                    task = restart_task(aid)
                     task and print(task)
                 except Exception as e:
-                    print("Cannot restart task: {}".format(e))
+                    print('Cannot restart task: {}'.format(e))
         else:
-            print(("Usage: %s" % parser.format_help()))
+            print('Usage: {}'.format(parser.format_help()))
 
     else:
-        print('Wrong argument, usage: %s' % parser.format_help())
+        print('Wrong argument, usage: {}'.format(parser.format_help()))
 
     exit(0)
