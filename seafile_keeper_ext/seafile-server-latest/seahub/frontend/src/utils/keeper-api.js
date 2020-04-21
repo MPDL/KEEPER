@@ -87,6 +87,11 @@ class KeeperAPI {
     return this.req.post(url, params);
   }
 
+  listLibraryDetails() {
+    const url = this.server + '/api2/library-details/';
+    return this.req.get(url);
+  }
+
 }
 
 export { KeeperAPI };
