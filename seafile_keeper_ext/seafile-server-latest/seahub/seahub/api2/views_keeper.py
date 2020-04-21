@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.response import Response
 
 from seahub import settings
 from seahub.auth.decorators import login_required
@@ -398,3 +399,15 @@ class ArchiveLib(APIView):
                 'msg':  _(resp_archive.get('msg')),
                 'status': 'success'
             })
+
+class LibraryDetailsView(APIView):
+    """ list LibraryDetails for sidenav """
+
+    def get(self, request):
+
+        username = request.user.username
+        libraryDetails = []
+        catalogs = list(Catalog.objects.raw('SELECT * from keeper_catalog WHERE owner="' + username + '" and (EXISTS (SELECT repo_id FROM doi_repos where doi_repos.repo_id= keeper_catalog.repo_id and doi_repos.rm is NULL) or keeper_catalog.is_archived=1)'))
+        for catalog in catalogs:
+            libraryDetails.append({"repo_id": catalog.repo_id, "repo_name": catalog.repo_name })
+        return Response(libraryDetails)

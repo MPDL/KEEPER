@@ -66,8 +66,6 @@ CUSTOM_NAV_ITEMS = getattr(settings, 'CUSTOM_NAV_ITEMS', '')
 
 from constance import config
 
-# KEEPER Landing Pages add DoiRepo
-from keeper.models import DoiRepo, Catalog
 
 
 # Get an instance of a logger
@@ -1141,13 +1139,6 @@ def react_fake_view(request, **kwargs):
         logger.error(e)
         max_upload_file_size = -1
 
-    # KEEPER
-    landing_pages = []
-    # TODO: move to model
-    catalogs = list(Catalog.objects.raw('SELECT * from keeper_catalog WHERE owner="' + username + '" and (EXISTS (SELECT repo_id FROM doi_repos where doi_repos.repo_id= keeper_catalog.repo_id and doi_repos.rm is NULL) or keeper_catalog.is_archived=1)'))
-    for catalog in catalogs:
-        landing_pages.append({"repo_id": catalog.repo_id, "repo_name": catalog.repo_name })
-
     return render(request, "react_app.html", {
         "guide_enabled": guide_enabled,
         'trash_repos_expire_days': expire_days if expire_days > 0 else 30,
@@ -1169,5 +1160,4 @@ def react_fake_view(request, **kwargs):
         'folder_perm_enabled': folder_perm_enabled,
         'file_audit_enabled' : FILE_AUDIT_ENABLED,
         'custom_nav_items' : json.dumps(CUSTOM_NAV_ITEMS),
-        'landing_pages' : landing_pages,
     })
