@@ -9,7 +9,8 @@ import toaster from '../toast';
 const propTypes = {
     repoID: PropTypes.string.isRequired,
     repoName: PropTypes.string.isRequired,
-    toggleDialog: PropTypes.func.isRequired
+    toggleDialog: PropTypes.func.isRequired,
+    hideDialog: PropTypes.func.isRequired
 };
 
 class ArchiveLibraryDialog extends React.Component {
@@ -19,7 +20,7 @@ class ArchiveLibraryDialog extends React.Component {
 
 
     formSubmit = () => {
-        this.props.toggleDialog();
+        this.props.hideDialog();
         const {repoID, repoName} = this.props;
         keeperAPI.archiveLibrary(repoID).then((resp) => {
             toaster.success(resp.data.msg);
@@ -36,8 +37,8 @@ class ArchiveLibraryDialog extends React.Component {
             this.props.quota);
         const split = archive_info.split('{archive_info_link}')
         return (
-            <Modal isOpen={true} toggle={this.props.toggleDialog}>
-                <ModalHeader toggle={this.props.toggleDialog}>
+            <Modal isOpen={true} toggle={this.props.hideDialog}>
+                <ModalHeader toggle={this.props.hideDialog}>
                     <span>{gettext('Archive {library_name}').replace('{library_name}', '')}</span> <span
                     style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
                 <ModalBody>
