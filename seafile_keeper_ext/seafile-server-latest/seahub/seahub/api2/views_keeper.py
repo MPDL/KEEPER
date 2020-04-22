@@ -258,7 +258,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 
     archive_repo = archive_repos[0]
     repo_owner = get_repo_owner(repo_id)
-    archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
+    archive_md = parse_markdown_doi(archive_repo.md)
     commit_id = archive_repo.commit_id
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
 
