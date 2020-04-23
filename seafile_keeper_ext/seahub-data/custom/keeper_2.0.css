@@ -328,15 +328,6 @@ div.fright.js-file-op > a:focus {
  ********************************************************************************	
 */
 
-/* titles of the side toolbar: Files, Tools, Share Admin */
-.side-nav-con h3{
-		 font-size: 20px !important;
-		 pointer-events: none !important;}
-
-/* "My Libraries" tab is highlighted when accessing the homepage */
-/*.side-tabnav-tabs .tab-cur a{background-color: #57a5b8 !important;}*/
-/*.side-tabnav-tabs .tab-cur a:active{background-color: #57a5b8 !important;}*/
-
 
 
 /*
@@ -352,21 +343,6 @@ div.fright.js-file-op > a:focus {
 	/* common settings for mobile and pc version */
 	/*********************************************/
 
-	/* footer container */
-	.side-nav-footer{
-		/* footer container is centered in the navigation sidebar */
-		width:80%;
-		position:absolute;
-		left:10%;
-		bottom: 10%;
-		/* background of the footer must be transparent */
-		background-color:rgba(254,254,254,1) !important;
-		transition: bottom 0.7s;
-		border-top: 1px solid #E5EAEA;
-		border-left: 1px solid #E5EAEA;
-		border-right: 1px solid #E5EAEA;
-		border-radius:5px;}
-
 	#footer-ctn{	
 		/* the footer canva must totally fill its container */
 		width:100%;
@@ -376,15 +352,6 @@ div.fright.js-file-op > a:focus {
 		top:0%;
 		left:0%;}
 	
-	/* triangle picture */
-	#img-ctn{
-		min-width:10px;
-		max-width:10px;
-		min-height:10px;
-		max-height:10px;
-		position:absolute;
-		top:-1px;
-		cursor:pointer;}
 
 	#footer-img{
 		width:10px; 
@@ -401,7 +368,7 @@ div.fright.js-file-op > a:focus {
 		/***** wide screen version ******************************************************/
 		/********************************************************************************/
 		@media (min-width:900px) {
-			.side-nav-footer{height:35%;bottom: -32%;}
+			/*.side-nav-footer{height:35%;bottom: -32%;}*/
 			#img-ctn{left:2%;}
 			#link-bar{width: 85%; position: absolute; left: 10%; top:1%;font-size: 0.65vw;}
 
@@ -441,28 +408,6 @@ div.fright.js-file-op > a:focus {
 	.mfp-zoom-out-cur:hover{cursor: auto !important;}
 	.mfp-img:hover{cursor: auto !important;}
 
-	/* link to open image in another tab */
-	/*.mfp-bottom-bar .mfp-title a{color:#57a5b8 !important;}*/
-
-/* trash bin */
-	
-	/* trash bin title */
-	/*.repo-trash-hd span{color:#57a5b8 !important;}*/
-
-	/* deleted files list */
-	/*#wide-panel-noframe table td a{color:#57a5b8 !important;}*/
-
-/* file modifications */
-
-
-/*#paginator a{color:#57a5b8 !important;}*/
-
-/*h3 span{color:#57a5b8 !important;}*/
-
-/* user name */
-/*.author a{color:#57a5b8 !important;}*/
-
-/*.go-back:hover{color:#57a5b8 !important;}*/
 
 /* system administration */
 #side-nav h3{color:#005c71 !important;}
@@ -550,4 +495,92 @@ textarea{resize: none;}
 
 #keeper-landing-page-nav .tab-cur .sharp {
 	color: #999;
-} 
+}
+
+
+
+.side-nav-footer {
+    display:block;
+    flex-shrink:0;
+    padding-top: 12px;
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-bottom: 16px;
+    background:#f8f8f8;
+    border-top:1px solid #eee;
+}
+
+.side-nav-footer #footer-header {
+    display: flex;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.side-nav-footer #footer-header .item {
+    color: #666 !important;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.side-nav-footer #footer-header .item:hover {
+    text-decoration: underline !important;
+}
+
+.side-nav-footer #footer-header .last-item {
+    margin-left:auto;
+}
+
+.side-nav-footer #footer-body {
+  width: 99%;
+  -webkit-transition: max-height 0.8s, border-bottom-width 0.8s;
+  transition: max-height 0.8s, border-bottom-width 0.8s;
+}
+
+.side-nav-footer #footer-body .row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.side-nav-footer #footer-body .row div {
+    flex: 50%;
+    flex-wrap: wrap;
+    text-align: left;
+    background-color: white;
+    padding: 10px;
+}
+
+.side-nav-footer #footer-body .row div > h4 {
+    color: #57a5b8;
+    font-weight: normal;
+}
+.side-nav-footer #footer-body .row div > a {
+    color: #B7B7B7;
+    font-weight: normal;
+}
+
+.side-nav-footer #seafile-logo {
+    height: 30px;
+    /*width: auto !important*/
+}
+.side-nav-footer #MPDL-logo {
+    max-width: 60%;
+}
+
+
+[class^="keeper-icon-"],
+[class*=" keeper-icon-"] {
+    /*font-family: 'seafile-font2';*/
+ 	color: #999;
+    speak: none;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+.keeper-icon-triangle-up:before {
+    content:"\25b2";
+}
+.keeper-icon-triangle-down:before {
+    content:"\25bc";
+}
