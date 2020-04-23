@@ -404,10 +404,7 @@ class LibraryDetailsView(APIView):
     """ list LibraryDetails for sidenav """
 
     def get(self, request):
-
-        username = request.user.username
-        libraryDetails = []
-        catalogs = list(Catalog.objects.raw('SELECT * from keeper_catalog WHERE owner="' + username + '" and (EXISTS (SELECT repo_id FROM doi_repos where doi_repos.repo_id= keeper_catalog.repo_id and doi_repos.rm is NULL) or keeper_catalog.is_archived=1)'))
-        for catalog in catalogs:
-            libraryDetails.append({"repo_id": catalog.repo_id, "repo_name": catalog.repo_name })
-        return Response(libraryDetails)
+        return Response([
+            {"repo_id": e.repo_id, "repo_name": e.repo_name}
+            for e in Catalog.objects.get_library_details_entries(request.user.username)
+        ])
