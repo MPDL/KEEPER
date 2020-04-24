@@ -552,6 +552,7 @@ textarea{resize: none;}
 .side-nav-footer #footer-body .row div > h4 {
     color: #57a5b8;
     font-weight: normal;
+    font-size: 0.875rem;
 }
 .side-nav-footer #footer-body .row div > a {
     color: #B7B7B7;
@@ -570,7 +571,7 @@ textarea{resize: none;}
 [class^="keeper-icon-"],
 [class*=" keeper-icon-"] {
     /*font-family: 'seafile-font2';*/
- 	color: #999;
+ 	color: #888;
     speak: none;
     font-weight: normal;
     font-variant: normal;
