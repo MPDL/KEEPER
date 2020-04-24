@@ -23,7 +23,7 @@ class SideNavFooter extends React.Component {
 
   render() {
       const elementBodyStyle = {
-      maxHeight: this.state.collapsed ? '0' : '30em',
+      maxHeight: this.state.collapsed ? '0' : '30rem',
       borderBottomWidth: this.state.collapsed ? '0' : '1px',
     };
     return (
