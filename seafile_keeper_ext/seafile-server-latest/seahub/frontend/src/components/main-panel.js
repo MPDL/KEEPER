@@ -12,7 +12,6 @@ class MainPanel extends Component {
         script.src = "https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa";
         script.id = "ze-snippet";
         script.async = true;
-        script.onload = () => this.scriptLoaded();
         document.body.appendChild(script);
     }
 
