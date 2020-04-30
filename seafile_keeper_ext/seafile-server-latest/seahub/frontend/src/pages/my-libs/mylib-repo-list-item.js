@@ -33,6 +33,32 @@ const propTypes = {
   onRepoClick: PropTypes.func.isRequired,
 };
 
+var handleCanArchiveResponse = (obj, resp) => {
+  const d = resp.data;
+  let msg, error;
+  const default_error = "Can not archive library due to unknown reason, please contact support.";
+  //alert(JSON.stringify(d));
+  if (d.status === 'success')
+    obj.setState({quota: d.quota})
+  else if (d.status === "in_processing")
+    msg = d.msg;
+  else if (d.status === "quota_expired")
+    error = gettext("Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support.");
+  else if (d.status === "snapshot_archived")
+    error = gettext("Cannot archive, since the library snapshot has already been archived.");
+  else if (d.status === "is_too_big")
+    error = gettext("Cannot archive, since the library is too large.");
+  else if (d.status === "metadata_error")
+    error = d.msg;
+  else if (d.status === "system_error")
+    error = d.msg || default_error;
+  else
+    error = default_error;
+  if (error)
+    toaster.danger(error);
+  else if (msg)
+    toaster.success(msg);
+}
 
 
 class MylibRepoListItem extends React.Component {
@@ -196,32 +222,6 @@ class MylibRepoListItem extends React.Component {
     this.setState({isAssignDoiDialogShow: !this.state.isAssignDoiDialogShow});
   }
 
-  handleCanArchiveResponse = (resp) => {
-    const d = resp.data;
-    let msg, error;
-    const default_error = "Can not archive library due to unknown reason, please contact support.";
-    //alert(JSON.stringify(d));
-    if (d.status === 'success')
-      this.setState({quota: d.quota})
-    else if (d.status === "in_processing")
-      msg = d.msg;
-    else if (d.status === "quota_expired")
-      error = gettext("Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support.");
-    else if (d.status === "snapshot_archived")
-      error = gettext("Cannot archive, since the library snapshot has already been archived.");
-    else if (d.status === "is_too_big")
-      error = gettext("Cannot archive, since the library is too large.");
-    else if (d.status === "metadata_error")
-      error = d.msg;
-    else if (d.status === "system_error")
-      error = d.msg || default_error;
-    else
-      error = default_error;
-    if (error)
-      toaster.danger(error);
-    else if (msg)
-      toaster.success(msg);
-  }
 
   onArchiveLibraryHide = () => {
         this.setState({isArchiveLibraryDialogShow: false});
@@ -230,12 +230,12 @@ class MylibRepoListItem extends React.Component {
   onArchiveLibraryToggle = () => {
     keeperAPI.canArchive(this.props.repo.repo_id).then((resp) => {
       const d = resp.data;
-      this.handleCanArchiveResponse(resp);
+      handleCanArchiveResponse(this, resp);
       if (d.status === 'success')
         this.setState({isArchiveLibraryDialogShow: true});
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
-      this.handleCanArchiveResponse({data: {status: 'system_error', msg: errorMsg}});
+      handleCanArchiveResponse(this,{data: {status: 'system_error', msg: errorMsg}});
     });
   }
 
@@ -508,3 +508,4 @@ class MylibRepoListItem extends React.Component {
 MylibRepoListItem.propTypes = propTypes;
 
 export default MylibRepoListItem;
+export { handleCanArchiveResponse };

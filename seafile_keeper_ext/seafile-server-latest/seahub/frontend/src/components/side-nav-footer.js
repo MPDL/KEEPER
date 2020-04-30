@@ -23,7 +23,7 @@ class SideNavFooter extends React.Component {
 
   render() {
       const elementBodyStyle = {
-      maxHeight: this.state.collapsed ? '0' : '30em',
+      maxHeight: this.state.collapsed ? '0' : '30rem',
       borderBottomWidth: this.state.collapsed ? '0' : '1px',
     };
     return (
@@ -64,7 +64,7 @@ class SideNavFooter extends React.Component {
                     <div className="right">
                         <h4>A service by</h4>
                         <a href="https://www.mpdl.mpg.de/" target="_blank">
-                            <img class="logo" id="MPDL-logo" src="/media/custom/mpdl.png"/>
+                            <img className="logo" id="MPDL-logo" src="/media/custom/mpdl.png"/>
                         </a><br/><br/>
                         <a href="mailto:keeper@mpdl.mpg.de" target="_blank">Contact Keeper Support</a><br/>
                         <a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Impressum</a><br/>

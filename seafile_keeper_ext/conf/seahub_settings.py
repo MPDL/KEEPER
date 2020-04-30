@@ -130,8 +130,8 @@ LOGGING = {
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'frontend/',
-        'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.dev.json'),
-        # 'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.pro.json'),
+        # 'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.dev.json'),
+       'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.pro.json'),
     }
 }
 

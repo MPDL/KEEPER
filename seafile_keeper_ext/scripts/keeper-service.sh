@@ -256,8 +256,7 @@ case "$1" in
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
-                #check_component_running "office_converter" "soffice.bin" "CRITICAL"
-                check_component_running "office_converter" "soffice.*--invisible --nocrashreport"
+                check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
             fi    
             if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
                 check_keepalived

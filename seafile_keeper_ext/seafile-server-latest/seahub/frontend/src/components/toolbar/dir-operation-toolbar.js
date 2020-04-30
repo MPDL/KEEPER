@@ -7,6 +7,9 @@ import ModalPortal from '../modal-portal';
 import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
+import ArchiveLibraryDialog from "../dialog/archive-library-dialog";
+import { keeperAPI } from "../../utils/seafile-api";
+import { handleCanArchiveResponse } from "../../pages/my-libs/mylib-repo-list-item";
 
 const propTypes = {
   path: PropTypes.string.isRequired,
@@ -24,6 +27,7 @@ const propTypes = {
   direntList: PropTypes.array.isRequired,
 };
 
+
 class DirOperationToolbar extends React.Component {
 
   constructor(props) {
@@ -36,7 +40,8 @@ class DirOperationToolbar extends React.Component {
       isCreateMenuShow: false,
       isShareDialogShow: false,
       operationMenuStyle: '',
-      isMobileOpMenuOpen: false
+      isMobileOpMenuOpen: false,
+      isArchiveLibraryDialogShow: false
     };
   }
 
@@ -100,6 +105,7 @@ class DirOperationToolbar extends React.Component {
     });
   }
 
+
   onCreateFolderToggle = () => {
     this.setState({isCreateFolderDialogShow: !this.state.isCreateFolderDialogShow});
   }
@@ -157,6 +163,23 @@ class DirOperationToolbar extends React.Component {
     return isDuplicated;
   }
 
+  // KEEPER
+  onArchiveLibraryHide = () => {
+    this.setState({isArchiveLibraryDialogShow: false});
+  }
+
+  onArchiveLibraryToggle = () => {
+    keeperAPI.canArchive(this.props.repoID).then((resp) => {
+      const d = resp.data;
+      handleCanArchiveResponse(this, resp);
+      if (d.status === 'success')
+        this.setState({isArchiveLibraryDialogShow: true});
+    }).catch((error) => {
+      let errorMsg = Utils.getErrorMsg(error);
+      handleCanArchiveResponse(this, {data: {status: 'system_error', msg: errorMsg}});
+    });
+  }
+
   render() {
     let { path, repoName, userPerm } = this.props;
     
@@ -167,6 +190,8 @@ class DirOperationToolbar extends React.Component {
     let itemType = path === '/' ? 'library' : 'dir';
     let itemName = path == '/' ? repoName : Utils.getFolderName(path);
 
+    let isArchiveBtnShow = ! this.props.repoEncrypted;
+
     const content = Utils.isDesktop() ? (
       <Fragment>
         {Utils.isSupportUploadFolder() ?
@@ -175,6 +200,8 @@ class DirOperationToolbar extends React.Component {
         <button className="btn btn-secondary operation-item" title={gettext('New')} onClick={this.onCreateClick}>{gettext('New')}</button>
         {this.props.showShareBtn &&
           <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
+        {isArchiveBtnShow &&
+          <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>}
       </Fragment>
     ) : (
       <Dropdown isOpen={this.state.isMobileOpMenuOpen} toggle={this.toggleMobileOpMenu}>
@@ -248,6 +275,32 @@ class DirOperationToolbar extends React.Component {
             />
           </ModalPortal>
         }
+        {this.state.isShareDialogShow &&
+          <ModalPortal>
+            <ShareDialog
+              itemType={itemType}
+              itemName={itemName}
+              itemPath={this.props.path}
+              repoID={this.props.repoID}
+              repoEncrypted={this.props.repoEncrypted}
+              enableDirPrivateShare={this.props.enableDirPrivateShare}
+              userPerm={this.props.userPerm}
+              isGroupOwnedRepo={this.props.isGroupOwnedRepo}
+              toggleDialog={this.onShareClick}
+            />
+          </ModalPortal>
+        }
+        {this.state.isArchiveLibraryDialogShow && (
+          <ModalPortal>
+            <ArchiveLibraryDialog
+              repoID={this.props.repoID}
+              repoName={this.props.repoName}
+              quota={this.state.quota}
+              hideDialog={this.onArchiveLibraryHide}
+              toggleDialog={this.onArchiveLibraryToggle}/>
+          </ModalPortal>
+        )}
+
       </Fragment>
     );
   }
