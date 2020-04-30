@@ -21,12 +21,12 @@ class AssignDoiDialog extends React.Component {
     const {repoID, repoName} = this.props;
     keeperAPI.addDoi(repoID).then((res) => {
       if (res.data && res.data['msg']) {
-        toaster.success(res.data['msg']);
+        toaster.success(res.data['msg'], {duration: 3});
       }
       this.props.toggleDialog();
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
-      toaster.danger(errorMsg);
+      toaster.danger(errorMsg, {duration: 3});
       this.props.toggleDialog();
     });
   }

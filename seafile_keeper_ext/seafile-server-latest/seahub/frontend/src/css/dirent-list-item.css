@@ -34,12 +34,14 @@
 }
 
 .small-icon {
-  height: 16px;
-  width: 16px; 
-  margin-bottom: 2px;
+  height: 15px;
+  width: 15px;
+  margin-bottom: 3px;
 }
 
 .hover-keep {
+  width: 320px;
+  height: 55px;
   pointer-events: auto !important;
   &:hover {
   visibility: visible !important;
@@ -52,21 +54,30 @@
   border: 2px solid gray !important;
   text-align: center !important;
   padding: 6px 6px !important;
+  line-height: 93%;
 }
 
 .tooltip-title {
   color:#b02318; 
   font-weight:bold;
   display:block;
-  margin-bottom:3px
+  font-size: 12px;
+  margin-bottom: 3px;
 }
 
 .tooltip-bold {
   color:black;
-  font-weight:bold
+  font-weight:bold;
+  font-size: 12px;
 }
 
 .tooltip-nomal {
   color:black;
   font-weight:normal;
+  font-size: 12px;
+}
+
+.tooltip-nomal a {
+  font-weight:bold;
+  font-size: 12px;
 }

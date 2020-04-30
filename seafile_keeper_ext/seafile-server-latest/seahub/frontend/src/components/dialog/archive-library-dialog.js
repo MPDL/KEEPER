@@ -23,10 +23,10 @@ class ArchiveLibraryDialog extends React.Component {
         this.props.hideDialog();
         const {repoID, repoName} = this.props;
         keeperAPI.archiveLibrary(repoID).then((resp) => {
-            toaster.success(resp.data.msg);
+            toaster.success(resp.data.msg, {duration: 3});
         }).catch((error) => {
             let errorMsg = Utils.getErrorMsg(error);
-            toaster.danger(errorMsg);
+            toaster.danger(errorMsg, {duration: 3});
         });
     }
 

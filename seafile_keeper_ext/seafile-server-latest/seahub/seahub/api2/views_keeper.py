@@ -144,7 +144,7 @@ class AddDoiView(APIView):
             else:
                 logger.info(response_doxi.status_code)
                 logger.info(response_doxi.text)
-                msg = 'Failed to create DOI, ' + response_doxi.text
+                msg = 'Failed to create DOI. Please try again later. If the problem persists, please contact Keeper support.'
                 send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
                 return api_error(status.HTTP_400_BAD_REQUEST, msg)
         else:
