@@ -3,6 +3,7 @@ import traceback
 
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
+from sqlalchemy.sql import text
 from .models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
 from urllib.parse import quote_plus
 from sqlalchemy.orm import sessionmaker
@@ -101,13 +102,9 @@ class DBOper(object):
         '''
         if to_user and detail:
             try:
-                cmd = 'INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) VALUES ( \'{}\', \'{}\', \'{}\', \'{}\', 0 )'.format(
-                    to_user,
-                    MSG_TYPE_KEEPER_ARCHIVING_MSG,
-                    detail,
-                    datetime.now(),
-                )
-                self.edb_session.execute(cmd)
+                sql = text("INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) "
+                           "VALUES ( :to_user, '" + MSG_TYPE_KEEPER_ARCHIVING_MSG + "', :detail, :timestamp, 0 )")
+                self.edb_session.execute(sql, dict(to_user=to_user, detail=detail, timestamp=datetime.now()))
                 self.edb_session.commit()
 
                 # add notification to gui

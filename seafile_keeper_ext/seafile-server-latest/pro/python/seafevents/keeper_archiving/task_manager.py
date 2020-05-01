@@ -324,8 +324,6 @@ class Worker(threading.Thread):
                 for dname, dobj in list(d.dirents.items()):
                     copy_dirent(dobj, repo, owner, dpath)
             elif obj.is_file():
-                #TODO ???
-                #plist = [p.decode('utf-8') for p in path.split(os.sep) if p]
                 plist = [p for p in path.split(os.sep) if p]
                 absdirpath = os.path.join(task._extracted_tmp_dir, *plist)
                 if not os.path.exists(absdirpath):
@@ -854,7 +852,7 @@ class TaskManager(object):
         if task.status == 'ERROR':
             d.update(msg=MSG_CANNOT_ARCHIVE_CRITICAL)
             task.msg and d.update(error=task.msg)
-            task.error and d.update(error=json.dumps(task.error).strip('"'))
+            task.error and d.update(error=task.error)
             # send email
             self.send_archiving_email(task)
         elif task.status != 'DONE' and task.error is not None:
