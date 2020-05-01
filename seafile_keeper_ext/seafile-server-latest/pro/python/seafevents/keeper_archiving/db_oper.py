@@ -13,7 +13,7 @@ from sqlalchemy.pool import Pool
 
 from seahub_settings import CACHES, DATABASES
 from django.utils.http import urlquote
-from datetime import datetime
+from django.utils import timezone
 
 from keeper.common import truncate_str
 
@@ -104,7 +104,7 @@ class DBOper(object):
             try:
                 sql = text("INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) "
                            "VALUES ( :to_user, '" + MSG_TYPE_KEEPER_ARCHIVING_MSG + "', :detail, :timestamp, 0 )")
-                self.edb_session.execute(sql, dict(to_user=to_user, detail=detail, timestamp=datetime.now()))
+                self.edb_session.execute(sql, dict(to_user=to_user, detail=detail, timestamp=timezone.now()))
                 self.edb_session.commit()
 
                 # add notification to gui
@@ -164,7 +164,7 @@ class DBOper(object):
             else:
                 a.status = status
                 if status == 'DONE':
-                    a.archived = datetime.now()
+                    a.archived = timezone.now()
                 a.checksum = checksum
                 a.external_path = external_path
                 a.md = _prepare_md(md)
