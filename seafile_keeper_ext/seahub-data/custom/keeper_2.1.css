@@ -560,11 +560,8 @@ textarea{resize: none;}
 }
 
 .side-nav-footer #seafile-logo {
-    height: 30px;
-    /*width: auto !important*/
-}
-.side-nav-footer #MPDL-logo {
-    max-width: 60%;
+    max-width: 15%;
+    max-height: unset;
 }
 
 
