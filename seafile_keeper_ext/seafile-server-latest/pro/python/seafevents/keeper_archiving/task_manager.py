@@ -552,12 +552,12 @@ class Worker(threading.Thread):
                 error_msg = error_msg.replace('\n', '')
                 raise Exception('Cannot calculate checksum: {}, exit_status: {}'.format(error_msg, exit_status))
 
-            resp = ''.join(stdout.read())
+            resp = ''.join(str(stdout.read()))
             remote_checksum = resp.split()[0]
             logger.info('Remote checksum: {}'.format(remote_checksum))
 
             # check checksums
-            if task.checksum == remote_checksum:
+            if task.checksum == remote_checksum.lstrip("b'"):
                 logger.info('Remote checksum equals to local checksum')
             else:
                raise Exception('Remote checksum {} does not match local checksum {}'.format(remote_checksum, task.checksum))
