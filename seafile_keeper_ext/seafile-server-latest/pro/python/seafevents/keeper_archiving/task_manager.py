@@ -14,7 +14,7 @@ import json
 from base64 import b64encode
 import subprocess
 import traceback
-from datetime import datetime
+from django.utils import timezone
 from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
 from seafobj import commit_mgr, fs_mgr
@@ -246,7 +246,7 @@ def _set_error(task, msg, error):
     task.msg = msg
     task.error = json.dumps({
         'status': task.status,
-        'ts': str(datetime.now()),
+        'ts': str(timezone.now()),
         'error': error,
     })
     logger.error(json.dumps({'message': msg, 'error': task.error}))

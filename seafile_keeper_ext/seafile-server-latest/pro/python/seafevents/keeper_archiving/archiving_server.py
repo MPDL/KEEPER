@@ -6,7 +6,7 @@ import argparse
 import logging
 import json
 from urllib import parse
-from datetime import datetime
+from django.utils import timezone
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from seafevents.keeper_archiving.task_manager import task_manager
@@ -100,17 +100,17 @@ def main():
 
     # start http server
     server_address = (args.host, int(args.port))
-    print("[%s] Starting keeper archiving on %s:%s..." % (datetime.now(), args.host, int(args.port)))
+    print("[%s] Starting keeper archiving on %s:%s..." % (timezone.now(), args.host, int(args.port)))
 
     # test if the http server has already started
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ret_code = sock.connect_ex((args.host, int(args.port)))
     if ret_code == 0:
         print("[%s] Existing keeper archiving  http server has been found, on %s:%s." %
-              (datetime.now(), args.host, int(args.port)))
+              (timezone.now(), args.host, int(args.port)))
     else:
         archiving_server = HTTPServer(server_address, ArchivingRequestHandler)
-        print("[%s] Keeper archiving http server has been started." % datetime.now())
+        print("[%s] Keeper archiving http server has been started." % timezone.now())
         archiving_server.serve_forever()
 
     sock.close()

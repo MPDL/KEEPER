@@ -4,7 +4,7 @@ from django.db import models
 
 from picklefield.fields import PickledObjectField
 
-from datetime import datetime
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class CatalogManager(models.Manager):
         if c:
             # don not delete the entry, set it to rm
             # return c.delete()
-            c.rm=datetime.now()
+            c.rm=timezone.now()
             c.save()
         return None
 
@@ -155,7 +155,7 @@ class CDCManager(models.Manager):
         event = EVENT.db_create
         cdc = self.get_by_repo(repo_id=repo_id)
         if cdc is not None:
-            cdc.modified = datetime.now()
+            cdc.modified = timezone.now()
             cdc.save()
             event = EVENT.db_update
         else:
@@ -197,7 +197,7 @@ def remove_keeper_entries(sender, **kwargs):
         logging.info("CDC: done.")
         doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
         if doi_repos:
-            doi_repos.update(rm=datetime.now())
+            doi_repos.update(rm=timezone.now())
         logging.info("DOI: done.")
     except Exception:
         logging.error(traceback.format_exc())
