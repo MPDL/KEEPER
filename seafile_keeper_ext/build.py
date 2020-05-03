@@ -157,7 +157,7 @@ class Utils(object):
             cp.write(fp)
 
     @classmethod
-    def ask_question(self,
+    def ask_question(cls,
                      desc,
                      key=None,
                      note=None,
@@ -205,7 +205,7 @@ class Utils(object):
                 desc += '[ %s ]' % key
 
         desc += ' '
-        if self.all:
+        if cls.all:
             return True
         else:
             while True:
@@ -229,7 +229,7 @@ class Utils(object):
                         continue
                     else:
                         if answer == 'all':
-                            self.all = True
+                            cls.all = True
                         return answer in ('yes', 'y', 'all')
                 else:
                     if validate:
@@ -597,7 +597,7 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
     # file types to be expanded
-    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
     # files to be expanded
     white_list_names = ('Makefile')
     if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
@@ -833,6 +833,20 @@ def do_generate(args):
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+    elif args.frontend:
+        Utils.info('Generate frontend...')
+        cmd = "npm run build"
+        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        if RC != 0:
+            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+
+def do_run(args):
+    if args.frontend_dev:
+        Utils.info('Run react.js dev server...')
+        cmd = "npm run dev"
+        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        if RC != 0:
+            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
     print('Upgrade')
@@ -909,7 +923,15 @@ def main():
     parser_generate.add_argument('--min-css', help='''Generate min.css file for seahub.css.
                                  Please install yui-compressor: http://yui.github.io/yuicompressor in your system!
                                  ''', action='store_true')
+    parser_generate.add_argument('--frontend', help='''Generate react.js application. Requirements: 
+                                    1. install nodejs v10.20.1: https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04-de#installation-mit-nvm
+                                    2. cd ~latest/seahub/frontend && npm install
+                                 ''', action='store_true')
 
+    # run 
+    parser_generate = subparsers.add_parser('run', help='Run development servers')
+    parser_generate.set_defaults(func=do_run)
+    parser_generate.add_argument('--frontend-dev', help='Run development server for frontend, see https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/', action='store_true')
 
     if len(sys.argv) == 1:
         print((parser.format_help()))
