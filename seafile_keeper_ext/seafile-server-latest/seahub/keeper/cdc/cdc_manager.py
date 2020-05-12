@@ -121,13 +121,77 @@ def validate_institute(txt):
     """Institute checking, format:
     InstituionName; Department; Director(or PI)Name, Vorname|Abbr.
     """
+    t = txt
+    t = t and t.strip()
+
+    if not t: 
+        CDC_MSG.append('Empty institution string')
+        return False
+
     valid = True
-    if txt:                    # Institution      Department        Director
-        pattern = re.compile("^(\s*[\w-]+\s*[;]*)+?((;\s*[\w-]+\s*)??(;\s*([\w-]+\s*)+?([\s,]+?([\w.-]+\s*)+?)??[\s;]*)??)?$", re.UNICODE)
-        # pattern = re.compile("^(\s*[\w-]+\s*)+?$", re.UNICODE)
+    msg = ''
+
+    # normalize 
+    t = re.sub(r'\s+', ' ', t)
+    t = re.sub(r'(\s*([;,])\s*)+', r'\g<2>', t)
+    t = re.sub(r'(\s*\.\s*)+', '.', t)
+
+    # print('txt: %s -- normalized: %s' % (t, txt))
+    ins = t.strip(';').split(';')
+    # print('len(ins):%s' % len(ins))
+
+    if len(ins) >= 1:
+        # Institute name
+        if ins[0]:
+            pattern = re.compile(r'^(\s*[\w-]+\s*)+$', re.UNICODE)
+            # pattern = re.compile("^(\s*[\w-]+\s*)+?$", re.UNICODE)
+            if not re.match(pattern, ins[0]):
+                valid = False
+                msg = 'Wrong institution name'
+        else:
+            valid = False
+            msg = 'Institution name is empty'
+
+        # Department name
+        if len(ins) >= 2:
+            if ins[1]: 
+                pattern = re.compile(r'^(\s*[\w-]+\s*)+$', re.UNICODE)
+                if not re.match(pattern, ins[1]):
+                    valid = False
+                    msg = 'Wrong department name'
+            else:
+                valid = False
+                msg = 'Department name is empty'
+
+            # Director name
+            if len(ins) >= 3:
+                if ins[2]:
+                    pattern = re.compile(r'^\s*([\w-]+\s*)+?([\s,]+?([\w.-]+\s*)+?[\s;]*?)?$', re.UNICODE)
+                    if not re.match(pattern, ins[2]):
+                        valid = False
+                        msg = 'Wrong director or PI name'
+                else:
+                    valid = False
+                    msg = 'Director or PI name is empty'
+    else:
+        valid = False
+        msg = 'Empty institution string'
+
+    CDC_MSG.append(msg + ': ' + txt)
+     
+    return valid
+
+def validate_director(txt):
+    """Institute checking, format:
+    Director(or PI)Name, Vorname|Abbr.
+    """
+    valid = True
+    if txt:                    #     Lastname       ,\s      Firstname or abbr     ;\s 
+        # pattern = re.compile(r"^(\s* ([\w-]+\s*)+?  ([\s,]+? ([\w.-]+\s*)+? [\s;]*? )? )?$", re.UNICODE)
+        pattern = re.compile(r"^\s*([\w-]+\s*)+?([\s,]+?([\w.-]+\s*)+?[\s;]*?)?$", re.UNICODE)
         if not re.match(pattern, txt):
             valid = False
-            msg = 'Wrong Institution string: ' + txt
+            msg = 'Wrong director string: ' + txt
             CDC_MSG.append(msg)
     else:
         valid = False

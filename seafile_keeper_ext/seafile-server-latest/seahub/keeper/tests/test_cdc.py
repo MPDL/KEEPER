@@ -66,7 +66,7 @@ def test_get_user_name(create_tmp_user):
     """
 
     email = create_tmp_user
-    print email
+    print(email)
     assert email == Profile.objects.get_contact_email_by_user(email)
 
     nick = u"Vlad Влад Üäß 金属と金属の掛け合わせ"
@@ -78,7 +78,7 @@ def test_get_user_name(create_tmp_user):
 
     Profile.objects.delete_profile_by_user(email)
 
-    print json.dumps([nick_from_db], ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': '))
+    print(json.dumps([nick_from_db], ensure_ascii = False, indent=4, sort_keys=True, separators=(',', ': ')))
 
 def test_validate_author():
     """Lastname1, Firstname1; Affiliation11, Affiliation12, ...
@@ -87,11 +87,12 @@ def test_validate_author():
     assert validate_author("Van der Hus, Vincent; MPG")
     assert validate_author("Moreno Ortega, Silvana Anna; MPG")
 
+
 def test_validate_institute():
     assert validate_institute("MPG; MPE; Name, FirstName")
     assert validate_institute("Max Planck Digital Library; DRG; Frank, Sander")
-    assert validate_institute("Institute;Department;Name,F."), "no spaces"
-    assert not validate_institute("Institute Department Name,F."), "No semicolon"
+    assert validate_institute("Institute;Department;Name,F.")
+    assert not validate_institute("Institute Department Name,F."), "Wrong institution string: No semicolons"
 
     assert validate_institute("Institute")
     assert validate_institute("Institute;")
@@ -108,6 +109,16 @@ def test_validate_institute():
     assert validate_institute("Institute; Department; Director, , ,, N. ;; ; ")
     assert validate_institute("Institute Long Name; Department Long Name; Director, , N.; ")
     assert validate_institute("Institute Long Name; Department Long Name; Director, , Ivan Pupkin; ")
+    assert validate_institute("Name; Department; Director forschungsgruppenleiter, Lastname or Abbr.")
+    assert validate_institute("Наименование института; Департамент; Франк Сандер")
+
+    assert not validate_institute("Na(me); Department; Petrov,,,, , ,  I.I."), "Not allowed symbol in institution name"
+    assert not validate_institute("Name; Depa<rtmen>t; Petrov,,,, , ,  I.I."), "Not allowed symbol in departament name"
+    assert not validate_institute("Name; Department; Petrov,,,, , ,  I.[I]."), "Not allowed symbol in director name"
+
+    assert not validate_institute(None), "Empty institution string"
+    assert not validate_institute("  "), "Empty institution string"
+
 
 def test_validate_all():
     assert not validate(parse_markdown(MD_BAD))
@@ -148,7 +159,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write('Text')
     f.flush()
-    os.chmod(f.name, 0666)
+    os.chmod(f.name, 0o666)
 
     seafile_api.post_file(repo.id, f.name, "/", "some_file.txt", SERVER_EMAIL)
     f.close()
@@ -157,7 +168,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write(MD_GOOD)
     f.flush()
-    os.chmod(f.name, 0666)
+    os.chmod(f.name, 0o666)
 
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
@@ -183,7 +194,7 @@ def test_cdc_completely(create_tmp_repo):
     f = tempfile.NamedTemporaryFile()
     f.write(MD_GOOD.replace("2010", "2017"))
     f.flush()
-    os.chmod(f.name, 0666)
+    os.chmod(f.name, 0o666)
 
     seafile_api.put_file(repo.id, f.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
     f.close()
