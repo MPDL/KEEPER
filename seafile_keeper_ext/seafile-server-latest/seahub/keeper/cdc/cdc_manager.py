@@ -129,7 +129,7 @@ def validate_institute(txt):
         return False
 
     valid = True
-    msg = ''
+    msg = None 
 
     # normalize 
     t = re.sub(r'\s+', ' ', t)
@@ -177,7 +177,7 @@ def validate_institute(txt):
         valid = False
         msg = 'Empty institution string'
 
-    CDC_MSG.append(msg + ': ' + txt)
+    msg and CDC_MSG.append(msg + ': ' + txt)
      
     return valid
 
