@@ -411,6 +411,7 @@ class EnvManager(object):
                 'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
                 'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/keeper.service@background': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
                 'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
 		'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
                 'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
@@ -768,11 +769,17 @@ def deploy_system_conf():
         do_links((
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
+        deploy_file('system/keeper.service')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
+
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
+        deploy_file('system/keeper.service@background')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service@background'], 0o755)
+
 
     if node_type in ('SINGLE'):
         deploy_file('system/my.cnf@single', expand=True)
@@ -783,9 +790,6 @@ def deploy_system_conf():
     if cron_node.lower() == 'true':
         deploy_file('system/cron.d.keeper', expand=True)
 
-    # deploy keeper.service systemd
-    deploy_file('system/keeper.service')
-    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
 
     # create system symlinks
     do_links((

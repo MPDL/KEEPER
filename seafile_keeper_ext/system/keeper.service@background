@@ -1,7 +1,7 @@
 [Unit]
 Description=Keeper
-Requires=network.target nginx.service mariadb.service
-After=network.target nginx.service mariadb.service
+Requires=network.target nginx.service
+After=network.target nginx.service
 #RequiresMountsFor=/keeper
 
 [Service]
