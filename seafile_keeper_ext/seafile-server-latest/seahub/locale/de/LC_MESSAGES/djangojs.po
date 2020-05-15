@@ -1328,8 +1328,8 @@ msgstr "%(email) und %(num) weitere Personen sind nun eingeladen."
 #: frontend/src/components/toolbar/invitations-toolbar.js:30
 #: frontend/src/components/toolbar/invitations-toolbar.js:34
 #: frontend/src/pages/invitations/invitations-view.js:273
-msgid "Invite Guest"
-msgstr ""
+msgid "Invite People"
+msgstr "Benutzer/innen einladen"
 
 #: frontend/src/components/dialog/invite-people-dialog.js:109
 msgid "Emails"
@@ -3508,7 +3508,7 @@ msgstr ""
 msgid ""
 "You have not invited any guests yet. A guest can access shared libraries "
 "through the web interface allowing more efficient ways to collaborate than "
-"through links. You can invite a guest by clicking the \"Invite Guest\" "
+"through links. You can invite a guest by clicking the \"Invite People\" "
 "button in the menu bar."
 msgstr ""
 

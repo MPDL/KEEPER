@@ -47,10 +47,10 @@ json_cache_file_path = install_path+'catalog.json'
 json_cache_time = 0 # minutes
 
 # items per page for pagination
-pagination_items = 4 # per page
+pagination_items = 20 # per page
 
 # max pages in paginator
-max_pages_in_paginator = 3 # links
+max_pages_in_paginator = 5 # links
 
 
 #########################

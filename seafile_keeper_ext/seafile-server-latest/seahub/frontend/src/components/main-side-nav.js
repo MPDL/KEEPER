@@ -247,13 +247,16 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
             }
-            {canPublishRepo &&
+            {
+            /*!
+              canPublishRepo &&
               <li className="nav-item">
                 <Link className={`nav-link ellipsis ${this.getActiveClass('published')}`} to={siteRoot + 'published/'} title={gettext('Published Libraries')} onClick={(e) => this.tabItemClick(e, 'published')}>
                   <span className="sf2-icon-wiki-view" aria-hidden="true"></span>
                   <span className="nav-text">{gettext('Published Libraries')}</span>
                 </Link>
               </li>
+            */
             }
             {isDocs &&
               <li className="nav-item" onClick={(e) => this.tabItemClick(e, 'drafts')}>
@@ -274,9 +277,9 @@ class MainSideNav extends React.Component {
             </li>
             {canInvitePeople &&
               <li className="nav-item">
-                <Link className={`nav-link ellipsis ${this.getActiveClass('invitations')}`} to={siteRoot + 'invitations/'} title={gettext('Invite Guest')} onClick={(e) => this.tabItemClick(e, 'invitations')}>
+                <Link className={`nav-link ellipsis ${this.getActiveClass('invitations')}`} to={siteRoot + 'invitations/'} title={gettext('Invite People')} onClick={(e) => this.tabItemClick(e, 'invitations')}>
                   <span className="sf2-icon-invite" aria-hidden="true"></span>
-                  <span className="nav-text">{gettext('Invite Guest')}</span>
+                  <span className="nav-text">{gettext('Invite People')}</span>
                 </Link>
               </li>
             }
