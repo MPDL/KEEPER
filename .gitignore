@@ -7,4 +7,5 @@ CDCGenerator/CDCGenerator.iml
 *.pyc
 .cache/
 __pycache__/
+.ropeproject/
 package-lock.json
