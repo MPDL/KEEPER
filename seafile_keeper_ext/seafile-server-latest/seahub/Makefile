@@ -8,11 +8,9 @@ develop: setup-git
 setup-git:
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
-dist: locale uglify statici18n collectstatic
+dist: locale statici18n collectstatic
 
-# TODO check: uglify is not available anymore!!!
 dist-keeper: locale-keeper statici18n collectstatic
-
 locale:
 	@echo "--> Compile locales"
 	django-admin.py compilemessages
@@ -32,7 +30,8 @@ collectstatic:
 	@echo "--> Collect django static files to media/assets"
 	rm -rf media/assets 2> /dev/null
 	#python manage.py collectstatic --noinput -i admin -i termsandconditions
-	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
+	#$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
+	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions
 
 compressstatic:
 	@echo "--> Compress static files(css) to media/CACHE"

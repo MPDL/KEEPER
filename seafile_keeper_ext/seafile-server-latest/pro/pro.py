@@ -331,6 +331,7 @@ class EnvManager(object):
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
         self.seafile_dir = os.path.join(self.top_dir, 'seafile-data')
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
+        self.seafile_rpc_pipe_path = os.path.join(self.install_path, 'runtime');
 
     def get_seahub_env(self):
         '''Prepare for seahub syncdb'''
@@ -338,6 +339,7 @@ class EnvManager(object):
         env['CCNET_CONF_DIR'] = self.ccnet_dir
         env['SEAFILE_CONF_DIR'] = self.seafile_dir
         env['SEAFILE_CENTRAL_CONF_DIR'] = self.central_config_dir
+        env['SEAFILE_RPC_PIPE_PATH'] = self.seafile_rpc_pipe_path
         env['SEAFES_DIR'] = self.seafes_dir
         env['SEAHUB_DIR'] = self.seahub_dir
         self.setup_python_path(env)
@@ -443,7 +445,7 @@ class MySQLDBConf(DBConf):
             config.set(self.DB_SECTION, 'host', self.mysql_host)
 
         if self.mysql_port:
-            config.set(self.DB_SECTION, 'port', self.mysql_port)
+            config.set(self.DB_SECTION, 'port', str(self.mysql_port))
 
         config.set(self.DB_SECTION, 'username', self.mysql_user)
         config.set(self.DB_SECTION, 'password', self.mysql_password)

@@ -81,7 +81,6 @@ def token_view(request, token):
             for backend in get_backends():
                 user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
 
-
         # Update invitation accept time.
         i.accept()
 

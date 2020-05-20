@@ -86,7 +86,7 @@ STATICFILES_DIRS = (
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'frontend/',
-        'STATS_FILE': os.path.join(PROJECT_ROOT, 'frontend/webpack-stats.dev.json'),
+        'STATS_FILE': os.path.join(PROJECT_ROOT, 'frontend/webpack-stats.pro.json'),
     }
 }
 
@@ -280,6 +280,9 @@ ENABLE_WATERMARK = False
 
 # enable work weixin
 ENABLE_WORK_WEIXIN = False
+
+# enable dingtalk
+ENABLE_DINGTALK = False
 
 # allow user to clean library trash
 ENABLE_USER_CLEAN_TRASH = True
@@ -727,6 +730,39 @@ ENABLE_WIKI = False
 # Enable 'repo snapshot label' feature
 ENABLE_REPO_SNAPSHOT_LABEL = True
 
+#  Repo wiki mode
+# ENABLE_REPO_WIKI_MODE = True
+
+############################
+# HU berlin additional #
+############################
+
+# ADDITIONAL_SHARE_DIALOG_NOTE = {
+#     'title': 'Attention! Read before shareing files:',
+#     'content': 'Do not share personal or confidential official data with **.'
+# }
+# ADDITIONAL_SHARE_DIALOG_NOTE = None
+
+# ADDITIONAL_APP_BOTTOM_LINKS = {
+#     'seafile': 'http://dev.seahub.com/seahub',
+#     'dtable-web': 'http://dev.seahub.com/dtable-web'
+# }
+# ADDITIONAL_APP_BOTTOM_LINKS = None
+
+# ADDITIONAL_ABOUT_DIALOG_LINKS = {
+#     'seafile': 'http://dev.seahub.com/seahub',
+#     'dtable-web': 'http://dev.seahub.com/dtable-web'
+# }
+# ADDITIONAL_ABOUT_DIALOG_LINKS = None
+
+############################
+# Settings for SeafileDocs #
+############################
+# if os.environ.get('SEAFILE_DOCS', None):
+    # LOGO_PATH = 'img/seafile-docs-logo.png'
+    # LOGO_WIDTH = ''
+    # ENABLE_WIKI = True
+
 d = os.path.dirname
 EVENTS_CONFIG_FILE = os.environ.get(
     'EVENTS_CONFIG_FILE',
@@ -854,7 +890,7 @@ if ENABLE_REMOTE_USER_AUTHENTICATION:
     MIDDLEWARE_CLASSES += ('seahub.auth.middleware.SeafileRemoteUserMiddleware',)
     AUTHENTICATION_BACKENDS += ('seahub.auth.backends.SeafileRemoteUserBackend',)
 
-if ENABLE_OAUTH or ENABLE_WORK_WEIXIN:
+if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_DINGTALK:
     AUTHENTICATION_BACKENDS += ('seahub.oauth.backends.OauthRemoteUserBackend',)
 
 #####################
@@ -868,4 +904,4 @@ if ENABLE_OAUTH or ENABLE_WORK_WEIXIN:
 #      },
 # ]
 
-SEAFILE_VERSION = "7.1.1"
+SEAFILE_VERSION = "7.1.3"

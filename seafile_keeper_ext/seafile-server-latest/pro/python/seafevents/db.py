@@ -106,7 +106,7 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
 
     return engine
 
-def init_db_session_class(config_file, db = 'seafevent', autocommit = False):
+def init_db_session_class(config_file, db = 'seafevent'):
     """Configure Session class for mysql according to the config file."""
     try:
         engine = create_engine_from_conf(config_file, db)
@@ -118,7 +118,7 @@ def init_db_session_class(config_file, db = 'seafevent', autocommit = False):
         # reflect the tables
         SeafBase.prepare(engine, reflect=True)
 
-    Session = sessionmaker(bind=engine, autocommit=autocommit)
+    Session = sessionmaker(bind=engine)
     return Session
 
 

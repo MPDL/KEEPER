@@ -84,7 +84,7 @@ class DirentListItem extends React.Component {
         isOperationShow: false,
       }, () => {
         if (nextProps.activeDirent && nextProps.activeDirent.name === nextProps.dirent.name) {
-          this.setState({ isOperationShow: true });
+          this.setState({isOperationShow: true});
         }
       });
     }
@@ -104,7 +104,7 @@ class DirentListItem extends React.Component {
         isOperationShow: true,
       });
     }
-    this.setState({ isDragTipShow: true });
+    this.setState({isDragTipShow: true});
   }
 
   onMouseOver = () => {
@@ -114,7 +114,7 @@ class DirentListItem extends React.Component {
         isOperationShow: true,
       });
     }
-    this.setState({ isDragTipShow: true });
+    this.setState({isDragTipShow: true});
   }
 
   onMouseLeave = () => {
@@ -124,7 +124,7 @@ class DirentListItem extends React.Component {
         isOperationShow: false,
       });
     }
-    this.setState({ isDragTipShow: false });
+    this.setState({isDragTipShow: false});
   }
 
   unfreezeItem = () => {
@@ -205,11 +205,11 @@ class DirentListItem extends React.Component {
 
   onItemShare = (e) => {
     e.nativeEvent.stopImmediatePropagation(); //for document event
-    this.setState({ isShareDialogShow: !this.state.isShareDialogShow });
+    this.setState({isShareDialogShow: !this.state.isShareDialogShow});
   }
 
   closeSharedDialog = () => {
-    this.setState({ isShareDialogShow: !this.state.isShareDialogShow });
+    this.setState({isShareDialogShow: !this.state.isShareDialogShow});
   }
 
   onMobileMenuItemClick = (e) => {
@@ -218,14 +218,14 @@ class DirentListItem extends React.Component {
   }
 
   onMenuItemClick = (operation, event) => {
-    switch (operation) {
-      case 'Download':
+    switch(operation) {
+      case 'Download': 
         this.onItemDownload(event);
         break;
       case 'Share':
         this.onItemShare(event);
         break;
-      case 'Delete':
+      case 'Delete': 
         this.onItemDelete(event);
         break;
       case 'Rename':
@@ -292,20 +292,20 @@ class DirentListItem extends React.Component {
   }
 
   onRenameCancel = () => {
-    this.setState({ isRenameing: false });
+    this.setState({isRenameing: false});
     this.unfreezeItem();
   }
 
   onItemMoveToggle = () => {
-    this.setState({ isMoveDialogShow: !this.state.isMoveDialogShow });
+    this.setState({isMoveDialogShow: !this.state.isMoveDialogShow});
   }
 
   onItemCopyToggle = () => {
-    this.setState({ isCopyDialogShow: !this.state.isCopyDialogShow });
+    this.setState({isCopyDialogShow: !this.state.isCopyDialogShow});
   }
 
   onPermissionItem = () => {
-    this.setState({ isPermissionDialogOpen: !this.state.isPermissionDialogOpen });
+    this.setState({isPermissionDialogOpen: !this.state.isPermissionDialogOpen});
   }
 
   onLockItem = () => {
@@ -321,7 +321,7 @@ class DirentListItem extends React.Component {
       toaster.danger(errMessage);
     });
   }
-
+  
   onUnlockItem = () => {
     let repoID = this.props.repoID;
     let filePath = this.getDirentPath(this.props.dirent);
@@ -338,20 +338,20 @@ class DirentListItem extends React.Component {
   onHistory = () => {
     let repoID = this.props.repoID;
     let filePath = this.getDirentPath(this.props.dirent);
-    let url = URLDecorator.getUrl({ type: 'file_revisions', repoID: repoID, filePath: filePath });
+    let url = URLDecorator.getUrl({type: 'file_revisions', repoID: repoID, filePath: filePath});
     location.href = url;
   }
-
+  
   onAccessLog = () => {
     let filePath = this.getDirentPath(this.props.dirent);
-    let path = siteRoot + 'repo/file-access/' + this.props.repoID + '/?p=' + encodeURIComponent(filePath);
+    let path = siteRoot + 'repo/file-access/' + this.props.repoID + '/?p=' + encodeURIComponent(filePath) ;
     window.open(path);
   }
 
   onOpenViaClient = () => {
     let repoID = this.props.repoID;
     let filePath = this.getDirentPath(this.props.dirent);
-    let url = URLDecorator.getUrl({ type: 'open_via_client', repoID: repoID, filePath: filePath });
+    let url = URLDecorator.getUrl({type: 'open_via_client', repoID: repoID, filePath: filePath});
     location.href = url;
   }
 
@@ -365,7 +365,7 @@ class DirentListItem extends React.Component {
         isZipDialogOpen: true
       });
     } else {
-      let url = URLDecorator.getUrl({ type: 'download_file_url', repoID: repoID, filePath: direntPath });
+      let url = URLDecorator.getUrl({type: 'download_file_url', repoID: repoID, filePath: direntPath});
       location.href = url;
     }
   }
@@ -383,7 +383,7 @@ class DirentListItem extends React.Component {
 
   onTagTooltipToggle = (e) => {
     e.stopPropagation();
-    this.setState({ isShowTagTooltip: !this.state.isShowTagTooltip });
+    this.setState({isShowTagTooltip: !this.state.isShowTagTooltip});
   }
 
   onItemMove = (destRepo, dirent, selectedPath, currentPath) => {
@@ -399,14 +399,14 @@ class DirentListItem extends React.Component {
     if (selectedDirentList.length > 0 && selectedDirentList.includes(this.props.dirent)) { // drag items and selectedDirentList include item
       this.props.onShowDirentsDraggablePreview();
       e.dataTransfer.setDragImage(this.refs.empty_content, 0, 0); // Show an empty content
-      let selectedList = selectedDirentList.map(item => {
+      let selectedList =  selectedDirentList.map(item => {
         let nodeRootPath = this.getDirentPath(item);
-        let dragStartItemData = { nodeDirent: item, nodeParentPath: this.props.path, nodeRootPath: nodeRootPath };
+        let dragStartItemData = {nodeDirent: item, nodeParentPath: this.props.path, nodeRootPath: nodeRootPath};
         return dragStartItemData;
       });
       selectedList = JSON.stringify(selectedList);
       e.dataTransfer.setData('applicaiton/drag-item-info', selectedList);
-      return;
+      return ;
     }
 
     if (e.dataTransfer && e.dataTransfer.setDragImage) {
@@ -414,7 +414,7 @@ class DirentListItem extends React.Component {
     }
 
     let nodeRootPath = this.getDirentPath(this.props.dirent);
-    let dragStartItemData = { nodeDirent: this.props.dirent, nodeParentPath: this.props.path, nodeRootPath: nodeRootPath };
+    let dragStartItemData = {nodeDirent: this.props.dirent, nodeParentPath: this.props.path, nodeRootPath: nodeRootPath};
     dragStartItemData = JSON.stringify(dragStartItemData);
 
     e.dataTransfer.setData('applicaiton/drag-item-info', dragStartItemData);
@@ -426,10 +426,10 @@ class DirentListItem extends React.Component {
     }
     if (this.props.dirent.type === 'dir') {
       e.stopPropagation();
-      this.setState({ isDropTipshow: true });
+      this.setState({isDropTipshow: true});
     }
   }
-
+  
   onItemDragOver = (e) => {
     if (Utils.isIEBrower()) {
       return false;
@@ -449,14 +449,14 @@ class DirentListItem extends React.Component {
     if (this.props.dirent.type === 'dir') {
       e.stopPropagation();
     }
-    this.setState({ isDropTipshow: false });
+    this.setState({isDropTipshow: false});
   }
 
   onItemDragDrop = (e) => {
     if (Utils.isIEBrower()) {
       return false;
     }
-    this.setState({ isDropTipshow: false });
+    this.setState({isDropTipshow: false});
     if (e.dataTransfer.files.length) { // uploaded files
       return;
     }
@@ -468,18 +468,18 @@ class DirentListItem extends React.Component {
     let dragStartItemData = e.dataTransfer.getData('applicaiton/drag-item-info');
     dragStartItemData = JSON.parse(dragStartItemData);
     if (Array.isArray(dragStartItemData)) { //move items
-      let direntPaths = dragStartItemData.map(draggedItem => {
+      let direntPaths =  dragStartItemData.map(draggedItem => {
         return draggedItem.nodeRootPath;
       });
 
       let selectedPath = Utils.joinPath(this.props.path, this.props.dirent.name);
 
-      if (direntPaths.some(direntPath => { return direntPath === selectedPath; })) { //eg; A/B, A/C --> A/B
+      if (direntPaths.some(direntPath => { return direntPath === selectedPath;})) { //eg; A/B, A/C --> A/B
         return;
       }
-
+      
       this.props.onItemsMove(this.props.currentRepoInfo, selectedPath);
-      return;
+      return ;
     }
 
     let { nodeDirent, nodeParentPath, nodeRootPath } = dragStartItemData;
@@ -519,7 +519,7 @@ class DirentListItem extends React.Component {
 
     return (
       <Fragment>
-        {selectedDirentList.length > 1 ?
+        {selectedDirentList.length > 1 ? 
           <Fragment>
             {this.state.isOperationShow && !dirent.isSelected &&
               <div className="operations">
@@ -553,9 +553,9 @@ class DirentListItem extends React.Component {
                 </ul>
               </div>
             }
-          </Fragment> :
+          </Fragment> : 
           <Fragment>
-            {this.state.isOperationShow &&
+            {this.state.isOperationShow && 
               <div className="operations">
                 <ul className="operation-group">
                   {(dirent.permission === 'rw' || dirent.permission === 'r') && (
@@ -623,30 +623,30 @@ class DirentListItem extends React.Component {
 
     let trClass = this.state.highlight ? 'tr-highlight ' : '';
     trClass += this.state.isDropTipshow ? 'tr-drop-effect' : '';
-    trClass += (activeDirent && activeDirent.name === dirent.name) ? 'tr-active' : '';
-    trClass += dirent.isSelected ? 'tr-active' : '';
+    trClass += (activeDirent && activeDirent.name === dirent.name)  ? 'tr-active' : '';
+    trClass += dirent.isSelected? 'tr-active' : '';
 
     let lockedInfo = gettext('locked by {name}').replace('{name}', dirent.lock_owner_name);
 
     const isDesktop = Utils.isDesktop();
     const desktopItem = (
-      <tr
-        className={trClass}
+      <tr 
+        className={trClass} 
         draggable="true"
-        onMouseEnter={this.onMouseEnter}
-        onMouseOver={this.onMouseOver}
-        onMouseLeave={this.onMouseLeave}
-        onClick={this.onDirentClick}
-        onDragStart={this.onItemDragStart}
-        onDragEnter={this.onItemDragEnter}
-        onDragOver={this.onItemDragOver}
-        onDragLeave={this.onItemDragLeave}
+        onMouseEnter={this.onMouseEnter} 
+        onMouseOver={this.onMouseOver} 
+        onMouseLeave={this.onMouseLeave} 
+        onClick={this.onDirentClick} 
+        onDragStart={this.onItemDragStart} 
+        onDragEnter={this.onItemDragEnter} 
+        onDragOver={this.onItemDragOver} 
+        onDragLeave={this.onItemDragLeave} 
         onDrop={this.onItemDragDrop}
         onMouseDown={this.onItemMouseDown}
         onContextMenu={this.onItemContextMenu}
       >
         <td className={`pl10 ${this.state.isDragTipShow ? 'tr-drag-effect' : ''}`}>
-          <input type="checkbox" className="vam" onChange={this.onItemSelected} checked={dirent.isSelected} />
+          <input type="checkbox" className="vam" onChange={this.onItemSelected} checked={dirent.isSelected}/>
         </td>
         <td className="pl10">
           {dirent.starred !== undefined && !dirent.starred && <i className="far fa-star star-empty cursor-pointer" onClick={this.onItemStarred}></i>}
@@ -658,8 +658,8 @@ class DirentListItem extends React.Component {
               <img ref='drag_icon' src={`${siteRoot}${dirent.encoded_thumbnail_src}`} className="thumbnail cursor-pointer" onClick={this.onItemClick} alt="" /> :
               <img ref='drag_icon' src={iconUrl} width="24" alt='' />
             }
-            {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo} />}
-            <div ref="empty_content" style={{ position: 'absolute', width: '1px', height: '1px' }}></div>
+            {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo}/>}
+            <div ref="empty_content" style={{position: 'absolute', width: '1px', height: '1px'}}></div>
           </div>
         </td>
         <td className="name">
@@ -675,7 +675,7 @@ class DirentListItem extends React.Component {
                 {dirent.file_tags.map((fileTag, index) => {
                   let length = dirent.file_tags.length;
                   return (
-                    <span className="file-tag" key={fileTag.id} style={{ zIndex: length - index, backgroundColor: fileTag.color }}></span>
+                    <span className="file-tag" key={fileTag.id} style={{zIndex:length - index, backgroundColor:fileTag.color}}></span>
                   );
                 })}
               </div>
@@ -683,13 +683,13 @@ class DirentListItem extends React.Component {
                 {tagTitle}
               </UncontrolledTooltip>
             </Fragment>
-          )}
+          )} 
         </td>
         <td className="operation">{this.renderItemOperation()}</td>
         <td className="file-size">{dirent.size && dirent.size}</td>
         <td className="last-update">{dirent.mtime_relative}</td>
       </tr>
-    );
+    ); 
     const mobileItem = (
       <tr>
         <td>
@@ -698,7 +698,7 @@ class DirentListItem extends React.Component {
               <img src={`${siteRoot}${dirent.encoded_thumbnail_src}`} className="thumbnail cursor-pointer" onClick={this.onItemClick} alt="" /> :
               <img src={iconUrl} width="24" alt="" />
             }
-            {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo} />}
+            {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo}/>}
           </div>
         </td>
         <td>
@@ -723,7 +723,7 @@ class DirentListItem extends React.Component {
               <div className="mobile-operation-menu-bg-layer"></div>
               <div className="mobile-operation-menu">
                 {dirent.starred !== undefined &&
-                  <DropdownItem className="mobile-menu-item" onClick={this.onItemStarred}>{dirent.starred ? gettext('Unstar') : gettext('Star')}</DropdownItem>}
+                <DropdownItem className="mobile-menu-item" onClick={this.onItemStarred}>{dirent.starred ? gettext('Unstar') : gettext('Star')}</DropdownItem>}
                 {this.props.getDirentItemMenuList(dirent, true).map((item, index) => {
                   if (item != 'Divider' && item.key != 'Open via Client') {
                     return (
@@ -736,11 +736,11 @@ class DirentListItem extends React.Component {
           </Dropdown>
         </td>
       </tr>
-    );
+    ); 
 
     return (
       <Fragment>
-        {isDesktop ? desktopItem : mobileItem}
+        {isDesktop ? desktopItem : mobileItem} 
         {this.state.isMoveDialogShow &&
           <ModalPortal>
             <MoveDirentDialog
@@ -788,7 +788,7 @@ class DirentListItem extends React.Component {
         }
         {this.state.isShareDialogShow &&
           <ModalPortal>
-            <ShareDialog
+            <ShareDialog 
               itemType={dirent.type}
               itemName={dirent.name}
               itemPath={direntPath}
@@ -803,7 +803,7 @@ class DirentListItem extends React.Component {
         }
         {this.state.isPermissionDialogOpen &&
           <ModalPortal>
-            <LibSubFolderPermissionDialog
+            <LibSubFolderPermissionDialog 
               toggleDialog={this.onPermissionItem}
               repoID={this.props.repoID}
               folderPath={direntPath}

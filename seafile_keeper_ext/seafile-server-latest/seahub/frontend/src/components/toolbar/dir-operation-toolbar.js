@@ -7,9 +7,11 @@ import ModalPortal from '../modal-portal';
 import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
+import ViewModeToolbar from './view-mode-toolbar';
 import ArchiveLibraryDialog from "../dialog/archive-library-dialog";
 import { keeperAPI } from "../../utils/seafile-api";
 import { handleCanArchiveResponse } from "../../pages/my-libs/mylib-repo-list-item";
+
 
 const propTypes = {
   path: PropTypes.string.isRequired,
@@ -25,8 +27,9 @@ const propTypes = {
   onUploadFile: PropTypes.func.isRequired,
   onUploadFolder: PropTypes.func.isRequired,
   direntList: PropTypes.array.isRequired,
+  currentMode: PropTypes.string.isRequired,
+  switchViewMode: PropTypes.func.isRequired,
 };
-
 
 class DirOperationToolbar extends React.Component {
 
@@ -104,7 +107,6 @@ class DirOperationToolbar extends React.Component {
       isShareDialogShow: !this.state.isShareDialogShow
     });
   }
-
 
   onCreateFolderToggle = () => {
     this.setState({isCreateFolderDialogShow: !this.state.isCreateFolderDialogShow});
@@ -192,53 +194,57 @@ class DirOperationToolbar extends React.Component {
 
     let isArchiveBtnShow = ! this.props.repoEncrypted;
 
-    const content = Utils.isDesktop() ? (
-      <Fragment>
-        {Utils.isSupportUploadFolder() ?
-          <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadClick}>{gettext('Upload')}</button> :
-          <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadFile}>{gettext('Upload')}</button>}
-        <button className="btn btn-secondary operation-item" title={gettext('New')} onClick={this.onCreateClick}>{gettext('New')}</button>
-        {this.props.showShareBtn &&
-          <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
-        {isArchiveBtnShow &&
-          <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>}
-      </Fragment>
-    ) : (
-      <Dropdown isOpen={this.state.isMobileOpMenuOpen} toggle={this.toggleMobileOpMenu}>
-        <DropdownToggle
-          tag="span"
-          className="sf2-icon-plus mobile-toolbar-icon"
-        />
-        <DropdownMenu>
-          <DropdownItem onClick={this.onUploadFile}>{gettext('Upload')}</DropdownItem>
-          <DropdownItem onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</DropdownItem>
-          <DropdownItem onClick={this.onCreateFileToggle}>{gettext('New File')}</DropdownItem>
-        </DropdownMenu>
-      </Dropdown>
-    );
+    let content = null;
+    if (Utils.isDesktop()) {
+      let { showShareBtn } = this.props;
+      content = (
+        <Fragment>
+          {Utils.isSupportUploadFolder() ?
+            <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadClick}>{gettext('Upload')}</button> :
+            <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadFile}>{gettext('Upload')}</button>}
+          <button className="btn btn-secondary operation-item" title={gettext('New')} onClick={this.onCreateClick}>{gettext('New')}</button>
+          {showShareBtn && <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
+          {isArchiveBtnShow && <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>}
+        </Fragment>
+      );
+    } else {
+      content = (
+        <Dropdown isOpen={this.state.isMobileOpMenuOpen} toggle={this.toggleMobileOpMenu}>
+          <DropdownToggle tag="span" className="sf2-icon-plus mobile-toolbar-icon" />
+          <DropdownMenu>
+            <DropdownItem onClick={this.onUploadFile}>{gettext('Upload')}</DropdownItem>
+            <DropdownItem onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</DropdownItem>
+            <DropdownItem onClick={this.onCreateFileToggle}>{gettext('New File')}</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      );
+    }
 
     return (
       <Fragment>
-        <div className="operation">
-          {content}
+        <div className="dir-operation">
+          <div className="operation">
+            {content}
+          </div>
+          {this.state.isUploadMenuShow && (
+            <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+              <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
+              <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
+            </ul>
+          )}
+          {this.state.isCreateMenuShow && (
+            <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+              <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
+              <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
+              <li className="dropdown-divider"></li>
+              <li className="dropdown-item" onClick={this.onCreateMarkdownToggle}>{gettext('New Markdown File')}</li>
+              <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
+              <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
+              <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
+            </ul>
+          )}
         </div>
-        {this.state.isUploadMenuShow && (
-          <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-            <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
-            <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
-          </ul>
-        )}
-        {this.state.isCreateMenuShow && (
-          <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-            <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
-            <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
-            <li className="dropdown-divider"></li>
-            <li className="dropdown-item" onClick={this.onCreateMarkdownToggle}>{gettext('New Markdown File')}</li>
-            <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
-            <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
-            <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
-          </ul>
-        )}
+        {Utils.isDesktop() && <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode} />}
         {this.state.isCreateFileDialogShow && (
           <ModalPortal>
             <CreateFile
@@ -263,21 +269,6 @@ class DirOperationToolbar extends React.Component {
         {this.state.isShareDialogShow &&
           <ModalPortal>
             <ShareDialog 
-              itemType={itemType}
-              itemName={itemName}
-              itemPath={this.props.path}
-              repoID={this.props.repoID}
-              repoEncrypted={this.props.repoEncrypted}
-              enableDirPrivateShare={this.props.enableDirPrivateShare}
-              userPerm={this.props.userPerm}
-              isGroupOwnedRepo={this.props.isGroupOwnedRepo}
-              toggleDialog={this.onShareClick}
-            />
-          </ModalPortal>
-        }
-        {this.state.isShareDialogShow &&
-          <ModalPortal>
-            <ShareDialog
               itemType={itemType}
               itemName={itemName}
               itemPath={this.props.path}

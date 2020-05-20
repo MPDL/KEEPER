@@ -66,12 +66,12 @@ function check_python_executable() {
     else
         PYTHON="python"$(python --version | cut -b 8-10)
         if !which $PYTHON 2>/dev/null 1>&2; then
-        echo
+            echo
             echo "Can't find a python executable of $PYTHON in PATH"
             echo "Install $PYTHON before continue."
-        echo "Or if you installed it in a non-standard PATH, set the PYTHON enviroment varirable to it"
-        echo
-        exit 1
+            echo "Or if you installed it in a non-standard PATH, set the PYTHON enviroment varirable to it"
+            echo
+            exit 1
         fi
     fi
 }

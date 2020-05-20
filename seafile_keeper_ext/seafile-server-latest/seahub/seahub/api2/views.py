@@ -139,7 +139,6 @@ from seaserv import seafserv_threaded_rpc, \
 
 from constance import config
 
-
 logger = logging.getLogger(__name__)
 json_content_type = 'application/json; charset=utf-8'
 
@@ -712,7 +711,6 @@ class Repos(APIView):
 
                 if q and q.lower() not in r.name.lower():
                     continue
-
 
                 repo = {
                     "type": "repo",

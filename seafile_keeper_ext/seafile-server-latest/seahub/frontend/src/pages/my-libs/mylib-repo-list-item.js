@@ -19,6 +19,7 @@ import LibSubFolderPermissionDialog from '../../components/dialog/lib-sub-folder
 import Rename from '../../components/rename';
 import MylibRepoMenu from './mylib-repo-menu';
 import RepoAPITokenDialog from '../../components/dialog/repo-api-token-dialog';
+import RepoShareUploadLinksDialog from '../../components/dialog/repo-share-upload-links-dialog';
 import AssignDoiDialog from '../../components/dialog/assign-doi-dialog';
 import ArchiveLibraryDialog from '../../components/dialog/archive-library-dialog';
 
@@ -78,6 +79,7 @@ class MylibRepoListItem extends React.Component {
       isLabelRepoStateDialogOpen: false,
       isFolderPermissionDialogShow: false,
       isAPITokenDialogShow: false,
+      isRepoShareUploadLinksDialogOpen: false,
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
     };
@@ -136,6 +138,9 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'API Token':
         this.onAPITokenToggle();
+        break;
+      case 'Share Links Admin':
+        this.toggleRepoShareUploadLinksDialog();
         break;
       case 'Assign DOI to current state':
         this.onAssignDoiToggle();
@@ -218,10 +223,12 @@ class MylibRepoListItem extends React.Component {
     this.setState({isAPITokenDialogShow: !this.state.isAPITokenDialogShow});
   }
 
+  toggleRepoShareUploadLinksDialog = () => {
+    this.setState({isRepoShareUploadLinksDialogOpen: !this.state.isRepoShareUploadLinksDialogOpen});
+  }
   onAssignDoiToggle = () => {
     this.setState({isAssignDoiDialogShow: !this.state.isAssignDoiDialogShow});
   }
-
 
   onArchiveLibraryHide = () => {
         this.setState({isArchiveLibraryDialogShow: false});
@@ -238,6 +245,7 @@ class MylibRepoListItem extends React.Component {
       handleCanArchiveResponse(this,{data: {status: 'system_error', msg: errorMsg}});
     });
   }
+
 
   onUnfreezedItem = () => {
     this.setState({
@@ -454,6 +462,7 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
+
         {this.state.isLabelRepoStateDialogOpen && (
           <ModalPortal>
             <LabelRepoStateDialog
@@ -463,6 +472,7 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
+
         {this.state.isFolderPermissionDialogShow && (
           <ModalPortal>
             <LibSubFolderPermissionDialog
@@ -472,6 +482,7 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
+
         {this.state.isAPITokenDialogShow && (
           <ModalPortal>
             <RepoAPITokenDialog
@@ -480,6 +491,16 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
+
+        {this.state.isRepoShareUploadLinksDialogOpen && (
+          <ModalPortal>
+            <RepoShareUploadLinksDialog
+              repo={repo}
+              toggleDialog={this.toggleRepoShareUploadLinksDialog}
+            />
+          </ModalPortal>
+        )}
+
         {this.state.isAssignDoiDialogShow && (
           <ModalPortal>
             <AssignDoiDialog
@@ -498,11 +519,9 @@ class MylibRepoListItem extends React.Component {
               toggleDialog={this.onArchiveLibraryToggle}/>
           </ModalPortal>
         )}
-      </Fragment>
+       </Fragment>
     );
   }
-
-
 }
 
 MylibRepoListItem.propTypes = propTypes;

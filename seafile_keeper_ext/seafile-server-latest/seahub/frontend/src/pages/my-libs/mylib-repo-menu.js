@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, DropdownMenu, DropdownToggle, DropdownItem } from 'reactstrap';
-import { gettext, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured } from '../../utils/constants';
+import { gettext, isPro, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
 const propTypes = {
@@ -52,19 +52,21 @@ class MylibRepoMenu extends React.Component {
 
   generatorOperations = () => {
     let repo = this.props.repo;
-    let showResetPasswordMenuItem = repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
+    let showResetPasswordMenuItem = isPro && repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let showArchiveLibraryMenuItem = !repo.encrypted;
-    let operations = ['Rename', 'Transfer', 'History Setting', 'API Token'];
+    let operations = ['Rename', 'Transfer']; 
+    if (folderPermEnabled) {
+      operations.push('Folder Permission');
+    }
+    operations.push('Share Links Admin', 'Divider');
     if (repo.encrypted) {
       operations.push('Change Password');
     }
     if (showResetPasswordMenuItem) {
       operations.push('Reset Password');
     }
-    if (folderPermEnabled) {
-      operations.push('Folder Permission');
-    }
+    operations.push('History Setting', 'API Token');
     if (this.props.isPC && enableRepoSnapshotLabel) {
       operations.push('Label Current State');
     }
@@ -74,7 +76,7 @@ class MylibRepoMenu extends React.Component {
     if (showArchiveLibraryMenuItem) {
       operations.push('Archive Library');
     }
-    return operations;
+     return operations;
   }
 
   translateOperations = (item) => {
@@ -116,13 +118,16 @@ class MylibRepoMenu extends React.Component {
       case 'API Token':
         translateResult = 'API Token'; // translation is not needed here
         break;
+      case 'Share Links Admin':
+        translateResult = gettext('Share Links Admin');
+        break;
       case 'Assign DOI to current state':
         translateResult = gettext('Assign DOI to current state');
         break;
       case 'Archive Library':
         translateResult = gettext('Archive Library');
         break;
-      default:
+       default:
         break;
     }
 
@@ -145,8 +150,12 @@ class MylibRepoMenu extends React.Component {
             aria-expanded={this.state.isItemMenuShow}
           />
           <DropdownMenu>
-            {operations.map((item, index )=> {
-              return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick}>{this.translateOperations(item)}</DropdownItem>);
+            {operations.map((item, index)=> {
+              if (item == 'Divider') {
+                return <DropdownItem key={index} divider />; 
+              } else {
+                return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick}>{this.translateOperations(item)}</DropdownItem>);
+              }
             })}
           </DropdownMenu>
         </Dropdown>
@@ -172,7 +181,9 @@ class MylibRepoMenu extends React.Component {
           <div className="mobile-operation-menu-bg-layer"></div>
           <div className="mobile-operation-menu">
             {operations.map((item, index) => {
-              return (<DropdownItem key={index} className="mobile-menu-item" data-toggle={item} onClick={this.onMenuItemClick}>{this.translateOperations(item)}</DropdownItem>);
+              if (item != 'Divider') {
+                return (<DropdownItem key={index} className="mobile-menu-item" data-toggle={item} onClick={this.onMenuItemClick}>{this.translateOperations(item)}</DropdownItem>);
+              }
             })}
           </div>
         </div>
