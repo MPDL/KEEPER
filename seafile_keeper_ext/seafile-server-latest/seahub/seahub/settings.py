@@ -741,19 +741,19 @@ ENABLE_REPO_SNAPSHOT_LABEL = True
 #     'title': 'Attention! Read before shareing files:',
 #     'content': 'Do not share personal or confidential official data with **.'
 # }
-# ADDITIONAL_SHARE_DIALOG_NOTE = None
+ADDITIONAL_SHARE_DIALOG_NOTE = None
 
 # ADDITIONAL_APP_BOTTOM_LINKS = {
 #     'seafile': 'http://dev.seahub.com/seahub',
 #     'dtable-web': 'http://dev.seahub.com/dtable-web'
 # }
-# ADDITIONAL_APP_BOTTOM_LINKS = None
+ADDITIONAL_APP_BOTTOM_LINKS = None
 
 # ADDITIONAL_ABOUT_DIALOG_LINKS = {
 #     'seafile': 'http://dev.seahub.com/seahub',
 #     'dtable-web': 'http://dev.seahub.com/dtable-web'
 # }
-# ADDITIONAL_ABOUT_DIALOG_LINKS = None
+ADDITIONAL_ABOUT_DIALOG_LINKS = None
 
 ############################
 # Settings for SeafileDocs #
