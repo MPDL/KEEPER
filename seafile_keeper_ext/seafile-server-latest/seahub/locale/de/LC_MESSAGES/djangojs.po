@@ -1342,8 +1342,8 @@ msgstr "%(email) und %(num) weitere Personen sind nun eingeladen."
 #: frontend/src/components/toolbar/invitations-toolbar.js:30
 #: frontend/src/components/toolbar/invitations-toolbar.js:34
 #: frontend/src/pages/invitations/invitations-view.js:273
-msgid "Invite Guest"
-msgstr "Gast einladen"
+msgid "Invite People"
+msgstr "Benutzer einladen"
 
 #: frontend/src/components/dialog/invite-people-dialog.js:109
 msgid "Emails"
@@ -5484,3 +5484,7 @@ msgstr "Fehler beim Verschieben von %(name)s und %(amount)s weiteren Objekten."
 #: frontend/src/utils/utils.js:1216
 msgid "Failed to move %(name)s."
 msgstr "Fehler beim Verschieben von %(name)s."
+
+# KEEPER
+msgid "Invite Guest"
+msgstr "Benutzer einladen"
