@@ -557,7 +557,7 @@ class Worker(threading.Thread):
             logger.info('Remote checksum: {}'.format(remote_checksum))
 
             # check checksums
-            if task.checksum == remote_checksum.lstrip("b'"):
+            if task.checksum == remote_checksum[2:]:
                 logger.info('Remote checksum equals to local checksum')
             else:
                raise Exception('Remote checksum {} does not match local checksum {}'.format(remote_checksum, task.checksum))
