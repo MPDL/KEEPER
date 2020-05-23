@@ -248,7 +248,9 @@ case "$1" in
         status)
             RC=0
             check_puppet
-            check_mysql
+            if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
+                check_mysql
+            fi
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
