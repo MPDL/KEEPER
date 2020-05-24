@@ -219,8 +219,8 @@ class NoticeItem extends React.Component {
     if (noticeType === MSG_DOI || noticeType === MSG_DOI_SUCCESS) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = detail.message + ' Check <a href="' + detail.doi_link + '" target=_new>' +
-          detail.doi + '</a>.';
+      let notice = detail.doi_link ? detail.message + ' Check <a href="' + detail.doi_link + '" target=_new>' +
+          detail.doi + '</a>.' : detail.message;
       return {avatar_url, notice};
     }
 
