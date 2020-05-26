@@ -385,30 +385,30 @@ class EnvManager(object):
     def set_keeper_env(self):
 
         self.SEAF_EXT_DIR_MAPPING = {
-                # dir -> dir mappings
-                'conf': os.path.join(self.top_dir, 'conf'),
-                'seafile-server-latest': self.install_path,
-                'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
-                'scripts': os.path.join(self.top_dir, 'scripts'),
-                'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
-                # file -> file mappings
-                'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
-                'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
-                'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
-                'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
-                'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
-                'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
-                'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
-                'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
-                'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
-                'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
-                'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
-                'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
-                'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
-                'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
-                'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
-                'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
-                'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
+            # dir -> dir mappings
+            'conf': os.path.join(self.top_dir, 'conf'),
+            'seafile-server-latest': self.install_path,
+            'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
+            'scripts': os.path.join(self.top_dir, 'scripts'),
+            'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
+            # file -> file mappings
+            'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
+            'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
+            'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
+            'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
+            'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
+            'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+            'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
+            'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
+            'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
+            'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
+            'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
+            'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
+            'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
+            'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+            'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+            'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
+            'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -521,6 +521,9 @@ def expand_properties(content, path):
             # switch off webdav for BACKGROUND server
             if key == '__WEBDAV_ENABLED__' and is_background:
                 value = 'false'
+            # convert comma separated unicast peers to keepealived.conf valid value
+            if key == '__MEMCACHED_KA_UNICAST_PEERS__' and ',' in value and path.endswith('keepalived.conf'):
+                value = '\n'.join(value.split(','))
              # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
@@ -532,7 +535,6 @@ def expand_properties(content, path):
     if node_type != 'single' and path.endswith('seahub_settings.py'):
         content = re.sub("EMAIL_HOST_USER.*?\n", "", content)
         content = re.sub("EMAIL_HOST_PASSWORD.*?\n", "", content)
-
 
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
