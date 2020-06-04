@@ -55,9 +55,9 @@ function backup_databases () {
     echo "Start time of first mysqldump: ${MYSQLDUMP_START_TIME}"
     for i in ccnet seafile seahub keeper; do
         TIMESTAMP=$(get_timestamp | tr ' ' '_')
-        mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
+	mysqldump --single-transaction=TRUE -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
         [ $? -ne 0  ] && err_and_exit "Cannot dump ${i}-db"
-        RECOVERY_COMMANDS+=(echo "mysql -u${__DB_USER__} -p******** -P${__DB_PORT__} ${i} < ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz")
+	RECOVERY_COMMANDS+=("gunzip < ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz | mysql -u${__DB_USER__} -p******** -P${__DB_PORT__} ${i}-db")
     done
     echo_green "Databases backup is OK"
 
