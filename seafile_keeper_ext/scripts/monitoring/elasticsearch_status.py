@@ -13,7 +13,7 @@ if health['status'] == 'green':
     print("OK")
     exit(0)
 
-if health['status'] == 'yelloq':
+if health['status'] == 'yellow':
     print("WARNING:", health)
     exit(1)
 
