@@ -94,7 +94,7 @@ function do_tsm_backup () {
         export MMBACKUP_DSMC_EXPIRE="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
 
         # Incremental forever backup every day
-        mmbackup /keeper --scope inodespace --noquote -s $TMP_DIR -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT | /opt/seafile/logs/mmbackup-incremental-${TODAY}.log
+        mmbackup /keeper --scope inodespace --noquote -s $TMP_DIR -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT | tee /opt/seafile/logs/mmbackup-incremental-${TODAY}.log
 
         [ $? -ne 0 ] && warn "Incremental TSM backup has failed" || echo_green "OK"
 
