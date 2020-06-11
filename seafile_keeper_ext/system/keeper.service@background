@@ -6,6 +6,7 @@ After=network.target nginx.service
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/bash -c 'while [ ! -d /keeper/seafile-data ]; do sleep 1; done'
 ExecStart=/bin/bash -c "/usr/local/bin/keeper-service start"
 ExecStop=/bin/bash -c "/usr/local/bin/keeper-service stop"
 RemainAfterExit=yes

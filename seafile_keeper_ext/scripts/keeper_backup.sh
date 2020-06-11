@@ -100,7 +100,7 @@ function do_tsm_backup () {
 
         # Rebuild the shadow database on Sundays
         if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
-             mmbackup /keeper --noquote --rebuild -s /keeper/tmp -v -B 1000 -L 2 -m 8 -a 1 | tee /opt/seafile/logs/mmbackup-rebuild-${TODAY}.log
+             mmbackup /keeper --noquote --rebuild -s $TMP_DIR -v -B 1000 -L 2 -m 8 -a 1 | tee /opt/seafile/logs/mmbackup-rebuild-${TODAY}.log
             [ $? -ne 0 ] && warn "Rebuild of shadow DB has failed" || echo_green "OK"
         fi
         echo_green "OK"
