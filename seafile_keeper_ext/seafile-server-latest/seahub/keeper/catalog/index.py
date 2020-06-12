@@ -19,6 +19,7 @@ os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/p
 
 
 from django import template
+from django.utils.translation import activate
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
@@ -191,6 +192,10 @@ def application(env, start_response):
                     'checked_'+scope: 'checked',
                     'results': [],
                 })
+                
+                # set language, get it from cookies
+                cookie = env.get('HTTP_COOKIE')
+                'django_language=de' in cookie and activate('de')
 
                 for res in results:
 

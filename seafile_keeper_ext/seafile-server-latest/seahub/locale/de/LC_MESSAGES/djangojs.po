@@ -5488,3 +5488,40 @@ msgstr "Fehler beim Verschieben von %(name)s."
 # KEEPER
 msgid "Invite Guest"
 msgstr "Benutzer einladen"
+
+msgid "Assign DOI to {library_name}"
+msgstr "DOI zu {library_name} zuweisen"
+
+msgid "Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library."
+msgstr "Bitte beachten: Ein digitaler Objektbezeichner (Digital Object Identifier: DOI) wird der aktuellen Version der ausgewählten Bibliothek zugeordnet (Schnappschuss). Eine DOI verweist auf den unveränderbaren Schnappschuss und nicht auf den aktuellsten Zustand der Bibliothek. Zudem kann eine DOI nur einmal pro Bibliothek zugewiesen werden." 
+
+msgid "Assign DOI"
+msgstr "DOI zuweisen"
+
+msgid "Archive {library_name}"
+msgstr "Archivierung von {library_name}"
+
+msgid "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: {archive_info_link} This library can be archived {quota} more times."
+msgstr "Durch die Archivierung der Bibliothek wird die aktuelle Version der ausgewählten Bibliothek (Schnappschuss) und deren Inhalt in ein dediziertes Archivierungssystem kopiert. Für mehr Informationen folgen Sie bitte dem nachfolgenden Link: {archive_info_link} Diese Bibliothek kann noch {quota} Mal archiviert werden."
+
+msgid "Information on Archiving"
+msgstr "Informationen zur Archivierung"
+
+msgid "Cannot archive, since the library snapshot has already been archived."
+msgstr "Archivierung nicht möglich, da der Snapshot bereits archiviert wurde."
+
+msgid "Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support."
+msgstr "Archivierung nicht möglich, da die maximal Anzahl der Archive für diese Bibliothek bereits erstellt wurde. Bitte kontaktieren Sie den Keeper Support."
+
+msgid "Cannot archive, since the library is too large."
+msgstr "Archivierung nicht möglich, da die Biliothek zu groß ist."
+
+msgid "Archive"
+msgstr "Archivierung"
+
+# footer
+msgid "Project Catalog"
+msgstr "Projektkatalog"
+
+msgid "Help / Knowledge Base"
+msgstr "Hilfe / Wissensdatenbank"

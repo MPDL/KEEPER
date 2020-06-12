@@ -1,6 +1,7 @@
+{% load i18n %}
 <!DOCTYPE html>
 <head>
-<title>Catalog - KEEPER</title>
+<title>{% trans "Catalog - KEEPER" %}</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="keywords" content="File Collaboration Team Organization" />
 <link rel="icon" type="image/x-icon" href="/media/img/favicon.png?t=1465786517" />
@@ -118,7 +119,7 @@
         <div id="header">
             <div id="header-inner">
                 <a href="/" id="logo" class="fleft">
-                    <img src="/media/{{ logo_path }}" title="Catalog" alt="logo" width="140" height="40" />
+                    <img src="/media/{{ logo_path }}" title="{% trans "Catalog - KEEPER" %}" alt="logo" width="140" height="40" />
                 </a>
             </div>
         </div>
@@ -129,18 +130,18 @@
                 {% if data_nav %}
                 <div id="left-panel" class="col-md-3 side-tabnav">
 
-                    <h3 class="hd">Show Projects</h3>
+                    <h3 class="hd">{% trans "Show Projects" %}</h3>
                     <form id="scope-selector" method="post">
                         <label class="radio-item">
-                            <input class="vam" type="radio" name="cat_scope" value="with_metadata" {{ checked_with_metadata }}/><span class="vam">with metadata</span>
+                            <input class="vam" type="radio" name="cat_scope" value="with_metadata" {{ checked_with_metadata }}/><span class="vam">{% trans "with metadata" %}</span>
                         </label>
                         <br>
                         <label class="radio-button">
-                            <input class="vam" type="radio" name="cat_scope" value="with_certificate" {{ checked_with_certificate }}/><span class="vam">with certificate</span>
+                            <input class="vam" type="radio" name="cat_scope" value="with_certificate" {{ checked_with_certificate }}/><span class="vam">{% trans "with certificate" %}</span>
                         </label>
                         <br>
                         <label class="radio-button">
-                            <input class="vam" type="radio" name="cat_scope" value="all" {{ checked_all }}/><span class="vam">all</span>
+                            <input class="vam" type="radio" name="cat_scope" value="all" {{ checked_all }}/><span class="vam">{% trans "all" %}</span>
                         </label>
                     </form>
 
@@ -150,7 +151,7 @@
                     {#{ debug }#}
 
                     <div class="hd ovhd">
-                        <h3 class="fleft">The Keeper Project Catalog of the Max Planck Society</h3>
+                        <h3 class="fleft">{% trans "The KEEPER Project Catalog of the Max Planck Society" %}</h3>
                     </div>
                 {% endif %}
 
