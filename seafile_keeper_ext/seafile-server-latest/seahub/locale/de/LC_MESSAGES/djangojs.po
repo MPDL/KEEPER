@@ -5519,6 +5519,9 @@ msgstr "Archivierung nicht möglich, da die Biliothek zu groß ist."
 msgid "Archive"
 msgstr "Archivierung"
 
+msgid "Library Details"
+msgstr "Bibliotheksdetails"
+
 # footer
 msgid "Project Catalog"
 msgstr "Projektkatalog"
