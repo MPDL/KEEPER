@@ -5498,6 +5498,12 @@ msgstr "Bitte beachten: Ein digitaler Objektbezeichner (Digital Object Identifie
 msgid "Assign DOI"
 msgstr "DOI zuweisen"
 
+msgid "Assign DOI to current state"
+msgstr "DOI der aktuellen Version zuweisen"
+
+msgid "Archive Library"
+msgstr "Bibliothek archivieren"
+
 msgid "Archive {library_name}"
 msgstr "Archivierung von {library_name}"
 
