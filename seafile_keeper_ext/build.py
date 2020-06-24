@@ -837,10 +837,15 @@ def do_generate(args):
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
     elif args.frontend:
         Utils.info('Generate frontend...')
-        cmd = "npm run build"
+        cmd = "sudo npm run build"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+        else: 
+            # copy frontend/build to ext by default
+            args.frontend_build = True
+            args.seafile_src_to_ext = False
+            do_upgrade(args)
 
 def do_run(args):
     if args.frontend_dev:
@@ -851,9 +856,7 @@ def do_run(args):
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
-    print('Upgrade')
-
-    print((env_mgr.keeper_ext_dir))
+    print('Upgrade...')
     # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
@@ -873,6 +876,11 @@ def do_upgrade(args):
                         else:
                             Utils.info("Copy from {} to {}".format(src_path, dest_path))
                             shutil.copy(src_path, dest_path)
+    elif args.frontend_build:
+        Utils.info("Copy frontend/build files into ext")
+        dest_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
+        shutil.rmtree(dest_dir, ignore_errors=True)
+        shutil.copytree(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'), dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
 
 
 env_mgr = EnvManager()
@@ -915,6 +923,9 @@ def main():
                                 Upgrade should be done BEFORE deploy-all command, on fresh untarred seafile-server files.
                                 Upgraded files should be merged with the current KEEPER code!
                                 Check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
+                                ''', action='store_true')
+    parser_upgrade.add_argument('--frontend-build', help='''Copied generated frontend/build files into KEEPER ext.
+                                HowTo generate the build: https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/. 
                                 ''', action='store_true')
 
     # generate
