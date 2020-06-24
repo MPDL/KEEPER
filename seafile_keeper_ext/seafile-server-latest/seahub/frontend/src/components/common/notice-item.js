@@ -194,7 +194,7 @@ class NoticeItem extends React.Component {
     if (noticeType === MSG_KEEPER_CDC) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = detail.header + ' <a href=' + siteRoot + 'library/' + detail.lib + '/' + detail.lib_name + '/ target=_new>'
+      let notice = detail.header + ' <a href="/library/' + detail.lib + '/' + detail.lib_name + '/" target=_new>'
           + detail.lib_name + '.</a><br/>' + detail.message + '.';
       return {avatar_url, notice};
     }
@@ -211,7 +211,7 @@ class NoticeItem extends React.Component {
     if (noticeType === MSG_INVALID_METADATA) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = detail.message + ' Check <a href=\"' + siteRoot + '/lib/' + detail.lib + '/file/' + detail.archive_metadata + '\" target=_new>' +
+      let notice = detail.message + ' Check <a href="/lib/' + detail.lib + '/file/' + detail.archive_metadata + '" target=_new>' +
           detail.archive_metadata + '</a> for more details.';
       return {avatar_url, notice};
     }
@@ -228,7 +228,7 @@ class NoticeItem extends React.Component {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice = detail.msg === 'Archive for %(name)s has been successfully created.'
-          ? gettext(detail.msg).replace('%(name)s',  '<a href="' + siteRoot + 'library/' + detail.repo_id + '/' + detail.repo_name + '/" target=_new>'
+          ? gettext(detail.msg).replace('%(name)s',  '<a href="/library/' + detail.repo_id + '/' + detail.repo_name + '/" target=_new>'
             + detail.repo_name + '</a>')
           : gettext(detail.msg);
       return {avatar_url, notice};
