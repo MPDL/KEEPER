@@ -573,7 +573,7 @@ class DirentListItem extends React.Component {
                       <i className="op-icon sf2-icon-delete" title={gettext('Delete')} onClick={this.onItemDelete}></i>
                     </li>
                   )}
-                  {dirent.permission === 'rw' && dirent.type== 'file' && (
+                  {dirent.permission === 'rw' && dirent.type === 'file' && (
                     <li className="operation-group-item">
                       <i className="op-icon" data-tip data-for="bloxberg"><img className="small-icon" src={bergImage} onClick={this.onItemCertify} /></i>
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
