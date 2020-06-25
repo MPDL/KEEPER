@@ -20,6 +20,7 @@ const propTypes = {
   repoEncrypted: PropTypes.bool.isRequired,
   enableDirPrivateShare: PropTypes.bool.isRequired,
   userPerm: PropTypes.string.isRequired,
+  isRepoOwner: PropTypes.bool.isRequired,
   isGroupOwnedRepo: PropTypes.bool.isRequired,
   showShareBtn: PropTypes.bool.isRequired,
   onAddFile: PropTypes.func.isRequired,
@@ -190,9 +191,9 @@ class DirOperationToolbar extends React.Component {
     }
 
     let itemType = path === '/' ? 'library' : 'dir';
-    let itemName = path == '/' ? repoName : Utils.getFolderName(path);
+    let itemName = path === '/' ? repoName : Utils.getFolderName(path);
 
-    let isArchiveBtnShow = ! this.props.repoEncrypted;
+    let isArchiveBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
 
     let content = null;
     if (Utils.isDesktop()) {
