@@ -846,6 +846,8 @@ def do_generate(args):
             args.frontend_build = True
             args.seafile_src_to_ext = False
             do_upgrade(args)
+            # deploy assets
+            Utils.run("make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
 def do_run(args):
     if args.frontend_dev:
