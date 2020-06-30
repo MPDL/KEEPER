@@ -385,30 +385,31 @@ class EnvManager(object):
     def set_keeper_env(self):
 
         self.SEAF_EXT_DIR_MAPPING = {
-            # dir -> dir mappings
-            'conf': os.path.join(self.top_dir, 'conf'),
-            'seafile-server-latest': self.install_path,
-            'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
-            'scripts': os.path.join(self.top_dir, 'scripts'),
-            'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
-            # file -> file mappings
-            'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
-            'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
-            'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
-            'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
-            'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
-            'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
-            'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
-            'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
-            'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
-            'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
-            'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
-            'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
-            'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
-            'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
-            'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
+                # dir -> dir mappings
+                'conf': os.path.join(self.top_dir, 'conf'),
+                'seafile-server-latest': self.install_path,
+                'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
+                'scripts': os.path.join(self.top_dir, 'scripts'),
+                'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
+                # file -> file mappings
+                'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
+                'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
+                'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
+                'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
+                'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
+                'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/keeper.service@background': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
+		'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
+                'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
+                'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
+                'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
+                'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
+                'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
+                'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
+                'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+                'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
+                'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
 
         self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
@@ -439,7 +440,22 @@ class EnvManager(object):
         self.keeper_oos_log_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
         self.keeper_oos_log_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service']
 
+        self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
+        self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
 
+        self.keeper_nagios_check_keeper_elasticsearch_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
+        self.keeper_nagios_check_keeper_elasticsearch_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
+
+        self.keeper_nagios_check_gpfs_health_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
+
+        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
+        self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
+
+        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
+        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
+
+        
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
@@ -668,6 +684,16 @@ def deploy_ext():
         (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
     ))
 
+    # create nagios checks links
+
+    do_links((
+        (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
+        (env_mgr.keeper_nagios_check_keeper_elasticsearch_link, env_mgr.keeper_nagios_check_keeper_elasticsearch_path),
+        (env_mgr.keeper_nagios_check_gpfs_health_link, env_mgr.keeper_nagios_check_gpfs_health_path),
+        (env_mgr.keeper_nagios_check_tmp_link, env_mgr.keeper_nagios_check_tmp_path),
+        (env_mgr.keeper_nagios_check_logfiles_link, env_mgr.keeper_nagios_check_logfiles_path)
+    ))
+
     # create seafile log dir
     Utils.must_mkdir(env_mgr.seafile_logs_dir)
 
@@ -729,11 +755,17 @@ def deploy_system_conf():
         do_links((
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
+        deploy_file('system/keeper.service')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
+
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
+        deploy_file('system/keeper.service@background')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service@background'], 0o755)
+
 
     if node_type in ('SINGLE'):
         deploy_file('system/my.cnf@single', expand=True)
