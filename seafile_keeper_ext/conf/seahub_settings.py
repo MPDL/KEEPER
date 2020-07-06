@@ -554,6 +554,9 @@ ENABLE_OFFICE_WEB_APP_EDIT = True
 # types of files should be editable through LibreOffice Online
 OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
+# Admin users page default sorting
+
+ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 
 ##########################################################################
 ####  KEEPER specific settings
