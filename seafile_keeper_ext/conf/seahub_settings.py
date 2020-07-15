@@ -554,6 +554,16 @@ ENABLE_OFFICE_WEB_APP_EDIT = True
 # types of files should be editable through LibreOffice Online
 OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
+# Enable Onlyoffice
+ENABLE_ONLYOFFICE = __ENABLE_ONLYOFFICE__
+VERIFY_ONLYOFFICE_CERTIFICATE = True
+
+# Onlyoffice settings
+ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
+ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
+ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
+
+
 # Admin users page default sorting
 
 ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
