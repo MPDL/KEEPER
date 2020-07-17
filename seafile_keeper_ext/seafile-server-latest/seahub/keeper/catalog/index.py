@@ -201,6 +201,9 @@ def application(env, start_response):
 
                     ctl = {}
 
+                    ctl['repo_id'] = res['repo_id']
+                    ctl['debug'] = repr(res)
+
                     title = "Project archive no. %s" % res['catalog_id']
                     if 'title' in res and len(res['title']) > 0:
                         title = truncate_str(res['title'], max_len=200)

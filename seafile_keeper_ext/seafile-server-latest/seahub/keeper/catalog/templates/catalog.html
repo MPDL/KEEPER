@@ -156,7 +156,7 @@
                 {% endif %}
 
                 {% for r in results %}
-                        <div class="item-block">
+                        <div class="item-block" id="{{ r.repo_id }}">
                             {% if r.is_certified %}
                                 <img src="/catalog/static/certified.png" />
                             {% endif %}
@@ -167,6 +167,7 @@
                                 {{ r.year }}
                                 {{ r.contact }}
                                 {{ r.landing_page_url }}
+                                {#<!-- {{ r.debug  }} -->#}
                             {% endautoescape %}
                         </div>
                 {% endfor %}
