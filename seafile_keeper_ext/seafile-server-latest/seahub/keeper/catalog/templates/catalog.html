@@ -127,7 +127,8 @@
         <div class="container">
             <div id="main" class="raw clear">
 
-                {% if data_nav %}
+                {#% if data_nav %#}
+                {% if not errmsg %}
                 <div id="left-panel" class="col-md-3 side-tabnav">
 
                     <h3 class="hd">{% trans "Show Projects" %}</h3>

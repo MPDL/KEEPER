@@ -97,21 +97,22 @@ def application(env, start_response):
             # get HTTP_X_FORWARDED_FOR (i.e. servier is clustered), otherwise remote address
             remote_addr = env['HTTP_X_FORWARDED_FOR'] if 'HTTP_X_FORWARDED_FOR' in env else env['REMOTE_ADDR']
 
-            is_valid_user = 0 # default 0 not valid
+            is_valid_user = False
+
             # allow all
             if DEBUG:
-                is_valid_user = 1
+                is_valid_user = True
                 errmsg = ''
             else:
                 # test for valid IP
                 for allowed_ip_prefix in allowed_ip_prefixes:
                     if (remote_addr.startswith(allowed_ip_prefix)):
                         errmsg = ''
-                        is_valid_user = 1
+                        is_valid_user = True
                         break
-                if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
+                if not is_valid_user and is_in_mpg_ip_range(remote_addr):
                    errmsg = ''
-                   is_valid_user = 1
+                   is_valid_user = True
 
             results = []
             t = template.Template(t_file.read())
@@ -120,8 +121,13 @@ def application(env, start_response):
                 'logo_path' :  LOGO_PATH,
                 'footer' : SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html',
             }
+            
+            if not is_valid_user or len(errmsg) > 0:
+                # show ERROR message
+                ctx.update(errmsg=errmsg)
 
-            if (is_valid_user == 1 and len(errmsg) <= 0):
+            else:
+                # show CATALOG
                 get_params = parse_qs(env['QUERY_STRING'])
 
                 # pars request params
@@ -295,12 +301,6 @@ def application(env, start_response):
                             'page': str(pagination_current + 2),
                             'scope': scope
                         }
-                else:
-                    # load template with error message
-                    ctx.update(errmsg=errmsg)
-
-                # ctx['debug'] = 'debug'
-
 
             response.write(t.render(template.Context(ctx)))
 
