@@ -1,17 +1,13 @@
-import logging
 import traceback
 
 from django.db import models
 
 from picklefield.fields import PickledObjectField
 
-from datetime import datetime
-from enum import Enum
 from django.utils import timezone
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 class CatalogManager(models.Manager):
 
@@ -31,7 +27,7 @@ class CatalogManager(models.Manager):
         if c:
             # don not delete the entry, set it to rm
             # return c.delete()
-            c.rm=datetime.now()
+            c.rm=timezone.now()
             c.save()
         return None
 
@@ -49,6 +45,19 @@ class CatalogManager(models.Manager):
         get all items with at least one filled md
         """
         return [c for c in self.get_all_mds_ordered() if 'is_certified' in c]
+
+    def get_library_details_entries(self, owner):
+        entries = []
+        if owner:
+            try:
+                entries = Catalog.objects.extra(where=[
+                    "owner='" + owner + "'",
+                    "EXISTS (SELECT repo_id FROM doi_repos WHERE doi_repos.repo_id=keeper_catalog.repo_id AND doi_repos.rm is NULL) OR keeper_catalog.is_archived=1"
+                ])
+            except Exception as e:
+                logger.error('Cannot retrieve library details entries: %s', e)
+        return entries
+
 
     def get_certified(self):
         """
@@ -146,7 +155,7 @@ class CDCManager(models.Manager):
         event = EVENT.db_create
         cdc = self.get_by_repo(repo_id=repo_id)
         if cdc is not None:
-            cdc.modified = datetime.now()
+            cdc.modified = timezone.now()
             cdc.save()
             event = EVENT.db_update
         else:
@@ -188,7 +197,7 @@ def remove_keeper_entries(sender, **kwargs):
         logging.info("CDC: done.")
         doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
         if doi_repos:
-            doi_repos.update(rm=datetime.now())
+            doi_repos.update(rm=timezone.now())
         logging.info("DOI: done.")
     except Exception:
         logging.error(traceback.format_exc())

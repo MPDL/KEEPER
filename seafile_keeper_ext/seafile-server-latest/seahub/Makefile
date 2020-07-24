@@ -8,41 +8,35 @@ develop: setup-git
 setup-git:
 	cd .git/hooks && ln -sf ../../hooks/* ./
 
-dist: locale uglify statici18n collectstatic
+dist: locale statici18n collectstatic
 
-dist-keeper: locale-keeper uglify statici18n collectstatic
-
+dist-keeper: locale-keeper statici18n collectstatic
 locale:
 	@echo "--> Compile locales"
-	$(RUN_KEEPER) $(DJANGO_ADMIN) compilemessages 
+	django-admin.py compilemessages
 	@echo ""
 
 locale-keeper:
-	@echo "--> Compile locales"
+	@echo "--> Compile KEEPER locales"
 	$(RUN_KEEPER)  $(DJANGO_ADMIN) compilemessages -l en 
 	$(RUN_KEEPER) $(DJANGO_ADMIN) compilemessages -l de 
 	@echo ""
 
-
-uglify:
-	@echo "--> Uglify JS files to static/scripts/dist"
-	rm -rf static/scripts/dist 2> /dev/null
-	r.js -o static/scripts/build.js
-
 statici18n:
 	@echo "--> Generate JS locale files in static/scripts/i18n"
-	$(RUN_KEEPER) manage.py compilejsi18n
+	python manage.py compilejsi18n
 
 collectstatic:
 	@echo "--> Collect django static files to media/assets"
 	rm -rf media/assets 2> /dev/null
 	#python manage.py collectstatic --noinput -i admin -i termsandconditions
-	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
+	#$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions -i app -i sysadmin-app -i build.js
+	$(RUN_KEEPER) manage.py collectstatic --noinput -i admin -i termsandconditions
 
 compressstatic:
 	@echo "--> Compress static files(css) to media/CACHE"
 	rm -rf media/CACHE 2> /dev/null
-	$(RUN_KEEPER) manage.py compress
+	python manage.py compress
 
 clean:
 	@echo '--> Cleaning media/static cache & dist'
@@ -56,4 +50,4 @@ cleanpyc:
 	find . -name \*.pyc -exec rm -f {} \;
 	@echo ""
 
-.PHONY: develop setup-git dist dist-keeper locale uglify statici18n collectstatic compressstatic clean
+.PHONY: develop setup-git dist dist-keeper locale statici18n collectstatic compressstatic clean

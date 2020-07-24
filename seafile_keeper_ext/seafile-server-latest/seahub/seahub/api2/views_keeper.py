@@ -1,14 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.response import Response
 
 from seahub import settings
 from seahub.auth.decorators import login_required
-from seahub.base.decorators import user_mods_check
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, SINGLE_MODE
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
-from seahub.share.models import FileShare
-from seahub.utils import gen_shared_link
 from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog
@@ -18,7 +16,6 @@ from keeper.models import CDC, DoiRepo, Catalog
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.http import require_POST
 
 from django.utils.translation import ugettext as _
 from django.utils.translation import get_language, activate
@@ -27,21 +24,22 @@ import logging
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
-    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
-    check_keeper_repo_archiving_status
+from seahub.api2.utils import api_error
+# from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
+#    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
+#    check_keeper_repo_archiving_status
+
+from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status
+
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
-
-def is_in_mpg_ip_range(ip):
-    # https://gwdu64.gwdg.de/pls/mpginfo/ip.liste2?version=edoc&aclgroup=mpg-allgemein
-    return True
 
 class CatalogView(APIView):
     """
@@ -52,22 +50,27 @@ class CatalogView(APIView):
         catalog = get_catalog()
         return catalog
 
-def certify_file(request):
-    repo_id = request.GET.get('repo_id', None)
-    path = request.GET.get('path', None)
-    user_email = request.user.username
-    hash_data = hash_file(repo_id, path, user_email)
-    response_bloxberg = request_bloxberg(hash_data)
+class BloxbergView(APIView):
+    """
+    Bloxberg Certify
+    """
 
-    if response_bloxberg is not None:
-        if response_bloxberg.status_code == 200:
-            transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
-            checksum = hash_data['certifyVariables']['checksum']
-            created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
-            create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
-            return JsonResponse(response_bloxberg.json())
+    def post(self, request, format=None):
+        repo_id = request.data['repo_id']
+        path = request.data['path']
 
-    return JsonResponse({'msg': 'Transaction failed'})
+        user_email = request.user.username
+        hash_data = hash_file(repo_id, path, user_email)
+        response_bloxberg = request_bloxberg(hash_data)
+
+        if response_bloxberg is not None:
+            if response_bloxberg.status_code == 200:
+                transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
+                checksum = hash_data['certifyVariables']['checksum']
+                created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
+                create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
+                return JsonResponse(response_bloxberg.json())
+        return api_error(status.HTTP_400_BAD_REQUEST, 'Transaction failed')
 
 def request_bloxberg(certify_payload):
     try:
@@ -95,70 +98,59 @@ def request_doxi(shared_link, doxi_payload):
 def get_landing_page_url(repo_id, commit_id):
     return "{}/doi/libs/{}/{}".format(SERVICE_URL, repo_id, commit_id)
 
-def add_doi(request):
-    repo_id = request.GET.get('repo_id', None)
-    user_email = request.user.username
-    repo = get_repo(repo_id)
-    doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
-    if doi_repos:
-        msg = 'This library already has a DOI. '
-        url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
-        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email, doi_repos[0].doi, url_landing_page)
-        return JsonResponse({
-            'msg': msg + doi_repos[0].doi,
-            'status': 'error',
-            })
+class AddDoiView(APIView):
+    """
+    Create DOI
+    """
+    def post(self, request, format=None):
+        repo_id = request.data['repo_id']
+        user_email = request.user.username
+        repo = get_repo(repo_id)
+        doi_repos = DoiRepo.objects.get_valid_doi_repos(repo_id)
+        if doi_repos:
+            msg = 'This library already has a DOI. '
+            url_landing_page = get_landing_page_url(doi_repos[0].repo_id, doi_repos[0].commit_id)
+            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email, doi_repos[0].doi, url_landing_page)
+            return api_error(status.HTTP_400_BAD_REQUEST, msg + doi_repos[0].doi)
 
-    metadata = get_metadata(repo_id, user_email, "assign DOI")
+        metadata = get_metadata(repo_id, user_email, "assign DOI")
 
-    if 'error' in metadata:
-        return JsonResponse({
-            'msg': metadata.get('error'),
-            'status': 'error',
-            })
+        if 'error' in metadata:
+            return api_error(status.HTTP_400_BAD_REQUEST, metadata.get('error'))
 
-    metadata_xml = generate_metadata_xml(metadata)
-    commit_id = get_latest_commit_id(repo)
+        metadata_xml = generate_metadata_xml(metadata)
+        commit_id = get_latest_commit_id(repo)
 
-    url_landing_page = get_landing_page_url(repo_id, commit_id)
-    response_doxi = request_doxi(url_landing_page, metadata_xml)
+        url_landing_page = get_landing_page_url(repo_id, commit_id)
+        response_doxi = request_doxi(url_landing_page, metadata_xml)
 
-    if response_doxi is not None:
-        if response_doxi.status_code == 201:
-            doi = 'https://doi.org/' + response_doxi.text
-            logger.info(doi)
-            repo_owner = get_repo_owner(repo_id)
-            DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
-            msg = _(u'DOI successfully created') + ': '
-            doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
-            return JsonResponse({
-                'msg': msg + doi,
-                'status': 'success',
-                })
-        elif response_doxi.status_code == 408:
+        if response_doxi is not None:
+            if response_doxi.status_code == 201:
+                doi = 'https://doi.org/' + response_doxi.text
+                logger.info(doi)
+                repo_owner = get_repo_owner(repo_id)
+                DoiRepo.objects.add_doi_repo(repo_id, repo.name, doi, None, commit_id, repo_owner, metadata)
+                msg = _('DOI successfully created') + ': '
+                doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_SUC_MSG, user_email, doi, url_landing_page, timestamp=doi_repos[0].created)
+                return JsonResponse({
+                    'msg': msg + doi,
+                    'status': 'success',
+                    })
+            elif response_doxi.status_code == 408:
+                msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
+                return api_error(status.HTTP_400_BAD_REQUEST, msg)
+            else:
+                logger.info(response_doxi.status_code)
+                logger.info(response_doxi.text)
+                msg = 'Failed to create DOI. Please try again later. If the problem persists, please contact Keeper support.'
+                send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
+                return api_error(status.HTTP_400_BAD_REQUEST, msg)
+        else:
             msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-            return JsonResponse({
-                'msg': msg,
-                'status': 'error'
-            })
-        else:
-            logger.info(response_doxi.status_code)
-            logger.info(response_doxi.text)
-            msg = 'Failed to create DOI, ' + response_doxi.text
-            send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-            return JsonResponse({
-                'msg': msg,
-                'status': 'error'
-                })
-    else:
-        msg = 'The assign DOI functionality is currently unavailable. Please try again later. If the problem persists, please contact Keeper support.'
-        send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
-        return JsonResponse({
-            'msg': msg,
-            'status': 'error'
-        })
+            return api_error(status.HTTP_400_BAD_REQUEST, msg)
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
@@ -196,7 +188,7 @@ def get_authors_from_md(md):
         author_name = author_array[0].strip()
         name_array = author_name.split(",")
         tmpauthor = ''
-        for i in xrange(len(name_array)):
+        for i in range(len(name_array)):
             if ( i <= 0 and len(name_array[i].strip()) > 1 ):
                 tmpauthor += name_array[i]+", "
             elif (len(name_array[i].strip()) >= 1):
@@ -253,11 +245,10 @@ def get_authors_from_catalog_md(md):
             tmp += ', ' + name_array[1].strip()[:1] + '.'
         affs = author.get("affs")
         if affs:
-            tmp += " (" + ", ".join(map(unicode.strip, affs)) + ")"
+            tmp += " (" + ", ".join(map(str.strip, affs)) + ")"
         result_authors.append(tmp)
 
     return "; ".join(result_authors)
-
 
 
 def ArchiveView(request, repo_id, version_id, is_tombstone):
@@ -267,7 +258,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 
     archive_repo = archive_repos[0]
     repo_owner = get_repo_owner(repo_id)
-    archive_md = parse_markdown_doi((archive_repo.md).encode("utf-8"))
+    archive_md = parse_markdown_doi(archive_repo.md)
     commit_id = archive_repo.commit_id
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
 
@@ -298,63 +289,66 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 
 class CanArchive(APIView):
 
-    "Quota checking before adding archiving"
+    """Quota checking before adding archiving"""
 
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         version = request.GET.get('version', None)
         owner = request.user.username
-        if SINGLE_MODE:
-            resp = delegate_query_keeper_archiving_status(repo_id, owner, version, get_language())
-        else:
-            resp = query_keeper_archiving_status(repo_id, owner, version, get_language())
+        resp = query_keeper_archiving_status(repo_id, owner, version)
         # logger.info("RESP:{}".format(resp))
         return JsonResponse(resp)
 
 
-
     def post(self, request):
-        repo_id = request.POST.get('repo_id', None)
-        version = request.POST.get('version', None)
-        owner = request.POST.get('owner', None)
-        language_code = request.POST.get('language_code', None)
+        # repo_id = request.POST.get('repo_id', None)
+        # version = request.POST.get('version', None)
+        # owner = request.POST.get('owner', None)
+        repo_id = request.data.get('repo_id', None)
+        owner = request.data.get('owner', request.user.username)
+        version = request.data.get('version', None)
+        language_code = request.data.get('language_code', None)
         if language_code == 'de':
             activate(language_code)
 
         # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, owner, version, get_language())
-        if resp_query.status in ('QUEUED', 'PROCESSING'):
-            msg = _(u'This library is currently being archived.')
+        resp_query = query_keeper_archiving_status(repo_id, owner, version)
+        logger.debug('check QUEUED or PROCESSING: %s', resp_query)
+        if resp_query.get('status') in ('QUEUED', 'PROCESSING'):
+            msg = _('This library is currently being archived.')
             return JsonResponse({
                 'msg': msg,
                 'status': 'in_processing'
             })
-        elif resp_query.status == 'ERROR':
+        elif resp_query.get('status') == 'ERROR':
             return JsonResponse({
-                'msg': resp_query.msg,
+                'msg': resp_query.get('msg') or 'system_error',
                 'status': 'system_error'
             })
 
-
         resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
-        if resp_is_archived.is_snapshot_archived == 'true':
+        logger.debug('is_snapshot_archived: %s', resp_is_archived)
+        if resp_is_archived.get('is_snapshot_archived') == 'true':
             return JsonResponse({
-                'status': "snapshot_archived"
-            })
-
-        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
-        if resp_is_repo_too_big.is_repo_too_big == 'true':
-            return JsonResponse({
-                'status': "is_too_big"
+                'status': 'snapshot_archived'
             })
 
         resp_quota = check_keeper_repo_archiving_status(repo_id, owner, 'get_quota')
-        if resp_quota.remains <= 0:
+        logger.debug('get_quota: %s', resp_quota)
+        if 'remains' in resp_quota and resp_quota.get('remains') <= 0:
             return JsonResponse({
-                'status': "quota_expired"
+                'status': 'quota_expired'
             })
 
-        metadata = get_metadata(repo_id, owner, "archive library")
+        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
+        logger.debug('is_repo_too_big: %s', resp_is_repo_too_big)
+        if resp_is_repo_too_big.get('is_repo_too_big') == 'true':
+            return JsonResponse({
+                'status': 'is_too_big'
+            })
+
+        metadata = get_metadata(repo_id, owner, 'archive library')
+        logger.debug('get metadata archive library: %s', metadata)
         if 'error' in metadata:
             return JsonResponse({
                 'msg': metadata.get('error'),
@@ -362,9 +356,10 @@ class CanArchive(APIView):
             })
 
         return JsonResponse({
-            'quota': resp_quota.remains,
-            'status': "success"
+            'quota': resp_quota.get('remains'),
+            'status': 'success'
         })
+
 
 class ArchiveLib(APIView):
 
@@ -373,28 +368,43 @@ class ArchiveLib(APIView):
     def get(self, request):
         repo_id = request.GET.get('repo_id', None)
         user_email = request.user.username
-        if SINGLE_MODE:
-            resp = delegate_add_keeper_archiving_task(repo_id, user_email, get_language())
-        else:
-            resp = add_keeper_archiving_task(repo_id, user_email, get_language())
+        resp = add_keeper_archiving_task(repo_id, user_email)
         # logger.info("RESP:{}".format(vars(resp)))
         return JsonResponse(resp)
 
     def post(self, request):
-        repo_id = request.POST.get('repo_id', None)
-        owner = request.POST.get('owner', None)
-        language_code = request.POST.get('language_code', None)
+
+        logger.error("RESP:{}".format(vars(request)))
+
+        # repo_id = request.POST.get('repo_id', None)
+        # owner = request.POST.get('owner', None)
+        # language_code = request.POST.get('language_code', None)
+        repo_id = request.data.get('repo_id', None)
+        owner = request.data.get('owner', request.user.username)
+        language_code = request.data.get('language_code', None)
         if language_code == 'de':
             activate(language_code)
 
+
+
         # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, owner, get_language())
-        if resp_archive.status == 'ERROR':
+        resp_archive = add_keeper_archiving_task(repo_id, owner)
+        logger.debug('resp_archive: %s', resp_archive)
+        if resp_archive.get('status') == 'ERROR':
             return JsonResponse({
-                'msg': _(resp_archive.msg),
+                'msg': _(resp_archive.get('msg')),
                 'status': 'error'
             })
         return JsonResponse({
-                'msg':  _(resp_archive.msg),
+                'msg':  _(resp_archive.get('msg')),
                 'status': 'success'
             })
+
+class LibraryDetailsView(APIView):
+    """ list LibraryDetails for sidenav """
+
+    def get(self, request):
+        return Response([
+            {"repo_id": e.repo_id, "repo_name": e.repo_name}
+            for e in Catalog.objects.get_library_details_entries(request.user.username)
+        ])

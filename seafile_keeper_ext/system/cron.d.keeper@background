@@ -1,9 +1,27 @@
-RSYSLOG="logger -s -n __SYSLOG_SERVER__ -t"                                                                                                                                                                                    
+RSYSLOG="logger -s -n __SYSLOG_SERVER__ -t"
 DATE=`date '+%Y-%m-%d'`
 
-# keeper-background-tasks-daemon 
-#*/3 * * * * root . /etc/profile; bash -c "sudo -u __OS_USER__ __SEAFILE_DIR__/scripts/keeper-background-tasks-daemon.sh >>__KEEPER_LOG_DIR__/keeper-background-tasks-daemon.log" 2>&1
-*/3 * * * * root . /etc/profile; bash -c "sudo -u __OS_USER__ __SEAFILE_DIR__/scripts/keeper-background-tasks-daemon.sh >/dev/null 2>&1"
+# keeper backup
+5 5 * * * root . /etc/profile; bash -c "__SEAFILE_DIR__/scripts/keeper_backup.sh 2>&1"
+
+# keeper seaf_fsck check
+30 0  * * 1 root . /etc/profile; bash -c "__SEAFILE_DIR__/scripts/check_object_storage_integrity.sh 2>&1"
+
+# keeper garbage collector
+30 0  * * 6 root . /etc/profile; bash -c "sudo -u  __OS_USER__ __SEAFILE_DIR__/seafile-server-latest/seaf-gc.sh -t 8 2>&1 | tee /var/log/keeper/keeper_gc.$DATE.log"
+
+#rotate keeper object storage integrity logs, weekly before object storage integrity check. remove logs older than 180 days
+0 0 * * 1 root ( find /var/log/keeper -name keeper_object_sorage_integrity.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+
+#rotate gc logs, weekly before gc. remove logs older than 180 days
+0 0 * * 6 root ( find /var/log/keeper -name keeper_gc.\*.log -mtime +180 -delete; >/dev/null 2>&1 )
+
+#rotate local server backup logs, daily before backup. remove logs older than 30 days
+5 4 * * * root ( find /var/log/keeper -name keeper_backup.\*.log -mtime +60 -delete; >/dev/null 2>&1 )
+
+# keeper-background-tasks-daemon
+#*/3 * * * * root . /etc/profile; bash -c "sudo -u seafile /opt/seafile/scripts/keeper-background-tasks-daemon.sh >>/var/log/keeper/keeper-background-tasks-daemon.log" 2>&1
+*/3 * * * * root . /etc/profile; bash -c "sudo -u  __OS_USER__ __SEAFILE_DIR__/scripts/keeper-background-tasks-daemon.sh >/dev/null 2>&1"
 
 # clean up /run/tmp files for document preview and clamav
-0 0 * * * root . /etc/profile; bash -c "find /run/tmp -type f -mtime +1 -delete >/dev/null 2>&1"                                                                                          
+0 0 * * * root . /etc/profile; bash -c "find /run/tmp -type f -mtime +1 -delete >/dev/null 2>&1"

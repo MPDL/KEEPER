@@ -48,7 +48,7 @@ def hash_file(repo_id, path, user_email):
 def get_file_by_path(repo_id, path):
     repo = seafile_api.get_repo(repo_id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, get_commit_root_id(repo_id))
-    paths = filter(None, path.split("/"))
+    paths = [_f for _f in path.split("/") if _f]
     for path in paths:
         dir = dir.lookup(path)
     return dir

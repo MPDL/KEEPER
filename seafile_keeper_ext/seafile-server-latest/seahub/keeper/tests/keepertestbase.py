@@ -21,6 +21,7 @@ def create_tmp_user():
     User.objects.create_user(password='secret', **kwargs)
     yield email
     # teardown code
+    print("remove user: " + email)
     User.objects.get(email).delete()
 
 @pytest.fixture(scope='function')
@@ -39,6 +40,7 @@ def create_tmp_repo(create_tmp_user):
     repo = seafile_api.get_repo(repo_id)
     yield repo
     # teardown code
+    print("remove repo: " + repo_id)
     if repo and repo.id:
         seafile_api.remove_repo(repo.id)
         # clean up Catalog table, repo_deleted_cb is not called for tests!!!

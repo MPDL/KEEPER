@@ -1,31 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import templayer
 import json
-import urllib2
-from urlparse import parse_qs
+import urllib.request, urllib.error, urllib.parse
+from urllib.parse import parse_qs
 import math
-import cgi
 import sys
 import time
-import os
-import StringIO
-
-
+import io
 import logging
 
+import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 os.environ.setdefault("CCNET_CONF_DIR", "__SEAFILE_DIR__/ccnet")
 os.environ.setdefault("SEAFILE_CONF_DIR", "__SEAFILE_DIR__/seafile-data")
 os.environ.setdefault("SEAFILE_CENTRAL_CONF_DIR", "__SEAFILE_DIR__/conf")
 os.environ.setdefault("SEAFES_DIR", "__SEAFILE_DIR__/seafile-server-latest/pro/python/seafes")
 
-from django.core.cache import cache
+
+from django import template
+from django.utils.translation import activate
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
 from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
-
+from keeper.common import truncate_str
 
 #########################
 #                       #
@@ -62,23 +60,11 @@ max_pages_in_paginator = 5 # links
 #                       #
 #########################
 
-def get_keeper_footer():
-    """Get keeper_footer from cache
-    """
-    CACHE_KEY = 'KEEPER_FOOTER_HTML'
-    keeper_footer = cache.get(CACHE_KEY)
-    if DEBUG or keeper_footer is None:
-        # read footer
-        f = open(SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html', 'r')
-        keeper_footer = unicode(f.read(), 'utf-8')
-        f.close()
-        cache.set(CACHE_KEY, keeper_footer, 0)
-    return keeper_footer
-
 
 def application(env, start_response):
 
     timer = time.time()
+
 
     # check static data (e.g. images)
     if ( 'static' in str(env['REQUEST_URI']) ):
@@ -89,274 +75,237 @@ def application(env, start_response):
         # image path
         tmp_static_path = install_path+str(env['REQUEST_URI'])[str(env['REQUEST_URI']).find('static'):]
 
-        # send response to nginx
-        return open(tmp_static_path,'r').read()
+        with open(tmp_static_path, 'rb') as tmp_static:
+
+            # send response to web-server
+            return [tmp_static.read()]
 
     else:
         # send html header
         start_response('200 OK', [('Content-Type','text/html')])
 
         # start response
-        response = StringIO.StringIO()
+        # TODO: close correctly!
 
+        response = io.StringIO()
 
-        # default text if IP not allowed
-        errmsg = unicode('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.','utf-8')
+        with open(install_path + 'templates/catalog.html', 'r') as t_file:
 
+            # default text if IP not allowed
+            errmsg = 'Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.'
 
-        # get HTTP_X_FORWARDED_FOR (i.e. servier is clustered), otherwise remote address
-        remote_addr = env['HTTP_X_FORWARDED_FOR'] if 'HTTP_X_FORWARDED_FOR' in env else env['REMOTE_ADDR']
+            # get HTTP_X_FORWARDED_FOR (i.e. servier is clustered), otherwise remote address
+            remote_addr = env['HTTP_X_FORWARDED_FOR'] if 'HTTP_X_FORWARDED_FOR' in env else env['REMOTE_ADDR']
 
-        is_valid_user = 0 # default 0 not valid
-        # allow all
-        if DEBUG:
-            is_valid_user = 1
-            errmsg = ''
-        else: 
-            # test for valid IP
-            for allowed_ip_prefix in allowed_ip_prefixes:
-                if (remote_addr.startswith(allowed_ip_prefix)):
-                    errmsg = ''
-                    is_valid_user = 1
-                    break
-            if is_valid_user == 0 and is_in_mpg_ip_range(remote_addr):
-               errmsg = ''
-               is_valid_user = 1
+            is_valid_user = False
 
+            # allow all
+            if DEBUG:
+                is_valid_user = True
+                errmsg = ''
+            else:
+                # test for valid IP
+                for allowed_ip_prefix in allowed_ip_prefixes:
+                    if (remote_addr.startswith(allowed_ip_prefix)):
+                        errmsg = ''
+                        is_valid_user = True
+                        break
+                if not is_valid_user and is_in_mpg_ip_range(remote_addr):
+                   errmsg = ''
+                   is_valid_user = True
 
-        results = []
-        if (is_valid_user == 1 and len(errmsg) <= 0):
-            get_params = parse_qs(env['QUERY_STRING'])
-
-			# pars request params
-            try:
-                request_body_size = int(env.get('CONTENT_LENGTH', 0))
-            except (ValueError):
-                request_body_size = 0
-
-            logging.error(env)
-            request_body = env['wsgi.input'].read()
-            post_params = parse_qs(request_body)
-            logging.error(post_params)
-            scope = post_params['cat_scope'][0] if 'cat_scope' in post_params else get_params['scope'][0] if 'scope' in get_params else 'with_metadata'
-
-            # jsondata = get_catalog(filter=scope[0])
-            jsondata = get_catalog(scope)
-            """
-            # init var
-            jsondata = ''
-            # test if json from cache is too old (5min)
-            if ( not(os.path.isfile(json_cache_file_path) ) or (time.time() - os.path.getmtime(json_cache_file_path) > (json_cache_time * 60)) ):
-
-                # get json from server
-                responseJson = urllib2.urlopen(json_data_url)
-                jsondataraw = responseJson.read()
-
-                # validate json
-                try:
-                    jsondata = json.loads(jsondataraw)
-                except ValueError:
-                    errmsg = 'the data ist not correct, please try again'
-                    # load json from cache
-                    with open(json_cache_file_path) as cachefile:
-                        jsondata = json.load(cachefile)
-
-                # cache json
-                with open(json_cache_file_path, 'w') as cachefile:
-                    json.dump(jsondata, cachefile)
+            results = []
+            t = template.Template(t_file.read())
+            ctx = {
+                'errmsg': '',
+                'logo_path' :  LOGO_PATH,
+                'footer' : SEAFILE_DIR + '/seahub-data/custom/templates/keeper_footer.html',
+            }
+            
+            if not is_valid_user or len(errmsg) > 0:
+                # show ERROR message
+                ctx.update(errmsg=errmsg)
 
             else:
+                # show CATALOG
+                get_params = parse_qs(env['QUERY_STRING'])
 
-                # load cached file
-                with open(json_cache_file_path) as cachefile:
-                    jsondata = json.load(cachefile)
-            """
-
-            # load pagination parameter
-            totalitemscount = 0
-            pagination_current = 0
-            try:
-                totalitemscount = len(jsondata)
-
-                #form = cgi.FieldStorage()
-                #pagination_current = int(form.getvalue('page'))
+                # pars request params
                 try:
-                    if 'cat_scope' in post_params:
+                    request_body_size = int(env.get('CONTENT_LENGTH', 0))
+                except (ValueError):
+                    request_body_size = 0
+
+                request_body = env['wsgi.input'].read()
+                post_params = parse_qs(request_body)
+
+                scope = 'with_metadata' # default
+                if b'cat_scope' in post_params:
+                    scope = post_params[b'cat_scope'][0].decode('utf-8')
+                elif 'scope' in get_params:
+                    scope = get_params['scope'][0]
+
+                # jsondata = get_catalog(filter=scope[0])
+                jsondata = get_catalog(scope)
+
+                # load pagination parameter
+                totalitemscount = 0
+                pagination_current = 0
+                try:
+                    totalitemscount = len(jsondata)
+
+                    #form = cgi.FieldStorage()
+                    #pagination_current = int(form.getvalue('page'))
+                    try:
+                        if b'cat_scope' in post_params:
+                            pagination_current = 0 # ignore error
+                        elif (env['QUERY_STRING'] and 'page' in parse_qs(env['QUERY_STRING'])):
+                            pagination_current = int(parse_qs(env['QUERY_STRING'])['page'][0])
+                    except (RuntimeError, TypeError, NameError, ValueError):
                         pagination_current = 0 # ignore error
-                    elif (env['QUERY_STRING'] and 'page' in parse_qs(env['QUERY_STRING'])):
-                        pagination_current = int(parse_qs(env['QUERY_STRING'])['page'][0])
+
+                    if ( pagination_current >= 1 ):
+                        pagination_current = pagination_current-1
+                    else:
+                        pagination_current = 0
                 except (RuntimeError, TypeError, NameError, ValueError):
-                    pagination_current = 0 # ignore error
-
-                if ( pagination_current >= 1 ):
-                    pagination_current = pagination_current-1
-                else:
-                    pagination_current = 0
-            except (RuntimeError, TypeError, NameError, ValueError):
-                pass  # ignore error
+                    pass  # ignore error
 
 
-            # TODO load institute parameter
+                # parse json an format data
+                for i in range( (pagination_current*pagination_items), (pagination_current*pagination_items+pagination_items) ):
+                    if ( i < len(jsondata) ):
+                        results.append(jsondata[i])
 
+                """
+                Sample code:
+                >>> from django import template
+                >>> s = '<html>{% if test %}<h1>{{ varvalue }}</h1>{% endif %}</html>'
+                >>> t = template.Template(s)
 
-            # parse json an format data
-            for i in range( (pagination_current*pagination_items), (pagination_current*pagination_items+pagination_items) ):
-                if ( i < len(jsondata) ):
-                    results.append(jsondata[i])
+                (t is now a compiled template, and its render() method can be called multiple
+                times with multiple contexts)
 
+                >>> c = template.Context({'test':True, 'varvalue': 'Hello'})
+                >>> t.render(c)
+                '<html><h1>Hello</h1></html>'
+                >>> c = template.Context({'test':False, 'varvalue': 'Hello'})
+                >>> t.render(c)
+                '<html></html>'
+                """
 
-            # debug parsed data output
-            #print('<pre>')
-            #print(jsondata)
-            #print(results)
-            #print('</pre>')
+                ctx.update({
+                    'checked_'+scope: 'checked',
+                    'results': [],
+                })
+                
+                # set language, get it from cookies
+                cookie = env.get('HTTP_COOKIE')
+                'django_language=de' in cookie and activate('de')
 
+                for res in results:
 
-            # load template
-            tmpl = templayer.HTMLTemplate(install_path + 'main.tpl')
-            file_writer = tmpl.start_file(response)
-            main_layer = file_writer.open(errmsg='', logo_path=LOGO_PATH, footer=templayer.RawHTML(get_keeper_footer()))
+                    ctl = {}
 
+                    ctl['repo_id'] = res['repo_id']
+                    ctl['debug'] = repr(res)
 
-            slots = {}
-            slots['checked_' + scope] = 'checked'
-            main_layer.write_layer('data-nav', **slots)
+                    title = "Project archive no. %s" % res['catalog_id']
+                    if 'title' in res and len(res['title']) > 0:
+                        title = truncate_str(res['title'], max_len=200)
+                    ctl['title'] = '<h3><a href="%s">%s</a></h3>' % (res['landing_page_url'], title) \
+                        if 'landing_page_url' in res else '<h3>%s</h3>' % title
 
+                    ctl['landing_page_url'] = '<p><a href="%s">Landing Page</a></p>' % \
+                        res['landing_page_url'] if 'landing_page_url' in res else ''
 
-            # load pagination into template
-#           main_layer.write_layer('pagination-start',style='margin-bottom:20px')
-#           if ( pagination_current > 0 ):
-#               main_layer.write_layer('page-prev',page=str(pagination_current))
-#           else:
-#               main_layer.write_layer('page-prev-disabled')
-#           for i in range( 0, int(math.ceil(1.0*totalitemscount/pagination_items)) ):
-#               if (i == pagination_current):
-#                   main_layer.write_layer('pagination',page=[str(i+1)], cssclass='active')
-#               else:
-#                   main_layer.write_layer('pagination',page=[str(i+1)], cssclass='')
-#           if ( pagination_current+2 <= math.ceil(1.0*totalitemscount/pagination_items) ):
-#               main_layer.write_layer('page-next',page=str(pagination_current+2))
-#           else:
-#               main_layer.write_layer('page-next-disabled')
-#           main_layer.write_layer('pagination-end')
+                    ctl['contact'] = '<p>Contact: %s</p>' % res['owner'].lower() \
+                        if 'owner' in res else ''
 
+                    author = []
+                    if 'authors' in res:
+                        for j in range(len(res['authors'])):
+                            authors = res['authors'][j]
+                            tmpauthor = ""
+                            tmpauthors = authors['name'].title().split(', ')
+                            for i in range(len(tmpauthors)):
+                                if (i <= 0 and len(tmpauthors[i].strip()) > 1):
+                                    tmpauthor += tmpauthors[i] + ", "
+                                elif len(tmpauthors[i].strip()) > 1:
+                                    tmpauthor += tmpauthors[i].strip()[:1] + "., "
+                            tmpauthor = tmpauthor.strip()[:-1]
 
-            # load datasets into template
-            for tmpresult in results:
+                            if (j >= 5):
+                                tmpauthor = "et al."
+                            author.append(tmpauthor)
+                            if (j >= 5):
+                                break
 
-                slots = {}
-                result_id = '#'
-                if ( 'id' in tmpresult):
-                    result_id = '/f/'+tmpresult['id']
+                            if 'affs' in authors:
+                                author.append(','.join(authors['affs']).title())
+                    ctl['author'] = '<p>%s</p>' % ', '.join(author)
 
-                result_title = "Project archive no. %s" % tmpresult['catalog_id']
-                if ( 'title' in tmpresult and len(tmpresult['title']) > 0 ):
-                    if ( len(tmpresult['title']) > 200 ):
-                        result_title = (tmpresult['title'][0:197]+'...')
-                    else:
-                        result_title = tmpresult['title']
-                slots['title'] = result_title
+                    desc = ''
+                    if 'description' in res and len(res['description']) > 0:
+                        desc = '<p>%s</p>' % truncate_str(res['description'], max_len=200)
+                    ctl['description'] = desc
 
-                result_owner = ''
-                if ( 'owner' in tmpresult):
-                    result_owner = tmpresult['owner'].lower()
-                slots['contact'] = result_owner
+                    ctl['year'] = '<p>Year: %s</p>' % res['year'] \
+                        if ('year' in res and len(res['year']) > 0) else ''
 
-                result_author = []
-                if ( 'authors' in tmpresult):
-                    for j in xrange(len(tmpresult['authors'])):
-                        tmpauthors = tmpresult['authors'][j]
-                        tmpauthor = ""
-                        tmpauthorlist = tmpauthors['name'].title().split(', ')
-                        for i in xrange(len(tmpauthorlist)):
-                            if ( i <= 0 and len(tmpauthorlist[i].strip()) > 1 ):
-                                tmpauthor += tmpauthorlist[i]+", "
-                            elif (len(tmpauthorlist[i].strip()) > 1):
-                                tmpauthor += tmpauthorlist[i].strip()[:1]+"., "
-                        tmpauthor = tmpauthor.strip()[:-1]
+                    ctl['is_certified'] = 'is_certified' in res and res['is_certified']
 
-                        if (j >= 5):
-                            tmpauthor = "et al."
-                        result_author.append( tmpauthor )
-                        if (j >= 5):
-                            break
+                    ctx['results'].append(ctl)
 
-                        if ( 'affs' in tmpauthors):
-                            #TODO check if correct format
-                            result_author.append( ','.join(tmpauthors['affs']).title() )
-                slots['author'] = ', '.join(result_author)
+                # PAGINATOR
+                if totalitemscount > pagination_items:
 
-                result_description = ''
-                if ( 'description' in tmpresult and len(tmpresult['description']) > 0 ):
-                    if ( len(tmpresult['description']) > 200 ):
-                        result_description = (tmpresult['description'][0:197]+'...')
-                    else:
-                        result_description = tmpresult['description']
-                slots['smalltext'] = result_description
+                    ctx['data_nav'] = True
 
-                slots['year']=''
-                if ( 'year' in tmpresult and len(tmpresult['year']) > 0 ):
-                    slots['year'] = tmpl.format('fyear', year=tmpresult['year'])
+                    # max number of pages
 
-                slots['landing_page_url'] = ''
-                if ('landing_page_url' in tmpresult):
-                    slots['landing_page_url'] = tmpl.format('flanding_page_url', landing_page_url=tmpresult['landing_page_url'])
-                    slots['title'] = tmpl.format('ftitle', title=slots['title'], landing_page_url=tmpresult['landing_page_url'])
+                    max_pages_count = int(totalitemscount / pagination_items)\
+                        if totalitemscount%pagination_items == 0  else\
+                        int(totalitemscount / pagination_items) + 1
 
-                if ( 'is_certified' in tmpresult and tmpresult['is_certified'] == True ):
-                    main_layer.write_layer('dataset_certified', **slots)
-                else:
-                    main_layer.write_layer('dataset', **slots)
+                    pagination_group = int(pagination_current / max_pages_in_paginator)
+                    start_page = pagination_group * max_pages_in_paginator + 1
+                    end_page = start_page + max_pages_in_paginator - 1
+                    end_page = min(end_page, max_pages_count)
 
+                    if pagination_current > 0:
+                        ctx['page_prev'] = {
+                            'page': str(pagination_current),
+                            'scope': scope
+                        }
+                    if pagination_group > 1:
+                        ctx['group_prev'] = {
+                            'page': str((pagination_group - 1) * max_pages_in_paginator + 1),
+                            'scope': scope
+                        }
+                    ctx['pagination'] = []
+                    for i in range(start_page, end_page + 1):
+                        ctx['pagination'].append({
+                            'page': str(i),
+                            'cssclass': 'active' if i - 1 == pagination_current else '',
+                            'scope': scope
+                        })
+                    next_group_first_page = (pagination_group + 1) * max_pages_in_paginator + 1
+                    if next_group_first_page < max_pages_count:
+                        ctx['group_next'] = {
+                            'page': str(next_group_first_page),
+                            'scope': scope
+                        }
+                    if pagination_current + 1 < max_pages_count:
+                        ctx['page_next'] = {
+                            'page': str(pagination_current + 2),
+                            'scope': scope
+                        }
 
-            # load pagination into template
-            if totalitemscount > pagination_items:
+            response.write(t.render(template.Context(ctx)))
 
-                # max number of pages
-                max_pages_count = (totalitemscount / pagination_items) + 1 if totalitemscount > pagination_items else 0
-
-                # pagination_group = int(math.ceil( 1.0 * (pagination_current + 1) / (max_pages_in_paginator + 1) + 1) )
-                pagination_group = pagination_current / max_pages_in_paginator
-                start_page = pagination_group * max_pages_in_paginator + 1
-                end_page = start_page + max_pages_in_paginator - 1
-                end_page = min(end_page, max_pages_count)
-
-                main_layer.write_layer('pagination-start',style='margin-top:20px',
-                                       # debug="start_page=" + str(start_page) + ";end_page=" + str(end_page) + ";pagination_current=" + str(pagination_current) + ";totalitemscount=" + str(totalitemscount) +
-                                       # ";max_pages_count=" + str(max_pages_count) + ";pagination_group=" +str(pagination_group)
-                                       )
-                if ( pagination_current > 0 ):
-                    main_layer.write_layer('page-prev', page=str(pagination_current), scope=scope)
-                if ( pagination_group > 1 ):
-                    main_layer.write_layer('group-prev', page=str((pagination_group - 1) * max_pages_in_paginator + 1 ), scope=scope)
-                for i in range( start_page, end_page + 1 ):
-                    main_layer.write_layer('pagination', page=str(i),
-                                           cssclass='active' if i - 1 == pagination_current else '',
-                                           scope=scope)
-                next_group_first_page = (pagination_group + 1) * max_pages_in_paginator + 1
-                if ( next_group_first_page < max_pages_count ):
-                    main_layer.write_layer('group-next', page=str(next_group_first_page), scope=scope)
-                if ( pagination_current + 1 < max_pages_count):
-                    main_layer.write_layer('page-next',page=str(pagination_current+2), scope=scope)
-                main_layer.write_layer('pagination-end')
-
-            main_layer.write_layer('data-nav-end')
-
-            file_writer.close()
-
-
-        else:
-
-            # load template with error message
-            tmpl = templayer.HTMLTemplate(install_path+'main.tpl')
-            file_writer = tmpl.start_file(response)
-            file_writer.open(errmsg=errmsg, logo_path=LOGO_PATH, footer=templayer.RawHTML(get_keeper_footer()))
-
-            file_writer.close()
-
-
-        # send response to nginx
-        return(response.getvalue()+"\n<!-- render: "+str(time.time()-timer)+" -->\n")
+        # send response to web-server
+        return(str(response.getvalue()+"\n<!-- render: "+str(time.time()-timer)+" -->\n").encode('utf-8'))
 
 # end of file while is halt so
 

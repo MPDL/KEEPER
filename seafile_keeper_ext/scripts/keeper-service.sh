@@ -165,11 +165,11 @@ case "$1" in
                 echo "Starting..."
             fi
 
-	    cd ${seafile_dir}
+            pushd ${seafile_dir} >/dev/null
 
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
-                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
@@ -178,21 +178,22 @@ case "$1" in
                     sleep 3
                     echo "Starting..."
                 fi
-                ${USR_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$1" == "restart" ]; then
                     $0 stop $2
+                    sleep 3
                     echo "Starting..."
                 fi
-                ${USR_CTX} ${script_path}/seafile.sh start >> ${seafile_init_log}
-                ${USR_CTX} ${script_path}/seahub.sh start >> ${seahub_init_log}
-                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh start >> ${background_init_log}
-                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh start 
+                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
+                ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
+                ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh ${1} 
             fi
-            echo "Done"
             sleep 3
+            echo "Done"
             $0 status
         ;;
         stop)
@@ -206,17 +207,18 @@ case "$1" in
                     check_and_exit_keeper_archiving_running
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$2" != "--force" ]; then
                     check_and_exit_keeper_archiving_running
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
-                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
                 ${ROOT_CTX} ${seafile_dir}/scripts/catalog-service.sh stop
             fi
+            sleep 3
             echo "Done"
             #systemctl ${1} memcached.service
         ;;
@@ -242,7 +244,9 @@ case "$1" in
         status)
             RC=0
             check_puppet
-            check_mysql
+            if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
+                check_mysql
+            fi
             check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
             check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
@@ -250,8 +254,7 @@ case "$1" in
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
-                #check_component_running "office_converter" "soffice.bin" "CRITICAL"
-                check_component_running "office_converter" "soffice.*--invisible --nocrashreport"
+                check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
             fi    
             if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
                 check_keepalived

@@ -15,13 +15,12 @@ from keeper.common import parse_markdown, print_json
 from keeper.utils import get_user_name
 
 from keeper.models import Catalog, DoiRepo
-from seafevents.keeper_archiving.db_oper import DBOper
 
 import logging
 import json
 from netaddr import IPAddress, IPSet
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from django.core.cache import cache
 from django.db import connections
@@ -37,13 +36,7 @@ def trim_by_len(str, max_len, suffix="..."):
         str = str.strip()
         if str and len(str) > max_len:
             str = str[0:max_len] + suffix
-        str = unicode(str, 'utf-8', errors='replace')
-    return str
-
-
-def strip_uni(str):
-    if str:
-        str = unicode(str.strip(), 'utf-8', errors='replace')
+        str = str(str, 'utf-8', errors='replace')
     return str
 
 
@@ -64,12 +57,12 @@ def get_mpg_ip_set():
         logging.info("Put IPs to cache...")
         try:
             # get json from server
-            response = urllib2.urlopen(KEEPER_MPG_IP_LIST_URL)
+            response = urllib.request.urlopen(KEEPER_MPG_IP_LIST_URL)
             json_str = response.read()
             # parse json
             json_dict = json.loads(json_str)
             # get only ip ranges
-            ip_ranges = [(ipr.items())[0][0] for ipr in json_dict['details']]
+            ip_ranges = [(list(ipr.items()))[0][0] for ipr in json_dict['details']]
             ip_set = IPSet(ip_ranges)
             cache.set('KEEPER_CATALOG_MPG_IP_SET', ip_set, None)
             cache.set(
@@ -77,10 +70,7 @@ def get_mpg_ip_set():
                 json_dict['timestamp'],
                 IP_SET_TTL)
         except Exception as e:
-            logging.info(
-                "Cannot get/parse MPG IPs DB: " +
-                ": ".join(
-                    str(i) for i in e))
+            logging.info("Cannot get/parse MPG IPs DB: %s", e)
             logging.info("Get IPs from old cache")
             ip_set = cache.get('KEEPER_CATALOG_MPG_IP_SET')
     else:
@@ -119,12 +109,13 @@ def generate_catalog_entry(repo):
         dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
         file = dir.lookup(ARCHIVE_METADATA_TARGET)
         if file:
-            md = parse_markdown(file.get_content())
+            md = file.get_content().decode('utf-8')
+            md = parse_markdown(md)
             if md:
                 # Author
                 a = md.get("Author")
                 if a:
-                    a_list = strip_uni(a).split('\n')
+                    a_list = a.split('\n')
                     authors = []
                     for _ in a_list:
                         author = {}
@@ -139,28 +130,28 @@ def generate_catalog_entry(repo):
                         proj["authors"] = authors
 
                 # Description
-                d = strip_uni(md.get("Description"))
+                d = md.get("Description")
                 if d:
                     proj["description"] = d
 
                 # Comments
-                c = strip_uni(md.get("Comments"))
+                c = md.get("Comments")
                 if c:
                     proj["comments"] = c
 
                 # Title
-                t = strip_uni(md.get("Title"))
+                t = md.get("Title")
                 if t:
                     proj["title"] = t
                     del proj["in_progress"]
 
                 # Year
-                y = strip_uni(md.get("Year"))
+                y = md.get("Year")
                 if y:
                     proj["year"] = y
 
                 # Institute
-                i = strip_uni(md.get("Institute"))
+                i = md.get("Institute")
                 if i:
                     proj["institute"] = i
 
@@ -256,10 +247,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if param == 'clean-db':
-        print ('%s catalog entries have been cleaned up' % clean_up_catalog())
+        print(('%s catalog entries have been cleaned up' % clean_up_catalog()))
     elif param == 'gen-db':
-        print ('Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog()))
+        print(('Catalog has been sucessfully [re]generated, number of processed entries:', len(generate_catalog())))
     else:
-        print (str(sys.argv))
+        print((str(sys.argv)))
         usage()
         sys.exit(1)

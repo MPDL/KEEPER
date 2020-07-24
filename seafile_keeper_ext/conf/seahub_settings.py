@@ -36,7 +36,6 @@ DATABASES = {
     }
 }
 
-
 ##########################################################################
 #### Caches
 
@@ -97,32 +96,41 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'syslog-django_request': {
-            'level': 'INFO',
-            'class': 'logging.handlers.SysLogHandler',
-            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
-            'facility': '__SYSLOG_FACILITY__',
-            'formatter': 'syslog-django_request'
-        },
-        'syslog-seahub': {
-            'level': 'INFO',
-            'class': 'logging.handlers.SysLogHandler',
-            'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
-            'facility': '__SYSLOG_FACILITY__',
-            'formatter': 'syslog-seahub'
-        },
-     },
+        # 'syslog-django_request': {
+            # 'level': 'INFO',
+            # 'class': 'logging.handlers.SysLogHandler',
+            # 'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            # 'facility': '__SYSLOG_FACILITY__',
+            # 'formatter': 'syslog-django_request'
+        # },
+        # 'syslog-seahub': {
+            # 'level': 'INFO',
+            # 'class': 'logging.handlers.SysLogHandler',
+            # 'address': ('syslog-mpcdf.mpdl.mpg.de', 514),
+            # 'facility': '__SYSLOG_FACILITY__',
+            # 'formatter': 'syslog-seahub'
+        # },
+    },
     'loggers': {
         '': {
-            'handlers': ['default', 'syslog-seahub'],
+            # 'handlers': ['default', 'syslog-seahub'],
+            'handlers': ['default'],
             'level': 'INFO',
             'propagate': True
         },
         'django.request': {
-            'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
+            # 'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
+            'handlers': ['request_handler', 'mail_admins'],
             'level': 'INFO',
             'propagate': False
         },
+    }
+}
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'frontend/',
+        'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.%s.json' % ('dev' if '__FRONTEND__' == 'dev' else 'pro')),
     }
 }
 
@@ -546,6 +554,9 @@ ENABLE_OFFICE_WEB_APP_EDIT = True
 # types of files should be editable through LibreOffice Online
 OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
+# Admin users page default sorting
+
+ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 
 ##########################################################################
 ####  KEEPER specific settings
@@ -573,6 +584,7 @@ DOI_TIMEOUT = __DOI_TIMEOUT__
 
 # archiving
 KEEPER_ARCHIVING_ROOT = 'http://__NODE_FQDN__' if SINGLE_MODE else '__KEEPER_ARCHIVING_ROOT__'
+KEEPER_ARCHIVING_PORT = '__KEEPER_ARCHIVING_PORT__'
 KEEPER_ARCHIVING_NODE = KEEPER_ARCHIVING_ROOT == 'http://__NODE_FQDN__'
 
 # KEEPER external resources

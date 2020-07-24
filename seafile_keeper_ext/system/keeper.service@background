@@ -1,0 +1,17 @@
+[Unit]
+Description=Keeper
+Requires=network.target nginx.service
+After=network.target nginx.service
+#RequiresMountsFor=/keeper
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/bash -c 'while [ ! -d /keeper/seafile-data ]; do sleep 1; done'
+ExecStart=/bin/bash -c "/usr/local/bin/keeper-service start"
+ExecStop=/bin/bash -c "/usr/local/bin/keeper-service stop"
+RemainAfterExit=yes
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

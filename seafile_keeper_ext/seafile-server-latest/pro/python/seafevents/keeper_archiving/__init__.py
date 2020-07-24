@@ -1,17 +1,16 @@
+import os
 import re
 import logging
-from pysearpc import searpc_server
-from ccnet.async import RpcServerProc
+import subprocess
 
-from .task_manager import task_manager
-from .rpc import KeeperArchivingRpcClient, KEEPER_ARCHIVING_RPC_SERVICE_NAME
-from .db_oper import DBOper
-import config as _cfg
+from seafevents.utils import run, get_python_executable
+from seahub.settings import SEAFILE_DIR
+from urllib import parse
 
 __all__ = [
     'KeeperArchiving',
-    'KeeperArchivingRpcClient',
 ]
+logger = logging.getLogger(__name__)
 
 REPO_ID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 def _valid_repo_id(repo_id):
@@ -20,85 +19,105 @@ def _valid_repo_id(repo_id):
 class KeeperArchiving(object):
 
     def __init__(self, conf):
+
         self._enabled = conf['enabled']
 
         if self._enabled:
-            self._conf = conf
-            self._db_oper = DBOper()
+            self._host = conf['host']
+            self._port = conf['port']
+            self._local_storage = conf['local_storage']
+            self._workers = conf['workers']
+            self._archive_max_size = conf['archive-max-size']
+            self._archives_per_library = conf['archives-per-library']
+            self._hpss_enabled = conf['hpss_enabled']
+            self._hpss_url = conf['hpss_url']
+            self._hpss_user = conf['hpss_user']
+            self._hpss_password = conf['hpss_password']
+            self._hpss_storage_path = conf['hpss_storage_path']
 
-    def add_task(self, repo_id, owner):
-        if not _valid_repo_id(repo_id):
-            raise Exception('invalid repo id by add_task')
-        if not owner:
-            raise Exception('No owner defined for repo {}'.format(repo_id))
-        return task_manager.add_task(repo_id, owner)
+            self._archiving_server_proc = None
+            self._archiving_server_py = os.path.join(os.path.dirname(__file__), 'archiving_server.py')
 
-    def query_task_status(self, repo_id, owner, version):
-        if not _valid_repo_id(repo_id):
-            raise Exception('invalid repo id by query_task: {}'.format(repo_id))
-        if not owner:
-            raise Exception('No owner defined for repo {}'.format(repo_id))
-        return task_manager.query_task_status(repo_id, version)
+            self._logfile = conf['log_directory'] + '/keeper.archiving.log'
 
-    def check_repo_archiving_status(self, repo_id, owner, action):
-        if not _valid_repo_id(repo_id):
-            raise Exception('invalid repo id {}'.format(repo_id))
-        if not owner:
-            raise Exception('No owner defined for repo {}'.format(repo_id))
-        if not action:
-            raise Exception('No action defined for  for repo: {} and owner: {}'.format(repo_id, owner))
-        return task_manager.check_repo_archiving_status(repo_id, owner, action)
-
-    def get_running_tasks(self):
-        return task_manager.get_running_tasks()
-
-    def restart_task(self, archive_id):
-        if not archive_id:
-            raise Exception('archive_id is not defined')
-        return task_manager.restart_task(archive_id)
-
-
-
-    def register_rpc(self, ccnet_client):
-        '''Register archiving rpc service'''
-        searpc_server.create_service(KEEPER_ARCHIVING_RPC_SERVICE_NAME)
-        ccnet_client.register_service(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                      'basic',
-                                      RpcServerProc)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.query_task_status)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.add_task)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.check_repo_archiving_status)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.get_running_tasks)
-
-        searpc_server.register_function(KEEPER_ARCHIVING_RPC_SERVICE_NAME,
-                                        self.restart_task)
 
     def start(self):
-        task_manager.init(db_oper=self._db_oper,
-                          num_workers=self._conf[_cfg.key_workers],
-                          local_storage=self._conf[_cfg.key_local_storage],
-                          archive_max_size=self._conf[_cfg.key_archive_max_size],
-                          archives_per_library=self._conf[_cfg.key_archives_per_library],
-                          hpss_enabled=self._conf[_cfg.key_hpss_enabled],
-                          hpss_url=self._conf[_cfg.key_hpss_url],
-                          hpss_user=self._conf[_cfg.key_hpss_user],
-                          hpss_password=self._conf[_cfg.key_hpss_password],
-                          hpss_storage_path=self._conf[_cfg.key_hpss_storage_path])
-        task_manager.run()
+        INSTALLPATH = SEAFILE_DIR  + '/seafile-server-latest'
 
-        logging.info('keeper archiving started')
+        pp = [INSTALLPATH + p for p in (
+            '/seafile/lib/python3.6/site-packages',
+            '/seahub/thirdpart',
+            '/seahub',
+            '/seahub-extra',
+            '/pro/python'
+        )]
+        env = {
+            'CCNET_CONF_DIR': SEAFILE_DIR + '/ccnet',
+            'SEAFILE_CONF_DIR': SEAFILE_DIR + '/seafile-data',
+            'SEAFILE_CENTRAL_CONF_DIR': SEAFILE_DIR + '/conf',
+            'SEAFES_DIR': INSTALLPATH + '/pro/python/seafes',
+            'SEAHUB_DIR': INSTALLPATH + '/seahub',
+            'SEAHUB_LOG_DIR': SEAFILE_DIR + '/logs',
+            'SEAFILE_RPC_PIPE_PATH': INSTALLPATH + '/runtime',
+            'PYTHONPATH': ':'.join(pp)
+        }
+
+        split = parse.urlsplit(self._host)
+        host = split.path if not split.scheme else split.netloc
+
+        archiving_server_args = [
+            get_python_executable(),
+            self._archiving_server_py,
+            '--host',
+            host,
+            '--port',
+            self._port,
+            '--local_storage',
+            self._local_storage,
+            '--workers',
+            self._workers,
+            '--archive_max_size',
+            self._archive_max_size,
+            '--archives_per_library',
+            self._archives_per_library,
+            '--hpss_enabled',
+            self._hpss_enabled,
+            '--hpss_url',
+            self._hpss_url,
+            '--hpss_user',
+            self._hpss_user,
+            '--hpss_password',
+            self._hpss_password,
+            '--hpss_storage_path',
+            self._hpss_storage_path,
+        ]
+
+        with open(self._logfile, 'a') as fp:
+            self._archiving_server_proc = run(
+                archiving_server_args, env=env, cwd=os.path.dirname(__file__), output=fp
+            )
+
+        exists_args = ["ps", "-ef"]
+        result = run(exists_args, output=subprocess.PIPE)
+        rows = result.stdout.read().decode('utf-8')
+        if self._archiving_server_py in rows:
+            logging.info('Keeper archiving http server is already started.')
+        else:
+            logging.warning('Failed to start keeper archiving http server.')
+
+        logging.info('Keeper archiving is started.')
 
     def stop(self):
-        task_manager.stop()
-        logging.info('keeper archiving stopped')
+        if self._archiving_server_proc:
+            try:
+                self._archiving_server_proc.terminate()
+                logging.info('Keeper archiving http server is stopped.')
+            except Exception as e:
+                logger.error(e)
+                logging.error('Cannot stop keeper archiving http server.')
+                pass
 
     def is_enabled(self):
         return self._enabled
+
+

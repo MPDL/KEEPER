@@ -1,173 +1,122 @@
-#coding: utf-8
+# coding: utf-8
 
-import logging
-from sqlalchemy.orm.scoping import scoped_session
-from models import VirusScanRecord, VirusFile
+from .models import VirusScanRecord, VirusFile
+from .scan_settings import logger
+from seafevents.db import SeafBase
+
 
 class DBOper(object):
     def __init__(self, settings):
-        self.edb_session = None
-        self.sdb_conn = None
-        self.sdb_cursor = None
-        self.is_enable = False
-        self.init_db(settings)
-
-    def init_db(self, settings):
-        try:
-            import MySQLdb
-        except ImportError:
-            logging.info('Failed to import MySQLdb module, stop virus scan.')
-            return
-
-        try:
-            self.edb_session = scoped_session(settings.session_cls)
-
-            self.sdb_conn = MySQLdb.connect(host=settings.sdb_host, port=settings.sdb_port,
-                                            user=settings.sdb_user, passwd=settings.sdb_passwd,
-                                            db=settings.sdb_name, charset=settings.sdb_charset)
-            self.sdb_conn.autocommit(True)
-            self.sdb_cursor = self.sdb_conn.cursor()
-
-            self.is_enable = True
-        except Exception as e:
-            logging.info('Failed to init mysql db: %s, stop virus scan.' %  e)
-            if self.edb_session:
-                self.edb_session.close()
-            if self.sdb_cursor:
-                self.sdb_cursor.close()
-            if self.sdb_conn:
-                self.sdb_conn.close()
-
-    def is_enabled(self):
-        return self.is_enable
-
-    def close_db(self):
-        if self.is_enable:
-            self.edb_session.close()
-            self.sdb_cursor.close()
-            self.sdb_conn.close()
+        self.edb_session = settings.session_cls
+        self.seafdb_session = settings.seaf_session_cls
 
     def get_repo_list(self):
+        session = self.seafdb_session()
         repo_list = []
         try:
-            self.sdb_cursor.execute('select r.repo_id, b.commit_id from Repo r, Branch b '
-                                    'where r.repo_id = b.repo_id and b.name = "master" and '
-                                    'r.repo_id not in (select repo_id from VirtualRepo)')
-            rows = self.sdb_cursor.fetchall()
+            repo = SeafBase.classes.Repo
+            branch = SeafBase.classes.Branch
+            virtual_repo = SeafBase.classes.VirtualRepo
 
-            self.sdb_cursor.close()
+            # select r.repo_id, b.commit_id from Repo r, Branch b
+            # where r.repo_id = b.repo_id and b.name = "master"
+            # and r.repo_id not in (select repo_id from VirtualRepo)
+            q = session.query(repo.repo_id, branch.commit_id).\
+                filter(repo.repo_id == branch.repo_id).filter(branch.name == 'master').\
+                filter(repo.repo_id.notin_(session.query(virtual_repo.repo_id)))
 
+            rows = q.all()
             for row in rows:
                 repo_id, commit_id = row
                 scan_commit_id = self.get_scan_commit_id(repo_id)
                 repo_list.append((repo_id, commit_id, scan_commit_id))
         except Exception as e:
-            logging.warning('Failed to fetch repo list from db: %s.', e)
+            logger.error('Failed to fetch repo list from db: %s.', e)
             repo_list = None
+        finally:
+            session.close()
 
         return repo_list
 
     def get_scan_commit_id(self, repo_id):
-        self.edb_session.begin()
-        q = self.edb_session.query(VirusScanRecord).filter(VirusScanRecord.repo_id==repo_id)
-        r = q.first()
-        scan_commit_id = r.scan_commit_id if r else None
-        self.edb_session.commit()
-        self.edb_session.close()
-        return scan_commit_id
+        session = self.edb_session()
+        try:
+            q = session.query(VirusScanRecord).filter(VirusScanRecord.repo_id == repo_id)
+            r = q.first()
+            scan_commit_id = r.scan_commit_id if r else None
+            return scan_commit_id
+        except Exception as e:
+            logger.error(e)
+        finally:
+            session.close()
 
     def update_vscan_record(self, repo_id, scan_commit_id):
+        session = self.edb_session()
         try:
-            self.edb_session.begin()
-            q = self.edb_session.query(VirusScanRecord).filter(VirusScanRecord.repo_id==repo_id)
+            q = session.query(VirusScanRecord).filter(VirusScanRecord.repo_id == repo_id)
             r = q.first()
             if not r:
                 vrecord = VirusScanRecord(repo_id, scan_commit_id)
-                self.edb_session.add(vrecord)
+                session.add(vrecord)
             else:
                 r.scan_commit_id = scan_commit_id
 
-            self.edb_session.commit()
-            self.edb_session.close()
+            session.commit()
         except Exception as e:
-            self.edb_session.rollback()
-            self.edb_session.close()
-            logging.warning('Failed to update virus scan record from db: %s.', e)
+            logger.warning('Failed to update virus scan record from db: %s.', e)
+        finally:
+            session.close()
 
     def add_virus_record(self, records):
+        session = self.edb_session()
         try:
-            self.edb_session.begin()
-            self.edb_session.add_all(VirusFile(repo_id, commit_id, file_path, 0) \
-                                     for repo_id, commit_id, file_path in records)
-            self.edb_session.commit()
-            self.edb_session.close()
+            session.add_all(VirusFile(repo_id, commit_id, file_path, 0)
+                            for repo_id, commit_id, file_path in records)
+            session.commit()
             return 0
         except Exception as e:
-            self.edb_session.rollback()
-            self.edb_session.close()
-            logging.warning('Failed to add virus records to db: %s.', e)
+            logger.warning('Failed to add virus records to db: %s.', e)
             return -1
-
-    def get_virus_records(self):
-        try:
-            self.edb_session.begin()
-            q = self.edb_session.query(VirusFile)
-            self.edb_session.commit()
-            self.edb_session.close()
-            return q.all()
-        except Exception as e:
-            self.edb_session.rollback()
-            self.edb_session.close()
-            logging.warning('Failed to get virus records: %s.', e)
-            return None
+        finally:
+            session.close()
 
 
 def get_virus_record(session, repo_id, start, limit):
     if start < 0:
+        logger.error('start must be non-negative')
         raise RuntimeError('start must be non-negative')
 
     if limit <= 0:
+        logger.error('limit must be positive')
         raise RuntimeError('limit must be positive')
 
     try:
-        session.begin()
         q = session.query(VirusFile)
         if repo_id:
-            q = q.filter(VirusFile.repo_id==repo_id)
+            q = q.filter(VirusFile.repo_id == repo_id)
         q = q.slice(start, start+limit)
-        session.commit()
-        session.close()
         return q.all()
     except Exception as e:
-        session.rollback()
-        session.close()
-        logging.warning('Failed to get virus record from db: %s.', e)
+        logger.warning('Failed to get virus record from db: %s.', e)
         return None
+
 
 def handle_virus_record(session, vid):
     try:
-        session.begin()
-        q = session.query(VirusFile).filter(VirusFile.vid==vid)
+        q = session.query(VirusFile).filter(VirusFile.vid == vid)
         r = q.first()
         r.has_handle = 1
         session.commit()
-        session.close()
         return 0
     except Exception as e:
-        session.rollback()
-        session.close()
-        logging.warning('Failed to handle virus record: %s.', e)
+        logger.warning('Failed to handle virus record: %s.', e)
         return -1
+
 
 def get_virus_record_by_id(session, vid):
     try:
-        session.begin()
-        q = session.query(VirusFile).filter(VirusFile.vid==vid)
-        session.commit()
-        session.close()
+        q = session.query(VirusFile).filter(VirusFile.vid == vid)
         return q.first()
     except Exception as e:
-        session.rollback()
-        session.close()
-        logging.warning('Failed to get virus record by id: %s.', e)
+        logger.warning('Failed to get virus record by id: %s.', e)
         return None

@@ -1,16 +1,11 @@
-import os
-
 import logging
+import os
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
 from seaserv import seafile_api
-from seahub.settings import SERVER_EMAIL, KEEPER_DEFAULT_LIBRARY, SEAFILE_DIR, ARCHIVE_METADATA_TARGET
+from seahub.settings import DEBUG, SERVER_EMAIL, KEEPER_DEFAULT_LIBRARY, SEAFILE_DIR, ARCHIVE_METADATA_TARGET
 
-DEBUG = False
-
-if DEBUG:
-    logging.basicConfig(level=logging.INFO)
 
 def create_keeper_default_library():
     """ create keeper default library
@@ -50,11 +45,8 @@ def get_keeper_default_library():
         logging.error("Cannot find KEEPER_DEFAULT_LIBRARY dirents, err: " + str(err))
         return None
 
-
-
 def copy_keeper_default_library(to_repo_id):
     logging.info("Add KEEPER_DEFAULT_LIBRARY files to the repo %s..." % to_repo_id)
-
     try:
         kdl = get_keeper_default_library()
         if kdl:
@@ -66,6 +58,5 @@ def copy_keeper_default_library(to_repo_id):
     except Exception as err:
         logging.error("Cannot copy KEEPER_DEFAULT_LIBRARY, err: " + str(err))
 
-
-if DEBUG:
-    copy_keeper_default_library('d1fe0133-25f2-4ce3-b5c1-055f1ec9716d')
+# if DEBUG:
+#     copy_keeper_default_library('d1fe0133-25f2-4ce3-b5c1-055f1ec9716d')

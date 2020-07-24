@@ -5,10 +5,17 @@
 {% block header_css_class %}{% endblock %}
 {% block main_css_class %}{% endblock %}
 
+
+{% comment "SEAFILE" %}
+{% block header_css_class %}hide{% endblock %}
+
+{% block extra_base_style %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/seafile-ui.css" />
+{% endblock %}
+{% endcomment %}
+
 {% block extra_style %}
-
 <meta name="description" content="Archive the way you work - Profit from safe data storage, seamlessly integrated into your research workflow. Free to use for all Max Planck Societies researcher." />
-
 <style type="text/css">
 
 html, body, #wrapper { 
@@ -98,11 +105,83 @@ html, body, #wrapper {
   }
 
 
-
+{% comment "SEAFILE" %}
+#wrapper {
+    background: url('{{ MEDIA_URL }}{{login_bg_image_path}}') center top no-repeat scroll;
+    background-size: cover;
+    padding-top:1px;
+}
+#lang {
+    margin:0;
+}
+#lang-context {
+    font-weight:normal;
+}
+#lang-context-selector {
+    text-align:left;
+}
+{% endcomment %}
 </style>
+
 {% endblock %}
 
 {% block main_content %}
+
+{% comment "SEAFILE" %}
+<div class="login-panel-outer-container vh">
+<div class="login-panel">
+    <h1 class="login-panel-hd">{% trans "Log In" %}</h1>
+    <form action="" method="post" id="login-form">{% csrf_token %}
+        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
+        <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
+
+        {% if form.captcha %}
+        <div class="ovhd">
+            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
+            {{ form.captcha }}
+        </div>
+        {% endif %}
+
+        <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+        {% if form.errors %}
+        {% if form.captcha.errors %}
+        {{ form.captcha.errors}}
+        {% elif form.errors.freeze_account %}
+        <p class="error">{{ form.errors.freeze_account }}</p>
+        {% elif form.errors.inactive %}
+        <p class="error">{{ form.errors.inactive }}</p>
+        {% elif form.errors.not_found %}
+        <p class="error">{{ form.errors.not_found }}</p>
+        {% else %}
+        <p class="error">{% trans "Incorrect email or password" %}</p>
+        {% endif %}
+        {% else %}
+        <p class="error hide"></p>
+        {% endif %}
+
+        <label class="checkbox-label remember">
+            <input type="checkbox" name="remember_me" class="vam remember-input" />
+            <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+        </label>
+        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
+
+        <button type="submit" class="submit btn btn-primary btn-block">{% trans "Log In" %}</button>
+    </form>
+
+    {% if enable_sso %}
+    <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
+    {% endif %}
+
+    <div class="login-panel-bottom-container">
+        {% if enable_signup %}
+        <a href="{{ signup_url }}" class="normal fleft" id="sign-up">{% trans "Signup" %}</a>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% include "snippets/policy_service_link.html" %}
+{% endcomment %}
+
 <div class="container">
     <div class="row">
         <div id="mpdl-flag" class="col-lg-12 hidden-md-down">
@@ -205,14 +284,42 @@ html, body, #wrapper {
 <script type="text/javascript">
 $('.login-panel-outer-container').prepend($($('#logo').html()).attr({'width': 160, 'height':40}).addClass('login-panel-logo'));
 
+{% comment "SEAFILE" %}
+$('.login-panel-outer-container').prepend($($('#logo').html()).attr({'height': 40}).addClass('login-panel-logo'));
+$('.login-panel-bottom-container').append($('#lang').removeClass('fright'));
+{% endcomment %}
+
 var $el = $('.login-panel-outer-container');
 var elHeight = $el.outerHeight();
 var wdHeight = $(window).height();
 if (wdHeight > elHeight) {
     $el.css({'margin-top': (wdHeight - elHeight)/2});
 }
+{% comment "SEAFILE" %}
+$('#lang').css({'margin-left': $('#sign-up').outerWidth() + 10});
+{% endcomment %}
+
 $el.removeClass('vh');
 
+{% comment "SEAFILE" %}
+$('#lang-context').on('click', function() {
+    var langTop = $('#lang').offset().top;
+    var langSelectorTop;
+    var langSelectorHeight = $('#lang-context-selector .sf-popover-con').outerHeight();
+    if (langSelectorHeight > langTop) {
+        langSelectorTop = '-' + (langTop - 5) + 'px';
+    } else {
+        langSelectorTop = '-' + (langSelectorHeight + 5) + 'px';
+    }
+    $('#lang-context-selector').css({
+        'top': langSelectorTop,
+        'right': 0
+    });
+    $('#lang-context-selector .sf-popover-con').css({
+        'max-height': $('#lang').offset().top - 10
+    });
+});
+{% endcomment %}
 
 $('[name="login"]').trigger('focus');
 
@@ -237,7 +344,7 @@ $('#refresh-captcha').on('click', function() {
     return false;
 });
 
-// TODO: $('#login-form').on('submit', function(){
+{# TODO check: $('#login-form').on('submit', function(){ #}
 $('input[type="submit"]').click(function(){
     if (!$.trim($('input[name="login"]').val())) {
         $('.error').removeClass('hide').html("{% trans "Email or username cannot be blank" %}");

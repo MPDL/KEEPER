@@ -1,8 +1,8 @@
 import os
-import ConfigParser
+import configparser
 import logging
 
-from urllib import quote_plus
+from urllib.parse import quote_plus
 
 from sqlalchemy import create_engine
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
@@ -19,7 +19,7 @@ Base = declarative_base()
 SeafBase = automap_base()
 
 def create_mysql_session(host, port, username, passwd, dbname):
-    db_url = "mysql+mysqldb://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
+    db_url = "mysql+pymysql://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
     kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
@@ -35,7 +35,7 @@ def create_mysql_session(host, port, username, passwd, dbname):
     return Session
 
 def create_engine_from_conf(config_file, db = 'seafevent'):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(config_file)
 
     need_connection_pool_fix = True
@@ -70,7 +70,7 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
         username = config.get(db_sec, user)
         passwd = config.get(db_sec, 'password')
         dbname = config.get(db_sec, db_name)
-        db_url = "mysql+mysqldb://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
+        db_url = "mysql+pymysql://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
         logger.info('[seafevents] database: mysql, name: %s', dbname)
     elif backend == 'oracle':
         if config.has_option(db_sec, 'host'):
@@ -90,6 +90,7 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
 
         logger.info('[seafevents] database: oracle, service_name: %s', service_name)
     else:
+        logger.error("Unknown database backend: %s" % backend)
         raise RuntimeError("Unknown database backend: %s" % backend)
 
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
@@ -105,22 +106,34 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
 
     return engine
 
-def init_db_session_class(config_file, db = 'seafevent', autocommit = False):
+def init_db_session_class(config_file, db = 'seafevent'):
     """Configure Session class for mysql according to the config file."""
     try:
         engine = create_engine_from_conf(config_file, db)
-    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+    except (configparser.NoOptionError, configparser.NoSectionError) as e:
+        logger.error(e)
         raise RuntimeError("invalid config file %s", config_file)
 
-    if db != 'seafile':
-        # Create tables if not exists.
-        Base.metadata.create_all(engine)
-    else:
+    if db == 'seafile':
         # reflect the tables
         SeafBase.prepare(engine, reflect=True)
 
-    Session = sessionmaker(bind=engine, autocommit=autocommit)
+    Session = sessionmaker(bind=engine)
     return Session
+
+
+def create_db_tables():
+    # create seafevents tables if not exists.
+    config_file = os.environ.get('EVENTS_CONFIG_FILE')
+
+    try:
+        engine = create_engine_from_conf(config_file)
+    except (configparser.NoOptionError, configparser.NoSectionError) as e:
+        logger.error(e)
+        raise RuntimeError("invalid config file %s", config_file)
+
+    Base.metadata.create_all(engine)
+
 
 # This is used to fix the problem of "MySQL has gone away" that happens when
 # mysql server is restarted or the pooled connections are closed by the mysql

@@ -55,9 +55,9 @@ function backup_databases () {
     echo "Start time of first mysqldump: ${MYSQLDUMP_START_TIME}"
     for i in ccnet seafile seahub keeper; do
         TIMESTAMP=$(get_timestamp | tr ' ' '_')
-        mysqldump -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
+	mysqldump --single-transaction=TRUE -h${__DB_HOST__} -u${__DB_USER__} -p${__DB_PASSWORD__} -P${__DB_PORT__} --verbose ${i}-db | gzip > ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz
         [ $? -ne 0  ] && err_and_exit "Cannot dump ${i}-db"
-        RECOVERY_COMMANDS+=(echo "mysql -u${__DB_USER__} -p******** -P${__DB_PORT__} ${i} < ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz")
+	RECOVERY_COMMANDS+=("gunzip < ${DB_BACKUP_DIR}/${TIMESTAMP}.${i}-db.sql.gz | mysql -u${__DB_USER__} -p******** -P${__DB_PORT__} ${i}-db")
     done
     echo_green "Databases backup is OK"
 
@@ -89,21 +89,19 @@ function do_tsm_backup () {
     if [ "${__SKIP_TSM_BACKUP__}" != "True" ]; then
         echo "Start TSM  backup..."
         LOGLEVEL="-L 2"
+        export MMBACKUP_PROGRESS_CONTENT=0x07
         export MMBACKUP_DSMC_BACKUP="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
         export MMBACKUP_DSMC_EXPIRE="-auditlogging=full -auditlogname=/var/log/mmbackup/tsm-auditlog-$DAYOFMONTH.log"
-        # Full backup the first time:
-        #mmbackup /keeper --scope inodespace --noquote -s /var/tmp -v -t full -B 1000 $LOGLEVEL -m 8 -S $GPFS_SNAPSHOT 
 
-        # on Sunday
+        # Incremental forever backup every day
+        mmbackup /keeper --scope inodespace --noquote -s $TMP_DIR -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT | tee /opt/seafile/logs/mmbackup-incremental-${TODAY}.log
+
+        [ $? -ne 0 ] && warn "Incremental TSM backup has failed" || echo_green "OK"
+
+        # Rebuild the shadow database on Sundays
         if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
-          # Rebuild the shadow database on Sundays
-            mmbackup /keeper --noquote -s $TMP_DIR -v -q -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
-            [ $? -ne 0 ] && warn "Incremental TSM backup with rebuild of shadow DB is failed" || echo_green "OK"
-
-        else
-          # Normal incremental backup on other days
-            mmbackup /keeper --scope inodespace --noquote -s $TMP_DIR -v -t incremental -B 1000 $LOGLEVEL -m 8 -a 1 -S $GPFS_SNAPSHOT 
-            [ $? -ne 0 ] && warn "Incremental TSM backup is failed" || echo_green "OK"
+             mmbackup /keeper --noquote --rebuild -s $TMP_DIR -v -B 1000 -L 2 -m 8 -a 1 | tee /opt/seafile/logs/mmbackup-rebuild-${TODAY}.log
+            [ $? -ne 0 ] && warn "Rebuild of shadow DB has failed" || echo_green "OK"
         fi
         echo_green "OK"
     else    

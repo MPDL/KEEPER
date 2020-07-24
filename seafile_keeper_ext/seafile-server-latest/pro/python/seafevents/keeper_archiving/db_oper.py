@@ -1,8 +1,11 @@
 import logging
+import traceback
+
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
-from models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
-from urllib import quote_plus
+from sqlalchemy.sql import text
+from .models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
+from urllib.parse import quote_plus
 from sqlalchemy.orm import sessionmaker
 from seafevents.db import ping_connection
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
@@ -10,7 +13,7 @@ from sqlalchemy.pool import Pool
 
 from seahub_settings import CACHES, DATABASES
 from django.utils.http import urlquote
-from datetime import datetime
+from django.utils import timezone
 
 from keeper.common import truncate_str
 
@@ -32,13 +35,12 @@ def normalize_cache_key(value, prefix=None, token=None, max_length=200):
 def _prepare_md(md):
     if md is None:
         return None;
-    return unicode(truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN), 'utf-8')
+    return truncate_str(md, max_len=MAX_UNICODE_TEXT_LEN)
 
 def create_db_session(host, port, username, passwd, dbname):
-    db_url = "mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
+    db_url = "mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8".format(username, quote_plus(passwd), host, port, dbname)
     # Add pool recycle, or mysql connection will be closed by mysqld if idle
     # for too long.
-    logging.info(db_url)
     kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
     engine = create_engine(db_url, **kwargs)
@@ -100,13 +102,9 @@ class DBOper(object):
         '''
         if to_user and detail:
             try:
-                cmd = 'INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) VALUES ( \'{}\', \'{}\', \'{}\', \'{}\', 0 )'.format(
-                    to_user,
-                    MSG_TYPE_KEEPER_ARCHIVING_MSG,
-                    detail,
-                    datetime.now(),
-                )
-                self.edb_session.execute(cmd)
+                sql = text("INSERT INTO notifications_usernotification ( to_user, msg_type, detail, timestamp, seen ) "
+                           "VALUES ( :to_user, '" + MSG_TYPE_KEEPER_ARCHIVING_MSG + "', :detail, :timestamp, 0 )")
+                self.edb_session.execute(sql, dict(to_user=to_user, detail=detail, timestamp=timezone.now()))
                 self.edb_session.commit()
 
                 # add notification to gui
@@ -148,7 +146,8 @@ class DBOper(object):
             return a
         except Exception as e:
             self.kdb_session.rollback()
-            logging.warning('Failed to add keeper archive record to db: {}.'.format(e))
+            logging.warning('Failed to add keeper archive record to db: %s', e.with_traceback())
+
             return -1
         finally:
             self.kdb_session.remove()
@@ -165,7 +164,7 @@ class DBOper(object):
             else:
                 a.status = status
                 if status == 'DONE':
-                    a.archived = datetime.now()
+                    a.archived = timezone.now()
                 a.checksum = checksum
                 a.external_path = external_path
                 a.md = _prepare_md(md)
@@ -286,5 +285,3 @@ class DBOper(object):
             return None
         finally:
             self.kdb_session.remove()
-
-

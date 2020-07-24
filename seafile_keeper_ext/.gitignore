@@ -7,3 +7,5 @@ tags
 __pycache__
 .cache
 .idea
+**/office_converter/
+node_modules/

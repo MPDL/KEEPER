@@ -67,7 +67,6 @@ urlpatterns += [
         {'template_name': 'registration/login.html',
          'redirect_if_logged_in': 'libraries'},
         name='auth_login'),
-    ### KEEPER
     url(r'^logout/$',
         auth_views.logout,
         {'template_name': 'registration/logout.html',

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import glob
 import subprocess
-import StringIO
 import shutil
 import re
-import ConfigParser
+import configparser
 import pwd, grp
 import getpass
 import traceback
@@ -48,7 +47,7 @@ class Utils(object):
     @staticmethod
     def error(msg):
         '''Print error and exit'''
-        print(Utils.red('Error: ' + msg))
+        print((Utils.red('Error: ' + msg)))
         sys.exit(1)
 
     @staticmethod
@@ -144,7 +143,7 @@ class Utils(object):
     @staticmethod
     def read_config(fn=None):
         '''Return a case sensitive ConfigParser by reading the file "fn"'''
-        cp = ConfigParser.ConfigParser()
+        cp = configparser.ConfigParser(interpolation=None)
         cp.optionxform = str
         if fn:
             cp.read(fn)
@@ -158,7 +157,7 @@ class Utils(object):
             cp.write(fp)
 
     @classmethod
-    def ask_question(self,
+    def ask_question(cls,
                      desc,
                      key=None,
                      note=None,
@@ -192,7 +191,7 @@ class Utils(object):
         '''
         assert key or yes_or_no
         # Format description
-        print
+        print()
         if note:
             desc += '\n' + note
 
@@ -206,7 +205,7 @@ class Utils(object):
                 desc += '[ %s ]' % key
 
         desc += ' '
-        if self.all:
+        if cls.all:
             return True
         else:
             while True:
@@ -214,7 +213,7 @@ class Utils(object):
                 if password:
                     answer = getpass.getpass(desc).strip()
                 else:
-                    answer = raw_input(desc).strip()
+                    answer = input(desc).strip()
 
                 # No user input: use default
                 if not answer:
@@ -226,18 +225,18 @@ class Utils(object):
                 # Have user input: validate answer
                 if yes_or_no:
                     if answer not in ['yes', 'no', 'y', 'n', 'all']:
-                        print(Utils.highlight('\nPlease answer yes, no or all\n'))
+                        print((Utils.highlight('\nPlease answer yes, no or all\n')))
                         continue
                     else:
                         if answer == 'all':
-                            self.all = True
+                            cls.all = True
                         return answer in ('yes', 'y', 'all')
                 else:
                     if validate:
                         try:
                             return validate(answer)
                         except InvalidAnswer as e:
-                            print(Utils.highlight('\n{}\n'.format(e)))
+                            print((Utils.highlight('\n{}\n'.format(e))))
                             continue
                     else:
                         return answer
@@ -247,10 +246,8 @@ class Utils(object):
     def get_python_executable():
         '''Find a suitable python executable'''
         try_list = [
-            'python2.7',
-            'python27',
-            'python2.6',
-            'python26',
+            'python3',
+            'python3.6',
         ]
 
 
@@ -323,7 +320,7 @@ class Utils(object):
         """
         True if link does not exist link and target exisist
         """
-        print ("Check {}->{} ({},{})".format(link, target, not os.path.islink(link), os.path.exists(target)))
+        print(("Check {}->{} ({},{})".format(link, target, not os.path.islink(link), os.path.exists(target))))
 
         return not os.path.islink(link) and os.path.exists(target)
 
@@ -336,7 +333,6 @@ class EnvManager(object):
         self.read_keeper_conf()
         self.set_seafile_env()
         self.set_keeper_env()
-        self.read_seafile_conf_dir()
 
     def read_keeper_conf(self):
         '''Read keeper config file and set keeper related properties
@@ -347,9 +343,9 @@ class EnvManager(object):
         if not conf_files:
             Utils.error('Cannot find KEEPER config files')
 
-        self.keeper_config = ConfigParser.ConfigParser()
+        self.keeper_config = configparser.ConfigParser(interpolation=None)
         self.keeper_config.optionxform = str
-        self.keeper_config.readfp(open(conf_files[0]))
+        self.keeper_config.read_file(open(conf_files[0]))
 
 
     def set_seafile_env(self):
@@ -371,17 +367,9 @@ class EnvManager(object):
         self.seahub_dir = os.path.join(self.install_path, 'seahub')
 
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
-        self.seafile_dir = ''
+        self.seafile_dir = os.path.join(self.top_dir, 'seafile-data')
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
 
-
-    def read_seafile_conf_dir(self):
-        '''Read seafile conf dir from ccnet/seafile.ini'''
-        seafile_ini = os.path.join(self.ccnet_dir, 'seafile.ini')
-        with open(seafile_ini, 'r') as fp:
-            path = fp.read()
-
-        self.seafile_dir = path.strip()
 
     def get_seahub_env(self):
         '''Prepare for seahub syncdb'''
@@ -393,7 +381,6 @@ class EnvManager(object):
         env['SEAHUB_DIR'] = self.seahub_dir
         self.setup_python_path(env)
         return env
-
 
     def set_keeper_env(self):
 
@@ -411,6 +398,7 @@ class EnvManager(object):
                 'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
                 'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
+                'system/keeper.service@background': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
                 'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
 		'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
                 'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
@@ -464,7 +452,18 @@ class EnvManager(object):
         self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
         self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
 
-        
+        self.keeper_nagios_check_keeper_elasticsearch_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
+        self.keeper_nagios_check_keeper_elasticsearch_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
+
+        self.keeper_nagios_check_gpfs_health_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
+
+        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
+        self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
+
+        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
+        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
+
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
         self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
@@ -486,10 +485,7 @@ class EnvManager(object):
             os.path.join(self.install_path, 'seahub-extra'),
             os.path.join(self.install_path, 'seahub-extra', 'thirdparts'),
 
-            os.path.join(self.install_path, 'seafile/lib/python2.6/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib64/python2.6/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib/python2.7/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib64/python2.7/site-packages'),
+            os.path.join(self.install_path, 'seafile/lib/python3.6/site-packages'),
         ]
 
         for path in extra_python_path:
@@ -549,6 +545,9 @@ def expand_properties(content, path):
             # switch off webdav for BACKGROUND server
             if key == '__WEBDAV_ENABLED__' and is_background:
                 value = 'false'
+            # convert comma separated unicast peers to keepealived.conf valid value
+            if key == '__MEMCACHED_KA_UNICAST_PEERS__' and ',' in value and path.endswith('keepalived.conf'):
+                value = '\n'.join(value.split(','))
              # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
@@ -560,7 +559,6 @@ def expand_properties(content, path):
     if node_type != 'single' and path.endswith('seahub_settings.py'):
         content = re.sub("EMAIL_HOST_USER.*?\n", "", content)
         content = re.sub("EMAIL_HOST_PASSWORD.*?\n", "", content)
-
 
 
     if kc.get('backup', '__IS_BACKUP_SERVER__').lower() == 'true':
@@ -592,7 +590,7 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     # files to be ignored
     ignore_list = ('.gitignore')
-    ignore_exts = ('.pyc', '.swp')
+    ignore_exts = ('.pyc', '.swp', '.bak')
     if os.path.basename(path) in ignore_list or path.endswith(ignore_exts):
         return
 
@@ -616,40 +614,36 @@ def deploy_file(path, expand=False, dest_dir=None):
         backup(dest_path)
     else:
         if not Utils.ask_question("Deploy file {} into {}?".format(path, dest_path),
-                                default="yes",
-                                yes_or_no=True):
+                                  default="yes",
+                                  yes_or_no=True):
             return
         if not os.path.isdir(dest_dir):
             Utils.info("Create dir <{}>".format(dest_dir))
             Utils.must_mkdir(dest_dir)
 
-    fin = open(path, 'r')
-    content = fin.read()
-    fin.close()
-
-    # file types not to be expanded
-    expand_ignore_exts = ('.jar', '.png', '.zip', '.svg', '.pdf')
-    if expand and not path.endswith(expand_ignore_exts):
-        content = expand_properties(content, path)
-
-
-    fout = open(dest_path, 'w')
-    fout.write(content)
-    fout.close()
-    Utils.info(Utils.highlight("{} has been deployed into {}{}".format(path, dest_path, " (expanded)" if expand else "")))
-
-    # Utils.info(dest_path)
+    # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
+    # file types to be expanded
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
+    # files to be expanded
+    white_list_names = ('Makefile')
+    if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
+        with open(path, 'r') as fin, open(dest_path, 'w') as fout:
+            content = expand_properties(fin.read(), path)
+            fout.write(content)
+    else:
+        shutil.copyfile(path, dest_path)
+    Utils.info(Utils.highlight("%s has been deployed into %s%s" % (path, dest_path, " (expanded)" if expand else "")))
 
 def deploy_dir(path, expand=False):
 
     Utils.check_dir(path)
 
     # dirs to be ignored
-    ignore_list = ('.rope', '.cache', '__pycache__', '.git', 'tags', '.ropeproject')
+    ignore_list = ('.rope', '.cache', '__pycache__', '.git', 'tags', '.ropeproject', '.pytest_cache')
     if os.path.basename(path) in ignore_list:
         return
 
-    for p in [p for p in os.listdir(path) ]:
+    for p in [p for p in os.listdir(path)]:
         sub_path = os.path.join(path, p)
         if os.path.isdir(sub_path):
             deploy_dir(sub_path, expand)
@@ -681,7 +675,7 @@ def deploy_ext():
 
     ### create ext-deploymnet related symlinks
     do_links((
-        (env_mgr.django_admin_link, env_mgr.django_admin_path),
+        #(env_mgr.django_admin_link, env_mgr.django_admin_path),
         (env_mgr.custom_link, env_mgr.custom_dir),
         (env_mgr.avatars_link, env_mgr.avatars_dir),
     ))
@@ -702,6 +696,7 @@ def deploy_ext():
 
     do_links((
         (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
+        (env_mgr.keeper_nagios_check_keeper_elasticsearch_link, env_mgr.keeper_nagios_check_keeper_elasticsearch_path),
         (env_mgr.keeper_nagios_check_gpfs_health_link, env_mgr.keeper_nagios_check_gpfs_health_path),
         (env_mgr.keeper_nagios_check_tmp_link, env_mgr.keeper_nagios_check_tmp_path),
         (env_mgr.keeper_nagios_check_logfiles_link, env_mgr.keeper_nagios_check_logfiles_path)
@@ -768,11 +763,17 @@ def deploy_system_conf():
         do_links((
           (env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_link, env_mgr.keeper_oos_log_service_systemd_multi_user_target_wants_path),
         ))
+        deploy_file('system/keeper.service')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
+
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
+        deploy_file('system/keeper.service@background')
+        os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service@background'], 0o755)
+
 
     if node_type in ('SINGLE'):
         deploy_file('system/my.cnf@single', expand=True)
@@ -874,16 +875,35 @@ def do_generate(args):
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+    elif args.frontend:
+        Utils.info('Generate frontend...')
+        cmd = "sudo npm run build"
+        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        if RC != 0:
+            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+        else: 
+            # copy frontend/build to ext by default
+            args.frontend_build = True
+            args.seafile_src_to_ext = False
+            do_upgrade(args)
+            # deploy assets
+            Utils.run("sudo make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+
+def do_run(args):
+    if args.frontend_dev:
+        Utils.info('Run react.js dev server...')
+        cmd = "npm run dev"
+        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        if RC != 0:
+            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
-    print('Upgrade')
-
-    print(env_mgr.keeper_ext_dir)
+    print('Upgrade...')
     # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
         for root, dirs, files in os.walk('seafile-server-latest'):
-            print (root, dirs, files)
+            print((root, dirs, files))
             if  files and \
                 not ('/keeper' in root
                     or '/.rope' in root or '/.cache' in root or '/__pycache__' in root
@@ -898,6 +918,11 @@ def do_upgrade(args):
                         else:
                             Utils.info("Copy from {} to {}".format(src_path, dest_path))
                             shutil.copy(src_path, dest_path)
+    elif args.frontend_build:
+        Utils.info("Copy frontend/build files into ext")
+        dest_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
+        shutil.rmtree(dest_dir, ignore_errors=True)
+        shutil.copytree(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'), dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
 
 
 env_mgr = EnvManager()
@@ -941,6 +966,9 @@ def main():
                                 Upgraded files should be merged with the current KEEPER code!
                                 Check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
                                 ''', action='store_true')
+    parser_upgrade.add_argument('--frontend-build', help='''Copied generated frontend/build files into KEEPER ext.
+                                HowTo generate the build: https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/. 
+                                ''', action='store_true')
 
     # generate
     parser_generate = subparsers.add_parser('generate', help='Generate components')
@@ -950,10 +978,18 @@ def main():
     parser_generate.add_argument('--min-css', help='''Generate min.css file for seahub.css.
                                  Please install yui-compressor: http://yui.github.io/yuicompressor in your system!
                                  ''', action='store_true')
+    parser_generate.add_argument('--frontend', help='''Generate react.js application. Requirements: 
+                                    1. install nodejs v10.20.1: https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04-de#installation-mit-nvm
+                                    2. cd ~latest/seahub/frontend && npm install
+                                 ''', action='store_true')
 
+    # run 
+    parser_generate = subparsers.add_parser('run', help='Run development servers')
+    parser_generate.set_defaults(func=do_run)
+    parser_generate.add_argument('--frontend-dev', help='Run development server for frontend, see https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/', action='store_true')
 
     if len(sys.argv) == 1:
-        print (parser.format_help())
+        print((parser.format_help()))
         return
 
     args = parser.parse_args()

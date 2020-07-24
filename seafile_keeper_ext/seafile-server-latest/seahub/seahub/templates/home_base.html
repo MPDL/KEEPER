@@ -11,9 +11,9 @@
         <h3 class="hd">{% trans "Files" %}</h3>
         <ul class="side-tabnav-tabs">
             {% if user.permissions.can_add_repo %}
-            <li class="tab"><a href="{{ SITE_ROOT }}#my-libs/" class="ellipsis" title="{% trans "My Libraries" %}"><span class="sf2-icon-user" aria-hidden="true"></span>{% trans "My Libraries" %}</a></li>
+            <li class="tab"><a href="{{ SITE_ROOT }}my-libs/" class="ellipsis" title="{% trans "My Libraries" %}"><span class="sf2-icon-user" aria-hidden="true"></span>{% trans "My Libraries" %}</a></li>
             {% endif %}
-            <li class="tab"><a href="{{ SITE_ROOT }}#shared-libs/" class="ellipsis" title="{% trans "Shared with me" %}"><span class="sf2-icon-share" aria-hidden="true"></span>{% trans "Shared with me" %}</a></li>
+            <li class="tab"><a href="{{ SITE_ROOT }}shared-libs/" class="ellipsis" title="{% trans "Shared with me" %}"><span class="sf2-icon-share" aria-hidden="true"></span>{% trans "Shared with me" %}</a></li>
         {% comment "KEEPER commented" %}    
             {% if user.permissions.can_view_org %}
             <li class="tab"><a href="{{ SITE_ROOT }}#org/" class="ellipsis" title="{% trans "Shared with all" %}"><span class="sf2-icon-organization" aria-hidden="true"></span>{% trans "Shared with all" %}</a></li>
@@ -25,11 +25,11 @@
                 <a href="#" class="ellipsis" title="{% trans "Shared with groups" %}"><span class="toggle-icon icon-caret-left fright" aria-hidden="true"></span><span class="sf2-icon-group" aria-hidden="true"></span>{% trans "Shared with groups" %}</a>
                 <ul class="grp-list hide">
                     <li>
-                        <a href="{{ SITE_ROOT }}#groups/"><span class="sharp" aria-hidden="true">#</span>{% trans "All Groups" %}</a>
+                        <a href="{{ SITE_ROOT }}groups/"><span class="sharp" aria-hidden="true">#</span>{% trans "All Groups" %}</a>
                     </li>
                     {% for grp in grps %}
                     <li>
-                        <a class="ellipsis" href="{{SITE_ROOT}}#group/{{ grp.id }}/" title="{{ grp.group_name }}"><span class="sharp" aria-hidden="true">#</span>{{ grp.group_name }}</a>
+                        <a class="ellipsis" href="{{SITE_ROOT}}group/{{ grp.id }}/" title="{{ grp.group_name }}"><span class="sharp" aria-hidden="true">#</span>{{ grp.group_name }}</a>
                     </li>
                     {% endfor %}
                 </ul>
@@ -40,9 +40,9 @@
             <h3 class="fleft">{% trans "Tools" %}</h3>
         </div>
         <ul class="side-tabnav-tabs">
-            <li class="tab"><a href="{{ SITE_ROOT }}#starred/"><span class="sf2-icon-star" aria-hidden="true"></span>{% trans "Favorites" %}</a></li>
+            <li class="tab"><a href="{{ SITE_ROOT }}starred/"><span class="sf2-icon-star" aria-hidden="true"></span>{% trans "Favorites" %}</a></li>
             {% if events_enabled %}
-            <li class="tab"><a href="{{ SITE_ROOT }}#activities/"><span class="sf2-icon-clock" aria-hidden="true"></span>{% trans "Activities" %}</a></li>
+            <li class="tab"><a href="{{ SITE_ROOT }}dashboard/"><span class="sf2-icon-clock" aria-hidden="true"></span>{% trans "Activities" %}</a></li>
             {% endif %}
             {% for mod in request.user.mods_enabled %}
             {% if mod == 'personal wiki' %}
@@ -55,25 +55,26 @@
                 <a href="{{ SITE_ROOT }}#invitations/"><span aria-hidden="true" class="sf2-icon-invite"></span>{% trans "Invite People" %}</a>
             </li>
             {% endif %}
+            <li class="tab"><a href="{{ SITE_ROOT }}drafts/"><span class="sf2-icon-edit2" aria-hidden="true"></span>{% trans "Drafts" %}</a></li>
 
             <li class="tab" id="share-admin-nav">
                 <a href="#" class="ellipsis" title="{% trans "Share Admin" %}"><span class="toggle-icon icon-caret-left fright" aria-hidden="true"></span><span aria-hidden="true" class="sf2-icon-wrench"></span>{% trans "Share Admin" %}</a>
                 <ul class="hide">
                     {% if user.permissions.can_add_repo %}
                     <li>
-                        <a href="{{ SITE_ROOT }}#share-admin-libs/"><span aria-hidden="true" class="sharp">#</span>{% trans "Libraries" %}</a>
+                        <a href="{{ SITE_ROOT }}share-admin-libs/"><span aria-hidden="true" class="sharp">#</span>{% trans "Libraries" %}</a>
                     </li>
                     <li>
-                        <a href="{{ SITE_ROOT }}#share-admin-folders/"><span aria-hidden="true" class="sharp">#</span>{% trans "Folders" %}</a>
+                        <a href="{{ SITE_ROOT }}share-admin-folders/"><span aria-hidden="true" class="sharp">#</span>{% trans "Folders" %}</a>
                     </li>
                     {% endif %}
                     {% if user.permissions.can_generate_share_link %}
                     <li>
-                        <a href="{{ SITE_ROOT }}#share-admin-share-links/"><span aria-hidden="true" class="sharp">#</span>{% trans "Links" %}</a>
+                        <a href="{{ SITE_ROOT }}share-admin-share-links/"><span aria-hidden="true" class="sharp">#</span>{% trans "Links" %}</a>
                     </li>
                     {% elif user.permissions.can_generate_upload_link %}
                     <li>
-                        <a href="{{ SITE_ROOT }}#share-admin-upload-links/"><span aria-hidden="true" class="sharp">#</span>{% trans "Links" %}</a>
+                        <a href="{{ SITE_ROOT }}share-admin-upload-links/"><span aria-hidden="true" class="sharp">#</span>{% trans "Links" %}</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -104,6 +105,7 @@
         <input type="submit" id="mods-enable-submit" value="{% trans "Submit"%}" class="submit" />
     </form>
     {% endif %}
+
 </div>
 {% endblock %}
 

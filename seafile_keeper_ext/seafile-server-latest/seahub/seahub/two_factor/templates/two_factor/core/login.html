@@ -20,8 +20,8 @@
         {% endif %}
 
         <label for="token">{% trans "Authentication token" %}</label>
+        {% comment %}KEEPER: removed autofocus="autofocus"{% endcomment %}
         <input id="token" type="text" name="{{form_prefix}}otp_token" value="" class="input two-factor-auth-login-token-input" autocomplete="off" />
-
         <label class="checkbox-label remember">
             <input type="checkbox" name="{{form_prefix}}remember_me" class="vam remember-input" />
             <span class="vam">{% blocktrans %}Remember this computer for {{remember_days}} days{% endblocktrans %}</span>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''
 Setup/Start/Stop the extra components of Seafile Professional
@@ -47,15 +47,15 @@ import os
 import sys
 import glob
 import subprocess
-import StringIO
+import io
 import getpass
 
 try:
-    import MySQLdb
+    import pymysql
 except:
     pass
 
-import ConfigParser
+import configparser
 
 ########################
 ## Helper functions
@@ -84,8 +84,8 @@ class Utils(object):
     @staticmethod
     def error(msg):
         '''Print error and exit'''
-        print
-        print ('Error: ' + msg)
+        print()
+        print('Error: ' + msg)
         sys.exit(1)
 
     @staticmethod
@@ -180,7 +180,7 @@ class Utils(object):
     @staticmethod
     def read_config(fn=None):
         '''Return a case sensitive ConfigParser by reading the file "fn"'''
-        cp = ConfigParser.ConfigParser()
+        cp = configparser.ConfigParser()
         cp.optionxform = str
         if fn:
             cp.read(fn)
@@ -227,7 +227,7 @@ class Utils(object):
         '''
         assert key or yes_or_no
         # Format description
-        print
+        print()
         if note:
             desc += '\n' + note
 
@@ -246,7 +246,7 @@ class Utils(object):
             if password:
                 answer = getpass.getpass(desc).strip()
             else:
-                answer = raw_input(desc).strip()
+                answer = input(desc).strip()
 
             # No user input: use default
             if not answer:
@@ -258,7 +258,7 @@ class Utils(object):
             # Have user input: validate answer
             if yes_or_no:
                 if answer not in ['yes', 'no']:
-                    print (Utils.highlight('\nPlease answer yes or no\n'))
+                    print(Utils.highlight('\nPlease answer yes or no\n'))
                     continue
                 else:
                     return answer == 'yes'
@@ -267,7 +267,7 @@ class Utils(object):
                     try:
                         return validate(answer)
                     except InvalidAnswer as e:
-                        print (Utils.highlight('\n%s\n' % e))
+                        print(Utils.highlight('\n%s\n' % e))
                         continue
                 else:
                     return answer
@@ -288,10 +288,7 @@ class Utils(object):
     def get_python_executable():
         '''Find a suitable python executable'''
         try_list = [
-            'python2.7',
-            'python27',
-            'python2.6',
-            'python26',
+            'python3.6',
         ]
 
         for prog in try_list:
@@ -332,16 +329,9 @@ class EnvManager(object):
         self.seahub_dir = os.path.join(self.install_path, 'seahub')
 
         self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
-        self.seafile_dir = ''
+        self.seafile_dir = os.path.join(self.top_dir, 'seafile-data')
         self.central_config_dir = os.path.join(self.top_dir, 'conf')
-
-    def read_seafile_conf_dir(self):
-        '''Read seafile conf dir from ccnet/seafile.ini'''
-        seafile_ini = os.path.join(self.ccnet_dir, 'seafile.ini')
-        with open(seafile_ini, 'r') as fp:
-            path = fp.read()
-
-        self.seafile_dir = path.strip()
+        self.seafile_rpc_pipe_path = os.path.join(self.install_path, 'runtime');
 
     def get_seahub_env(self):
         '''Prepare for seahub syncdb'''
@@ -349,6 +339,7 @@ class EnvManager(object):
         env['CCNET_CONF_DIR'] = self.ccnet_dir
         env['SEAFILE_CONF_DIR'] = self.seafile_dir
         env['SEAFILE_CENTRAL_CONF_DIR'] = self.central_config_dir
+        env['SEAFILE_RPC_PIPE_PATH'] = self.seafile_rpc_pipe_path
         env['SEAFES_DIR'] = self.seafes_dir
         env['SEAHUB_DIR'] = self.seahub_dir
         self.setup_python_path(env)
@@ -367,11 +358,8 @@ class EnvManager(object):
             os.path.join(self.install_path, 'seahub-extra'),
             os.path.join(self.install_path, 'seahub-extra', 'thirdparts'),
 
-            os.path.join(self.install_path, 'seafile/lib/python2.6/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib64/python2.6/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib/python2.7/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib64/python2.7/site-packages'),
-
+            os.path.join(self.install_path, 'seafile/lib/python3.6/site-packages'),
+            os.path.join(self.install_path, 'seafile/lib64/python3.6/site-packages'),
         ]
 
         for path in extra_python_path:
@@ -424,7 +412,7 @@ class DBConf(object):
         config = Utils.read_config()
         self.generate_conf(config)
 
-        buf = StringIO.StringIO()
+        buf = io.StringIO()
         config.write(buf)
         buf.flush()
 
@@ -457,7 +445,7 @@ class MySQLDBConf(DBConf):
             config.set(self.DB_SECTION, 'host', self.mysql_host)
 
         if self.mysql_port:
-            config.set(self.DB_SECTION, 'port', self.mysql_port)
+            config.set(self.DB_SECTION, 'port', str(self.mysql_port))
 
         config.set(self.DB_SECTION, 'username', self.mysql_user)
         config.set(self.DB_SECTION, 'password', self.mysql_password)
@@ -476,7 +464,7 @@ class MySQLDBConf(DBConf):
             if not sql:
                 continue
 
-            print ('>>> sql is', sql, len(sql))
+            print('>>> sql is', sql, len(sql))
             self.exec_sql(sql)
 
     def exec_sql(self, sql):
@@ -484,14 +472,14 @@ class MySQLDBConf(DBConf):
         try:
             cursor.execute(sql)
         except Exception as e:
-            if isinstance(e, MySQLdb.OperationalError):
+            if isinstance(e, pymysql.err.OperationalError):
                 Utils.error('Failed to create extra tables: %s' % e.args[1])
             else:
                 Utils.error('Failed to create extra tables: %s' % e)
 
     def get_conn(self):
-        print ('host is'), self.mysql_host
-        print ('port is'), self.mysql_port
+        print('host is', self.mysql_host)
+        print('port is', self.mysql_port)
         kwargs = dict(user=self.mysql_user,
                       passwd=self.mysql_password,
                       db=self.mysql_db)
@@ -501,9 +489,9 @@ class MySQLDBConf(DBConf):
             kwargs['host'] = self.mysql_host
 
         try:
-            self.conn = MySQLdb.connect(**kwargs)
+            self.conn = pymysql.connect(**kwargs)
         except Exception as e:
-            if isinstance(e, MySQLdb.OperationalError):
+            if isinstance(e, pymysql.err.OperationalError):
                 Utils.error('Failed to connect to mysql database %s: %s' % (self.mysql_db, e.args[1]))
             else:
                 Utils.error('Failed to connect to mysql database %s: %s' % (self.mysql_db, e))
@@ -571,23 +559,20 @@ index_office_pdf = true
 enabled = true
 workers = 1
 
-## how many pages are allowed to be previewed online. Default is 50 pages
-max-pages = 50
-
-## the max size of documents allowed to be previewed online, in MB. Default is 10 MB
-## Previewing a large file (for example >30M) online is likely going to freeze the browser.
-max-size = 10
-
 [SEAHUB EMAIL]
 enabled = true
 
 ## interval of sending Seahub email. Can be s(seconds), m(minutes), h(hours), d(days)
 interval = 30m
+
+# Enable statistics
+[STATISTICS]
+enabled=true
 '''
         db_config_text = self.db_config.generate_config_text()
         if not os.path.exists(env_mgr.pro_data_dir):
             os.makedirs(env_mgr.pro_data_dir)
-        os.chmod(env_mgr.pro_data_dir, 0700)
+        os.chmod(env_mgr.pro_data_dir, 0o700)
 
         with open(self.seafevents_conf, 'w') as fp:
             fp.write(template % dict(db_config_text=db_config_text))
@@ -614,7 +599,7 @@ class MigratingProfessionalConfigurator(ProfessionalConfigurator):
         try:
             from seahub_settings import DATABASES # pylint: disable=F0401
         except ImportError:
-            print 'Failed to import "DATABASES" from seahub_settings.py, assuming sqlite3'
+            print('Failed to import "DATABASES" from seahub_settings.py, assuming sqlite3')
             self.db_config = SQLiteDBConf()
             return
 
@@ -631,11 +616,11 @@ class MigratingProfessionalConfigurator(ProfessionalConfigurator):
                 if db_config.mysql_port:
                     db_config.mysql_port = int(db_config.mysql_port)
 
-                print 'Your seafile server is using mysql'
+                print('Your seafile server is using mysql')
 
                 self.db_config = db_config
             else:
-                print 'Your seafile server is using sqlite3'
+                print('Your seafile server is using sqlite3')
                 self.db_config = SQLiteDBConf()
 
         except KeyError:
@@ -705,7 +690,6 @@ def do_setup(args):
     global pro_config
 
     if args.migrate:
-        env_mgr.read_seafile_conf_dir()
         pro_config = MigratingProfessionalConfigurator(args)
     else:
         pro_config = SetupProfessionalConfigurator(args)
@@ -716,7 +700,6 @@ def do_setup(args):
 
 def handle_search_commands(args):
     '''provide search related utility'''
-    env_mgr.read_seafile_conf_dir()
     if args.update:
         update_search_index()
     elif args.clear:
@@ -746,7 +729,7 @@ def delete_search_index():
     choice = None
     while choice not in ('y', 'n', ''):
         prompt = 'Delete seafile search index ([y]/n)? '
-        choice = raw_input(prompt).strip()
+        choice = input(prompt).strip()
 
     if choice == 'n':
         return
@@ -763,7 +746,6 @@ def delete_search_index():
     Utils.run_argv(argv, env=get_seafes_env())
 
 def handle_ldap_sync_commands(args):
-    env_mgr.read_seafile_conf_dir()
     if args.test:
         argv = [
             Utils.get_python_executable(),
@@ -779,8 +761,12 @@ def handle_ldap_sync_commands(args):
     Utils.run_argv(argv, env=env_mgr.get_seahub_env())
 
 def handle_virus_scan_commands(args):
-    env_mgr.read_seafile_conf_dir()
-
+    # argv = [
+        # Utils.get_python_executable(),
+        # '-m', 'seafevents.virus_scanner.run_virus_scan',
+        # '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
+    # ]
+    # TODO check rescan:
     if args.rescan:
         argv = [
             Utils.get_python_executable(),
@@ -795,10 +781,10 @@ def handle_virus_scan_commands(args):
             '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
         ]
 
+
     Utils.run_argv(argv, env=env_mgr.get_seahub_env())
 
 def handle_archive_commands(args):
-    env_mgr.read_seafile_conf_dir()
     argv = [
             Utils.get_python_executable(),
             '-m', 'seafevents.keeper_archiving.task_manager',
@@ -858,6 +844,7 @@ def main():
 
     # virus scan
     parser_virus_scan = subparsers.add_parser('virus_scan', help='virus scan commands')
+    # TODO check rescan:
     parser_virus_scan.add_argument('-r', '--rescan', help='rescans viruses', action='store_true')
     parser_virus_scan.set_defaults(func=handle_virus_scan_commands)
 
@@ -869,7 +856,7 @@ def main():
     parser_archive.set_defaults(func=handle_archive_commands)
 
     if len(sys.argv) == 1:
-        print parser.format_help()
+        print(parser.format_help())
         return
 
     args = parser.parse_args()

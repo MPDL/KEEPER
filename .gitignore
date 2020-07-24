@@ -9,3 +9,6 @@ CDCGenerator/CDCGenerator.iml
 __pycache__/
 .ropeproject/
 package-lock.json
+.ropeproject/
+.env/
+.vim/

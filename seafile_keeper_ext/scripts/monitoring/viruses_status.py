@@ -19,9 +19,9 @@ rows = cur.fetchall()
 
 if len(rows)>0:
     # found not hadlen viruses
-    print "There are non handled viruses:"
+    print("There are non handled viruses:")
     for row in rows:
-        print row
+        print(row)
     RC = 2
 
 sys.exit(RC)
