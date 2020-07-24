@@ -443,6 +443,9 @@ class EnvManager(object):
         self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
         self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
 
+        self.keeper_nagios_check_keeper_elasticsearch_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
+        self.keeper_nagios_check_keeper_elasticsearch_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
+
         self.keeper_nagios_check_gpfs_health_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
         self.keeper_nagios_check_gpfs_health_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
 
@@ -784,9 +787,6 @@ def deploy_system_conf():
     if cron_node.lower() == 'true':
         deploy_file('system/cron.d.keeper', expand=True)
 
-    # deploy keeper.service systemd
-    deploy_file('system/keeper.service')
-    os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper.service'], 0o755)
 
     # create system symlinks
     do_links((
