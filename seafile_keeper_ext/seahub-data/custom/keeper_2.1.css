@@ -582,3 +582,9 @@ textarea{resize: none;}
 .keeper-icon-triangle-down:before {
     content:"\25bc";
 }
+
+.select-module.select-module-email {
+    margin-left: 2.0rem;
+    font-size: 0.75rem;
+    color: #808080;
+}
