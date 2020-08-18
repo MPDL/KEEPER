@@ -22,8 +22,9 @@ from django import template
 from django.utils.translation import activate
 
 from seahub.settings import SERVICE_URL, LOGO_PATH, SEAFILE_DIR, DEBUG
-from keeper.catalog.catalog_manager import is_in_mpg_ip_range, get_catalog
+from keeper.catalog.catalog_manager import get_catalog
 from keeper.common import truncate_str
+from keeper.utils import is_in_mpg_ip_range
 
 #########################
 #                       #

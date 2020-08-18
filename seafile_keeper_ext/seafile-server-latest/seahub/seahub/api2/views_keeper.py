@@ -1,10 +1,10 @@
-from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework.response import Response
+from thirdpart.rest_framework.views import APIView
+from thirdpart.rest_framework import status
+from thirdpart.rest_framework.response import Response
 
 from seahub import settings
 from seahub.auth.decorators import login_required
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL
+from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
 from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
 from seahub.api2.utils import json_response
 from seaserv import seafile_api
@@ -14,29 +14,29 @@ from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certific
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
 from keeper.models import CDC, DoiRepo, Catalog
 
-from django.http import JsonResponse
+from thirdpart.django.core.urlresolvers import reverse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 
 from django.utils.translation import ugettext as _
 from django.utils.translation import get_language, activate
 
+from urllib.parse import quote_plus
+
 import logging
+import json
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
 from seahub.api2.utils import api_error
-# from keeper.utils import delegate_add_keeper_archiving_task, add_keeper_archiving_task,\
-#    delegate_query_keeper_archiving_status, query_keeper_archiving_status,\
-#    check_keeper_repo_archiving_status
 
-from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status
+from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status, archive_metadata_form_validation, get_mpg_ips_and_institutes, get_archive_metadata, save_archive_metadata, MPI_NAME_LIST_DEFAULT
 
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
@@ -374,8 +374,6 @@ class ArchiveLib(APIView):
 
     def post(self, request):
 
-        logger.error("RESP:{}".format(vars(request)))
-
         # repo_id = request.POST.get('repo_id', None)
         # owner = request.POST.get('owner', None)
         # language_code = request.POST.get('language_code', None)
@@ -399,6 +397,49 @@ class ArchiveLib(APIView):
                 'msg':  _(resp_archive.get('msg')),
                 'status': 'success'
             })
+
+class ArchiveMetadata(APIView):
+    """docstring for ArchiveMetadata"""
+
+    def get(self, request):
+        repo_id = request.GET.get('repo_id')
+        if not(repo_id):
+            return api_error(status.HTTP_400_BAD_REQUEST, 'Bad request.')
+
+        amd = get_archive_metadata(repo_id)
+        if not(amd):
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR , 'Cannot get ' + ARCHIVE_METADATA_TARGET)
+
+        return JsonResponse(amd)
+
+    def post(self, request):
+        data = request.data
+
+        repo_id = data.get('repo_id')
+        if not(repo_id):
+            return api_error(status.HTTP_400_BAD_REQUEST, 'Bad request.')
+
+        errors = archive_metadata_form_validation(data)
+        if errors:
+            data.update(errors=errors)
+            return JsonResponse(data)
+
+        save_archive_metadata(repo_id, data)
+
+        redirect_to = '%s/library/%s/%s/' % (SERVICE_URL, repo_id, quote_plus(get_repo(repo_id).name)) 
+
+        return JsonResponse({'redirect_to': redirect_to}) 
+
+
+
+class MPGInstitutes(APIView):
+    """ get MPI Name list from RENA """
+
+    def get(self, request):
+        _, ins_list = get_mpg_ips_and_institutes()
+        ins_list = ins_list or MPI_NAME_LIST_DEFAULT
+        return JsonResponse(ins_list, safe=False)
+
 
 class LibraryDetailsView(APIView):
     """ list LibraryDetails for sidenav """

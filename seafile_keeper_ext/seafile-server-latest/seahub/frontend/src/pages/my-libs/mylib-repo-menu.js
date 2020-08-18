@@ -76,7 +76,7 @@ class MylibRepoMenu extends React.Component {
     if (showArchiveLibraryMenuItem) {
       operations.push('Archive Library');
     }
-     return operations;
+    return operations;
   }
 
   translateOperations = (item) => {
@@ -127,7 +127,7 @@ class MylibRepoMenu extends React.Component {
       case 'Archive Library':
         translateResult = gettext('Archive Library');
         break;
-       default:
+      default:
         break;
     }
 

@@ -7,6 +7,9 @@ import MySQLdb
 
 from seahub.settings import DATABASES
 
+from thirdpart.seafobj import fs_mgr, commit_mgr
+from seaserv import seafile_api, get_repo
+
 def get_logger(name, logfile):
     logger = logging.getLogger(name)
     handler = logging.handlers.WatchedFileHandler(logfile)
@@ -30,7 +33,7 @@ def get_db(db_name):
 
 HEADER_STEP = 2
 # Headers in MD file to be processed by the parse_markdown
-md_headers =  ['Title', 'Author', 'Year', 'Description', 'Institute', 'Comments', 'Resource Type', 'RelatedIdentifier']
+md_headers =  ('Title', 'Author', 'Year', 'Description', 'Institute', 'Comments', 'Resource Type', 'RelatedIdentifier', 'License')
 
 class TokenTreeRenderer(mistune.Renderer):
     # options is required
@@ -117,3 +120,12 @@ def truncate_str(s, max_len=256, sfx='...'):
         return None;
     return (s[:max_len - len(sfx)] + sfx) if len(s) > max_len else s
 
+def get_repo_root_dir(repo_id):
+    """
+    Get repo root dir from object storage
+    """
+    repo = get_repo(repo_id)
+    commits = seafile_api.get_commit_list(repo.id, 0, 1)
+    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
+    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
+    return dir

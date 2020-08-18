@@ -347,7 +347,19 @@ class EnvManager(object):
         self.keeper_config.optionxform = str
         self.keeper_config.read_file(open(conf_files[0]))
 
+        kc = self.keeper_config
+        node_type = kc.get('global', '__NODE_TYPE__').lower()
+        is_background = node_type == 'background'
 
+        # set defaults
+        value = kc.get('global', '__INDEX_FILES__', fallback = 'true').lower()
+        kc.set('global', '__INDEX_FILES__', 'false' if value == 'false' else 'true')
+
+        # switch off webdav for BACKGROUND server
+        if is_background:
+            kc.set('http', '__WEBDAV_ENABLED__', 'false')
+        # TODO: move here entries items from expand_properties if possible
+ 
     def set_seafile_env(self):
 
         # self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -540,14 +552,11 @@ def expand_properties(content, path):
     is_background = node_type == 'background'
     for section in kc.sections():
         for key, value in kc.items(section):
-           # capitalize bools
+            # capitalize bools
             if value.lower() in ('false', 'true') and path.endswith('.py'):
                 value = value.capitalize()
             if key == '__EXTERNAL_ES_SERVER__':
                 value = value.lower()
-            # switch off webdav for BACKGROUND server
-            if key == '__WEBDAV_ENABLED__' and is_background:
-                value = 'false'
             # convert comma separated unicast peers to keepealived.conf valid value
             if key == '__MEMCACHED_KA_UNICAST_PEERS__' and ',' in value and path.endswith('keepalived.conf'):
                 value = '\n'.join(value.split(','))

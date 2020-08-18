@@ -17,7 +17,7 @@ from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
 # KEEPER
-from .views_keeper import CatalogView, BloxbergView, AddDoiView, ArchiveLib, CanArchive, LibraryDetailsView
+from .views_keeper import CatalogView, BloxbergView, AddDoiView, ArchiveLib, CanArchive, LibraryDetailsView, ArchiveMetadata, MPGInstitutes
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -123,6 +123,12 @@ urlpatterns = [
     url(r'^can-archive/$', CanArchive.as_view(), name='can_archive'),
 
     url(r'^library-details/$', LibraryDetailsView.as_view(), name='list_library_details'),
+
+    # Archive Metadata
+    url(r'^archive-metadata/$', ArchiveMetadata.as_view(), name='archive_metadata'),
+
+    # MPG Institutes list
+    url(r'^mpg-institutes/$', MPGInstitutes.as_view(), name='mpg_institutes'),
 
 ]
 
