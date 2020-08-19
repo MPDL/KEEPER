@@ -33,7 +33,7 @@ def get_db(db_name):
 
 HEADER_STEP = 2
 # Headers in MD file to be processed by the parse_markdown
-md_headers =  ('Title', 'Author', 'Year', 'Description', 'Institute', 'Comments', 'Resource Type', 'RelatedIdentifier', 'License')
+MD_HEADERS =  ('Title', 'Author', 'Description', 'Publisher', 'Year', 'Institute', 'Comments', 'Resource Type', 'RelatedIdentifier', 'License')
 
 class TokenTreeRenderer(mistune.Renderer):
     # options is required
@@ -55,29 +55,48 @@ class TokenTreeRenderer(mistune.Renderer):
 
 md_processor = mistune.Markdown(renderer=TokenTreeRenderer())
 
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
 def parse_markdown (md):
     """Parse markdown file"""
+
     res = {}
     stack = []
+    prev_p = None
     parsed = md_processor.render(md)
 
-    for i in range(0, len(parsed)-1, 2):
-        str = parsed[i]
+    # skip non-headers at the beginning
+    k = 0
+    while (k+1 < len(parsed) and parsed[k] != 'header'):
+        k += 2
+
+    # start processing
+    for i in range(k, len(parsed)-1 , 2):
+        line = parsed[i]
         h = parsed[i+1]
-        if str == 'header':
-            if h[2] in md_headers and h[1] == HEADER_STEP:
-                stack.append(h[2])
-        elif str == 'paragraph':
-            if len(stack) > 0:
-                txt_list = []
-                for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] in ['text', 'autolink']:
-                        txt_list.append(h[0][i1+1][0])
-                val = ''.join(txt_list).strip()
-                if val:
-                    res[stack.pop()] = val
-                else:
-                    stack.pop()
+        if line == 'header':
+            # put prev paragraph in res
+            if prev_p:
+                val = ''
+                if len(stack):
+                    val = "\n".join(stack)
+                res.update({prev_p: val})
+            # set new paragraph 
+            stack = []
+            if h[2] in MD_HEADERS and h[1] == HEADER_STEP:
+                prev_p = h[2]
+            else:
+                prev_p = None
+        elif line == 'paragraph':
+            print("h: %r, prev_p: %s" % (h, prev_p))
+            if h[0][0] in ('text'):
+                if h[0][1]:
+                    stack.append(h[0][1][0])
+
+    # put last field if available
+    prev_p and res.update({prev_p: "\n".join(stack) if len(stack) else ''})
+
     return res
 
 def parse_markdown_doi (md):
@@ -95,7 +114,7 @@ def parse_markdown_doi (md):
                 if "\n".join(content):
                     res[header] = "\n".join(content)
                 content = []
-            if h[2] in md_headers and h[1] == HEADER_STEP:
+            if h[2] in MD_HEADERS and h[1] == HEADER_STEP:
                 stack.append(h[2])
         elif str == 'paragraph':
             if len(stack) > 0:
