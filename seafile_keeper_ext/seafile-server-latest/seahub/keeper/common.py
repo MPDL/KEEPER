@@ -55,8 +55,6 @@ class TokenTreeRenderer(mistune.Renderer):
 
 md_processor = mistune.Markdown(renderer=TokenTreeRenderer())
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
 
 def parse_markdown (md):
     """Parse markdown file"""
@@ -64,18 +62,19 @@ def parse_markdown (md):
     res = {}
     stack = []
     prev_p = None
+
     parsed = md_processor.render(md)
 
     # skip non-headers at the beginning
     k = 0
-    while (k+1 < len(parsed) and parsed[k] != 'header'):
+    while (k < len(parsed) and parsed[k] != 'header'):
         k += 2
 
     # start processing
     for i in range(k, len(parsed)-1 , 2):
-        line = parsed[i]
-        h = parsed[i+1]
-        if line == 'header':
+        ln_type = parsed[i]
+        ln_content = parsed[i+1]
+        if ln_type == 'header':
             # put prev paragraph in res
             if prev_p:
                 val = ''
@@ -84,52 +83,22 @@ def parse_markdown (md):
                 res.update({prev_p: val})
             # set new paragraph 
             stack = []
-            if h[2] in MD_HEADERS and h[1] == HEADER_STEP:
-                prev_p = h[2]
+            if ln_content[2] in MD_HEADERS and ln_content[1] == HEADER_STEP:
+                prev_p = ln_content[2]
             else:
                 prev_p = None
-        elif line == 'paragraph':
-            print("h: %r, prev_p: %s" % (h, prev_p))
-            if h[0][0] in ('text'):
-                if h[0][1]:
-                    stack.append(h[0][1][0])
+        elif ln_type == 'paragraph':
+            if ln_content[0][0] in ('text', 'autolink'):
+                if ln_content[0][1]:
+                    stack.append(ln_content[0][1][0])
 
     # put last field if available
     prev_p and res.update({prev_p: "\n".join(stack) if len(stack) else ''})
 
     return res
 
-def parse_markdown_doi (md):
-    res = {}
-    stack = []
-    content = []
-    parsed = md_processor.render(md)
-
-    for i in range(0, len(parsed)-1, 2):
-        str = parsed[i]
-        h = parsed[i+1]
-        if str == 'header':
-            if len(stack) > 0:
-                header = stack.pop()
-                if "\n".join(content):
-                    res[header] = "\n".join(content)
-                content = []
-            if h[2] in MD_HEADERS and h[1] == HEADER_STEP:
-                stack.append(h[2])
-        elif str == 'paragraph':
-            if len(stack) > 0:
-                txt_list = []
-                for i1 in range(0, len(h[0])-1, 2):
-                    if h[0][i1] in ['text', 'autolink']:
-                        txt_list.append(h[0][i1+1][0])
-                val = ''.join(txt_list).strip()
-                if val:
-                    content.append(val)
-
-    if len(stack) > 0 and "\n".join(content):
-        res[stack.pop()] = "\n".join(content)
-    return res
-
+def parse_markdown_doi(md):
+    return parse_markdown(md) 
 
 def truncate_str(s, max_len=256, sfx='...'):
     """
