@@ -12,6 +12,8 @@ from seaserv import seafile_api
 from seahub.onlyoffice.settings import VERIFY_ONLYOFFICE_CERTIFICATE
 from seahub.onlyoffice.utils import generate_onlyoffice_cache_key
 from seahub.utils import gen_inner_file_upload_url
+from seahub.utils.file_op import check_file_lock, \
+        ONLINE_OFFICE_LOCK_OWNER, if_locked_by_online_office
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -103,6 +105,8 @@ def onlyoffice_editor_callback(request):
         # remove document key from cache when document is ready for saving
         # no one is editting
         if status == 2:
+            if if_locked_by_online_office(repo_id, file_path):
+                seafile_api.unlock_file(repo_id, file_path)
             cache.delete(cache_key)
 
         fake_obj_id = {'online_office_update': True,}
@@ -123,5 +127,17 @@ def onlyoffice_editor_callback(request):
         # update file
         update_url = gen_inner_file_upload_url('update-api', update_token)
         requests.post(update_url, files=files)
+
+    if status == 4:
+        doc_key = post_data.get('key')
+        doc_info = json.loads(cache.get("ONLYOFFICE_%s" % doc_key))
+
+        repo_id = doc_info['repo_id']
+        file_path = doc_info['file_path']
+
+        cache_key = generate_onlyoffice_cache_key(repo_id, file_path)
+        if if_locked_by_online_office(repo_id, file_path):
+            seafile_api.unlock_file(repo_id, file_path)
+        cache.delete(cache_key)
 
     return HttpResponse('{"error": 0}')
