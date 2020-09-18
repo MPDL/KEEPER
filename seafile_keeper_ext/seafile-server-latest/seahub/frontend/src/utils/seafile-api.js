@@ -9,4 +9,4 @@ let xcsrfHeaders = cookie.load('sfcsrftoken');
 seafileAPI.initForSeahubUsage({ siteRoot, xcsrfHeaders });
 keeperAPI.initForSeahubUsage({ siteRoot, xcsrfHeaders });
 
-export { seafileAPI };
+export { seafileAPI, keeperAPI };

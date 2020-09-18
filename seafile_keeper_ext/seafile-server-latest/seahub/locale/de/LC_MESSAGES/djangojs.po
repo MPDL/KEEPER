@@ -5488,7 +5488,7 @@ msgid "Failed to move %(name)s."
 msgstr "Fehler beim Verschieben von %(name)s."
 
 # KEEPER
-msgid "Invite Guest"
+msgid "Invite People"
 msgstr "Benutzer einladen"
 
 msgid "Assign DOI to {library_name}"

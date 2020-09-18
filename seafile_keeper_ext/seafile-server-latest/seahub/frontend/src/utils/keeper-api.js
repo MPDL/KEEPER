@@ -9,14 +9,14 @@ class KeeperAPI {
     if (this.token && this.server) {
       this.req = axios.create({
         baseURL: this.server,
-        headers: { Authorization: "Token " + this.token },
+        headers: { Authorization: 'Token ' + this.token },
       });
     }
     return this;
   }
 
   initForSeahubUsage({ siteRoot, xcsrfHeaders }) {
-    if (siteRoot && siteRoot.charAt(siteRoot.length - 1) === "/") {
+    if (siteRoot && siteRoot.charAt(siteRoot.length - 1) === '/') {
       var server = siteRoot.substring(0, siteRoot.length - 1);
       this.server = server;
     } else {
@@ -25,7 +25,7 @@ class KeeperAPI {
 
     this.req = axios.create({
       headers: {
-        "X-CSRFToken": xcsrfHeaders,
+        'X-CSRFToken': xcsrfHeaders,
       },
     });
     return this;
@@ -42,7 +42,7 @@ class KeeperAPI {
   }
 
   getToken() {
-    const url = this.server + "/api2/auth-token/";
+    const url = this.server + '/api2/auth-token/';
     axios
       .post(url, {
         username: this.username,
@@ -55,7 +55,7 @@ class KeeperAPI {
   }
 
   certifyOnBloxberg(repoID, path) {
-    const url = this.server + "/api2/certify/";
+    const url = this.server + '/api2/certify/';
     const params = {
       repo_id: repoID,
       path: path,
@@ -64,7 +64,7 @@ class KeeperAPI {
   }
 
   addDoi(repoID) {
-    const url = this.server + "/api2/doi/";
+    const url = this.server + '/api2/doi/';
     const params = {
       repo_id: repoID,
     };
@@ -72,7 +72,7 @@ class KeeperAPI {
   }
 
   canArchive(repoID) {
-    const url = this.server + "/api2/can-archive/";
+    const url = this.server + '/api2/can-archive/';
     const params = {
       repo_id: repoID,
     };
@@ -80,7 +80,7 @@ class KeeperAPI {
   }
 
   archiveLibrary(repoID) {
-    const url = this.server + "/api2/archive/";
+    const url = this.server + '/api2/archive/';
     const params = {
       repo_id: repoID,
     };
@@ -88,23 +88,23 @@ class KeeperAPI {
   }
 
   listLibraryDetails() {
-    const url = this.server + "/api2/library-details/";
+    const url = this.server + '/api2/library-details/';
     return this.req.get(url);
   }
 
   getArchiveMetadata(repoID) {
-    const url = this.server + "/api2/archive-metadata/?repo_id=" + repoID;
+    const url = this.server + '/api2/archive-metadata/?repo_id=' + repoID;
     return this.req.get(url);
   }
 
   updateArchiveMetadata(repoID, md) {
-    const url = this.server + "/api2/archive-metadata/";
+    const url = this.server + '/api2/archive-metadata/';
     md.repo_id = repoID;
     return this.req.post(url, md);
   }
 
   getMpgInstitutes() {
-    const url = this.server + "/api2/mpg-institutes/";
+    const url = this.server + '/api2/mpg-institutes/';
     return this.req.get(url);
   }
 }

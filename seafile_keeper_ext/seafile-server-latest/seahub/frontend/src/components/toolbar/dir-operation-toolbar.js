@@ -189,6 +189,7 @@ class DirOperationToolbar extends React.Component {
     //Vlad: seafile bug?
     //if (userPerm !== 'rw' && userPerm !== 'admin') {
     //  return '';
+    //
     //}
 
     let itemType = path === '/' ? 'library' : 'dir';
