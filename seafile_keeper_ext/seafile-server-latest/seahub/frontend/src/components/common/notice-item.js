@@ -228,9 +228,9 @@ class NoticeItem extends React.Component {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice = detail.msg === 'Archive for %(name)s has been successfully created.'
-          ? gettext(detail.msg).replace('%(name)s',  '<a href="/library/' + detail.repo_id + '/' + detail.repo_name + '/" target=_new>'
+        ? gettext(detail.msg).replace('%(name)s',  '<a href="/library/' + detail.repo_id + '/' + detail.repo_name + '/" target=_new>'
             + detail.repo_name + '</a>')
-          : gettext(detail.msg);
+        : gettext(detail.msg);
       return {avatar_url, notice};
     }
 

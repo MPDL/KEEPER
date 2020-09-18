@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import MD5 from 'MD5';
-import ReactTooltip from 'react-tooltip'
+import ReactTooltip from 'react-tooltip';
 import { UncontrolledTooltip } from 'reactstrap';
 import { Dropdown, DropdownToggle, DropdownItem } from 'reactstrap';
 import { gettext, siteRoot, mediaUrl, username } from '../../utils/constants';
@@ -78,7 +78,7 @@ class DirentListItem extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!nextProps.isItemFreezed) {
+    if (nextProps.isItemFreezed !== this.props.isItemFreezed && !nextProps.isItemFreezed) {
       this.setState({
         highlight: false,
         isOperationShow: false,
@@ -194,9 +194,9 @@ class DirentListItem extends React.Component {
     let repoID = this.props.repoID;
     let filePath = this.getDirentPath(dirent);
 
-    toaster.success("Certify the file through Bloxberg...", {duration: 4});
+    toaster.success('Certify the file through Bloxberg...', {duration: 4});
     keeperAPI.certifyOnBloxberg(repoID, filePath).then(() => {
-      toaster.success("Transaction succeeded");
+      toaster.success('Transaction succeeded');
     }).catch(error => {
       let errMessage = Utils.getErrorMsg(error);
       toaster.danger(errMessage);
@@ -579,7 +579,7 @@ class DirentListItem extends React.Component {
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
                         <span className="tooltip-title">Beta Status ---- only for testing</span>
                         <p><span className="tooltip-bold">Certify your data via the bloxberg blockchain.</span>
-                        <span className="tooltip-nomal">Check out <a href='https://bloxberg.org' target="_blank">https://bloxberg.org</a></span></p>
+                          <span className="tooltip-nomal">Check out <a href='https://bloxberg.org' target="_blank">https://bloxberg.org</a></span></p>
                       </ReactTooltip>
                     </li>
                   )}
@@ -794,7 +794,7 @@ class DirentListItem extends React.Component {
               itemPath={direntPath}
               userPerm={dirent.permission}
               repoID={this.props.repoID}
-              repoEncrypted={false}
+              repoEncrypted={this.props.repoEncrypted}
               enableDirPrivateShare={this.props.enableDirPrivateShare}
               isGroupOwnedRepo={this.props.isGroupOwnedRepo}
               toggleDialog={this.closeSharedDialog}

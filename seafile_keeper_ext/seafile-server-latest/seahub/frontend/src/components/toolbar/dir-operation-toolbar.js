@@ -8,9 +8,9 @@ import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
 import ViewModeToolbar from './view-mode-toolbar';
-import ArchiveLibraryDialog from "../dialog/archive-library-dialog";
-import { keeperAPI } from "../../utils/seafile-api";
-import { handleCanArchiveResponse } from "../../pages/my-libs/mylib-repo-list-item";
+import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
+import { keeperAPI } from '../../utils/seafile-api';
+import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
 
 
 const propTypes = {
@@ -186,9 +186,10 @@ class DirOperationToolbar extends React.Component {
   render() {
     let { path, repoName, userPerm } = this.props;
     
-    if (userPerm !== 'rw' && userPerm !== 'admin') {
-      return '';
-    }
+    //Vlad: seafile bug?
+    //if (userPerm !== 'rw' && userPerm !== 'admin') {
+    //  return '';
+    //}
 
     let itemType = path === '/' ? 'library' : 'dir';
     let itemName = path === '/' ? repoName : Utils.getFolderName(path);
@@ -223,28 +224,30 @@ class DirOperationToolbar extends React.Component {
 
     return (
       <Fragment>
-        <div className="dir-operation">
-          <div className="operation">
-            {content}
+        {(userPerm === 'rw' || userPerm === 'admin') && (
+          <div className="dir-operation">
+            <div className="operation">
+              {content}
+            </div>
+            {this.state.isUploadMenuShow && (
+              <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+                <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
+                <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
+              </ul>
+            )}
+            {this.state.isCreateMenuShow && (
+              <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
+                <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
+                <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
+                <li className="dropdown-divider"></li>
+                <li className="dropdown-item" onClick={this.onCreateMarkdownToggle}>{gettext('New Markdown File')}</li>
+                <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
+                <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
+                <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
+              </ul>
+            )}
           </div>
-          {this.state.isUploadMenuShow && (
-            <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-              <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
-              <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
-            </ul>
-          )}
-          {this.state.isCreateMenuShow && (
-            <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-              <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
-              <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
-              <li className="dropdown-divider"></li>
-              <li className="dropdown-item" onClick={this.onCreateMarkdownToggle}>{gettext('New Markdown File')}</li>
-              <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
-              <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
-              <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
-            </ul>
-          )}
-        </div>
+        )}
         {Utils.isDesktop() && <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode} />}
         {this.state.isCreateFileDialogShow && (
           <ModalPortal>

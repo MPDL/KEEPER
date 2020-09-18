@@ -330,14 +330,13 @@ class AccountInfo(APIView):
         info['is_staff'] = request.user.is_staff
 
         if getattr(settings, 'MULTI_INSTITUTION', False):
-            # KEEPER 
-            # fix sync client bug: cannot login
-            # TODO: inform seafile, why seahub.institutions.middleware.InstitutionMiddleware 
-            # for MULTI_INSTITUTION = True does does not work
-            # see https://download.seafile.com/published/seafile-manual/deploy_pro/multi_institutions.md
-            # info['is_inst_admin'] = request.user.inst_admin
-            info['is_inst_admin'] = False
-
+            # KEEPER: TODO: check client login! 
+            from seahub.institutions.models import InstitutionAdmin
+            try:
+                InstitutionAdmin.objects.get(user=email)
+                info['is_inst_admin'] = True
+            except InstitutionAdmin.DoesNotExist:
+                info['is_inst_admin'] = False
 
         interval = UserOptions.objects.get_file_updates_email_interval(email)
         info['email_notification_interval'] = 0 if interval is None else interval

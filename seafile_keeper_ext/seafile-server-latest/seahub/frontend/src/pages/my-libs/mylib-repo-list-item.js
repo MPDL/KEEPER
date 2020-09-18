@@ -37,21 +37,21 @@ const propTypes = {
 var handleCanArchiveResponse = (obj, resp) => {
   const d = resp.data;
   let msg, error;
-  const default_error = "Can not archive library due to unknown reason, please contact support.";
+  const default_error = 'Can not archive library due to unknown reason, please contact support.';
   //alert(JSON.stringify(d));
   if (d.status === 'success')
-    obj.setState({quota: d.quota})
-  else if (d.status === "in_processing")
+    obj.setState({quota: d.quota});
+  else if (d.status === 'in_processing')
     msg = d.msg;
-  else if (d.status === "quota_expired")
-    error = gettext("Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support.");
-  else if (d.status === "snapshot_archived")
-    error = gettext("Cannot archive, since the library snapshot has already been archived.");
-  else if (d.status === "is_too_big")
-    error = gettext("Cannot archive, since the library is too large.");
-  else if (d.status === "metadata_error")
+  else if (d.status === 'quota_expired')
+    error = gettext('Cannot archive, since the maximum number of archives for this library has been reached. Please contact Keeper support.');
+  else if (d.status === 'snapshot_archived')
+    error = gettext('Cannot archive, since the library snapshot has already been archived.');
+  else if (d.status === 'is_too_big')
+    error = gettext('Cannot archive, since the library is too large.');
+  else if (d.status === 'metadata_error')
     error = d.msg;
-  else if (d.status === "system_error")
+  else if (d.status === 'system_error')
     error = d.msg || default_error;
   else
     error = default_error;
@@ -59,7 +59,7 @@ var handleCanArchiveResponse = (obj, resp) => {
     toaster.danger(error);
   else if (msg)
     toaster.success(msg);
-}
+};
 
 
 class MylibRepoListItem extends React.Component {
@@ -80,6 +80,7 @@ class MylibRepoListItem extends React.Component {
       isFolderPermissionDialogShow: false,
       isAPITokenDialogShow: false,
       isRepoShareUploadLinksDialogOpen: false,
+      isRepoDeleted: false,
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
     };
@@ -231,7 +232,7 @@ class MylibRepoListItem extends React.Component {
   }
 
   onArchiveLibraryHide = () => {
-        this.setState({isArchiveLibraryDialogShow: false});
+    this.setState({isArchiveLibraryDialogShow: false});
   }
 
   onArchiveLibraryToggle = () => {
@@ -290,6 +291,12 @@ class MylibRepoListItem extends React.Component {
 
   onDeleteRepo = (repo) => {
     seafileAPI.deleteRepo(repo.repo_id).then((res) => {
+      
+      this.setState({
+        isRepoDeleted: true,
+        isDeleteDialogShow: false,
+      });
+      
       this.props.onDeleteRepo(repo);
       let name = repo.repo_name;
       var msg = gettext('Successfully deleted {name}.').replace('{name}', name);
@@ -301,6 +308,8 @@ class MylibRepoListItem extends React.Component {
         errMessage = gettext('Failed to delete {name}.').replace('{name}', name);
       }
       toaster.danger(errMessage);
+
+      this.setState({isRepoDeleted: false});
     });
   }
 
@@ -422,6 +431,7 @@ class MylibRepoListItem extends React.Component {
           <ModalPortal>
             <DeleteRepoDialog
               repo={repo}
+              isRepoDeleted={this.state.isRepoDeleted}
               onDeleteRepo={this.onDeleteRepo}
               toggle={this.onDeleteToggle}
             />
@@ -519,7 +529,7 @@ class MylibRepoListItem extends React.Component {
               toggleDialog={this.onArchiveLibraryToggle}/>
           </ModalPortal>
         )}
-       </Fragment>
+      </Fragment>
     );
   }
 }
@@ -527,4 +537,3 @@ class MylibRepoListItem extends React.Component {
 MylibRepoListItem.propTypes = propTypes;
 
 export default MylibRepoListItem;
-export { handleCanArchiveResponse };
