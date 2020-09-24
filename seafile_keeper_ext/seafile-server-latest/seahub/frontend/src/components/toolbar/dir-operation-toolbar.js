@@ -175,7 +175,7 @@ class DirOperationToolbar extends React.Component {
     keeperAPI.canArchive(this.props.repoID).then((resp) => {
       const d = resp.data;
       handleCanArchiveResponse(this, resp);
-      if (d.status === 'success')
+      if (d.status === 'success' || d.status === 'metadata_error')
         this.setState({isArchiveLibraryDialogShow: true});
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);

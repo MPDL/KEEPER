@@ -5,6 +5,7 @@ import {gettext} from '../../utils/constants';
 import {keeperAPI} from '../../utils/seafile-api';
 import {Utils} from '../../utils/utils';
 import toaster from '../toast';
+import KeeperArchiveMetadataForm from '../keeper-archive-metadata-form';
 
 const propTypes = {
     repoID: PropTypes.string.isRequired,
@@ -16,8 +17,13 @@ const propTypes = {
 class ArchiveLibraryDialog extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {canArchive: false};
     }
 
+    handleCanArchive = (errors) => {
+        //cannot archive until errors are available
+        this.setState({canArchive: !(errors && Object.keys(errors).length > 0)});
+    }
 
     formSubmit = () => {
         this.props.hideDialog();
@@ -39,16 +45,18 @@ class ArchiveLibraryDialog extends React.Component {
         return (
             <Modal isOpen={true} toggle={this.props.hideDialog}>
                 <ModalHeader toggle={this.props.hideDialog}>
-                    <span>{gettext('Archive {library_name}').replace('{library_name}', '')}</span> <span
-                    style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
+                    <span>{gettext('Archive {library_name}').replace('{library_name}', '')}</span>
+                    <span style={{color: '#57a5b8'}}>{this.props.repoName}</span>
+                </ModalHeader>
                 <ModalBody>
                     {split[0]}
                     <a href="https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving"
                        target="_blank">{gettext("Information on Archiving")}</a>.
                     {split[1]}
                 </ModalBody>
+                <KeeperArchiveMetadataForm repoID={this.props.repoID} canArchive={this.handleCanArchive} />
                 <ModalFooter>
-                    <button className="btn btn-primary" onClick={this.formSubmit}>{gettext('Archive')}</button>
+                    <button className="btn btn-primary" disabled={!this.state.canArchive} onClick={this.formSubmit}>{gettext('Archive')}</button>
                 </ModalFooter>
             </Modal>
         )

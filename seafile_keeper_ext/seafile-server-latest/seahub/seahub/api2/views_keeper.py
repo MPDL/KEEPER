@@ -410,6 +410,10 @@ class ArchiveMetadata(APIView):
         if not(amd):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR , 'Cannot get ' + ARCHIVE_METADATA_TARGET)
 
+        errors = archive_metadata_form_validation(amd)
+        if errors:
+            amd.update(errors=errors)
+
         return JsonResponse(amd)
 
     def post(self, request):

@@ -27,7 +27,7 @@ class SideNavFooter extends React.Component {
       borderBottomWidth: this.state.collapsed ? '0' : '1px',
     };
     return (
-      <Fragment>
+        <Fragment>
         <div className="side-nav-footer">
           <div id="footer-header">
             <span aria-hidden="true"

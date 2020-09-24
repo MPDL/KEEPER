@@ -738,7 +738,7 @@ TWO_FACTOR_DEVICE_REMEMBER_DAYS = 90
 ENABLE_FORCE_2FA_TO_ALL_USERS = False
 
 # Enable wiki
-ENABLE_WIKI = False
+ENABLE_WIKI = True
 
 # Enable 'repo snapshot label' feature
 ENABLE_REPO_SNAPSHOT_LABEL = True

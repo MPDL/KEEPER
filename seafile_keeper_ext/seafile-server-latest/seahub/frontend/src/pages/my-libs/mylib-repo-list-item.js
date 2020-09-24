@@ -36,9 +36,9 @@ const propTypes = {
 
 var handleCanArchiveResponse = (obj, resp) => {
   const d = resp.data;
+  //alert(JSON.stringify(d));
   let msg, error;
   const default_error = 'Can not archive library due to unknown reason, please contact support.';
-  //alert(JSON.stringify(d));
   if (d.status === 'success')
     obj.setState({quota: d.quota});
   else if (d.status === 'in_processing')
@@ -49,9 +49,9 @@ var handleCanArchiveResponse = (obj, resp) => {
     error = gettext('Cannot archive, since the library snapshot has already been archived.');
   else if (d.status === 'is_too_big')
     error = gettext('Cannot archive, since the library is too large.');
-  else if (d.status === 'metadata_error')
-    error = d.msg;
-  else if (d.status === 'system_error')
+  else if (d.status === 'metadata_error') {
+   //pass, error will be handled via archive metadata form
+  } else if (d.status === 'system_error')
     error = d.msg || default_error;
   else
     error = default_error;
@@ -537,3 +537,4 @@ class MylibRepoListItem extends React.Component {
 MylibRepoListItem.propTypes = propTypes;
 
 export default MylibRepoListItem;
+export { handleCanArchiveResponse };

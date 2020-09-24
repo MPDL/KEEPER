@@ -514,7 +514,6 @@ def validate_institute(txt):
         # Institute name
         if ins[0]:
             pattern = re.compile(r'^(\s*[\w-]+\s*)+$', re.UNICODE)
-            # pattern = re.compile("^(\s*[\w-]+\s*)+?$", re.UNICODE)
             if not re.match(pattern, ins[0]):
                 msg = 'Wrong institution name'
         else:
@@ -533,8 +532,11 @@ def validate_institute(txt):
             if len(ins) >= 3:
                 if ins[2]:
                     pattern = re.compile(r'^\s*([\w-]+\s*)+?([\s,]+?([\w.-]+\s*)+?[\s;]*?)?$', re.UNICODE)
-                    if not re.match(pattern, ins[2]):
-                        msg = 'Wrong director or PI name'
+                    for d in ins[2].split('|'):
+                        d_strip = d.strip()
+                        if not re.match(pattern, d_strip):
+                            msg = 'Wrong director or PI name: ' + d_strip
+                            break
                 else:
                     msg = 'Director or PI name is empty'
     else:
@@ -542,7 +544,7 @@ def validate_institute(txt):
 
     if msg:
         msg += ': ' + txt
-     
+
     return msg 
 
 def validate_director(txt):

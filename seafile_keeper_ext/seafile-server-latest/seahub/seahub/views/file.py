@@ -616,12 +616,13 @@ def view_lib_file(request, repo_id, path):
         template = 'common_file_view_react.html'
 
     # KEEPER
-    if filename =='archive-metadata.md':
-        template = 'edit_keeper_archive_md_react.html'
-        return_dict['repo_id'] = repo_id
+    # if filename =='archive-metadata.md':
+    #     template = 'edit_keeper_archive_md_react.html'
+    #     return_dict['repo_id'] = repo_id
 
     # KEEPER
-    if filetype == TEXT or fileext in get_conf_text_ext() or filename == 'archive-metadata.md':
+    # if filetype == TEXT or fileext in get_conf_text_ext() or filename == 'archive-metadata.md':
+    if filetype == TEXT or fileext in get_conf_text_ext():
 
         # get file size
         if file_size > FILE_PREVIEW_MAX_SIZE:
