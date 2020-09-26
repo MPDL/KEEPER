@@ -1,9 +1,9 @@
 import React from 'react';
 import Select from 'react-select';
 import AsyncCreatableSelect from 'react-select/lib/AsyncCreatable';
-import ReactDOM from "react-dom";
-import { navigate } from "@reach/router";
-import { Utils } from "./utils/utils";
+import ReactDOM from 'react-dom';
+import { navigate } from '@reach/router';
+import { Utils } from './utils/utils';
 import {
   gettext,
   siteRoot,
@@ -12,19 +12,19 @@ import {
   logoWidth,
   logoHeight,
   siteTitle,
-} from "./utils/constants";
-import { keeperAPI } from "./utils/seafile-api";
-import toaster from "./components/toast";
-import CommonToolbar from "./components/toolbar/common-toolbar";
-import SideNav from "./components/user-settings/side-nav";
+} from './utils/constants';
+import { keeperAPI } from './utils/seafile-api';
+import toaster from './components/toast';
+import CommonToolbar from './components/toolbar/common-toolbar';
+import SideNav from './components/user-settings/side-nav';
 import { Tooltip  } from 'reactstrap';
 import PropTypes from 'prop-types';
 
-import "./css/toolbar.css";
-import "./css/search.css";
+import './css/toolbar.css';
+import './css/search.css';
 
-import "./css/user-settings.css";
-import "./css/keeper-archive-metadata-form.css";
+import './css/user-settings.css';
+import './css/keeper-archive-metadata-form.css';
 
 const { repoId, csrfToken } = window.app.pageOptions;
 let val_errors = {};
@@ -38,16 +38,16 @@ const defaultDirectors = [{ firstName: '', lastName: '' }];
 const defaultPublisher = 'MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.';
 
 const defaultMd = {
-  title: "",
+  title: '',
   authors: defaultAuthors,
   publisher: defaultPublisher,
-  description: "",
-  year: "",
-  institute: "",
-  department: "",
+  description: '',
+  year: '',
+  institute: '',
+  department: '',
   directors: defaultDirectors,
   resourceType: defaultResourceType,
-  license: "",
+  license: '',
 };
 
 const propTypes = {
@@ -92,18 +92,18 @@ class KeeperArchiveMetadataForm extends React.Component {
   constructor(props) {
     super(props);
     this.sideNavItems = [
-      { show: true, href: "#lbl-title", text: gettext("Title") },
-      { show: true, href: "#lbl-authors", text: gettext("Authors") },
-      { show: true, href: "#lbl-publisher", text: gettext("Publisher") },
-      { show: true, href: "#lbl-description", text: gettext("Description") },
-      { show: true, href: "#lbl-year", text: gettext("Year") },
-      { show: true, href: "#lbl-institute", text: gettext("Institute") },
+      { show: true, href: '#lbl-title', text: gettext('Title') },
+      { show: true, href: '#lbl-authors', text: gettext('Authors') },
+      { show: true, href: '#lbl-publisher', text: gettext('Publisher') },
+      { show: true, href: '#lbl-description', text: gettext('Description') },
+      { show: true, href: '#lbl-year', text: gettext('Year') },
+      { show: true, href: '#lbl-institute', text: gettext('Institute') },
       {
         show: true,
-        href: "#lbl-resource-type",
-        text: gettext("Resource Type"),
+        href: '#lbl-resource-type',
+        text: gettext('Resource Type'),
       },
-      { show: true, href: "#lbl-license", text: gettext("License") },
+      { show: true, href: '#lbl-license', text: gettext('License') },
     ];
     this.state = defaultMd;
     this.state.curItemID = this.sideNavItems[0].href.substr(1);
@@ -114,21 +114,21 @@ class KeeperArchiveMetadataForm extends React.Component {
       .getArchiveMetadata(repoId)
       .then((res) => {
         let md = {};
-        if ("data" in res) {
+        if ('data' in res) {
           Object.keys(defaultMd).map((k) => {
-            md[k] = k in res.data ? res.data[k] : "";
+            md[k] = k in res.data ? res.data[k] : '';
           });
-          if (!("authors" in md && md.authors.length > 0)) {
+          if (!('authors' in md && md.authors.length > 0)) {
             md.authors = defaultAuthors;
           }
-          if (!("directors" in md && md.directors.length > 0)) {
+          if (!('directors' in md && md.directors.length > 0)) {
             md.directors = defaultDirectors;
           }
-          if (!("publisher" in md && md.publisher && md.publisher.trim())) {
+          if (!('publisher' in md && md.publisher && md.publisher.trim())) {
             md.publisher = defaultPublisher;
           }
           if (
-            !("resourceType" in md && md.resourceType && md.resourceType.trim())
+            !('resourceType' in md && md.resourceType && md.resourceType.trim())
           ) {
             md.resourceType = defaultResourceType;
           }
@@ -174,14 +174,14 @@ class KeeperArchiveMetadataForm extends React.Component {
           }
 
           //if empty publisher, det defaultPublisher
-          if (!("publisher" in md && md.publisher && md.publisher.trim())) {
+          if (!('publisher' in md && md.publisher && md.publisher.trim())) {
             md.publisher = defaultPublisher;
           }
           this.setState(md);
         } else {
           //redirect!!!
           window.location.href =
-            "redirect_to" in md ? md.redirect_to : siteRoot;
+            'redirect_to' in md ? md.redirect_to : siteRoot;
         } 
         //toaster.success(gettext("Success"), {duration: 3});
       })
@@ -195,20 +195,20 @@ class KeeperArchiveMetadataForm extends React.Component {
     if (selectedItem.is_dir === true) {
       let url =
         siteRoot +
-        "library/" +
+        'library/' +
         selectedItem.repo_id +
-        "/" +
+        '/' +
         selectedItem.repo_name +
         selectedItem.path;
       navigate(url, { repalce: true });
     } else {
       let url =
         siteRoot +
-        "lib/" +
+        'lib/' +
         selectedItem.repo_id +
-        "/file" +
+        '/file' +
         Utils.encodePath(selectedItem.path);
-      let newWindow = window.open("about:blank");
+      let newWindow = window.open('about:blank');
       newWindow.location.href = url;
     }
   };
@@ -240,7 +240,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorAddFields = (idx) => {
     const values = [...this.state.authors];
-    values.splice(idx + 1, 0, { firstName: "", lastName: "", affs: [""] });
+    values.splice(idx + 1, 0, { firstName: '', lastName: '', affs: [''] });
     this.setAuthorInputFields(values);
   };
 
@@ -252,7 +252,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorInputChange = (idx, e) => {
     const values = [...this.state.authors];
-    if (e.target.name === "firstName") {
+    if (e.target.name === 'firstName') {
       values[idx].firstName = e.target.value;
     } else {
       values[idx].lastName = e.target.value;
@@ -268,7 +268,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorAffAddFields = (idx, aidx) => {
     const values = [...this.state.authors];
-    values[idx].affs.splice(aidx + 1, 0, "");
+    values[idx].affs.splice(aidx + 1, 0, '');
     this.setAuthorInputFields(values);
   };
 
@@ -284,7 +284,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleDirectorAddFields = (idx) => {
     const values = [...this.state.directors];
-    values.splice(idx + 1, 0, { firstName: "", lastName: "" });
+    values.splice(idx + 1, 0, { firstName: '', lastName: '' });
     this.setDirectorInputFields(values);
   };
 
@@ -296,7 +296,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleDirectorInputChange = (idx, e) => {
     const values = [...this.state.directors];
-    if (e.target.name === "firstName") {
+    if (e.target.name === 'firstName') {
       values[idx].firstName = e.target.value;
     } else {
       values[idx].lastName = e.target.value;
@@ -331,9 +331,9 @@ class KeeperArchiveMetadataForm extends React.Component {
   handleInstituteChange = (option) => {
     let insName =
       option == null
-        ? ""
-        : !("value" in option) || option.value.trim() === ""
-          ? ""
+        ? ''
+        : !('value' in option) || option.value.trim() === ''
+          ? ''
           : option.value;
     this.setState({ institute: insName });
   };
@@ -366,7 +366,7 @@ class KeeperArchiveMetadataForm extends React.Component {
             }
 
             <div className="main-panel d-flex flex-column">
-              <h2 className="heading">{gettext("Archive Metadata")}</h2>
+              <h2 className="heading">{gettext('Archive Metadata')}</h2>
               <div
                 className="content position-relative"
                 onScroll={this.handleContentScroll}
@@ -389,14 +389,14 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="lbl-title"
                     >
-                      {gettext("Title")}:
+                      {gettext('Title')}:
                     </label>
                     <div className="col-sm-7 setting-item">
                       <textarea
                         className="form-control"
                         value={this.state.title}
                         onChange={(e) => {
-                          this.handleInputChange(e, "title");
+                          this.handleInputChange(e, 'title');
                         }}
                       />
                       {val_errors.title && (
@@ -411,7 +411,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="title-help"
                         text={gettext(
-                          "MANDATORY: Please enter the title of your research project."
+                          'MANDATORY: Please enter the title of your research project.'
                         )}
                       />
                     </div>
@@ -426,15 +426,15 @@ class KeeperArchiveMetadataForm extends React.Component {
                           className="col-sm-1 col-form-label"
                           htmlFor="lbl-authors"
                         >
-                          {gettext("Author") +
+                          {gettext('Author') +
                             (this.state.authors.length > 1
-                              ? " #" + (index + 1)
-                              : "")}
+                              ? ' #' + (index + 1)
+                              : '')}
                           :
                         </label>
                         <div className="form-group col-sm-3 setting-item">
                           <label htmlFor="firstName">
-                            {gettext("First Name")}:
+                            {gettext('First Name')}:
                           </label>
                           <input
                             type="text"
@@ -448,7 +448,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         </div>
                         <div className="form-group col-sm-4 setting-item">
                           <label htmlFor="lastName">
-                            {gettext("Last Name")}:
+                            {gettext('Last Name')}:
                           </label>
                           <input
                             type="text"
@@ -488,10 +488,10 @@ class KeeperArchiveMetadataForm extends React.Component {
                               className="form-group offset-sm-1 col-sm-1"
                               htmlFor="lbl-affiliation"
                             >
-                              {gettext("Affiliation") +
+                              {gettext('Affiliation') +
                                 (inputField.affs.length > 1
-                                  ? " #" + (aidx + 1)
-                                  : "")}
+                                  ? ' #' + (aidx + 1)
+                                  : '')}
                               :
                             </label>
                             <div className="form-group col-sm-6 setting-item">
@@ -551,7 +551,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="publisher"
                     >
-                      {gettext("Publisher")}:
+                      {gettext('Publisher')}:
                     </label>
                     <div className="col-sm-7 setting-item">
                       <input
@@ -559,7 +559,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         className="form-control"
                         value={this.state.publisher}
                         onChange={(e) => {
-                          this.handleInputChange(e, "publisher");
+                          this.handleInputChange(e, 'publisher');
                         }}
                       />
                       {val_errors.publisher && (
@@ -574,7 +574,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="publisher-help"
                         text={gettext(
-                          "MANDATORY: Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource."
+                          'MANDATORY: Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource.'
                         )}
                       />
                     </p>
@@ -587,7 +587,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="description"
                     >
-                      {gettext("Description")}:
+                      {gettext('Description')}:
                     </label>
                     <div className="col-sm-7 setting-item">
                       <textarea
@@ -595,7 +595,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         className="form-control"
                         value={this.state.description}
                         onChange={(e) => {
-                          this.handleInputChange(e, "description");
+                          this.handleInputChange(e, 'description');
                         }}
                       />
                       {val_errors.description && (
@@ -610,7 +610,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="description-help"
                         text={gettext(
-                          "MANDATORY: Please enter the description of your research project."
+                          'MANDATORY: Please enter the description of your research project.'
                         )}
                       />
                     </p>
@@ -623,14 +623,14 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="lbl-year"
                     >
-                      {gettext("Year")}:
+                      {gettext('Year')}:
                     </label>
                     <div className="col-sm-1 setting-item">
                       <input
                         className="form-control"
                         value={this.state.year}
                         onChange={(e) => {
-                          this.handleInputChange(e, "year");
+                          this.handleInputChange(e, 'year');
                         }}
                       />
                       {val_errors.year && (
@@ -645,7 +645,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="year-help"
                         text={gettext(
-                          "MANDATORY: Please enter year of project start."
+                          'MANDATORY: Please enter year of project start.'
                         )}
                       />
                     </p>
@@ -658,10 +658,10 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="institute"
                     >
-                      {gettext("Institute")}:
+                      {gettext('Institute')}:
                     </label>
                     <div className="form-group col-sm-4 setting-item">
-                      <label>{gettext("Institute name")}:</label>
+                      <label>{gettext('Institute name')}:</label>
                       <AsyncCreatableSelect
                         id="institute"
                         isClearable
@@ -676,14 +676,14 @@ class KeeperArchiveMetadataForm extends React.Component {
                     </div>
                     <div className="form-group col-sm-3 setting-item">
                       <label htmlFor="department">
-                        {gettext("Department")}:
+                        {gettext('Department')}:
                       </label>
                       <input
                         type="text"
                         className="form-control"
                         value={this.state.department}
                         onChange={(e) =>
-                          this.handleInputChange(e, "department")
+                          this.handleInputChange(e, 'department')
                         }
                       />
                     </div>
@@ -691,7 +691,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="institute-help"
                         text={gettext(
-                          "MANDATORY: Please enter the related Max Planck Institute for this research project."
+                          'MANDATORY: Please enter the related Max Planck Institute for this research project.'
                         )}
                       />
                     </p>
@@ -703,8 +703,8 @@ class KeeperArchiveMetadataForm extends React.Component {
                     {val_errors.department && (
                       <label
                         className={
-                          (val_errors.institute ? "" : "offset-sm-5 ") +
-                          "col-sm-4 col-form-label val-error"
+                          (val_errors.institute ? '' : 'offset-sm-5 ') +
+                          'col-sm-4 col-form-label val-error'
                         }
                       >
                         {val_errors.department}
@@ -719,15 +719,15 @@ class KeeperArchiveMetadataForm extends React.Component {
                           className="offset-sm-1 col-sm-1 col-form-label"
                           htmlFor="directors"
                         >
-                          {gettext("Director or PI") +
+                          {gettext('Director or PI') +
                             (this.state.directors.length > 1
-                              ? " #" + (index + 1)
-                              : "")}
+                              ? ' #' + (index + 1)
+                              : '')}
                           :
                         </label>
                         <div className="form-group col-sm-3 setting-item">
                           <label htmlFor="firstName">
-                            {gettext("First Name")}:
+                            {gettext('First Name')}:
                           </label>
                           <input
                             type="text"
@@ -741,7 +741,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         </div>
                         <div className="form-group col-sm-3 setting-item">
                           <label htmlFor="lastName">
-                            {gettext("Last Name")}:
+                            {gettext('Last Name')}:
                           </label>
                           <input
                             type="text"
@@ -789,7 +789,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="resource-type"
                     >
-                      {gettext("Resource Type")}:
+                      {gettext('Resource Type')}:
                     </label>
                     <div className="col-sm-2 setting-item">
                       <Select
@@ -806,7 +806,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       <HelpIcon
                         id="resource-type-help"
                         text={gettext(
-                          "MANDATORY: Please enter the resource type of the entity. Allowed values for this field: Library (default), Project."
+                          'MANDATORY: Please enter the resource type of the entity. Allowed values for this field: Library (default), Project.'
                         )}
                       />
                     </p>
@@ -819,7 +819,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                       className="col-sm-1 col-form-label"
                       htmlFor="license"
                     >
-                      {gettext("License")}:
+                      {gettext('License')}:
                     </label>
                     <div className="col-sm-7 setting-item">
                       <input
@@ -827,14 +827,14 @@ class KeeperArchiveMetadataForm extends React.Component {
                         className="form-control"
                         value={this.state.license}
                         onChange={(e) => {
-                          this.handleInputChange(e, "license");
+                          this.handleInputChange(e, 'license');
                         }}
                       />
                     </div>
                     <p className="col-sm-4 m-0 input-tip">
                       <HelpIcon
                         id="license-help"
-                        text={gettext("OPTIONAL: Please enter the license.")}
+                        text={gettext('OPTIONAL: Please enter the license.')}
                       />
                     </p>
                   </div>
@@ -843,8 +843,8 @@ class KeeperArchiveMetadataForm extends React.Component {
                     type="submit"
                     className="btn btn-outline-primary offset-sm-6 col-sm-2"
                   >
-                    {" "}
-                    {gettext("Submit")}
+                    {' '}
+                    {gettext('Submit')}
                   </button>
                 </form>
 
@@ -859,4 +859,4 @@ class KeeperArchiveMetadataForm extends React.Component {
   }
 }
 
-ReactDOM.render(<KeeperArchiveMetadataForm />, document.getElementById("wrapper"));
+ReactDOM.render(<KeeperArchiveMetadataForm />, document.getElementById('wrapper'));

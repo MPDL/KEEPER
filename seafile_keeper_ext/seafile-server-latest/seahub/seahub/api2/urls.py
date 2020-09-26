@@ -17,7 +17,8 @@ from .endpoints.send_share_link_email import SendShareLinkView
 from .endpoints.send_upload_link_email import SendUploadLinkView
 
 # KEEPER
-from .views_keeper import CatalogView, BloxbergView, AddDoiView, ArchiveLib, CanArchive, LibraryDetailsView, ArchiveMetadata, MPGInstitutes
+from .views_keeper import CatalogView, CatalogReactView, BloxbergView, AddDoiView, ArchiveLib, \
+    CanArchive, LibraryDetailsView, ArchiveMetadata, MPGInstitutes
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -111,6 +112,8 @@ urlpatterns = [
 
     # KEEPER
     url(r'^catalog/$', CatalogView.as_view()),
+    # TODO: clean up!!!
+    url(r'^project-catalog/$', CatalogReactView.as_view(), name='project_catalog'),
 
     # Bloxberg
     url(r'^certify/$', BloxbergView.as_view()),
@@ -129,6 +132,8 @@ urlpatterns = [
 
     # MPG Institutes list
     url(r'^mpg-institutes/$', MPGInstitutes.as_view(), name='mpg_institutes'),
+
+    # Project Catalog
 
 ]
 

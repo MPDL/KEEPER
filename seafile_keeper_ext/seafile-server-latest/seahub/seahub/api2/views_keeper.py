@@ -9,7 +9,7 @@ from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_e
 from seahub.api2.utils import json_response
 from seaserv import seafile_api
 
-from keeper.catalog.catalog_manager import get_catalog
+from keeper.catalog.catalog_manager import get_catalog, add_landing_page_entry
 from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
 from keeper.models import CDC, DoiRepo, Catalog
@@ -49,6 +49,47 @@ class CatalogView(APIView):
     def get(self, request, format=None):
         catalog = get_catalog()
         return catalog
+
+class CatalogReactView(APIView):
+    """
+    Returns Keeper Catalog.
+    """
+    @json_response
+    def get(self, request):
+        try:
+            page = int(request.GET.get('page', '1'))
+            per_page = int(request.GET.get('per_page', '25'))
+        except ValueError:
+            page = 1
+            per_page = 25
+
+        if page <= 0:
+            error_msg = 'page invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        if per_page <= 0:
+            error_msg = 'per_page invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        start = (page - 1) * per_page
+
+        # set limit to per_page + 1 to eval hasMore value
+        limit = per_page + 1
+
+        try:
+            catalog = Catalog.objects.get_mds_ordered(start=start, limit=limit)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        hasMore = len(catalog) == per_page + 1
+        catalog = add_landing_page_entry(catalog[:per_page])
+
+        return { "more": hasMore, "items": catalog }
+
+
+
 
 class BloxbergView(APIView):
     """

@@ -220,6 +220,11 @@ module.exports = {
       require.resolve('react-dev-utils/webpackHotDevClient'),
       paths.appSrc + '/keeper-archive-metadata-form.js',
     ],
+    keeperProjectCatalog: [
+      require.resolve('./polyfills'),
+      require.resolve('react-dev-utils/webpackHotDevClient'),
+      paths.appSrc + '/keeper-project-catalog.js',
+    ],
   },
 
   output: {

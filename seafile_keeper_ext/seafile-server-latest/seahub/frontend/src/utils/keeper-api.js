@@ -107,6 +107,16 @@ class KeeperAPI {
     const url = this.server + '/api2/mpg-institutes/';
     return this.req.get(url);
   }
+
+  getProjectCatalog(page, perPage) {
+    var url = this.server + '/api2/project-catalog/';
+    var params = {
+      page: page || 1,
+      per_page: perPage || 25
+    };
+    return this.req.get(url, {params: params});
+  }
+
 }
 
 export { KeeperAPI };

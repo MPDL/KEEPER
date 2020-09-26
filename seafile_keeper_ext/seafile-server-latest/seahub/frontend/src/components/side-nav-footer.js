@@ -33,7 +33,7 @@ class SideNavFooter extends React.Component {
             <span aria-hidden="true"
               className={(this.state.collapsed ? 'keeper-icon-triangle-up' : 'keeper-icon-triangle-down') + ' vam'}
               onClick={this.onFooterExpandedToggle}/>&nbsp;
-            <a href={siteRoot + 'catalog/'} target="_blank" className="item">{gettext('Project Catalog')}</a>
+            <a href={siteRoot + 'project-catalog/'} target="_blank" className="item">{gettext('Project Catalog')}</a>
             <a href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper" target="_blank"
               className="item">{gettext('Help / Knowledge Base')}</a>
             <a className="item cursor-pointer last-item" onClick={this.onAboutDialogToggle}>{gettext('About')}</a>
