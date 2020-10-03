@@ -6,8 +6,14 @@ from picklefield.fields import PickledObjectField
 
 from django.utils import timezone
 
+from seahub.settings import SERVICE_URL
+
+from operator import attrgetter
+
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class CatalogManager(models.Manager):
 
@@ -27,7 +33,7 @@ class CatalogManager(models.Manager):
         if c:
             # don not delete the entry, set it to rm
             # return c.delete()
-            c.rm=timezone.now()
+            c.rm = timezone.now()
             c.save()
         return None
 
@@ -43,8 +49,20 @@ class CatalogManager(models.Manager):
         return mds
 
     def get_mds_ordered(self, start=0, limit=25):
+        """
+        SELECT *,
+            IF(EXISTS(SELECT 1 FROM doi_repos WHERE doi_repos.repo_id = c.repo_id AND doi_repos.rm is NULL) OR c.is_archived = 1, CONCAT('url', c.repo_id), NULL) AS
+            landing_page_url
+        FROM
+            `keeper_catalog` AS c
+        WHERE
+            c.rm is NULL
+        """
         mds = []
-        for c in self.exclude(rm__isnull=False).order_by('-modified').all()[start:limit]:
+        for c in self.exclude(rm__isnull=False).order_by('-modified').all()[start:start + limit]:
+            # add landing page link
+            if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
+                c.md["landing_page_url"] = '%s/landing-page/libs/%s/' % (SERVICE_URL, c.repo_id)
             c.md.update(
                 catalog_id=c.catalog_id,
                 repo_id=c.repo_id,
@@ -52,6 +70,178 @@ class CatalogManager(models.Manager):
             )
             mds.append(c.md)
         return mds
+
+    def get_mds_with_facets(self, author_facet=None, year_facet=None, institute_facet=None, director_facet=None,
+                            start=0, limit=25):
+
+        def _f(f):
+            return f is None or not f.get("termsChecked")
+
+        if _f(author_facet) and _f(year_facet) and _f(institute_facet) and _f(director_facet):
+            return self.get_mds_ordered(start, limit)
+        mds = []
+        for c in self.exclude(rm__isnull=False).order_by('-modified').all():
+            # author
+            if "termsChecked" in author_facet:
+                a_list = c.md.get("authors")
+                if a_list:
+                    a_list = [a.get("name") for a in c.md.get("authors")]
+                    if a_list:
+                        inter = set(author_facet["termsChecked"]).intersection(a_list)
+                        if not (inter and list(inter)):
+                            continue
+                else:
+                    continue
+            # year
+            if "termsChecked" in year_facet and len(year_facet.get("termsChecked")) > 0:
+                y = c.md.get("year")
+                if y and y.strip():
+                    if not (y.strip() in year_facet["termsChecked"]):
+                        continue
+                else:
+                    continue
+
+            # add landing page link
+            if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
+                c.md["landing_page_url"] = '%s/landing-page/libs/%s/' % (SERVICE_URL, c.repo_id)
+            c.md.update(
+                catalog_id=c.catalog_id,
+                repo_id=c.repo_id,
+                is_archived=c.is_archived,
+                _order_key="".join([a["name"] for a in c.md.get("authors")]),
+            )
+            mds.append(c.md)
+
+        order = author_facet.get("order")
+        if order:
+            reverse = order == 'desc'
+            mds = sorted(mds, key=lambda c: c["_order_key"], reverse=reverse)
+
+        # clean up
+        [m.pop("_order_key", None) for m in mds]
+
+        return mds[start:limit]
+
+
+
+    def get_mds_with_scope_ordered(self, scope=None, start=0, limit=25):
+
+        #logging.error("s:%s, l:%s scope:%r", start, limit, scope)
+        if not scope:
+            return self.get_mds_ordered(start, limit)
+        mds = []
+        for c in self.exclude(rm__isnull=False).filter(catalog_id__in=scope).order_by('-modified').all():
+
+            # add landing page link
+            if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
+                c.md["landing_page_url"] = '%s/landing-page/libs/%s/' % (SERVICE_URL, c.repo_id)
+            c.md.update(
+                catalog_id=c.catalog_id,
+                repo_id=c.repo_id,
+                is_archived=c.is_archived,
+                #_author_key="".join([a["name"] for a in c.md.get("authors")]),
+                #_year_key=c.md.get("year").strip(),
+                # _inst_key=c.md.get("institute").
+            )
+            mds.append(c.md)
+
+        # TODO: implement complex sorting in python
+        # https://docs.python.org/3/howto/sorting.html#sort-stability-and-complex-sorts
+        # order = author_facet.get("order")
+        # if order:
+        #     reverse = order == 'desc'
+        #     mds = sorted(mds, key=lambda c: c["_order_key"], reverse=reverse)
+
+        # clean up
+        #[m.pop("_order_key", None) for m in mds]
+
+        return mds[start:start + limit]
+
+    def _get_catalog_items_with_refinement(self, in_cat):
+        return self.exclude(rm__isnull=False).filter(catalog_id__in=in_cat).all() if in_cat and len(in_cat) > 0 \
+            else self.exclude(rm__isnull=False).all()
+
+    def get_md_authors_ordered(self, in_cat=None):
+        """
+        Get list of catalog authors ordered and list of catalog_ids of the corresponding author
+        """
+        a_entries = {}
+        for c in self._get_catalog_items_with_refinement(in_cat):
+            a_tmp = c.md.get("authors")
+            if a_tmp:
+                for a in a_tmp:
+                    name = a.get("name")
+                    if name:
+                        if not name in a_entries:
+                            a_entries[name] = [c.catalog_id]
+                        else:
+                            a_entries[name].append(c.catalog_id)
+        authors = list(a_entries.keys())
+        authors.sort()
+        return [(a, a_entries[a]) for a in authors]
+
+    def get_md_years_ordered(self, in_cat):
+        """
+        Get list of catalog years, sorted
+        """
+        years = set()
+        y_count = {}
+        for c in self._get_catalog_items_with_refinement(in_cat):
+            y = c.md.get("year")
+            if y:
+                if not y in y_count:
+                    y_count[y] = 1
+                else:
+                    y_count[y] += 1
+                years.add(y)
+        years = list(years)
+        years.sort(reverse=True)
+        return [(y, y_count[y]) for y in years]
+
+    def get_md_institutes_ordered(self, in_cat=None):
+        """
+        Get list of catalog years, sorted
+        """
+        insts = set()
+        i_count = {}
+        for c in self._get_catalog_items_with_refinement(in_cat):
+            inst = c.md.get("institute")
+            if inst:
+                i_split = inst.split(";")
+                if len(i_split) > 0 and i_split[0]:
+                    inst = i_split[0].strip()
+                    if inst:
+                        if not inst in i_count:
+                            i_count[inst] = 1
+                        else:
+                            i_count[inst] += 1
+                        insts.add(inst)
+        insts = list(insts)
+        insts.sort()
+        return [(inst, i_count[inst]) for inst in insts]
+
+    def get_md_directors_ordered(self, in_cat=None):
+        """
+        Get list of catalog years, sorted
+        """
+        directors = set()
+        d_count = {}
+        for c in self._get_catalog_items_with_refinement(in_cat):
+            inst = c.md.get("institute")
+            if inst:
+                i_split = inst.split(";")
+                if len(i_split) >= 3 and i_split[2]:
+                    d = i_split[2].strip()
+                    for d in d.split("|"):
+                        d = d.strip()
+                        if not d in d_count:
+                            d_count[d] = 1
+                        else:
+                            d_count[d] += 1
+                        directors.add(d)
+        directors = list(directors)
+        directors.sort()
+        return [(d, d_count[d]) for d in directors]
 
     def get_with_metadata(self):
         """
@@ -70,7 +260,6 @@ class CatalogManager(models.Manager):
             except Exception as e:
                 logger.error('Cannot retrieve library details entries: %s', e)
         return entries
-
 
     def get_certified(self):
         """
@@ -118,7 +307,6 @@ class CatalogManager(models.Manager):
 
 
 class Catalog(models.Model):
-
     """ Keeper Catalog DB model """
 
     repo_id = models.CharField(max_length=37, unique=True, null=False)
@@ -177,8 +365,8 @@ class CDCManager(models.Manager):
             event = EVENT.db_create
         return cdc.cdc_id, event
 
-class CDC(models.Model):
 
+class CDC(models.Model):
     """ Keeper Cared Data Certficate DB model"""
 
     class Meta:
@@ -195,6 +383,7 @@ class CDC(models.Model):
 ###### signal handlers
 from django.dispatch import receiver
 from seahub.signals import repo_deleted
+
 
 @receiver(repo_deleted)
 def remove_keeper_entries(sender, **kwargs):
@@ -224,15 +413,16 @@ class BCertificateManager(models.Manager):
         Add to DB a new Bloxberg certificate, modify currently is not needed
         Returns Bloxberg certificate id and EVENT: db_create
         """
-        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner, checksum=checksum)
+        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id,
+                                     created=created_time, owner=owner, checksum=checksum)
         b_certificate.save()
         return b_certificate.obj_id
 
     def has_bloxberg_certificate(self, repo_id, path, commit_id):
         return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count()
 
-class BCertificate(models.Model):
 
+class BCertificate(models.Model):
     """ Bloxberg Certificate model """
 
     class Meta:
@@ -240,7 +430,7 @@ class BCertificate(models.Model):
 
     transaction_id = models.CharField(max_length=255, null=False)
     repo_id = models.CharField(max_length=37, null=False)
-    commit_id =  models.CharField(max_length=41, null=False)
+    commit_id = models.CharField(max_length=41, null=False)
     path = models.TextField(null=False)
     obj_id = models.AutoField(primary_key=True)
     created = models.DateTimeField()
@@ -248,11 +438,13 @@ class BCertificate(models.Model):
     checksum = models.CharField(max_length=64, null=False)
     objects = BCertificateManager()
 
+
 ###### DOI Repository ######
 class DoiRepoManager(models.Manager):
 
     def add_doi_repo(self, repo_id, repo_name, doi, prev_doi, commit_id, owner, md):
-        doi_repo = self.model(repo_id=repo_id, repo_name=repo_name, doi=doi, prev_doi=prev_doi, commit_id=commit_id, owner=owner, md=md)
+        doi_repo = self.model(repo_id=repo_id, repo_name=repo_name, doi=doi, prev_doi=prev_doi, commit_id=commit_id,
+                              owner=owner, md=md)
         doi_repo.save()
         return doi_repo
 
@@ -268,9 +460,10 @@ class DoiRepoManager(models.Manager):
     def get_doi_repos_by_repo_id(self, repo_id):
         return super(DoiRepoManager, self).filter(repo_id=repo_id)
 
-class DoiRepo(models.Model):
 
+class DoiRepo(models.Model):
     """ Doi Repository """
+
     class Meta:
         db_table = 'doi_repos'
 

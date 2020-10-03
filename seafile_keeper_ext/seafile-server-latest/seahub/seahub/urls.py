@@ -5,7 +5,6 @@ from django.conf.urls import url, include
 from django.views.generic import TemplateView
 
 from seahub.views import *
-from seahub.views.project_catalog import project_catalog
 from seahub.views.sysadmin import *
 from seahub.views.ajax import *
 from seahub.views.sso import *
@@ -177,8 +176,7 @@ from seahub.api2.endpoints.file_participants import FileParticipantsView, FilePa
 from seahub.api2.endpoints.repo_related_users import RepoRelatedUsersView
 
 # KEEPER
-from seahub.api2.views_keeper import DoiView, LandingPageView, ArchiveView
-from seahub.views.project_catalog import project_catalog
+from seahub.api2.views_keeper import DoiView, LandingPageView, ArchiveView, project_catalog_starter
 
 urlpatterns = [
     url(r'^accounts/', include('seahub.base.registration_urls')),
@@ -728,7 +726,7 @@ urlpatterns = [
     url(r'^doi/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<commit_id>[0-9a-f]{40})/$', DoiView, name='doi_page'),
     url(r'^landing-page/libs/(?P<repo_id>[-0-9a-f]{36})/$', LandingPageView, name='landing_page'),
     url(r'^archive/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<version_id>\d+)/(?P<is_tombstone>\d+)/$', ArchiveView, name='Archive_page'),
-    url(r'^project-catalog/$', project_catalog, name='project_catalog'),
+    url(r'^project-catalog/$', project_catalog_starter, name='project_catalog_starter'),
 ]
 
 try:

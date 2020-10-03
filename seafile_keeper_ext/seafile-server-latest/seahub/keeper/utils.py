@@ -14,7 +14,7 @@ from seahub.profile.models import Profile
 
 from thirdpart.seafobj import fs_mgr, commit_mgr
 from seaserv import seafile_api, get_repo
-from seahub.settings import KEEPER_MPG_DOMAINS_URL, KEEPER_MPG_IP_LIST_URL, ARCHIVE_METADATA_TARGET, SERVER_EMAIL
+from seahub.settings import KEEPER_MPG_DOMAINS_URL, KEEPER_MPG_IP_LIST_URL, ARCHIVE_METADATA_TARGET, SERVER_EMAIL, DEBUG
 
 from keeper.common import parse_markdown, get_repo_root_dir
 
@@ -383,8 +383,11 @@ def get_mpg_ips_and_institutes():
 def is_in_mpg_ip_range(ip):
     # only for tests!
     # return True
-    ip_set, _ = get_mpg_ips_and_institutes()
-    return IPAddress(ip) in ip_set 
+    if DEBUG:
+        return True
+    else:
+        ip_set, _ = get_mpg_ips_and_institutes()
+        return IPAddress(ip) in ip_set
 
 def account_can_be_auto_activated(email):
     """

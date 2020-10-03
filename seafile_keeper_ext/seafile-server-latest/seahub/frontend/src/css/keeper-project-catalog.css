@@ -22,7 +22,7 @@ h3 {
 
 .item-block {
   border-bottom: 1px solid #dddddd;
-  padding: 10px 10px 10px 45px;
+  padding: 12px 0px 12px 4px;
 }
 
 .item-block img {
@@ -43,3 +43,16 @@ h3 {
   margin: 0;
   padding: 0;
 }
+
+#lg_footer h4 {
+  color: #57a5b8 !important;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: .5rem;
+}
+
+#keeper-links {
+  margin-top: 10px;
+}
+
+

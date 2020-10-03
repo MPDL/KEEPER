@@ -108,13 +108,39 @@ class KeeperAPI {
     return this.req.get(url);
   }
 
-  getProjectCatalog(page, perPage) {
+  getProjectCatalog(page, perPage, authorFacet, yearFacet, instituteFacet, directorFacet, scope) {
     var url = this.server + '/api2/project-catalog/';
     var params = {
       page: page || 1,
-      per_page: perPage || 25
+      per_page: perPage || 25,
+      author_facet: authorFacet || {},
+      year_facet: yearFacet || {},
+      institute_facet: instituteFacet || {},
+      director_facet: directorFacet || {},
+      scope: scope || [],
     };
-    return this.req.get(url, {params: params});
+    console.log("scope:" + JSON.stringify(scope));
+    return this.req.post(url, params);
+  }
+
+  getCatalogAuthors() {
+    var url = this.server + '/api2/catalog-authors/';
+    return this.req.get(url);
+  }
+
+  getCatalogYears() {
+    var url = this.server + '/api2/catalog-years/';
+    return this.req.get(url);
+  }
+
+  getCatalogInstitutes() {
+    var url = this.server + '/api2/catalog-institutes/';
+    return this.req.get(url);
+  }
+
+  getCatalogDirectors() {
+    var url = this.server + '/api2/catalog-directors/';
+    return this.req.get(url);
   }
 
 }

@@ -2,11 +2,12 @@ from thirdpart.rest_framework.views import APIView
 from thirdpart.rest_framework import status
 from thirdpart.rest_framework.response import Response
 
-from seahub import settings
 from seahub.auth.decorators import login_required
-from seahub.settings import DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
-from seahub.base.templatetags.seahub_tags import email2nickname, email2contact_email
-from seahub.api2.utils import json_response
+from seahub.settings import DEBUG, DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
+from seahub.base.templatetags.seahub_tags import email2contact_email
+from seahub.auth.decorators import login_required
+from seahub.api2.utils import api_error, json_response
+
 from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog, add_landing_page_entry
@@ -14,23 +15,22 @@ from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certific
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
 from keeper.models import CDC, DoiRepo, Catalog
 
-from thirdpart.django.core.urlresolvers import reverse
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from django.utils.translation import ugettext as _
-from django.utils.translation import get_language, activate
+from django.utils.translation import activate
 
 from urllib.parse import quote_plus
 
 import logging
-import json
 import datetime
 import requests
 from requests.exceptions import ConnectionError, Timeout
-from seahub.api2.utils import api_error
 
-from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status, archive_metadata_form_validation, get_mpg_ips_and_institutes, get_archive_metadata, save_archive_metadata, MPI_NAME_LIST_DEFAULT
+from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status,\
+    archive_metadata_form_validation, get_mpg_ips_and_institutes, get_archive_metadata, save_archive_metadata, \
+    is_in_mpg_ip_range, MPI_NAME_LIST_DEFAULT
 
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
@@ -40,6 +40,20 @@ logger = logging.getLogger(__name__)
 
 BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
+
+allowed_ip_prefixes = []
+# allowed_ip_prefixes = ['','172.16.1','10.10.','192.168.1.10','192.129.1.102']
+
+
+@login_required
+def project_catalog_starter(request):
+    """
+    Get project catalog, first call
+    """
+    return render(request, 'project_catalog_react.html', {
+        'current_page': 1,
+        'per_page': 25,
+    })
 
 class CatalogView(APIView):
     """
@@ -55,10 +69,31 @@ class CatalogReactView(APIView):
     Returns Keeper Catalog.
     """
     @json_response
-    def get(self, request):
+    def post(self, request):
+
+        # check access
+        can_access = DEBUG
+        if not can_access:
+            remote_addr = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
+            if remote_addr:
+                for allowed_ip_prefix in allowed_ip_prefixes:
+                    if (remote_addr.startswith(allowed_ip_prefix)):
+                        can_access = True
+                        break
+                if not can_access and is_in_mpg_ip_range(remote_addr):
+                    can_access = True
+
+        if not can_access:
+            return {"is_access_denied": True}
+
         try:
-            page = int(request.GET.get('page', '1'))
-            per_page = int(request.GET.get('per_page', '25'))
+            page = int(request.data.get('page', '1'))
+            per_page = int(request.data.get('per_page', '25'))
+            author_facet = request.data.get('author_facet', None)
+            year_facet = request.data.get('year_facet', None)
+            institute_facet = request.data.get('institute_facet', None)
+            director_facet = request.data.get('director_facet', None)
+            scope = request.data.get('scope', None)
         except ValueError:
             page = 1
             per_page = 25
@@ -71,25 +106,89 @@ class CatalogReactView(APIView):
             error_msg = 'per_page invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
+        if not(scope and len(scope)>0):
+            scope = None;
+
         start = (page - 1) * per_page
 
         # set limit to per_page + 1 to eval hasMore value
         limit = per_page + 1
 
         try:
-            catalog = Catalog.objects.get_mds_ordered(start=start, limit=limit)
+            catalog = Catalog.objects.get_mds_with_scope_ordered(scope=scope, start=start, limit=limit)
+
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         hasMore = len(catalog) == per_page + 1
-        catalog = add_landing_page_entry(catalog[:per_page])
 
-        return { "more": hasMore, "items": catalog }
+        return {"more": hasMore, "items": catalog[:per_page]}
 
+class CatalogAuthors(APIView):
+    """
+    Returns Keeper Catalog Authors.
+    """
+    @json_response
+    def get(self, request):
+        authors = []
+        try:
+            authors = Catalog.objects.get_md_authors_ordered()
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
+        return JsonResponse(authors, safe=False)
 
+class CatalogYears(APIView):
+    """
+    Returns Keeper Catalog Years.
+    """
+    @json_response
+    def get(self, request):
+        years = []
+        try:
+            years = Catalog.objects.get_md_years_ordered()
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        return JsonResponse(years, safe=False)
+
+class CatalogInstitutes(APIView):
+    """
+    Returns Keeper Catalog Intitutes.
+    """
+    @json_response
+    def get(self, request):
+        insts = []
+        try:
+            insts = Catalog.objects.get_md_institutes_ordered()
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        return JsonResponse(insts, safe=False)
+
+class CatalogDirectors(APIView):
+    """
+    Returns Keeper Catalog Directors.
+    """
+    @json_response
+    def get(self, request):
+        directors = []
+        try:
+            directors = Catalog.objects.get_md_directors_ordered()
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        return JsonResponse(directors, safe=False)
 
 class BloxbergView(APIView):
     """

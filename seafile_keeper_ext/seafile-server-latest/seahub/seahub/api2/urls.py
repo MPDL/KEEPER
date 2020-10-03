@@ -18,7 +18,8 @@ from .endpoints.send_upload_link_email import SendUploadLinkView
 
 # KEEPER
 from .views_keeper import CatalogView, CatalogReactView, BloxbergView, AddDoiView, ArchiveLib, \
-    CanArchive, LibraryDetailsView, ArchiveMetadata, MPGInstitutes
+    CanArchive, LibraryDetailsView, ArchiveMetadata, MPGInstitutes, \
+    CatalogAuthors, CatalogYears, CatalogInstitutes, CatalogDirectors
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -111,9 +112,14 @@ urlpatterns = [
     url(r'^repos/(?P<repo_id>[-0-9-a-f]{36})/fileops/move/$', OpMoveView.as_view(), name="api2-fileops-move"),
 
     # KEEPER
+    # Project Catalog
     url(r'^catalog/$', CatalogView.as_view()),
     # TODO: clean up!!!
     url(r'^project-catalog/$', CatalogReactView.as_view(), name='project_catalog'),
+    url(r'^catalog-authors/$', CatalogAuthors.as_view(), name='catalog_authors'),
+    url(r'^catalog-years/$', CatalogYears.as_view(), name='catalog_years'),
+    url(r'^catalog-institutes/$', CatalogInstitutes.as_view(), name='catalog_institutes'),
+    url(r'^catalog-directors/$', CatalogDirectors.as_view(), name='catalog_directors'),
 
     # Bloxberg
     url(r'^certify/$', BloxbergView.as_view()),
@@ -133,7 +139,6 @@ urlpatterns = [
     # MPG Institutes list
     url(r'^mpg-institutes/$', MPGInstitutes.as_view(), name='mpg_institutes'),
 
-    # Project Catalog
 
 ]
 
