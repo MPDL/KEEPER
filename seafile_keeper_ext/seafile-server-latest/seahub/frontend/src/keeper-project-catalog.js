@@ -485,7 +485,7 @@ class Item extends React.Component {
           <div className="row">
             <div className="col-md-1">
               {
-                item.is_certified && <img src="/catalog/static/certified.png"/>
+                item.is_certified && <img src="/media/custom/certified.png"/>
               }
             </div>
             <div className="col-md-11">
