@@ -55,14 +55,16 @@ def project_catalog_starter(request):
         'per_page': 25,
     })
 
+
 class CatalogView(APIView):
     """
     Returns Keeper Catalog.
     """
     @json_response
-    def get(self, request, format=None):
+    def get(self):
         catalog = get_catalog()
         return catalog
+
 
 class CatalogReactView(APIView):
     """
@@ -77,7 +79,7 @@ class CatalogReactView(APIView):
             remote_addr = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
             if remote_addr:
                 for allowed_ip_prefix in allowed_ip_prefixes:
-                    if (remote_addr.startswith(allowed_ip_prefix)):
+                    if remote_addr.startswith(allowed_ip_prefix):
                         can_access = True
                         break
                 if not can_access and is_in_mpg_ip_range(remote_addr):
@@ -86,14 +88,18 @@ class CatalogReactView(APIView):
         if not can_access:
             return {"is_access_denied": True}
 
+        facets = {}
         try:
             page = int(request.data.get('page', '1'))
             per_page = int(request.data.get('per_page', '25'))
-            author_facet = request.data.get('author_facet', None)
-            year_facet = request.data.get('year_facet', None)
-            institute_facet = request.data.get('institute_facet', None)
-            director_facet = request.data.get('director_facet', None)
+            search_term = request.data.get('search_term', None)
             scope = request.data.get('scope', None)
+            facets.update(
+                author=request.data.get('author_facet', None),
+                year=request.data.get('year_facet', None),
+                institute=request.data.get('institute_facet', None),
+                director=request.data.get('director_facet', None),
+            )
         except ValueError:
             page = 1
             per_page = 25
@@ -106,25 +112,25 @@ class CatalogReactView(APIView):
             error_msg = 'per_page invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
-        if not(scope and len(scope)>0):
+        if not(scope and len(scope) > 0):
             scope = None;
 
         start = (page - 1) * per_page
 
-        # set limit to per_page + 1 to eval hasMore value
+        # set limit to per_page + 1 to eval has_more value
         limit = per_page + 1
 
         try:
-            catalog = Catalog.objects.get_mds_with_scope_ordered(scope=scope, start=start, limit=limit)
-
+            catalog = Catalog.objects.get_mds_react(search_term=search_term, scope=scope, facets=facets, start=start, limit=limit)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
-        hasMore = len(catalog) == per_page + 1
+        has_more = len(catalog.get("items")) == per_page + 1
 
-        return {"more": hasMore, "items": catalog[:per_page]}
+        return {"more": has_more, "items": catalog.get("items")[:per_page], "total": catalog.get("total")}
+
 
 class CatalogAuthors(APIView):
     """
@@ -142,13 +148,14 @@ class CatalogAuthors(APIView):
 
         return JsonResponse(authors, safe=False)
 
+
 class CatalogYears(APIView):
     """
     Returns Keeper Catalog Years.
     """
     @json_response
     def get(self, request):
-        years = []
+
         try:
             years = Catalog.objects.get_md_years_ordered()
         except Exception as e:
@@ -158,9 +165,10 @@ class CatalogYears(APIView):
 
         return JsonResponse(years, safe=False)
 
+
 class CatalogInstitutes(APIView):
     """
-    Returns Keeper Catalog Intitutes.
+    Returns Keeper Catalog Institutes.
     """
     @json_response
     def get(self, request):
@@ -173,6 +181,7 @@ class CatalogInstitutes(APIView):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         return JsonResponse(insts, safe=False)
+
 
 class CatalogDirectors(APIView):
     """
@@ -189,6 +198,7 @@ class CatalogDirectors(APIView):
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         return JsonResponse(directors, safe=False)
+
 
 class BloxbergView(APIView):
     """

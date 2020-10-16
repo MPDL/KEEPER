@@ -1,4 +1,5 @@
 import React, {Fragment} from 'react';
+import {Button, Form, FormGroup, Input, Label} from 'reactstrap';
 import ReactDOM from 'react-dom';
 import {navigate} from '@reach/router';
 import {Utils} from './utils/utils';
@@ -26,6 +27,7 @@ const defaultFacet = {
       order: 'asc',
       terms: [],
       term_count: {},
+      scope: [],
       extractTermsFunc: (data) => {
         let terms = [], term_count = {}, term_entries = {};
         data.map(r => {
@@ -48,41 +50,15 @@ class KeeperProjectCatalog extends React.Component {
       perPage: 25,
       hasNextPage: false,
       items: [],
-      scope: [],
-      authorsOrder: 'asc',
+      total: 0,
+      searchTerm: '',
       isAuthorFacetDialogOpen: false,
       isYearFacetDialogOpen: false,
       isInstituteFacetDialogOpen: false,
       isDirectorFacetDialogOpen: false,
+      hasTermsChecked: false,
     };
-    this.state.authorFacet = {
-      ...defaultFacet,
-      name: "Author",
-      termsChecked: [],
-      keeperApiFunc: function() {return keeperAPI.getCatalogAuthors()},
-    };
-
-    this.state.yearFacet = {
-      ...defaultFacet,
-      name: "Year",
-      termsChecked: [],
-      keeperApiFunc: function() {return keeperAPI.getCatalogYears()},
-    };
-
-    this.state.instituteFacet = {
-      ...defaultFacet,
-      name: "Institute",
-      termsChecked: [],
-      keeperApiFunc: function() {return keeperAPI.getCatalogInstitutes()},
-    };
-
-    this.state.directorFacet = {
-      ...defaultFacet,
-      name: "Director",
-      termsChecked: [],
-      keeperApiFunc: function() {return keeperAPI.getCatalogDirectors()},
-    };
-
+    this.resetFacets()
   }
 
   componentDidMount() {
@@ -104,18 +80,99 @@ class KeeperProjectCatalog extends React.Component {
     document.body.appendChild(script);
   }
 
+  resetFacets = () => {
+    this.state.authorFacet = {
+      ...defaultFacet,
+      name: "Author",
+      termsChecked: [],
+      keeperApiFunc: function () {
+        return keeperAPI.getCatalogAuthors()
+      },
+    };
+
+    this.state.yearFacet = {
+      ...defaultFacet,
+      name: "Year",
+      termsChecked: [],
+      keeperApiFunc: function () {
+        return keeperAPI.getCatalogYears()
+      },
+    };
+
+    this.state.instituteFacet = {
+      ...defaultFacet,
+      name: "Institute",
+      termsChecked: [],
+      keeperApiFunc: function () {
+        return keeperAPI.getCatalogInstitutes()
+      },
+    };
+
+    this.state.directorFacet = {
+      ...defaultFacet,
+      name: "Director",
+      termsChecked: [],
+      keeperApiFunc: function () {
+        return keeperAPI.getCatalogDirectors()
+      },
+    };
+  }
+
+  calculateTotalScope = () => {
+    let st = this.state;
+    //unity
+    //let scope = [];
+    // if (st.authorFacet && st.authorFacet.scope) {
+    //   scope = scope.concat(st.authorFacet.scope);
+    // }
+    // if (st.yearFacet && st.yearFacet.scope) {
+    //   scope = scope.concat(st.yearFacet.scope);
+    // }
+    // if (st.instituteFacet && st.instituteFacet.scope) {
+    //   scope = scope.concat(st.instituteFacet.scope);
+    // }
+    // if (st.directorFacet && st.directorFacet.scope) {
+    //   scope = scope.concat(st.directorFacet.scope);
+    // }
+    //return [...new Set(scope)];
+
+    // intersection
+    let scope = null;
+    let flag = true;
+    for (let sc of [st.authorFacet.scope, st.yearFacet.scope, st.instituteFacet.scope, st.directorFacet.scope]) {
+      if (sc && sc.length > 0) {
+        if (flag) {
+          scope = sc;
+          flag = false;
+        } else {
+          scope = scope.filter(v => sc.includes(v));
+        }
+      }
+    }
+    if (scope == null)
+      return null;
+    //if scope is [] and there is at least one termsChecked than intersection is empty -> return [-1]
+    return !flag && scope && [...scope].length == 0 ? [-1] : scope;
+  }
+
   getItems = (page) => {
-    keeperAPI.getProjectCatalog(page, this.state.perPage,
-        this.state.authorFacet, this.state.yearFacet, this.state.instituteFacet, this.state.directorFacet,
-        this.state.scope).then((res) => {
-      // console.log(JSON.stringify(res.data));
+    this.setHasTermsChecked();
+    let st = this.state;
+    keeperAPI.getProjectCatalog(page, st.perPage,
+        st.authorFacet, st.yearFacet, st.instituteFacet, st.directorFacet,
+        this.calculateTotalScope(),
+        st.searchTerm
+    ).then((res) => {
+      let d = res.data;
       this.setState({
         isLoading: false,
         currentPage: page,
-        items: res.data.items,
-        hasNextPage: res.data.more,
-        isAccessDenied: "is_access_denied" in res.data && res.data.is_access_denied,
+        items: d.items,
+        hasNextPage: d.more,
+        total: d.total,
+        isAccessDenied: "is_access_denied" in d && d.is_access_denied,
       });
+
     }).catch((error) => {
       this.setState({
         isLoading: false,
@@ -132,61 +189,50 @@ class KeeperProjectCatalog extends React.Component {
     }); 
   }
 
-  applyAuthorFacet = (tc, ts, tcount, o, s) => {
+  _chk = (f) => {
+    return f && "termsChecked" in f && f.termsChecked.length > 0;
+  }
+
+  setHasTermsChecked = () => {
+    let st = this.state;
     this.setState({
-      scope: s,
-      authorFacet: {
-        ...this.state.authorFacet,
+      hasTermsChecked: this._chk(st.authorFacet) || this._chk(st.yearFacet) || this._chk(st.instituteFacet) || this._chk(st.directorFacet)
+    })
+  }
+
+  applyFacetDefault = (tc, ts, tcount, o, s, key, f) => {
+    this.setState({
+      [key]: {
+        ...f,
         termsChecked: tc,
         terms: ts,
         term_count: tcount,
         order: o,
+        scope: s,
       },
     }, () => this.getItems(1)
-    );
-    //console.log(this.state.authorFacet);
+    )
+  }
+
+  applyAuthorFacet = (tc, ts, tcount, o, s) => {
+    this.applyFacetDefault(tc, ts, tcount, o, s, "authorFacet", this.state.authorFacet);
   }
 
   applyYearFacet = (tc, ts, tcount, o, s) => {
-    this.setState({
-      scope: s,
-      yearFacet: {
-        ...this.state.yearFacet,
-        termsChecked: tc,
-        terms: ts,
-        term_count: tcount,
-        order: o,
-      },
-    }, () => this.getItems(1)
-    );
+    this.applyFacetDefault(tc, ts, tcount, o, s, "yearFacet", this.state.yearFacet);
   }
 
   applyInstituteFacet = (tc, ts, tcount, o, s) => {
-    this.setState({
-      scope: s,
-      instituteFacet: {
-        ...this.state.instituteFacet,
-        termsChecked: tc,
-        terms: ts,
-        term_count: tcount,
-        order: o,
-      },
-    }, () => this.getItems(1)
-    );
+    this.applyFacetDefault(tc, ts, tcount, o, s, "instituteFacet", this.state.instituteFacet);
   }
 
   applyDirectorFacet = (tc, ts, tcount, o, s) => {
-    this.setState({
-      scope: s,
-      directorFacet: {
-        ...this.state.directorFacet,
-        termsChecked: tc,
-        terms: ts,
-        term_count: tcount,
-        order: o,
-      },
-    }, () => this.getItems(1)
-    );
+    this.applyFacetDefault(tc, ts, tcount, o, s, "directorFacet", this.state.directorFacet);
+  }
+
+  cleanAllFacets = () => {
+    this.resetFacets();
+    this.getItems(1);
   }
 
   onSearchedClick = (selectedItem) => {
@@ -216,10 +262,19 @@ class KeeperProjectCatalog extends React.Component {
       this.setState({isDirectorFacetDialogOpen: !this.state.isDirectorFacetDialogOpen});
     }
 
+
+  inputSearchTerm = (e) => {
+    this.setState({searchTerm: e.target.value},
+        () => {
+      // this.state.searchTerm.length > 1 && this.getItems(1);
+      this.getItems(1);
+    });
+  }
+
   getFacetFragment = (facet) => {
     return (
         <Fragment>
-              <span style={{fontWeight: 600}}>{gettext(facet.name)}</span>
+              <a href="#" style={{color: "#575859", fontWeight: "lighter"}}>{gettext(facet.name)}</a>
               {facet.termsChecked.length > 0 &&
                 <i className={"ml-1 fa fa-arrow-" + (facet.order == "desc" ? "up" : "down")}/>
               }
@@ -236,7 +291,7 @@ class KeeperProjectCatalog extends React.Component {
 
   render() {
     const {isAuthorFacetDialogOpen, isYearFacetDialogOpen, isInstituteFacetDialogOpen, isDirectorFacetDialogOpen,
-      authorFacet, yearFacet, instituteFacet, directorFacet} = this.state;
+      authorFacet, yearFacet, instituteFacet, directorFacet, searchTerm} = this.state;
     return (
       <React.Fragment>
         <div className="h-100 d-flex flex-column">
@@ -256,11 +311,9 @@ class KeeperProjectCatalog extends React.Component {
                     <h3 className="d-flex offset-md-3"
                         id="header">{(gettext('The KEEPER Project Catalog of the Max Planck Society'))}</h3>
                     <div className="row">
-
                       <div id="facet" className="col-md-3">
-                        <h3 style={{color: "#57a5b8", fontSize: "1.75em", fontWeight: 500}}>{gettext('Show Projects')}</h3>
-
-                        <div onClick={this.toggleAuthorFacetDialog}>
+                        <h3 style={{color: "#57a5b8", fontSize: "1.75em", fontWeight: 500}}>{gettext('Show Projects')} ({this.state.total})</h3>
+                      <div onClick={this.toggleAuthorFacetDialog}>
                           {this.getFacetFragment(this.state.authorFacet)}
                         </div>
                         <div onClick={this.toggleYearFacetDialog}>
@@ -272,8 +325,18 @@ class KeeperProjectCatalog extends React.Component {
                         <div onClick={this.toggleDirectorFacetDialog}>
                           {this.getFacetFragment(this.state.directorFacet)}
                         </div>
+                        {this.state.hasTermsChecked &&
+                          <div className="mt-1">
+                            <a href="#" onClick={this.cleanAllFacets}>{gettext("Reset all")}</a>
+                          </div>
+                        }
                       </div>
                       <div className="col-md-9">
+                        <Form>
+                          <FormGroup>
+                            <Input type="search" style={{height: "60%"}} placeholder={gettext('Search') + "..."} value={this.state.searchTerm} onChange={this.inputSearchTerm}/>
+                          </FormGroup>
+                        </Form>
                         <Content
                             isLoading={this.state.isLoading}
                             errorMsg={this.state.errorMsg}
@@ -336,6 +399,7 @@ class KeeperProjectCatalog extends React.Component {
       </React.Fragment>
     );
   }
+
 }
 
 class Content extends React.Component {

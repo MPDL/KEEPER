@@ -25,7 +25,6 @@ class KeeperCatalogFacetDialog extends React.Component {
       terms: [],
       termsChecked: facet["termsChecked"] || [],
     };
-
   }
 
   componentDidMount() {
@@ -93,6 +92,7 @@ class KeeperCatalogFacetDialog extends React.Component {
 
   calculateScope = () => {
     let scope = [];
+    //unity
     for (let term of this.state.termsChecked) {
       scope = scope.concat(term_entries[term]);
     }
@@ -109,7 +109,6 @@ class KeeperCatalogFacetDialog extends React.Component {
     this.props.applyFacet([], [], {}, 'asc', []);
     this.toggle();
   }
-
 
   getTermFragment = (inputField, index) => {
       let showFragment = !this.state.searchTerm ||
@@ -130,7 +129,7 @@ class KeeperCatalogFacetDialog extends React.Component {
 
   getOrderFragment = (o, label) => {
     return (
-        <FormGroup check className="ml-4">
+        <FormGroup check>
           <Label check>
             <Input type="radio" name="order" value={o} checked={this.state.order == o} onChange={this.setOrder} className="mr-1"/>
             {gettext(label)}
@@ -152,9 +151,8 @@ class KeeperCatalogFacetDialog extends React.Component {
           <Form>
             {this.getOrderFragment("asc", "Ascending")}
             {this.getOrderFragment("desc", "Descending")}
-            <FormGroup>
-              <Label>{gettext('Search')}</Label>
-              <Input style={{width: "50%"}} value={searchTerm} onChange={this.inputSearchTerm}/>
+            <FormGroup className="mt-3">
+              <Input style={{width: "60%", height: "60%"}} placeholder={gettext('Search')} value={searchTerm} onChange={this.inputSearchTerm}/>
             </FormGroup>
             {this.state.termsChecked.map((inputField, index) => (
                 this.getTermFragment(inputField, index)
@@ -167,7 +165,7 @@ class KeeperCatalogFacetDialog extends React.Component {
         </ModalBody>
         <ModalFooter>
           <Button color="primary" className="w-9" onClick={this.handleApply} disabled={!this.state.isSubmitBtnActive}>{gettext('Apply')}</Button>
-          <Button className="ml-4"  color="primary" onClick={this.handleCleanAll}>{gettext('Disable all')}</Button>
+          <Button className="ml-4"  color="primary" onClick={this.handleCleanAll}>{gettext('Reset')}</Button>
           <Button className="ml-7" color="secondary" onClick={this.toggle}>{gettext('Cancel')}</Button>
         </ModalFooter>
       </Modal>

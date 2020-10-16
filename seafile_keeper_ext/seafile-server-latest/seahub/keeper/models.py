@@ -15,6 +15,56 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _get_sort_key(md, facets, facet_name):
+    """
+    Generate order keys for python complex sorting
+    """
+    idx = "_"
+    f = facets.get(facet_name)
+    if facet_name == "author":
+        tcs = f.get("termsChecked")
+        if tcs:
+            if md.get("authors"):
+                for tc in tcs:
+                    if tc in [a.get("name") for a in md.get("authors")]:
+                        idx += tc
+    elif facet_name == "year":
+        tcs = f.get("termsChecked")
+        if tcs:
+            y = md.get("year")
+            if y and y in tcs:
+                idx = y
+    elif facet_name == "institute":
+        tcs = f.get("termsChecked")
+        if tcs:
+            mm = md.get("institute")
+            if mm:
+                for tc in tcs:
+                    if tc in mm:
+                        idx += tc
+    elif facet_name == "director":
+        tcs = f.get("termsChecked")
+        if tcs:
+            mm = md.get("director")
+            if mm:
+                for tc in tcs:
+                    if tc in mm:
+                        idx += tc
+    return idx
+
+
+def _apply_sorts(mds, facets):
+    """
+    Apply facets sorting
+    """
+    for k in reversed(('author', 'year', 'institute', 'director')):
+        f = facets.get(k)
+        if f and f.get("termsChecked"):
+            reverse = f.get("order", "asc") == "desc"
+            mds = sorted(mds, key=lambda md: _get_sort_key(md, facets, k), reverse=reverse)
+    return mds
+
+
 class CatalogManager(models.Manager):
 
     def get_by_repo_id(self, repo_id):
@@ -71,177 +121,155 @@ class CatalogManager(models.Manager):
             mds.append(c.md)
         return mds
 
-    def get_mds_with_facets(self, author_facet=None, year_facet=None, institute_facet=None, director_facet=None,
-                            start=0, limit=25):
+    def get_mds_react(self, search_term=None, scope=None, facets=None, start=0, limit=25):
+        """
+        Get catalog entries, apply search_term, facets, orders and offset
+        """
+        def _f(fs):
+            """
+            True if at least one facet is checked
+            """
+            if not fs:
+                return False
+            for v in fs.values():
+                if v.get("termsChecked"):
+                    return True
+            return False
 
-        def _f(f):
-            return f is None or not f.get("termsChecked")
+        def _search_term_in_md(st, md):
+            """
+            True if at least one md contains search_term
+            """
+            st = st.lower()
+            for k in ("title", "description", "year", "institute", "owner", "owner_name"):
+                m = md.get(k)
+                if m and st in m.lower():
+                    return True
+            m = md.get("authors")
+            if m:
+                for a in m:
+                    m = a.get("name")
+                    if m and st in m.lower():
+                        return True
+                    m = a.get("affs")
+                    if m and st in "".join(m).lower():
+                        return True
+            return False
 
-        if _f(author_facet) and _f(year_facet) and _f(institute_facet) and _f(director_facet):
-            return self.get_mds_ordered(start, limit)
+        #
+        # if not(_f(facets) or scope or search_term):
+        #     return self.get_mds_ordered(start, limit)
+
+        # logging.error("locals():%r", locals())
+
+        q = self.exclude(rm__isnull=False).order_by('-modified')
+        if scope:
+            q = q.filter(catalog_id__in=scope)
+
+        cat_entries = q.all()
+
+        if not cat_entries:
+            return {"items": [], "total": 0}
+
         mds = []
-        for c in self.exclude(rm__isnull=False).order_by('-modified').all():
-            # author
-            if "termsChecked" in author_facet:
-                a_list = c.md.get("authors")
-                if a_list:
-                    a_list = [a.get("name") for a in c.md.get("authors")]
-                    if a_list:
-                        inter = set(author_facet["termsChecked"]).intersection(a_list)
-                        if not (inter and list(inter)):
-                            continue
-                else:
-                    continue
-            # year
-            if "termsChecked" in year_facet and len(year_facet.get("termsChecked")) > 0:
-                y = c.md.get("year")
-                if y and y.strip():
-                    if not (y.strip() in year_facet["termsChecked"]):
-                        continue
-                else:
-                    continue
-
+        for c in cat_entries:
+            if search_term and not _search_term_in_md(search_term, c.md):
+                continue
             # add landing page link
             if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
-                c.md["landing_page_url"] = '%s/landing-page/libs/%s/' % (SERVICE_URL, c.repo_id)
+                c.md.update(landing_page_url="%s/landing-page/libs/%s/"%(SERVICE_URL, c.repo_id))
             c.md.update(
                 catalog_id=c.catalog_id,
                 repo_id=c.repo_id,
                 is_archived=c.is_archived,
-                _order_key="".join([a["name"] for a in c.md.get("authors")]),
             )
             mds.append(c.md)
 
-        order = author_facet.get("order")
-        if order:
-            reverse = order == 'desc'
-            mds = sorted(mds, key=lambda c: c["_order_key"], reverse=reverse)
-
-        # clean up
-        [m.pop("_order_key", None) for m in mds]
-
-        return mds[start:limit]
-
-
-
-    def get_mds_with_scope_ordered(self, scope=None, start=0, limit=25):
-
-        #logging.error("s:%s, l:%s scope:%r", start, limit, scope)
-        if not scope:
-            return self.get_mds_ordered(start, limit)
-        mds = []
-        for c in self.exclude(rm__isnull=False).filter(catalog_id__in=scope).order_by('-modified').all():
-
-            # add landing page link
-            if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
-                c.md["landing_page_url"] = '%s/landing-page/libs/%s/' % (SERVICE_URL, c.repo_id)
-            c.md.update(
-                catalog_id=c.catalog_id,
-                repo_id=c.repo_id,
-                is_archived=c.is_archived,
-                #_author_key="".join([a["name"] for a in c.md.get("authors")]),
-                #_year_key=c.md.get("year").strip(),
-                # _inst_key=c.md.get("institute").
-            )
-            mds.append(c.md)
-
-        # TODO: implement complex sorting in python
+        # complex sorting in python:
         # https://docs.python.org/3/howto/sorting.html#sort-stability-and-complex-sorts
-        # order = author_facet.get("order")
-        # if order:
-        #     reverse = order == 'desc'
-        #     mds = sorted(mds, key=lambda c: c["_order_key"], reverse=reverse)
+        mds = _apply_sorts(mds, facets)
 
-        # clean up
-        #[m.pop("_order_key", None) for m in mds]
+        return {"items": mds[start:start + limit], "total": len(mds)}
 
-        return mds[start:start + limit]
-
-    def _get_catalog_items_with_refinement(self, in_cat):
+    def _get_catalog_items_with_refinement(self, in_cat=None):
         return self.exclude(rm__isnull=False).filter(catalog_id__in=in_cat).all() if in_cat and len(in_cat) > 0 \
             else self.exclude(rm__isnull=False).all()
 
-    def get_md_authors_ordered(self, in_cat=None):
+    def get_md_authors_ordered(self):
         """
         Get list of catalog authors ordered and list of catalog_ids of the corresponding author
         """
-        a_entries = {}
-        for c in self._get_catalog_items_with_refinement(in_cat):
-            a_tmp = c.md.get("authors")
-            if a_tmp:
-                for a in a_tmp:
+        entries = {}
+        for c in self._get_catalog_items_with_refinement():
+            md = c.md.get("authors")
+            if md:
+                for a in md:
                     name = a.get("name")
                     if name:
-                        if not name in a_entries:
-                            a_entries[name] = [c.catalog_id]
+                        if name not in entries:
+                            entries[name] = [c.catalog_id]
                         else:
-                            a_entries[name].append(c.catalog_id)
-        authors = list(a_entries.keys())
-        authors.sort()
-        return [(a, a_entries[a]) for a in authors]
+                            entries[name].append(c.catalog_id)
+        keys = list(entries.keys())
+        keys.sort()
+        return [(a, entries[a]) for a in keys]
 
-    def get_md_years_ordered(self, in_cat):
+    def get_md_years_ordered(self):
         """
         Get list of catalog years, sorted
         """
-        years = set()
-        y_count = {}
-        for c in self._get_catalog_items_with_refinement(in_cat):
-            y = c.md.get("year")
-            if y:
-                if not y in y_count:
-                    y_count[y] = 1
+        entries = {}
+        for c in self._get_catalog_items_with_refinement():
+            md = c.md.get("year")
+            if md:
+                if md not in entries:
+                    entries[md] = [c.catalog_id]
                 else:
-                    y_count[y] += 1
-                years.add(y)
-        years = list(years)
-        years.sort(reverse=True)
-        return [(y, y_count[y]) for y in years]
+                    entries[md].append(c.catalog_id)
+        keys = list(entries.keys())
+        keys.sort(reverse=True)
+        return [(y, entries[y]) for y in keys]
 
-    def get_md_institutes_ordered(self, in_cat=None):
+    def get_md_institutes_ordered(self):
         """
-        Get list of catalog years, sorted
+        Get list of catalog institutes, sorted
         """
-        insts = set()
-        i_count = {}
-        for c in self._get_catalog_items_with_refinement(in_cat):
-            inst = c.md.get("institute")
-            if inst:
-                i_split = inst.split(";")
-                if len(i_split) > 0 and i_split[0]:
-                    inst = i_split[0].strip()
-                    if inst:
-                        if not inst in i_count:
-                            i_count[inst] = 1
+        entries = {}
+        for c in self._get_catalog_items_with_refinement():
+            md = c.md.get("institute")
+            if md:
+                md_split = md.split(";")
+                if len(md_split) > 0 and md_split[0]:
+                    md = md_split[0].strip()
+                    if md:
+                        if md not in entries:
+                            entries[md] = [c.catalog_id]
                         else:
-                            i_count[inst] += 1
-                        insts.add(inst)
-        insts = list(insts)
-        insts.sort()
-        return [(inst, i_count[inst]) for inst in insts]
+                            entries[md].append(c.catalog_id)
+        keys = list(entries.keys())
+        keys.sort()
+        return [(k, entries[k]) for k in keys]
 
-    def get_md_directors_ordered(self, in_cat=None):
+    def get_md_directors_ordered(self):
         """
-        Get list of catalog years, sorted
+        Get list of catalog directors, sorted
         """
-        directors = set()
-        d_count = {}
-        for c in self._get_catalog_items_with_refinement(in_cat):
-            inst = c.md.get("institute")
-            if inst:
-                i_split = inst.split(";")
-                if len(i_split) >= 3 and i_split[2]:
-                    d = i_split[2].strip()
+        entries = {}
+        for c in self._get_catalog_items_with_refinement():
+            md = c.md.get("institute")
+            if md:
+                md_split = md.split(";")
+                if len(md_split) >= 3 and md_split[2]:
+                    d = md_split[2].strip()
                     for d in d.split("|"):
                         d = d.strip()
-                        if not d in d_count:
-                            d_count[d] = 1
+                        if d not in entries:
+                            entries[d] = [c.catalog_id]
                         else:
-                            d_count[d] += 1
-                        directors.add(d)
-        directors = list(directors)
-        directors.sort()
-        return [(d, d_count[d]) for d in directors]
+                            entries[d].append(c.catalog_id)
+        keys = list(entries.keys())
+        keys.sort()
+        return [(k, entries[k]) for k in keys]
 
     def get_with_metadata(self):
         """
