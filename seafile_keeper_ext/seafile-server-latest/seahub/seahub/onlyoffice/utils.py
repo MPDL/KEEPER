@@ -61,6 +61,11 @@ def get_onlyoffice_dict(username, repo_id, file_path,
         # when init process for the first time
         if not doc_key:
             doc_key = cache.get(cache_key)
+        if not doc_key:
+            doc_key = hashlib.md5(force_bytes(origin_repo_id + origin_file_path + file_id)).hexdigest()[:20]
+            cache.set(cache_key, doc_key, None)
+            doc_info = json.dumps({'repo_id': repo_id, 'file_path': file_path, 'username': username})
+            cache.set("ONLYOFFICE_%s" % doc_key, doc_info, None)
     else:
         doc_key = hashlib.md5(force_bytes(origin_repo_id + origin_file_path + file_id)).hexdigest()[:20]
         cache.set(cache_key, doc_key, None)
