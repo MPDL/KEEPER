@@ -107,7 +107,8 @@ def onlyoffice_editor_callback(request):
         if status == 2:
             if if_locked_by_online_office(repo_id, file_path):
                 seafile_api.unlock_file(repo_id, file_path)
-            cache.delete(cache_key)
+                cache.delete(cache_key)
+                cache.delete("ONLYOFFICE_%s" % doc_key)
 
         fake_obj_id = {'online_office_update': True,}
         update_token = seafile_api.get_fileserver_access_token(repo_id,
@@ -136,8 +137,21 @@ def onlyoffice_editor_callback(request):
         file_path = doc_info['file_path']
 
         cache_key = generate_onlyoffice_cache_key(repo_id, file_path)
+
         if if_locked_by_online_office(repo_id, file_path):
             seafile_api.unlock_file(repo_id, file_path)
-        cache.delete(cache_key)
+            cache.delete(cache_key)
+
+    if status == 1:
+        connected_users = post_data.get('users')
+        if len(connected_users) > 0:
+            doc_key = post_data.get('key')
+            doc_info = json.loads(cache.get("ONLYOFFICE_%s" % doc_key))
+            repo_id = doc_info['repo_id']
+            file_path = doc_info['file_path']
+            cache_key = generate_onlyoffice_cache_key(repo_id, file_path)
+            if not if_locked_by_online_office(repo_id, file_path):
+                seafile_api.lock_file(repo_id, file_path, ONLINE_OFFICE_LOCK_OWNER, 0)
+                cache.set(cache_key, doc_key)
 
     return HttpResponse('{"error": 0}')
