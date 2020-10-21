@@ -26,3 +26,16 @@ textarea.form-control {
 .val-error {
   color: red;
 }
+
+#institute.is-valid :first-child {
+    border-color: #5eba00;
+}
+
+#institute.is-invalid :first-child {
+    border-color: #cd201f;
+}
+
+.info-area-names {
+    padding-top: 2.75rem;
+    padding-left: 0.75rem;
+}

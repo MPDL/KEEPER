@@ -1,4 +1,4 @@
-var axios = require('axios');
+const axios = require('axios');
 
 class KeeperAPI {
   init({ server, username, password, token }) {
@@ -109,9 +109,9 @@ class KeeperAPI {
   }
 
   getProjectCatalog(page, perPage, authorFacet, yearFacet, instituteFacet, directorFacet, scope, searchTerm) {
-    var url = this.server + '/api2/project-catalog/';
+    const url = this.server + '/api2/project-catalog/';
 
-    var params = {
+    let params = {
       page: page || 1,
       per_page: perPage || 25,
       search_term: searchTerm || '',
@@ -121,29 +121,29 @@ class KeeperAPI {
       director_facet: directorFacet || {},
     };
     if (scope != null) {
-      params["scope"] = scope;
+      params.scope = scope;
     }
-    console.log("params:" + JSON.stringify(params));
+    // console.log("params:" + JSON.stringify(params));
     return this.req.post(url, params);
   }
 
   getCatalogAuthors() {
-    var url = this.server + '/api2/catalog-authors/';
+    const url = this.server + '/api2/catalog-authors/';
     return this.req.get(url);
   }
 
   getCatalogYears() {
-    var url = this.server + '/api2/catalog-years/';
+    const url = this.server + '/api2/catalog-years/';
     return this.req.get(url);
   }
 
   getCatalogInstitutes() {
-    var url = this.server + '/api2/catalog-institutes/';
+    const url = this.server + '/api2/catalog-institutes/';
     return this.req.get(url);
   }
 
   getCatalogDirectors() {
-    var url = this.server + '/api2/catalog-directors/';
+    const url = this.server + '/api2/catalog-directors/';
     return this.req.get(url);
   }
 

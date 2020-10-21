@@ -580,9 +580,9 @@ class ArchiveMetadata(APIView):
 
         save_archive_metadata(repo_id, data)
 
-        redirect_to = '%s/library/%s/%s/' % (SERVICE_URL, repo_id, quote_plus(get_repo(repo_id).name)) 
+        data.update(redirect_to='%s/library/%s/%s/' % (SERVICE_URL, repo_id, quote_plus(get_repo(repo_id).name)))
 
-        return JsonResponse({'redirect_to': redirect_to}) 
+        return JsonResponse(data)
 
 
 

@@ -611,6 +611,7 @@ def archive_metadata_form_validation(md):
         # 1. null/empty check 
         for k in ('title', 'publisher', 'description', 'year', 'institute', 'department', 'directors', 'resourceType'):
             v = md.get(k)
+            logging.error("HERE!!!: k:%s,v:%r", k, v)
             if not(v) or (isinstance(v, str) and not(v.strip())):
                 errors[k] = 'Empty mandatory field.'
 

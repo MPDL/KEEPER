@@ -91,7 +91,6 @@ module.exports = {
     sysAdmin: [require.resolve('./polyfills'), paths.appSrc + '/pages/sys-admin'],
     viewCdoc: [require.resolve('./polyfills'), paths.appSrc + '/view-file-cdoc.js'],
     search: [require.resolve('./polyfills'), paths.appSrc + '/pages/search'],
-    keeperArchiveMetadataForm: [require.resolve('./polyfills'), paths.appSrc + '/keeper-archive-metadata-form.js'],
     keeperProjectCatalog: [require.resolve('./polyfills'), paths.appSrc + '/keeper-project-catalog.js'],
   },
 

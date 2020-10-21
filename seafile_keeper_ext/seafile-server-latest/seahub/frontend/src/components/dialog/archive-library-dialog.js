@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import {gettext} from '../../utils/constants';
 import {keeperAPI} from '../../utils/seafile-api';
 import {Utils} from '../../utils/utils';
@@ -20,9 +20,28 @@ class ArchiveLibraryDialog extends React.Component {
         this.state = {canArchive: false};
     }
 
-    handleCanArchive = (errors) => {
+    // handleCanArchive = errors => {
+    //     //cannot archive until errors are available
+    //     this.setState({canArchive: !(errors && Object.keys(errors).length > 0)});
+    // }
+
+    handleCanArchive = validMd  => {
         //cannot archive until errors are available
-        this.setState({canArchive: !(errors && Object.keys(errors).length > 0)});
+        let flag = true;
+        outer: for (let key in validMd) {
+            if (key == "authors" || key == "directors") {
+                for (let a of validMd[key])
+                    if (!a) {
+                        flag = false;
+                        break outer;
+                    }
+            } else
+                if (!validMd[key]) {
+                    flag = false;
+                    break outer;
+                }
+        }
+        this.setState({canArchive: flag});
     }
 
     formSubmit = () => {
