@@ -576,7 +576,6 @@ class ArchiveMetadata(APIView):
         errors = archive_metadata_form_validation(data)
         if errors:
             data.update(errors=errors)
-            return JsonResponse(data)
 
         save_archive_metadata(repo_id, data)
 

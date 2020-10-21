@@ -21,7 +21,7 @@ const resourceTypes = ["Library", "Project"];
 
 const defaultAuthors = [{ firstName: "", lastName: "", affs: [""] }];
 const defaultDirectors = [{ firstName: "", lastName: "" }];
-const defaultPublisher = "MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.";
+const defaultPublisher = gettext("MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.");
 
 const defaultMd = {
   title: "",
@@ -39,13 +39,13 @@ const defaultMd = {
 
 const defaultValidMd = {
   title: true,
-  authors:  [{ firstName: true, lastName: true, }],
+  authors:  [true],
   publisher: true,
   description: true,
   year: true,
   institute: true,
   department: true,
-  directors: [{ firstName: true, lastName: true, }],
+  directors: [true],
   resourceType: true,
 };
 
@@ -112,7 +112,6 @@ class KeeperArchiveMetadataForm extends React.Component {
     this.state = {
       ...defaultMd,
       validMd: defaultValidMd,
-      canArchive: false,
     };
   }
 
@@ -148,7 +147,7 @@ class KeeperArchiveMetadataForm extends React.Component {
         state.validMd = this.state.validMd;
         this.setState(state);
 
-        this.props.canArchive(this.state.validMd);
+        this.props.canArchive(this.state.validMd, true);
 
         keeperAPI.getMpgInstitutes().then((res2) => {
           res2.data.map((v) => {
@@ -165,8 +164,9 @@ class KeeperArchiveMetadataForm extends React.Component {
   pupulateValidMd = (md) => {
     Object.keys(defaultValidMd).map(k => {
       if (k == "authors" || k == "directors") {
-        for (let idx in md[k])
-          this.state.validMd[k][idx] = this.isValidMd(k, md[k][idx]);
+        for (let idx in md[k]) {
+          this.state.validMd[k][idx] = this.isValidMd(k.slice(0, -1), md[k][idx])
+        }
       } else {
         this.state.validMd[k] = this.isValidMd(k, md[k]);
       }
@@ -184,17 +184,18 @@ class KeeperArchiveMetadataForm extends React.Component {
       .then((res) => {
         state = res.data;
 
-        //if empty publisher, det defaultPublisher
+        //if empty publisher, apply defaultPublisher
         if (!("publisher" in state && state.publisher && state.publisher.trim())) {
           state.publisher = defaultPublisher;
+          this.state.validMd.publisher = true;
         }
 
+        state.validMd = this.state.validMd;
         this.setState(state);
-        this.props.canArchive(this.state.validMd);
+        this.props.canArchive(this.state.validMd, true);
 
-        if (!("errors" in state)) {
-          toaster.success(gettext("Success"), {duration: 3});
-        }
+        toaster.success(gettext("Success"), {duration: 3});
+
       })
       .catch((error) => {
         let errMessage = Utils.getErrorMsg(error);
@@ -220,8 +221,12 @@ class KeeperArchiveMetadataForm extends React.Component {
   handleInputChange(e, key) {
     this.state.validMd[key] = this.isValidMd(key, e.target.value);
     this.setState({
-      [key]: e.target.value, validMd: this.state.validMd},
-       () => this.props.canArchive(this.state.validMd)
+          [key]: e.target.value,
+          validMd: this.state.validMd
+        },
+        () => {
+         this.props.canArchive(this.state.validMd, false);
+       }
     );
   }
 
@@ -229,8 +234,13 @@ class KeeperArchiveMetadataForm extends React.Component {
     for (let idx in values) {
       this.state.validMd.authors[idx] = this.isValidMd("author", values[idx]);
     }
-    this.setState({authors: values,  validMd: this.state.validMd}, 
-      () => this.props.canArchive(this.state.validMd)
+    this.setState({
+          authors: values,
+          validMd: this.state.validMd
+        },
+        () => {
+           this.props.canArchive(this.state.validMd, false);
+       }
     );
   }
 
@@ -278,8 +288,12 @@ class KeeperArchiveMetadataForm extends React.Component {
     for (let idx in values) {
       this.state.validMd.directors[idx] = this.isValidMd("director", values[idx]);
     }
-    this.setState({directors: values, validMd: this.state.validMd},
-        () => this.props.canArchive(this.state.validMd)
+    this.setState({
+          directors: values,
+          validMd: this.state.validMd},
+          () => {
+            this.props.canArchive(this.state.validMd, false);
+          }
     );
   }
 
@@ -337,7 +351,13 @@ class KeeperArchiveMetadataForm extends React.Component {
           ? ""
           : option.value;
     this.state.validMd.institute = this.isValidMd("institute", insName);
-    this.setState({ institute: insName , validMd: this.state.validMd});
+    this.setState({
+      institute: insName,
+      validMd: this.state.validMd
+      },
+        () => {
+            this.props.canArchive(this.state.validMd, false);
+    });
   };
 
   validationProps = key => {

@@ -17,7 +17,10 @@ const propTypes = {
 class ArchiveLibraryDialog extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {canArchive: false};
+        this.state = {
+            canArchive: false,
+            isSaved: true,
+        };
     }
 
     // handleCanArchive = errors => {
@@ -25,7 +28,7 @@ class ArchiveLibraryDialog extends React.Component {
     //     this.setState({canArchive: !(errors && Object.keys(errors).length > 0)});
     // }
 
-    handleCanArchive = validMd  => {
+    handleCanArchive = (validMd, isSaved)  => {
         //cannot archive until errors are available
         let flag = true;
         outer: for (let key in validMd) {
@@ -41,7 +44,8 @@ class ArchiveLibraryDialog extends React.Component {
                     break outer;
                 }
         }
-        this.setState({canArchive: flag});
+
+        this.setState({isSaved: isSaved, canArchive: flag && isSaved});
     }
 
     formSubmit = () => {
@@ -73,7 +77,10 @@ class ArchiveLibraryDialog extends React.Component {
                        target="_blank">{gettext("Information on Archiving")}</a>.
                     {split[1]}
                 </ModalBody>
-                <KeeperArchiveMetadataForm repoID={this.props.repoID} canArchive={this.handleCanArchive} />
+                <KeeperArchiveMetadataForm
+                    repoID={this.props.repoID}
+                    canArchive={this.handleCanArchive}
+                />
                 <ModalFooter>
                     <button className="btn btn-primary" disabled={!this.state.canArchive} onClick={this.formSubmit}>{gettext('Archive')}</button>
                 </ModalFooter>
