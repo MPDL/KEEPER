@@ -127,7 +127,8 @@
         <div class="container">
             <div id="main" class="raw clear">
 
-                {% if data_nav %}
+                {#% if data_nav %#}
+                {% if not errmsg %}
                 <div id="left-panel" class="col-md-3 side-tabnav">
 
                     <h3 class="hd">{% trans "Show Projects" %}</h3>
@@ -156,7 +157,7 @@
                 {% endif %}
 
                 {% for r in results %}
-                        <div class="item-block">
+                        <div class="item-block" id="{{ r.repo_id }}">
                             {% if r.is_certified %}
                                 <img src="/catalog/static/certified.png" />
                             {% endif %}
@@ -167,6 +168,7 @@
                                 {{ r.year }}
                                 {{ r.contact }}
                                 {{ r.landing_page_url }}
+                                {#<!-- {{ r.debug  }} -->#}
                             {% endautoescape %}
                         </div>
                 {% endfor %}
