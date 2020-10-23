@@ -393,8 +393,8 @@ class EnvManager(object):
                 'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
                 # file -> file mappings
                 'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
-                'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'keeper'),
-                'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'keeper-background'),
+                'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'cron-keeper'),
+                'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'cron-keeper-background'),
                 'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
                 'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
                 'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
@@ -615,9 +615,9 @@ def deploy_file(path, expand=False, dest_dir=None):
 
     # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
     # file types to be expanded
-    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service', 'cron.d/keeper')
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service')
     # files to be expanded
-    white_list_names = ('Makefile')
+    white_list_names = ('Makefile', 'cron-keeper', 'cron-keeper-background')
     if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
         with open(path, 'r') as fin, open(dest_path, 'w') as fout:
             content = expand_properties(fin.read(), path)
