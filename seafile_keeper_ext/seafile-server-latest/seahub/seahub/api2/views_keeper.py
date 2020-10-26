@@ -123,81 +123,15 @@ class CatalogReactView(APIView):
         try:
             catalog = Catalog.objects.get_mds_react(search_term=search_term, scope=scope, facets=facets, start=start, limit=limit)
         except Exception as e:
+            import traceback
+            logger.error(traceback.format_exc())
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
 
         has_more = len(catalog.get("items")) == per_page + 1
 
-        return {"more": has_more, "items": catalog.get("items")[:per_page], "total": catalog.get("total")}
-
-
-class CatalogAuthors(APIView):
-    """
-    Returns Keeper Catalog Authors.
-    """
-    @json_response
-    def get(self, request):
-        authors = []
-        try:
-            authors = Catalog.objects.get_md_authors_ordered()
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
-
-        return JsonResponse(authors, safe=False)
-
-
-class CatalogYears(APIView):
-    """
-    Returns Keeper Catalog Years.
-    """
-    @json_response
-    def get(self, request):
-
-        try:
-            years = Catalog.objects.get_md_years_ordered()
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
-
-        return JsonResponse(years, safe=False)
-
-
-class CatalogInstitutes(APIView):
-    """
-    Returns Keeper Catalog Institutes.
-    """
-    @json_response
-    def get(self, request):
-        insts = []
-        try:
-            insts = Catalog.objects.get_md_institutes_ordered()
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
-
-        return JsonResponse(insts, safe=False)
-
-
-class CatalogDirectors(APIView):
-    """
-    Returns Keeper Catalog Directors.
-    """
-    @json_response
-    def get(self, request):
-        directors = []
-        try:
-            directors = Catalog.objects.get_md_directors_ordered()
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'Internal Server Error'
-            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
-
-        return JsonResponse(directors, safe=False)
+        return {"more": has_more, "items": catalog.get("items")[:per_page], "scope": catalog.get("scope"), "facets": catalog.get("facets")}
 
 
 class BloxbergView(APIView):

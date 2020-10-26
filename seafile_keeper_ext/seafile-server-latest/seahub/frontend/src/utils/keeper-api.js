@@ -127,25 +127,6 @@ class KeeperAPI {
     return this.req.post(url, params);
   }
 
-  getCatalogAuthors() {
-    const url = this.server + '/api2/catalog-authors/';
-    return this.req.get(url);
-  }
-
-  getCatalogYears() {
-    const url = this.server + '/api2/catalog-years/';
-    return this.req.get(url);
-  }
-
-  getCatalogInstitutes() {
-    const url = this.server + '/api2/catalog-institutes/';
-    return this.req.get(url);
-  }
-
-  getCatalogDirectors() {
-    const url = this.server + '/api2/catalog-directors/';
-    return this.req.get(url);
-  }
 
 }
 
