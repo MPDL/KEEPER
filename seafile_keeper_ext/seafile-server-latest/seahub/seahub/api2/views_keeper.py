@@ -385,9 +385,7 @@ class CanArchive(APIView):
 
 
     def post(self, request):
-        # repo_id = request.POST.get('repo_id', None)
-        # version = request.POST.get('version', None)
-        # owner = request.POST.get('owner', None)
+
         repo_id = request.data.get('repo_id', None)
         owner = request.data.get('owner', request.user.username)
         version = request.data.get('version', None)
@@ -434,10 +432,13 @@ class CanArchive(APIView):
         metadata = get_metadata(repo_id, owner, 'archive library')
         logger.debug('get metadata archive library: %s', metadata)
         if 'error' in metadata:
-            return JsonResponse({
+            resp = {
                 'msg': metadata.get('error'),
                 'status': 'metadata_error',
-            })
+            }
+            q = resp_quota.get("remains")
+            q and resp.update(quota=q)
+            return JsonResponse(resp)
 
         return JsonResponse({
             'quota': resp_quota.get('remains'),
