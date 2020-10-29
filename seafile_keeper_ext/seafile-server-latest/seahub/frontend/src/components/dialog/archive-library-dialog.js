@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import {Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import {gettext} from '../../utils/constants';
@@ -17,74 +17,74 @@ const propTypes = {
 class ArchiveLibraryDialog extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            canArchive: false,
-            isSaved: true,
-        };
     }
 
-    // handleCanArchive = errors => {
-    //     //cannot archive until errors are available
-    //     this.setState({canArchive: !(errors && Object.keys(errors).length > 0)});
-    // }
+    onUpdateArchiveMetadata = (defaultMd, state) => {
+        let newState = {};
+        Object.keys(defaultMd).map(k => {
+            newState[k] = state[k];
+        });
+        //return promise, not run!
+        return keeperAPI
+            .updateArchiveMetadata(this.props.repoID, newState)
+            .then((res) => {
+                newState = res.data;
 
-    handleCanArchive = (validMd, isSaved)  => {
-        //cannot archive until errors are available
-        let flag = true;
-        outer: for (let key in validMd) {
-            if (key == "authors" || key == "directors") {
-                for (let a of validMd[key])
-                    if (!a) {
-                        flag = false;
-                        break outer;
-                    }
-            } else
-                if (!validMd[key]) {
-                    flag = false;
-                    break outer;
+                newState.validMd = state.validMd;
+
+                //if publisher is empty, apply defaultPublisher
+                if (!("publisher" in newState && newState.publisher && newState.publisher.trim())) {
+                    newState.publisher = defaultMd.publisher;
+                    newState.validMd.publisher = true;
                 }
-        }
 
-        this.setState({isSaved: isSaved, canArchive: flag && isSaved});
+                return newState;
+            })
+            .catch((error) => {
+                let errMessage = Utils.getErrorMsg(error);
+                toaster.danger(errMessage);
+            });
     }
 
-    formSubmit = () => {
+    onArchiveClick = (a, b) => {
         this.props.hideDialog();
-        const {repoID, repoName} = this.props;
-        keeperAPI.archiveLibrary(repoID).then((resp) => {
-            toaster.success(resp.data.msg, {duration: 3});
-        }).catch((error) => {
-            let errorMsg = Utils.getErrorMsg(error);
-            toaster.danger(errorMsg, {duration: 3});
+        //return promise, not run!
+        return keeperAPI.archiveLibrary(this.props.repoID)
+            .then((resp) => {
+                return resp.data.msg;
         });
     }
 
     render() {
         const archive_info = gettext("By archiving this library, the current state of everything contained within " +
             "it will be archived on a dedicated archiving system. For more information, please follow the link: " +
-            "{archive_info_link} This library can be archived {quota} more times.").replace("{quota}",
+            "{archive_info_link} This library can be archived {quota} more times. Please, fill out the following archive metadata form.").replace("{quota}",
             this.props.quota);
         const split = archive_info.split('{archive_info_link}')
         return (
-            <Modal isOpen={true} toggle={this.props.hideDialog}>
-                <ModalHeader toggle={this.props.hideDialog}>
-                    <span>{gettext('Archive {library_name}').replace('{library_name}', '')}</span>
-                    <span style={{color: '#57a5b8'}}>{this.props.repoName}</span>
-                </ModalHeader>
-                <ModalBody>
-                    {split[0]}
-                    <a href="https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving"
-                       target="_blank">{gettext("Information on Archiving")}</a>.
-                    {split[1]}
-                </ModalBody>
                 <KeeperArchiveMetadataForm
+                    hideDialog={this.props.hideDialog}
                     repoID={this.props.repoID}
-                    canArchive={this.handleCanArchive}
+                    header={
+                        <Fragment>
+                            <span>{gettext('Archive {library_name}').replace('{library_name}', '')}</span>
+                            <span style={{color: '#57a5b8'}}>{this.props.repoName}</span>
+                            <span> {gettext('library')}</span>
+                        </Fragment>
+                    }
+                    body={
+                        <Fragment>
+                            {split[0]}
+                            <a href="https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving"
+                                target="_blank">{gettext("Information on Archiving")}</a>.
+                            {split[1]}
+                        </Fragment>
+                    }
+                    onButton1={this.onUpdateArchiveMetadata}
+                    button1Label={gettext("Save metadata")}
+                    onButton2={this.onArchiveClick}
+                    button2Label={gettext("Archive")}
                 />
-                <ModalFooter>
-                    <button className="btn btn-primary" disabled={!this.state.canArchive} onClick={this.formSubmit}>{gettext('Archive')}</button>
-                </ModalFooter>
-            </Modal>
         )
     }
 }

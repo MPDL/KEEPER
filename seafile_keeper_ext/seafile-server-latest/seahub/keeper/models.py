@@ -251,6 +251,7 @@ class CatalogManager(models.Manager):
             ORDER by c.modified DESC
             """ % (SERVICE_URL, SCOPE)
 
+        # cat_entries = self.raw(RAW)
         cat_entries = self.raw(RAW)
 
         # q = self.exclude(rm__isnull=False).order_by('-modified')

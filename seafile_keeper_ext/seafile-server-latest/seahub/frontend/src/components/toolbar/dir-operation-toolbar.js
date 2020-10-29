@@ -9,6 +9,7 @@ import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
 import ViewModeToolbar from './view-mode-toolbar';
 import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
+import KeeperEditMetadataDialog from "../dialog/keeper-edit-metadata-dialog";
 import { keeperAPI } from '../../utils/seafile-api';
 import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
 
@@ -45,7 +46,8 @@ class DirOperationToolbar extends React.Component {
       isShareDialogShow: false,
       operationMenuStyle: '',
       isMobileOpMenuOpen: false,
-      isArchiveLibraryDialogShow: false
+      isArchiveLibraryDialogShow: false,
+      isEditMetadataDialogShow: false,
     };
   }
 
@@ -183,6 +185,16 @@ class DirOperationToolbar extends React.Component {
     });
   }
 
+  onEditMetadataHide = () => {
+    this.setState({isEditMetadataDialogShow: false});
+  }
+
+  onEditMetadataToggle = () => {
+    this.setState({isEditMetadataDialogShow: true});
+  }
+
+
+
   render() {
     let { path, repoName, userPerm } = this.props;
     
@@ -196,6 +208,7 @@ class DirOperationToolbar extends React.Component {
     let itemName = path === '/' ? repoName : Utils.getFolderName(path);
 
     let isArchiveBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
+    let isEditMetadataBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
 
     let content = null;
     if (Utils.isDesktop()) {
@@ -207,7 +220,12 @@ class DirOperationToolbar extends React.Component {
             <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadFile}>{gettext('Upload')}</button>}
           <button className="btn btn-secondary operation-item" title={gettext('New')} onClick={this.onCreateClick}>{gettext('New')}</button>
           {showShareBtn && <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
-          {isArchiveBtnShow && <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>}
+          {isArchiveBtnShow &&
+            <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>
+          }
+          {isEditMetadataBtnShow &&
+            <button className="btn btn-secondary operation-item" title={gettext('Metadata')} onClick={this.onEditMetadataToggle}>{gettext('Metadata')}</button>
+          }
         </Fragment>
       );
     } else {
@@ -294,6 +312,15 @@ class DirOperationToolbar extends React.Component {
               quota={this.state.quota}
               hideDialog={this.onArchiveLibraryHide}
               toggleDialog={this.onArchiveLibraryToggle}/>
+          </ModalPortal>
+        )}
+        {this.state.isEditMetadataDialogShow && (
+          <ModalPortal>
+            <KeeperEditMetadataDialog
+              repoID={this.props.repoID}
+              repoName={this.props.repoName}
+              hideDialog={this.onEditMetadataHide}
+              toggleDialog={this.onEditMetadataToggle}/>
           </ModalPortal>
         )}
 

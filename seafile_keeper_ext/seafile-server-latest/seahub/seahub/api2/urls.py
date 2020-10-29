@@ -134,7 +134,6 @@ urlpatterns = [
     # MPG Institutes list
     url(r'^mpg-institutes/$', MPGInstitutes.as_view(), name='mpg_institutes'),
 
-
 ]
 
 from seahub.settings import KEEPER_ARCHIVING_NODE

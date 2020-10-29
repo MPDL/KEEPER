@@ -162,7 +162,8 @@ class KeeperCatalogFacetDialog extends React.Component {
                   this.getTermFragment(inputField, index)
             ))}
             {this.state.terms
-                .map((inputField, index2) => (index2 < maxTerms && this.getTermFragment(inputField, index2)
+                .map((inputField, index2) => (
+                    index2 < maxTerms && this.getTermFragment(inputField, index2)
               ))}
             {this.state.terms.length >= maxTerms &&
               <div className="ml-1">...</div>

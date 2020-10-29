@@ -468,7 +468,6 @@ class ArchiveLib(APIView):
             activate(language_code)
 
 
-
         # add new archiving task
         resp_archive = add_keeper_archiving_task(repo_id, owner)
         logger.debug('resp_archive: %s', resp_archive)
@@ -507,16 +506,16 @@ class ArchiveMetadata(APIView):
         if not(repo_id):
             return api_error(status.HTTP_400_BAD_REQUEST, 'Bad request.')
 
-        errors = archive_metadata_form_validation(data)
-        if errors:
-            data.update(errors=errors)
+        if data.get('validate'):
+            errors = archive_metadata_form_validation(data)
+            if errors:
+                data.update(errors=errors)
 
         save_archive_metadata(repo_id, data)
 
         data.update(redirect_to='%s/library/%s/%s/' % (SERVICE_URL, repo_id, quote_plus(get_repo(repo_id).name)))
 
         return JsonResponse(data)
-
 
 
 class MPGInstitutes(APIView):

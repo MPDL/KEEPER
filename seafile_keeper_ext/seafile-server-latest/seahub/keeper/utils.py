@@ -611,7 +611,6 @@ def archive_metadata_form_validation(md):
         # 1. null/empty check 
         for k in ('title', 'publisher', 'description', 'year', 'institute', 'department', 'directors', 'resourceType'):
             v = md.get(k)
-            logging.error("HERE!!!: k:%s,v:%r", k, v)
             if not(v) or (isinstance(v, str) and not(v.strip())):
                 errors[k] = 'Empty mandatory field.'
 
@@ -620,7 +619,8 @@ def archive_metadata_form_validation(md):
             val_func = globals().get('validate_' + k)
             if val_func and not(k in errors.keys()):
                 v = val_func(md.get(k))
-                if v: errors[k] = v
+                if v:
+                    errors[k] = v
 
     return errors
 
@@ -721,10 +721,14 @@ def save_archive_metadata(repo_id, md_dict):
         with tempfile.NamedTemporaryFile() as fp:
             fp.write(md_markdown.encode())
             fp.flush()
-            seafile_api.put_file(repo_id, fp.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
+            if seafile_api.get_dirent_by_path(repo_id, ARCHIVE_METADATA_TARGET):
+                # file exists, update
+                seafile_api.put_file(repo_id, fp.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL, None)
+            else:
+                # create file
+                seafile_api.post_file(repo_id, fp.name, "/", ARCHIVE_METADATA_TARGET, SERVER_EMAIL)
     except Exception as e:
-        logger.exception('Cannot put_file %s', ARCHIVE_METADATA_TARGET) 
-
+        logger.error('Cannot save file %s: %r', ARCHIVE_METADATA_TARGET, e)
 
 
 def get_archive_metadata(repo_id):
@@ -732,7 +736,6 @@ def get_archive_metadata(repo_id):
     Get ARCHIVE_METADATA_TARGET markdown file from library root, 
     parse and map it for the archive metadata form consume.
     """
-
     md = None
     dir = get_repo_root_dir(repo_id)
     # get latest version of the ARCHIVE_METADATA_TARGET
@@ -777,21 +780,29 @@ def get_archive_metadata(repo_id):
         department = ''
         directors = []
         if institute:
-            name, department, directors_str = institute.split(";")
-            if name:
-                institute = name.strip()
-            if department:
-                department = department.strip()
-            if directors_str:
-                # TODO: define mutiply directors
-                for d in directors_str.split("|"):
-                    d_split = d.split(",")
-                    ln, fn = [n.strip() for n in d_split] if len(d_split) == 2 else [d, '']
-                    # Affiliations
-                    directors.append({'lastName': ln, 'firstName': fn})
+            d_split = institute.split(";")
+            if d_split:
+                if len(d_split)>0 :
+                    institute = d_split[0].strip()
+                if len(d_split)>1 :
+                    department = d_split[1].strip()
+                if len(d_split)>2:
+                    # TODO: define mutiply directors
+                    directors_str = d_split[2]
+                    for d in directors_str.split("|"):
+                        d_split = d.split(",")
+                        ln, fn = [n.strip() for n in d_split] if len(d_split) == 2 else [d, '']
+                        # Affiliations
+                        directors.append({'lastName': ln, 'firstName': fn})
      
         md.update(institute=institute, department=department, directors=directors)
         md.pop('Institute', None)
+    else:
+        md = {};
+        for k in ("title", "description", "year", "publisher", "institute", "department", "resourceType", "license"):
+            md[k] = ""
+        for k in ("authors", "directors"):
+            md[k] = []
 
     return md
     

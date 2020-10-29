@@ -24,6 +24,7 @@ class MylibRepoMenu extends React.Component {
 
   onMenuItemClick = (e) => {
     let operation = Utils.getEventData(e, 'toggle');
+    console.log(operation)
     this.props.onMenuItemClick(operation);
   }
 
@@ -55,7 +56,8 @@ class MylibRepoMenu extends React.Component {
     let showResetPasswordMenuItem = isPro && repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let showArchiveLibraryMenuItem = !repo.encrypted;
-    let operations = ['Rename', 'Transfer']; 
+    let showEditMetadatayMenuItem = !repo.encrypted;
+    let operations = ['Rename', 'Transfer'];
     if (folderPermEnabled) {
       operations.push('Folder Permission');
     }
@@ -70,11 +72,15 @@ class MylibRepoMenu extends React.Component {
     if (this.props.isPC && enableRepoSnapshotLabel) {
       operations.push('Label Current State');
     }
+    operations.push('Divider');
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
     }
     if (showArchiveLibraryMenuItem) {
       operations.push('Archive Library');
+    }
+    if (showEditMetadatayMenuItem) {
+      operations.push('Edit Metadata');
     }
     return operations;
   }
@@ -126,6 +132,9 @@ class MylibRepoMenu extends React.Component {
         break;
       case 'Archive Library':
         translateResult = gettext('Archive Library');
+        break;
+      case 'Edit Metadata':
+        translateResult = gettext('Edit Metadata');
         break;
       default:
         break;

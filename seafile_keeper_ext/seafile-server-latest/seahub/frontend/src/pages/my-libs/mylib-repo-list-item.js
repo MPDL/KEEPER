@@ -83,6 +83,7 @@ class MylibRepoListItem extends React.Component {
       isRepoDeleted: false,
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
+      isEditMetadataDialogShow: false,
     };
   }
 
@@ -148,6 +149,9 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'Archive Library':
         this.onArchiveLibraryToggle();
+        break;
+      case 'Edit Metadata':
+        this.onEditMetadataToggle();
         break;
       default:
         break;
@@ -241,6 +245,23 @@ class MylibRepoListItem extends React.Component {
       handleCanArchiveResponse(this, resp);
       if (d.status === 'success')
         this.setState({isArchiveLibraryDialogShow: true});
+    }).catch((error) => {
+      let errorMsg = Utils.getErrorMsg(error);
+      handleCanArchiveResponse(this,{data: {status: 'system_error', msg: errorMsg}});
+    });
+  }
+
+  onEditMetadataHide = () => {
+    this.setState({isEditMetadataDialogShow: false});
+  }
+
+  onEditMetadataToggle = () => {
+    keeperAPI.canArchive(this.props.repo.repo_id).then((resp) => {
+      const d = resp.data;
+      
+      handleCanArchiveResponse(this, resp);
+      if (d.status === 'success')
+        this.setState({isEditMetadataDialogShow: true});
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
       handleCanArchiveResponse(this,{data: {status: 'system_error', msg: errorMsg}});
@@ -527,6 +548,16 @@ class MylibRepoListItem extends React.Component {
               quota={this.state.quota}
               hideDialog={this.onArchiveLibraryHide}
               toggleDialog={this.onArchiveLibraryToggle}/>
+          </ModalPortal>
+        )}
+        {this.state.isEditMetadataDialogShow && (
+          <ModalPortal>
+            <ArchiveLibraryDialog
+              repoID={repo.repo_id}
+              repoName={repo.repo_name}
+              quota={this.state.quota}
+              hideDialog={this.onEditMetadataHide}
+              toggleDialog={this.onEditMetadataToggle}/>
           </ModalPortal>
         )}
       </Fragment>

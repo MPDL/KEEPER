@@ -1,11 +1,11 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import Select from 'react-select';
 import AsyncCreatableSelect from 'react-select/lib/AsyncCreatable';
 import {Utils} from '../utils/utils';
 import {gettext,} from '../utils/constants';
 import {keeperAPI} from '../utils/seafile-api';
 import toaster from './toast';
-import {Col, FormGroup, Input, Label, Row, Tooltip} from 'reactstrap';
+import {Col, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label, Row, Tooltip} from 'reactstrap';
 import PropTypes from 'prop-types';
 
 import '../css/toolbar.css';
@@ -78,7 +78,7 @@ class InfoArea extends React.Component {
 
     // console.log(this.props.id);
     return (
-        <React.Fragment>
+        <Fragment>
           <div className="input-tip pt-0">
             {this.props.id != "license" &&
               <span style={{color: "red", fontWeight: "900"}}>*&nbsp;&nbsp;</span>
@@ -94,7 +94,7 @@ class InfoArea extends React.Component {
               {gettext(this.props.helpText)}
             </Tooltip>
           </div>
-        </React.Fragment>
+        </Fragment>
     );
   }
 }
@@ -112,42 +112,43 @@ class KeeperArchiveMetadataForm extends React.Component {
     this.state = {
       ...defaultMd,
       validMd: defaultValidMd,
+      isSaved: true,
+      isButton1Disabled: false,
+      isButton2Disabled: true,
     };
+
   }
 
   componentDidMount() {
     keeperAPI
       .getArchiveMetadata(this.props.repoID)
       .then((res) => {
-        let state = {};
+        let newState = this.state;
         if ('data' in res) {
           Object.keys(defaultMd).map((k) => {
-            state[k] = k in res.data ? res.data[k] : "";
+            newState[k] = k in res.data ? res.data[k] : "";
           });
-          if (!("authors" in state && state.authors.length > 0)) {
-            state.authors = defaultAuthors;
+          if (!("authors" in newState && newState.authors.length > 0)) {
+            newState.authors = defaultAuthors;
           }
-          if (!("directors" in state && state.directors.length > 0)) {
-            state.directors = defaultDirectors;
+          if (!("directors" in newState && newState.directors.length > 0)) {
+            newState.directors = defaultDirectors;
           }
-          if (!("publisher" in state && state.publisher && state.publisher.trim())) {
-            state.publisher = defaultPublisher;
+          if (!("publisher" in newState && newState.publisher && newState.publisher.trim())) {
+            newState.publisher = defaultPublisher;
           }
           if (
-            !("resourceType" in state && state.resourceType && state.resourceType.trim())
+            !("resourceType" in newState && newState.resourceType && newState.resourceType.trim())
           ) {
-            state.resourceType = defaultResourceType;
+            newState.resourceType = defaultResourceType;
           }
         } else {
-          state = defaultMd;
+          newState = defaultMd;
         }
 
-        this.pupulateValidMd(state);
+        newState.validMd = this.getValidMd(newState);
 
-        state.validMd = this.state.validMd;
-        this.setState(state);
-
-        this.props.canArchive(this.state.validMd, true);
+        this.setState(newState, () => this.setButtons());
 
         keeperAPI.getMpgInstitutes().then((res2) => {
           res2.data.map((v) => {
@@ -161,86 +162,110 @@ class KeeperArchiveMetadataForm extends React.Component {
       });
   }
 
-  pupulateValidMd = (md) => {
+      isFieldValid = (key, value) => {
+        if (!key || !value)
+            return false;
+        let isValid = true;
+        if (key == "title" || key == "description" || key == "publisher" || key == "department" || key == "institute") {
+            isValid = value.trim() != "";
+        } else if (key == "year") {
+            const parsed = parseInt(value, 10);
+            isValid = !isNaN(parsed) && parsed > 0;
+        } else if (key == "author" || key == "director") {
+            isValid = (value.firstName && value.firstName.trim() != "") || (value.lastName && value.lastName.trim() != "");
+        }
+        return isValid;
+    }
+
+    isFormValid = (validMd) => {
+        let isValid = true;
+        outer: for (let key in validMd) {
+            if (key == "authors" || key == "directors") {
+                for (let a of validMd[key])
+                    if (!a) {
+                        isValid = false;
+                        break outer;
+                    }
+            } else if (!validMd[key]) {
+                isValid = false;
+                break outer;
+            }
+        }
+        return isValid;
+    }
+
+  setButtons = () => {
+      const isValid = this.isFormValid(this.state.validMd);
+      this.setState({
+          isButton1Disabled: this.state.isSaved && isValid,
+          isButton2Disabled: !this.state.isSaved || !isValid,
+      })
+  }
+
+  getValidMd = (md) => {
     Object.keys(defaultValidMd).map(k => {
       if (k == "authors" || k == "directors") {
         for (let idx in md[k]) {
-          this.state.validMd[k][idx] = this.isValidMd(k.slice(0, -1), md[k][idx])
+          this.state.validMd[k][idx] = this.isFieldValid(k.slice(0, -1), md[k][idx])
         }
       } else {
-        this.state.validMd[k] = this.isValidMd(k, md[k]);
+        this.state.validMd[k] = this.isFieldValid(k, md[k]);
       }
     })
+    return this.state.validMd;
   }
 
-  updateArchiveMetadata = (e) => {
+  onButton1 = e => {
     e.preventDefault();
-    let state = {};
-    Object.keys(defaultMd).map((k) => {
-      state[k] = this.state[k];
-    });
-    keeperAPI
-      .updateArchiveMetadata(this.props.repoID, state)
-      .then((res) => {
-        state = res.data;
-
-        //if empty publisher, apply defaultPublisher
-        if (!("publisher" in state && state.publisher && state.publisher.trim())) {
-          state.publisher = defaultPublisher;
-          this.state.validMd.publisher = true;
-        }
-
-        state.validMd = this.state.validMd;
-        this.setState(state);
-        this.props.canArchive(this.state.validMd, true);
-
-        toaster.success(gettext("Success"), {duration: 3});
-
+    this.props.onButton1(defaultMd, this.state)
+      .then(res => {
+          res.validMd = this.getValidMd(res);
+          res.isSaved = true;
+          this.setState(res, () => this.setButtons());
+          toaster.success(
+              gettext("Success.") + (this.state.isButton2Disabled ? "" : " " + gettext("Now you can archive.")),
+              {duration: 3}
+          );
       })
       .catch((error) => {
-        let errMessage = Utils.getErrorMsg(error);
-        toaster.danger(errMessage);
+          let errMessage = Utils.getErrorMsg(error);
+          toaster.danger(errMessage);
       });
   };
 
-  isValidMd = (key, value) => {
-    if (!key || !value)
-      return false;
-    let isValid = true;
-    if (key == "title" || key == "description" || key == "publisher" || key == "department"  || key == "institute") {
-      isValid = value.trim() != "";
-    } else if (key == "year") {
-      const parsed = parseInt(value, 10);
-      isValid = !isNaN(parsed) && parsed > 0;
-    } else if (key == "author" || key == "director") {
-      isValid = (value.firstName && value.firstName.trim() != "") || (value.lastName && value.lastName.trim() != "");
-    }
-    return isValid;
-  }
+  onButton2 = e => {
+    this.props.onButton2()
+        .then(msg => {
+          console.log(msg)
+          toaster.success(gettext(msg), {duration: 3});
+      })
+      .catch((error) => {
+          let errMessage = Utils.getErrorMsg(error);
+          toaster.danger(errMessage);
+      });
+  };
 
   handleInputChange(e, key) {
-    this.state.validMd[key] = this.isValidMd(key, e.target.value);
+    this.state.validMd[key] = this.isFieldValid(key, e.target.value);
     this.setState({
           [key]: e.target.value,
-          validMd: this.state.validMd
+          validMd: this.state.validMd,
+          isSaved: false,
         },
-        () => {
-         this.props.canArchive(this.state.validMd, false);
-       }
+        () => this.setButtons()
     );
   }
 
   setAuthorInputFields(values) {
     for (let idx in values) {
-      this.state.validMd.authors[idx] = this.isValidMd("author", values[idx]);
+      this.state.validMd.authors[idx] = this.isFieldValid("author", values[idx]);
     }
     this.setState({
           authors: values,
-          validMd: this.state.validMd
+          validMd: this.state.validMd,
+          isSaved: false,
         },
-        () => {
-           this.props.canArchive(this.state.validMd, false);
-       }
+        () => this.setButtons()
     );
   }
 
@@ -286,14 +311,14 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   setDirectorInputFields(values) {
     for (let idx in values) {
-      this.state.validMd.directors[idx] = this.isValidMd("director", values[idx]);
+      this.state.validMd.directors[idx] = this.isFieldValid("director", values[idx]);
     }
     this.setState({
           directors: values,
-          validMd: this.state.validMd},
-          () => {
-            this.props.canArchive(this.state.validMd, false);
-          }
+          validMd: this.state.validMd,
+          isSaved: false,
+        },
+        () => this.setButtons()
     );
   }
 
@@ -326,10 +351,7 @@ class KeeperArchiveMetadataForm extends React.Component {
   };
 
   resourceOptions = resourceTypes.map((item) => {
-    return {
-      value: item,
-      label: item,
-    };
+    return { value: item, label: item};
   });
 
   filterInstitutes = input => {
@@ -350,14 +372,15 @@ class KeeperArchiveMetadataForm extends React.Component {
         : !("value" in option) || option.value.trim() === ""
           ? ""
           : option.value;
-    this.state.validMd.institute = this.isValidMd("institute", insName);
-    this.setState({
-      institute: insName,
-      validMd: this.state.validMd
-      },
-        () => {
-            this.props.canArchive(this.state.validMd, false);
-    });
+    this.state.validMd.institute = this.isFieldValid("institute", insName);
+      this.setState({
+              institute: insName,
+              validMd: this.state.validMd,
+              isSaved: false,
+          },
+          () => this.setButtons()
+      );
+
   };
 
   validationProps = key => {
@@ -379,454 +402,472 @@ class KeeperArchiveMetadataForm extends React.Component {
   render() {
 
     return (
-      <React.Fragment>
-        <div className="h-100 d-flex flex-column">
-          <div className="flex-auto d-flex o-hidden">
-            <div className="main-panel d-flex flex-column">
-              <h2 style={{fontWeight: "900"}} className="heading">{gettext("Archive Metadata")}</h2>
-              <div
-                className="content position-relative" style={{paddingBottom: "2rem"}}
-              >
-                <form method="post">
 
-                  {/*Title*/}
-                  <FormGroup row className="md-item">
-                    <Col sm={12}>
-                      <Label
-                          id="lbl-title"
-                          sm={1}
-                      >
-                        {gettext("Title")}:
-                      </Label>
-                      <Row>
-                        <Col sm={11}>
-                          <Input
-                              type="textarea"
-                              className="form-control"
-                              placeholder={gettext("Title of your research project") + "..."}
-                              value={this.state.title}
-                              onChange={(e) => {
-                                this.handleInputChange(e, "title");
-                              }}
-                              {...this.validationProps("title")}
-                          />
-                        </Col>
-                        <Col sm={1}>
-                          <InfoArea id="title"
-                              helpText="Please enter the title of your research project."
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </FormGroup>
+      <Fragment>
+        <Modal isOpen={true}>
 
-                  {/*Authors*/}
-                  <FormGroup row className="md-item">
-                    {this.state.authors.map((inputField, index) => (
-                        <React.Fragment key={`${inputField}~${index}`}>
-                          <Label
-                              id="lbl-authors"
-                              sm={1}
-                              className="pt-3"
-                              for="lbl-authors"
-                          >
-                            {gettext("Author") +
-                            (this.state.authors.length > 1
-                                ? " #" + (index + 1)
-                                : "")}
-                            :
-                          </Label>
-                          <Col sm={4} className="form-group md-item">
-                            <Label for="firstName">
-                              {gettext('First Name')}:
-                            </Label>
-                            <Input
-                                name="firstName"
-                                value={inputField.firstName}
-                                onChange={(e) =>
-                                    this.handleAuthorInputChange(index, e)
-                                }
-                                {...this.validationInAuthors(index)}
-                            />
-                          </Col>
-                          <div className="form-group col-sm-5 md-item">
-                            <label htmlFor="lastName">
-                              {gettext('Last Name')}:
-                            </label>
-                            <Input
-                                name="lastName"
-                                value={inputField.lastName}
-                                onChange={(e) =>
-                                    this.handleAuthorInputChange(index, e)
-                                }
-                                {...this.validationInAuthors(index)}
-                            />
-                          </div>
-                          <div className="form-group col-sm-1">
-                            {this.state.authors.length > 1 && (
-                                <button
-                                    className="author-control btn btn-link"
-                                    type="button"
-                                    onClick={() =>
-                                        this.handleAuthorRemoveFields(index)
-                                    }
-                                >
-                                  -
-                                </button>
-                            )}
-                            <button
-                                className="author-control btn btn-link"
-                                type="button"
-                                onClick={() => this.handleAuthorAddFields(index)}
+          <form method="post">
+
+            <ModalHeader toggle={this.props.hideDialog}>
+              {this.props.header}
+            </ModalHeader>
+            <ModalBody>
+              {this.props.body}
+
+              <div className="h-100 d-flex flex-column">
+                <div className="flex-auto d-flex o-hidden">
+                  <div className="main-panel d-flex flex-column">
+                    <div className="content position-relative" style={{paddingBottom: "0rem"}}>
+
+                        {/*Title*/}
+                        <FormGroup row className="md-item">
+                          <Col sm={12}>
+                            <Label
+                                id="lbl-title"
+                                sm={1}
                             >
-                              +
-                            </button>
-                          </div>
-                          { index == 0 &&
-                              <span className="info-area-names">
-                                <InfoArea
-                                  id="author"
-                                  className="info-area-names"
-                                  helpText="Please enter the authors and affiliation of your research project"
+                              {gettext("Title")}:
+                            </Label>
+                            <Row>
+                              <Col sm={11}>
+                                <Input
+                                    type="textarea"
+                                    className="form-control"
+                                    placeholder={gettext("Title of your research project") + "..."}
+                                    value={this.state.title}
+                                    onChange={(e) => {
+                                      this.handleInputChange(e, "title");
+                                    }}
+                                    {...this.validationProps("title")}
                                 />
-                              </span>
-                          }
+                              </Col>
+                              <Col sm={1}>
+                                <InfoArea id="title"
+                                          helpText="Please enter the title of your research project."
+                                />
+                              </Col>
+                            </Row>
+                          </Col>
+                        </FormGroup>
 
-                          {inputField.affs.map((_, aidx) => (
-                              <React.Fragment
-                                  key={`${inputField}~${index}~${aidx}`}
-                              >
-                                <div className="form-group col-sm-11 ml-2">
-                                  <label
-                                      className="offset-sm-1"
-                                      htmlFor="lbl-affiliation"
-                                  >
-                                    {gettext('Affiliation') +
-                                    (inputField.affs.length > 1
-                                        ? ' #' + (aidx + 1)
-                                        : "")}
-                                    :
-                                  </label>
-                                  <input
-                                      type="text"
-                                      className="form-control  offset-sm-1 col-sm-11"
-                                      value={inputField.affs[aidx]}
+                        {/*Authors*/}
+                        <FormGroup row className="md-item">
+                          {this.state.authors.map((inputField, index) => (
+                              <React.Fragment key={`${inputField}~${index}`}>
+                                <Label
+                                    id="lbl-authors"
+                                    sm={1}
+                                    className="pt-3"
+                                    for="lbl-authors"
+                                >
+                                  {gettext("Author") +
+                                  (this.state.authors.length > 1
+                                      ? " #" + (index + 1)
+                                      : "")}
+                                  :
+                                </Label>
+                                <Col sm={4} className="form-group md-item">
+                                  <Label for="firstName">
+                                    {gettext('First Name')}:
+                                  </Label>
+                                  <Input
+                                      name="firstName"
+                                      value={inputField.firstName}
                                       onChange={(e) =>
-                                          this.handleAuthorAffInputChange(
-                                              index,
-                                              aidx,
-                                              e
-                                          )
+                                          this.handleAuthorInputChange(index, e)
                                       }
+                                      {...this.validationInAuthors(index)}
+                                  />
+                                </Col>
+                                <div className="form-group col-sm-5 md-item">
+                                  <label htmlFor="lastName">
+                                    {gettext('Last Name')}:
+                                  </label>
+                                  <Input
+                                      name="lastName"
+                                      value={inputField.lastName}
+                                      onChange={(e) =>
+                                          this.handleAuthorInputChange(index, e)
+                                      }
+                                      {...this.validationInAuthors(index)}
                                   />
                                 </div>
-                                <div className="form-group">
-                                  {inputField.affs.length > 1 && (
+                                <div className="form-group col-sm-1">
+                                  {this.state.authors.length > 1 && (
                                       <button
-                                          className="affiliation-control btn btn-link"
+                                          className="author-control btn btn-link"
                                           type="button"
                                           onClick={() =>
-                                              this.handleAuthorAffRemoveFields(
-                                                  index,
-                                                  aidx
-                                              )
+                                              this.handleAuthorRemoveFields(index)
                                           }
                                       >
                                         -
                                       </button>
                                   )}
                                   <button
-                                      className="affiliation-control btn btn-link"
+                                      className="author-control btn btn-link"
                                       type="button"
-                                      onClick={() =>
-                                          this.handleAuthorAffAddFields(index, aidx)
-                                      }
+                                      onClick={() => this.handleAuthorAddFields(index)}
                                   >
                                     +
                                   </button>
                                 </div>
+                                { index == 0 &&
+                                <span className="info-area-names">
+                                <InfoArea
+                                    id="author"
+                                    className="info-area-names"
+                                    helpText="Please enter the authors and affiliation of your research project"
+                                />
+                              </span>
+                                }
+
+                                {inputField.affs.map((_, aidx) => (
+                                    <React.Fragment
+                                        key={`${inputField}~${index}~${aidx}`}
+                                    >
+                                      <div className="form-group col-sm-11 ml-2">
+                                        <label
+                                            className="offset-sm-1"
+                                            htmlFor="lbl-affiliation"
+                                        >
+                                          {gettext('Affiliation') +
+                                          (inputField.affs.length > 1
+                                              ? ' #' + (aidx + 1)
+                                              : "")}
+                                          :
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="form-control  offset-sm-1 col-sm-11"
+                                            value={inputField.affs[aidx]}
+                                            onChange={(e) =>
+                                                this.handleAuthorAffInputChange(
+                                                    index,
+                                                    aidx,
+                                                    e
+                                                )
+                                            }
+                                        />
+                                      </div>
+                                      <div className="form-group">
+                                        {inputField.affs.length > 1 && (
+                                            <button
+                                                className="affiliation-control btn btn-link"
+                                                type="button"
+                                                onClick={() =>
+                                                    this.handleAuthorAffRemoveFields(
+                                                        index,
+                                                        aidx
+                                                    )
+                                                }
+                                            >
+                                              -
+                                            </button>
+                                        )}
+                                        <button
+                                            className="affiliation-control btn btn-link"
+                                            type="button"
+                                            onClick={() =>
+                                                this.handleAuthorAffAddFields(index, aidx)
+                                            }
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    </React.Fragment>
+                                ))}
                               </React.Fragment>
                           ))}
-                        </React.Fragment>
-                    ))}
-                  </FormGroup>
+                        </FormGroup>
 
-                  {/*Publisher*/}
-                  <FormGroup row className="md-item">
-                    <Col sm={12}>
-                      <Label
-                          id="lbl-publisher"
-                          sm={1}
-                          htmlFor="publisher"
-                      >
-                        {gettext('Publisher')}:
-                      </Label>
-                      <Row>
-                        <Col sm={11}>
-                          <Input
-                              id="publisher"
-                              type="textarea"
-                              style={{height: "4em"}}
-                              placeholder={gettext("Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource") + "..."}
-                              className="form-control"
-                              value={this.state.publisher}
-                              onChange={(e) => {
-                                this.handleInputChange(e, "publisher");
-                              }}
-                              {...this.validationProps("publisher")}
-                          />
-                        </Col>
-                        <Col sm={1}>
+                        {/*Publisher*/}
+                        <FormGroup row className="md-item">
+                          <Col sm={12}>
+                            <Label
+                                id="lbl-publisher"
+                                sm={1}
+                                htmlFor="publisher"
+                            >
+                              {gettext('Publisher')}:
+                            </Label>
+                            <Row>
+                              <Col sm={11}>
+                                <Input
+                                    id="publisher"
+                                    type="textarea"
+                                    style={{height: "4em"}}
+                                    placeholder={gettext("Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource") + "..."}
+                                    className="form-control"
+                                    value={this.state.publisher}
+                                    onChange={(e) => {
+                                      this.handleInputChange(e, "publisher");
+                                    }}
+                                    {...this.validationProps("publisher")}
+                                />
+                              </Col>
+                              <Col sm={1}>
+                                <InfoArea
+                                    id="publisher"
+                                    helpText="Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource."
+                                />
+                              </Col>
+                            </Row>
+                          </Col>
+                        </FormGroup>
+
+                        {/*Description*/}
+                        <FormGroup row className="md-item">
+                          <Col sm={12}>
+                            <Label
+                                id="lbl-description"
+                                sm={1}
+                                htmlFor="description"
+                            >
+                              {gettext("Description")}:
+                            </Label>
+                            <Row>
+                              <Col sm={11}>
+                                <Input
+                                    id="description"
+                                    type="textarea"
+                                    style={{height: "6em"}}
+                                    placeholder={gettext("Please enter the description of your research project") + "..."}
+                                    className="form-control"
+                                    value={this.state.description}
+                                    onChange={(e) => {
+                                      this.handleInputChange(e, "description");
+                                    }}
+                                    {...this.validationProps("description")}
+                                />
+                              </Col>
+                              <Col sm={1}>
+                                <InfoArea
+                                    id="description"
+                                    helpText="Please enter the description of your research project."
+                                />
+                              </Col>
+                            </Row>
+                          </Col>
+
+                        </FormGroup>
+
+                        {/*Year*/}
+                        <FormGroup row className="md-item">
+                          <Label
+                              id="lbl-year"
+                              sm={1}
+                              className="pt-0"
+                              for="lbl-year"
+                          >
+                            {gettext("Year")}:
+                          </Label>
+                          <Col sm={4}>
+                            <Input
+                                className="form-control"
+                                placeholder={gettext("Year of project start...")}
+                                value={this.state.year}
+                                onChange={(e) => {
+                                  this.handleInputChange(e, "year");
+                                }}
+                                {...this.validationProps("year")}
+                            />
+                          </Col>
                           <InfoArea
-                              id="publisher"
-                              helpText="Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource."
+                              id="year"
+                              helpText="Please enter year of project start."
                           />
-                        </Col>
-                      </Row>
-                    </Col>
-                  </FormGroup>
-                  
-                  {/*Description*/}
-                  <FormGroup row className="md-item">
-                    <Col sm={12}>
-                      <Label
-                          id="lbl-description"
-                          sm={1}
-                          htmlFor="description"
-                      >
-                        {gettext("Description")}:
-                      </Label>
-                      <Row>
-                        <Col sm={11}>
-                          <Input
-                            id="description"
-                            type="textarea"
-                            style={{height: "6em"}}
-                            placeholder={gettext("Please enter the description of your research project") + "..."}
-                            className="form-control"
-                            value={this.state.description}
-                            onChange={(e) => {
-                              this.handleInputChange(e, "description");
-                            }}
-                            {...this.validationProps("description")}
-                        />
-                        </Col>
-                        <Col sm={1}>
-                          <InfoArea
-                            id="description"
-                            helpText="Please enter the description of your research project."
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
+                        </FormGroup>
 
-                  </FormGroup>
-
-                  {/*Year*/}
-                  <FormGroup row className="md-item">
-                    <Label
-                        id="lbl-year"
-                        sm={1}
-                        className="pt-0"
-                        for="lbl-year"
-                    >
-                      {gettext("Year")}:
-                    </Label>
-                    <Col sm={4}>
-                      <Input
-                          className="form-control"
-                          placeholder={gettext("Year of project start...")}
-                          value={this.state.year}
-                          onChange={(e) => {
-                            this.handleInputChange(e, "year");
-                          }}
-                          {...this.validationProps("year")}
-                      />
-                    </Col>
-                      <InfoArea
-                          id="year"
-                          helpText="Please enter year of project start."
-                      />
-                  </FormGroup>
-
-                  {/*Institute*/}
-                  <FormGroup row className="md-item">
-                    <Label
-                        id="lbl-institute"
-                        className="pt-3"
-                        sm={1}
-                        for="institute"
-                    >
-                      {gettext('Institute')}:
-                    </Label>
-                    <Col sm={5} className="form-group md-item">
-                      <Label>{gettext('Institute name')}:</Label>
-                      <AsyncCreatableSelect
-                          id="institute"
-                          className={this.state.validMd.institute ? "is-valid" : "is-invalid"}
-                          isClearable
-                          cacheOptions
-                          value={{
-                            value: this.state.institute,
-                            label: this.state.institute,
-                          }}
-                          onChange={this.handleInstituteChange}
-                          loadOptions={this.promiseOptions}
-                          {...this.validationProps("institute")}
-                      />
-                    </Col>
-                    <Col sm={5} className="form-group md-item">
-                      <Label for="department">
-                        {gettext('Department')}:
-                      </Label>
-                      <Input
-                        value={this.state.department}
-                        onChange={(e) =>
-                            this.handleInputChange(e, "department")
-                        }
-                        {...this.validationProps("department")}
-                      />
-                    </Col>
-                    <span className="info-area-names">
+                        {/*Institute*/}
+                        <FormGroup row className="md-item">
+                          <Label
+                              id="lbl-institute"
+                              className="pt-3"
+                              sm={1}
+                              for="institute"
+                          >
+                            {gettext('Institute')}:
+                          </Label>
+                          <Col sm={5} className="form-group md-item">
+                            <Label>{gettext('Institute name')}:</Label>
+                            <AsyncCreatableSelect
+                                id="institute"
+                                className={this.state.validMd.institute ? "is-valid" : "is-invalid"}
+                                isClearable
+                                cacheOptions
+                                value={{
+                                  value: this.state.institute,
+                                  label: this.state.institute,
+                                }}
+                                onChange={this.handleInstituteChange}
+                                loadOptions={this.promiseOptions}
+                                {...this.validationProps("institute")}
+                            />
+                          </Col>
+                          <Col sm={5} className="form-group md-item">
+                            <Label for="department">
+                              {gettext('Department')}:
+                            </Label>
+                            <Input
+                                value={this.state.department}
+                                onChange={(e) =>
+                                    this.handleInputChange(e, "department")
+                                }
+                                {...this.validationProps("department")}
+                            />
+                          </Col>
+                          <span className="info-area-names">
                       <InfoArea
                           id="institute"
                           helpText="Please enter the related Max Planck Institute for this research project."
                       />
                     </span>
-                    {this.state.directors.map((inputField, index) => (
-                        <React.Fragment key={`${inputField}~${index}`}>
-                          <Label
-                              id="lbl-directors"
-                              sm={2}
-                              className="form-group offset-sm-1 pt-3"
-                              for="directors"
-                          >
-                            {gettext('Director or PI') +
-                            (this.state.directors.length > 1
-                                ? ' #' + (index + 1)
-                                : "")}
-                            :
-                          </Label>
-                          <FormGroup className="col-sm-4 md-item">
-                            <Label form="firstName">
-                              {gettext('First Name')}:
-                            </Label>
-                            <Input
-                                name="firstName"
-                                value={inputField.firstName}
-                                onChange={(e) =>
-                                    this.handleDirectorInputChange(index, e)
-                                }
-                                {...this.validationInDirectors(index)}
-
-                            />
-                          </FormGroup>
-                          <FormGroup className="col-sm-4 md-item">
-                            <Label for="lastName">
-                              {gettext('Last Name')}:
-                            </Label>
-                            <Input
-                                name="lastName"
-                                value={inputField.lastName}
-                                onChange={(e) =>
-                                    this.handleDirectorInputChange(index, e)
-                                }
-                                {...this.validationInDirectors(index)}
-                            />
-                          </FormGroup>
-                          <FormGroup>
-                            {this.state.directors.length > 1 && (
-                                <button
-                                    className="director-control btn btn-link"
-                                    type="button"
-                                    onClick={() =>
-                                        this.handleDirectorRemoveFields(index)
-                                    }
+                          {this.state.directors.map((inputField, index) => (
+                              <React.Fragment key={`${inputField}~${index}`}>
+                                <Label
+                                    id="lbl-directors"
+                                    sm={2}
+                                    className="form-group offset-sm-1 pt-3"
+                                    for="directors"
                                 >
-                                  -
-                                </button>
-                            )}
-                            <button
-                                className="director-control btn btn-link"
-                                type="button"
-                                onClick={() => this.handleDirectorAddFields(index)}
-                            >
-                              +
-                            </button>
-                          </FormGroup>
-                        </React.Fragment>
-                    ))}
-                  </FormGroup>
+                                  {gettext('Director or PI') +
+                                  (this.state.directors.length > 1
+                                      ? ' #' + (index + 1)
+                                      : "")}
+                                  :
+                                </Label>
+                                <FormGroup className="col-sm-4 md-item">
+                                  <Label form="firstName">
+                                    {gettext('First Name')}:
+                                  </Label>
+                                  <Input
+                                      name="firstName"
+                                      value={inputField.firstName}
+                                      onChange={(e) =>
+                                          this.handleDirectorInputChange(index, e)
+                                      }
+                                      {...this.validationInDirectors(index)}
 
-                  {/*Resource Type*/}
-                  <Row className="form-group md-item">
-                    <Label
-                        id="lbl-resource-type"
-                        sm={2}
-                        className="pt-0"
-                        for="resource-type"
-                    >
-                      {gettext('Resource Type')}:
-                    </Label>
-                    <Col sm={3}>
-                      <Select
-                          id="resource-type"
-                          value={{
-                            value: this.state.resourceType,
-                            label: this.state.resourceType
-                          }}
-                          options={this.resourceOptions}
-                          onChange={this.onResourceSelectChange}
-                      />
-                    </Col>
-                    <InfoArea
-                        id="resource-type"
-                        helpText="Please enter the resource type of the entity. Allowed values for this field: Library (default), Project."
-                    />
-                  </Row>
+                                  />
+                                </FormGroup>
+                                <FormGroup className="col-sm-4 md-item">
+                                  <Label for="lastName">
+                                    {gettext('Last Name')}:
+                                  </Label>
+                                  <Input
+                                      name="lastName"
+                                      value={inputField.lastName}
+                                      onChange={(e) =>
+                                          this.handleDirectorInputChange(index, e)
+                                      }
+                                      {...this.validationInDirectors(index)}
+                                  />
+                                </FormGroup>
+                                <FormGroup>
+                                  {this.state.directors.length > 1 && (
+                                      <button
+                                          className="director-control btn btn-link"
+                                          type="button"
+                                          onClick={() =>
+                                              this.handleDirectorRemoveFields(index)
+                                          }
+                                      >
+                                        -
+                                      </button>
+                                  )}
+                                  <button
+                                      className="director-control btn btn-link"
+                                      type="button"
+                                      onClick={() => this.handleDirectorAddFields(index)}
+                                  >
+                                    +
+                                  </button>
+                                </FormGroup>
+                              </React.Fragment>
+                          ))}
+                        </FormGroup>
 
-                  {/*License*/}
-                  <Row className="form-group md-item">
-                    <Label
-                        id="lbl-license"
-                        className="pt-0"
-                        sm={1}
-                        for="license"
-                    >
-                      {gettext("License")}:
-                    </Label>
-                    <Col sm={7}>
-                      <Input
-                          id="license"
-                          placeholder={gettext("Please enter the license") + "..."}
-                          className="form-control"
-                          value={this.state.license}
-                          onChange={(e) => {
-                            this.handleInputChange(e, "license");
-                          }}
-                      />
-                    </Col>
-                    <InfoArea
-                        id="license" helpText="Please enter the license."
-                    />
-                  </Row>
-                  <button
-                      type="submit"
-                      className="btn btn-outline-primary offset-sm-9 col-sm-3"
-                      onClick={this.updateArchiveMetadata}
-                  >
-                    {" "}
-                    {gettext("Save metadata")}
-                  </button>
-                </form>
+                        {/*Resource Type*/}
+                        <Row className="form-group md-item">
+                          <Label
+                              id="lbl-resource-type"
+                              sm={2}
+                              className="pt-0"
+                              for="resource-type"
+                          >
+                            {gettext('Resource Type')}:
+                          </Label>
+                          <Col sm={3}>
+                            <Select
+                                id="resource-type"
+                                value={{
+                                  value: this.state.resourceType,
+                                  label: this.state.resourceType
+                                }}
+                                options={this.resourceOptions}
+                                onChange={this.onResourceSelectChange}
+                            />
+                          </Col>
+                          <InfoArea
+                              id="resource-type"
+                              helpText="Please enter the resource type of the entity. Allowed values for this field: Library (default), Project."
+                          />
+                        </Row>
 
-                {/*<br />*/}
-                {/*<pre>{JSON.stringify(this.state, null, 2)}</pre>*/}
+                        {/*License*/}
+                        <Row className="form-group md-item">
+                          <Label
+                              id="lbl-license"
+                              className="pt-0"
+                              sm={1}
+                              for="license"
+                          >
+                            {gettext("License")}:
+                          </Label>
+                          <Col sm={7}>
+                            <Input
+                                id="license"
+                                placeholder={gettext("Please enter the license") + "..."}
+                                className="form-control"
+                                value={this.state.license}
+                                onChange={(e) => {
+                                  this.handleInputChange(e, "license");
+                                }}
+                            />
+                          </Col>
+                          <InfoArea
+                              id="license" helpText="Please enter the license."
+                          />
+                        </Row>
+                      {/*<br />*/}
+                      {/*<pre>{JSON.stringify(this.state, null, 2)}</pre>*/}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </React.Fragment>
+            </ModalBody>
+           <ModalFooter>
+             {this.props.onButton1 &&
+                  <button type="submit"
+                      className="btn btn-outline-primary offset-sm-1 col-sm-2"
+                      disabled={this.state.isButton1Disabled}
+                      onClick={(e) => this.onButton1(e)}>
+                    {this.props.button1Label}
+                  </button>
+                  }
+             {this.props.onButton2 &&
+              <button type="submit"
+                      className="btn btn-outline-primary offset-sm-9 col-sm-3"
+                      disabled={this.state.isButton2Disabled}
+                      onClick={(e) => this.onButton2(e)}>
+                {this.props.button2Label}
+              </button>
+              }
+           </ModalFooter>
+          </form>
+        </Modal>
+      </Fragment>
     );
   }
 }

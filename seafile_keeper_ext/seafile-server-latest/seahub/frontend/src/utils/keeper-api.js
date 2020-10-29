@@ -87,6 +87,7 @@ class KeeperAPI {
     return this.req.post(url, params);
   }
 
+
   listLibraryDetails() {
     const url = this.server + '/api2/library-details/';
     return this.req.get(url);
@@ -100,6 +101,7 @@ class KeeperAPI {
   updateArchiveMetadata(repoID, md) {
     const url = this.server + '/api2/archive-metadata/';
     md.repo_id = repoID;
+    md.validate = true
     return this.req.post(url, md);
   }
 
