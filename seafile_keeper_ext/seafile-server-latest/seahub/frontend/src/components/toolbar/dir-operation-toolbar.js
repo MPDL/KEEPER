@@ -178,7 +178,10 @@ class DirOperationToolbar extends React.Component {
       const d = resp.data;
       handleCanArchiveResponse(this, resp);
       if (d.status === 'success' || d.status === 'metadata_error')
-        this.setState({isArchiveLibraryDialogShow: true});
+        this.setState({
+          isArchiveLibraryDialogShow: true,
+          quota: d.quota,
+        });
     }).catch((error) => {
       let errorMsg = Utils.getErrorMsg(error);
       handleCanArchiveResponse(this, {data: {status: 'system_error', msg: errorMsg}});
