@@ -17,29 +17,35 @@ class KeeperCatalogFacetDialog extends React.Component {
   constructor(props) {
     super(props);
     const facet = this.props.values;
-    let tes = facet.termEntries;
-    //console.log(facet);
-    let tc = [...facet.termsChecked] || [];
-
-    // sort terms by amount of entries, desc
-    let termsSorted = Object.keys(tes)
-        .sort((a, b) => (tes[b].length-tes[a].length));
-    let ts = termsSorted || [];
-    //terms are not checked terms
-    if (ts.length > 0 && tc.length > 0) {
-      ts = ts.filter(t => !tc.includes(t))
-    }
-
     this.state = {
       errorMsg: '',
       searchTerm: '',
       isSubmitBtnActive: false,
       order: facet.order || 'asc',
-      terms: ts,
-      termsChecked: tc,
+      termsChecked: [...facet.termsChecked] || [],
     };
+    this.state.terms = this.getTerms();
   }
 
+
+  getTerms = () => {
+    const { termsChecked } = this.state;
+    const { termEntries } = this.props.values;
+    // sort terms by amount of entries, desc, and than name, asc
+    let termsSorted = Object.keys(termEntries)
+        .sort((a, b) => {
+          let aLen = termEntries[a].length;
+          let bLen = termEntries[b].length;
+          if (aLen == bLen) {
+            return a.localeCompare(b);
+          }
+          return bLen - aLen;
+        });
+    if (termsSorted.length > 0 && termsChecked.length > 0) {
+      termsSorted = termsSorted.filter(t => !termsChecked.includes(t))
+    }
+    return termsSorted;
+  }
 
   toggle = () => {
     this.props.toggleDialog();
@@ -59,16 +65,19 @@ class KeeperCatalogFacetDialog extends React.Component {
   addToTermsChecked(name) {
     this.state.termsChecked.unshift(name);
     this.setState({
-      terms: this.state.terms.filter(t => t !== name),
       termsChecked: this.state.termsChecked,
+    }, () => {
+      this.setState({terms: this.getTerms()});
     });
   }
 
   addToTerms(name) {
-    this.state.terms.push(name);
+    let {termsChecked} = this.state;
+    termsChecked = termsChecked.filter(t => t !== name);
     this.setState({
-      terms: this.state.terms,
-      termsChecked: this.state.termsChecked.filter(t => t !== name),
+      termsChecked: termsChecked,
+    }, () => {
+      this.setState({terms: this.getTerms()});
     });
   }
 
@@ -88,15 +97,12 @@ class KeeperCatalogFacetDialog extends React.Component {
 
 
   handleApply = () => {
-    this.props.applyFacet(
-        this.props.name,
-        this.state.termsChecked, this.state.order);
+    this.props.applyFacet(this.props.name, this.state.termsChecked, this.state.order);
     this.toggle();
   }
 
   handleCleanAll = () => {
-    this.props.applyFacet(this.props.name,
-        [], [], {}, 'asc', []);
+    this.props.applyFacet(this.props.name, [], "asc");
     this.toggle();
   }
 
@@ -108,17 +114,12 @@ class KeeperCatalogFacetDialog extends React.Component {
     return tscope.some(e => cscope.indexOf(e) != -1)
   }
 
-  getTermFragment = (inputField, index) => {
-    let {termEntries} = this.props.values;
-    let {catalogScope} = this.props;
-    if (this.state.searchTerm && inputField && inputField.toLowerCase().indexOf(this.state.searchTerm.toLowerCase()) == -1)
-      return
-    if (!(inputField && inputField in termEntries))
-      return
-    if (!this.isTermInScope(inputField))
-      return
+  getTermFragment = (inputField, idx) => {
+    let { termEntries } = this.props.values;
+    // if (!this.isTermInScope(inputField))
+    //   return
     return (
-        <Fragment key={`${inputField}~${index}`}>
+        <Fragment key={`${inputField}~${idx}`}>
           <FormGroup className="ml-5 mb-0">
             <Label>
               <Input type="checkbox" name={inputField} checked={this.isChecked(inputField)}
@@ -143,10 +144,7 @@ class KeeperCatalogFacetDialog extends React.Component {
 
   render() {
     const { dialogTitle, name } = this.props;
-    const { 
-      errorMsg,
-      searchTerm,
-    } = this.state;
+    const { errorMsg, searchTerm, termsChecked, terms, isSubmitBtnActive } = this.state;
     return (
       <Modal isOpen={true} toggle={this.toggle}>
         <ModalHeader toggle={this.toggle}>{gettext("Select " + name.charAt(0).toUpperCase() + name.slice(1) + "(s)")}</ModalHeader>
@@ -157,22 +155,26 @@ class KeeperCatalogFacetDialog extends React.Component {
             <FormGroup className="mt-3">
               <Input style={{width: "60%", height: "60%"}} placeholder={gettext('Search')} value={searchTerm} onChange={this.inputSearchTerm}/>
             </FormGroup>
-            {this.state.termsChecked
-                .map((inputField, index) => (
-                  this.getTermFragment(inputField, index)
+            {termsChecked
+                .map((inputField, idx) => (
+                  this.getTermFragment(inputField, idx)
             ))}
-            {this.state.terms
-                .map((inputField, index2) => (
-                    index2 < maxTerms && this.getTermFragment(inputField, index2)
+            {terms
+                .filter((input, idx) =>
+                  (typeof searchTerm === "undefined" || searchTerm === null) ||
+                  (input && input.toLowerCase().indexOf(searchTerm.toLowerCase()) != -1)
+                )
+                .map((inputField, idx) => (
+                    idx + termsChecked.length < maxTerms && this.getTermFragment(inputField, idx)
               ))}
-            {this.state.terms.length >= maxTerms &&
+            {terms.length + termsChecked.length >= maxTerms &&
               <div className="ml-1">...</div>
             }
           </Form>
           {errorMsg && <Alert color="danger">{errorMsg}</Alert>}
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" className="w-9" onClick={this.handleApply} disabled={!this.state.isSubmitBtnActive}>{gettext('Apply')}</Button>
+          <Button color="primary" className="w-9" onClick={this.handleApply} disabled={!isSubmitBtnActive}>{gettext('Apply')}</Button>
           <Button className="ml-4"  color="primary" onClick={this.handleCleanAll}>{gettext('Reset')}</Button>
           <Button className="ml-4" color="secondary" onClick={this.toggle}>{gettext('Cancel')}</Button>
         </ModalFooter>

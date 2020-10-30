@@ -25,7 +25,6 @@ const maxDescLength = 500;
 
 const defaultFacet = {
       order: 'asc',
-      terms: [],
       termEntries: {},
       termsChecked: [],
   }
@@ -49,7 +48,7 @@ class KeeperProjectCatalog extends React.Component {
       isDirectorFacetDialogOpen: false,
       hasTermsChecked: false,
     };
-    this.resetFacets()
+    this.doResetFacets()
   }
 
   componentDidMount() {
@@ -71,7 +70,7 @@ class KeeperProjectCatalog extends React.Component {
     document.body.appendChild(script);
   }
 
-  resetFacets = () => {
+  doResetFacets = () => {
     this.state.facets = {
       author: {...defaultFacet},
       year: {...defaultFacet},
@@ -96,32 +95,37 @@ class KeeperProjectCatalog extends React.Component {
     return Array.from(scope)
   }
 
-  updateFacets = (newFs) => {
+  updateFacets = (newFs, reset) => {
     let f = {};
     for (let fkey of Object.keys(newFs) ) {
+      let oldFs = this.state.facets[fkey].termEntries;
       f[fkey] = {
         ...this.state.facets[fkey],
-        termEntries: newFs[fkey].termEntries,
+        // newer override oldFs if it is already initialized from DB
+        // TODO: check case: somebody chanhed catalog during the current search session
+        // check timestamp of latest
+        termEntries: Object.keys(oldFs).length == 0 ? newFs[fkey].termEntries : oldFs,
         termsChecked: newFs[fkey].termsChecked,
       }
     }
+//    console.log(f)
     return f;
   }
 
-  getItems = (page, resetFacets) => {
-    this.setState({isLoading: true})
+  getItems = (page, resetScope) => {
+    // this.setState({isLoading: true})
     this.setHasTermsChecked();
     let st = this.state;
     let fs = this.state.facets;
     let scope =
-        resetFacets ? [] : this.calculateScopeFromFacets();
+        resetScope ? [] : this.calculateScopeFromFacets();
     keeperAPI.getProjectCatalog(page, st.perPage,
         fs.author, fs.year, fs.institute, fs.director,
         scope,
         st.searchTerm
     ).then((res) => {
       let d = res.data;
-      //console.log(d)
+//      console.log(d.facets);
       this.setState({
         isLoading: false,
         currentPage: page,
@@ -159,11 +163,6 @@ class KeeperProjectCatalog extends React.Component {
   }
 
   applyFacet = (fkey, termsChecked, order) => {
-    let resetFacets = false;
-    //reset facets condition
-    if (termsChecked && termsChecked.length == 0) {
-      resetFacets = true;
-    }
     this.setState({
       facets: {
         ...this.state.facets,
@@ -173,12 +172,12 @@ class KeeperProjectCatalog extends React.Component {
           order: order,
       }},
     }, () => {
-      this.getItems(1, resetFacets);
+      this.getItems(1, termsChecked && termsChecked.length == 0);
     })
   }
 
   cleanAllFacets = () => {
-    this.resetFacets();
+    this.doResetFacets();
     this.getItems(1, true);
   }
 
