@@ -67,6 +67,9 @@ def _apply_sorts(mds, facets):
 
 
 def _update_facets(facets, c):
+    """
+    Regenerate facets and sort keys in one run
+    """
 
     def _f(fs, n, md, mn):
         return fs.get(n).get("termsChecked"), md.get(mn, None)
@@ -126,7 +129,6 @@ def _update_facets(facets, c):
                 })
             else:
                 return False
-
 
     terms, md = _f(facets, "director", c.md, "institute")
     if terms and not md:
