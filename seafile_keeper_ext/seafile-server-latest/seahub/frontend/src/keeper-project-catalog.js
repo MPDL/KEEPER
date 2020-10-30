@@ -125,7 +125,7 @@ class KeeperProjectCatalog extends React.Component {
         st.searchTerm
     ).then((res) => {
       let d = res.data;
-//      console.log(d.facets);
+      console.log(d.items);
       this.setState({
         isLoading: false,
         currentPage: page,
@@ -402,7 +402,7 @@ class Item extends React.Component {
     let author = [];
     if ("authors" in item && item.authors.length > 0) {
       let authors = item.authors
-      for (let j = 0; j < authors.length ; j++) {
+      for (let j = 0; j < authors.length; j++) {
         let tauthor = "";
         let tauthors = this.toTitleCase(authors[j].name).split(", ");
         for (let i = 0; i < tauthors.length; i++) {
@@ -422,6 +422,36 @@ class Item extends React.Component {
       }
     }
     return author.join("; ");
+  }
+
+  //TODO
+  getDirectors = (str) => {
+    let dirs = str.split("|").map((s) => s.trim()).filter(s => s.length > 0);
+    if (dirs.length > 0) {
+      return dirs.join("; ");
+    }
+    return null;
+  }
+
+  instituteFragment = (ins) => {
+    const split = ins.split(";").map((s) => s.trim()).filter(s => s.length > 0);
+    if (!(split && split.length && split.length > 0))
+      return
+
+    const dirs = split.length >= 3 ? this.getDirectors(split[2]) : null;
+    return (
+        <Fragment>
+          {split[0] &&
+            <p>{gettext("Institute") + ": " + split[0]}</p>
+          }
+          {split[1] &&
+            <p>{gettext("Department") + ": " + split[1]}</p>
+          }
+          {/*{dirs &&*/}
+          {/*  <p>{gettext("Directors or PIs") + ": " + dirs}</p>*/}
+          {/*}*/}
+        </Fragment>
+    )
   }
 
   render() {
@@ -464,6 +494,9 @@ class Item extends React.Component {
               }
               {
                 item.year && <p>{gettext("Year") + ": " + item.year}</p>
+              }
+              {
+                item.institute && this.instituteFragment(item.institute)
               }
               {
                 item.owner && <p>{gettext("Contact") + ": " + item.owner.toLowerCase()}</p>
