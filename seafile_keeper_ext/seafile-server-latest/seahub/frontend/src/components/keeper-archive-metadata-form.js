@@ -39,14 +39,12 @@ const defaultMd = {
 
 const defaultValidMd = {
   title: true,
-  // authors:  [true],
   authors: [[true, true]],
   publisher: true,
   description: true,
   year: true,
   institute: true,
   department: true,
-  // directors: [true],
   directors: [[true, true]],
   resourceType: true,
 };
