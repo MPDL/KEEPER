@@ -33,16 +33,16 @@ class KeeperCatalogFacetDialog extends React.Component {
     const { termEntries } = this.props.values;
     // sort terms by amount of entries, desc, and than name, asc
     let termsSorted = Object.keys(termEntries)
-        .sort((a, b) => {
-          let aLen = termEntries[a].length;
-          let bLen = termEntries[b].length;
-          if (aLen == bLen) {
-            return a.localeCompare(b);
-          }
-          return bLen - aLen;
-        });
+      .sort((a, b) => {
+        let aLen = termEntries[a].length;
+        let bLen = termEntries[b].length;
+        if (aLen == bLen) {
+          return a.localeCompare(b);
+        }
+        return bLen - aLen;
+      });
     if (termsSorted.length > 0 && termsChecked.length > 0) {
-      termsSorted = termsSorted.filter(t => !termsChecked.includes(t))
+      termsSorted = termsSorted.filter(t => !termsChecked.includes(t));
     }
     return termsSorted;
   }
@@ -109,9 +109,9 @@ class KeeperCatalogFacetDialog extends React.Component {
   isTermInScope = (term) => {
     const cscope = this.props.catalogScope || [];
     if (cscope.length == 0)
-      return true
+      return true;
     const tscope = this.props.values.termEntries[term];
-    return tscope.some(e => cscope.indexOf(e) != -1)
+    return tscope.some(e => cscope.includes(e));
   }
 
   getTermFragment = (inputField, idx) => {
@@ -119,32 +119,35 @@ class KeeperCatalogFacetDialog extends React.Component {
     // if (!this.isTermInScope(inputField))
     //   return
     return (
-        <Fragment key={`${inputField}~${idx}`}>
-          <FormGroup className="ml-5 mb-0">
-            <Label>
-              <Input type="checkbox" name={inputField} checked={this.isChecked(inputField)}
-                     onChange={this.handleCheckboxChange}/>
-              {inputField + " (" + termEntries[inputField].length + ")"}
-            </Label>
-          </FormGroup>
-        </Fragment>
-    )
+      <Fragment key={`${inputField}~${idx}`}>
+        <FormGroup className="ml-5 mb-0">
+          <Label>
+            <Input type="checkbox" name={inputField} checked={this.isChecked(inputField)}
+              onChange={this.handleCheckboxChange}/>
+            {inputField + " (" + termEntries[inputField].length + ")"}
+          </Label>
+        </FormGroup>
+      </Fragment>
+    );
   }
 
   getOrderFragment = (o, label) => {
     return (
-        <FormGroup check>
-          <Label check>
-            <Input type="radio" name="order" value={o} checked={this.state.order == o} onChange={this.setOrder} className="mr-1"/>
-            {gettext(label)}
-          </Label>
-        </FormGroup>
-    )
+      <FormGroup check>
+        <Label check>
+          <Input type="radio" name="order" value={o} checked={this.state.order == o} onChange={this.setOrder} className="mr-1"/>
+          {gettext(label)}
+        </Label>
+      </FormGroup>
+    );
   }
 
   render() {
-    const { dialogTitle, name } = this.props;
+    const { dialogTitle, name, hasCatalogSearchTerm } = this.props;
     const { errorMsg, searchTerm, termsChecked, terms, isSubmitBtnActive } = this.state;
+    
+    let termsCatalogSearchTermFiltered = hasCatalogSearchTerm ? terms.filter((term) => this.isTermInScope(term)) : terms;
+
     return (
       <Modal isOpen={true} toggle={this.toggle}>
         <ModalHeader toggle={this.toggle}>{gettext("Select " + name.charAt(0).toUpperCase() + name.slice(1) + "(s)")}</ModalHeader>
@@ -156,18 +159,18 @@ class KeeperCatalogFacetDialog extends React.Component {
               <Input style={{width: "60%", height: "60%"}} placeholder={gettext('Search')} value={searchTerm} onChange={this.inputSearchTerm}/>
             </FormGroup>
             {termsChecked
-                .map((inputField, idx) => (
-                  this.getTermFragment(inputField, idx)
-            ))}
-            {terms
-                .filter((input, idx) =>
-                  (typeof searchTerm === "undefined" || searchTerm === null) ||
-                  (input && input.toLowerCase().indexOf(searchTerm.toLowerCase()) != -1)
-                )
-                .map((inputField, idx) => (
-                    idx + termsChecked.length < maxTerms && this.getTermFragment(inputField, idx)
+              .map((term, idx) => (
+                this.getTermFragment(term, idx)
               ))}
-            {terms.length + termsChecked.length >= maxTerms &&
+            {termsCatalogSearchTermFiltered
+              .filter((term) =>
+                (typeof searchTerm === "undefined" || searchTerm === null) ||
+                  (term && term.toLowerCase().includes(searchTerm.toLowerCase()))
+              )
+              .map((term, idx) => (
+                idx + termsChecked.length < maxTerms && this.getTermFragment(term, idx)
+              ))}
+            {termsCatalogSearchTermFiltered.length + termsChecked.length >= maxTerms &&
               <div className="ml-1">...</div>
             }
           </Form>

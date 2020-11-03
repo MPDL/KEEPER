@@ -24,10 +24,10 @@ const {
 const maxDescLength = 500;
 
 const defaultFacet = {
-      order: 'asc',
-      termEntries: {},
-      termsChecked: [],
-  }
+  order: 'asc',
+  termEntries: {},
+  termsChecked: [],
+};
 
 class KeeperProjectCatalog extends React.Component {
 
@@ -48,7 +48,7 @@ class KeeperProjectCatalog extends React.Component {
       isDirectorFacetDialogOpen: false,
       hasTermsChecked: false,
     };
-    this.doResetFacets()
+    this.doResetFacets();
   }
 
   componentDidMount() {
@@ -76,7 +76,7 @@ class KeeperProjectCatalog extends React.Component {
       year: {...defaultFacet},
       institute: {...defaultFacet},
       director: {...defaultFacet},
-    }
+    };
   }
 
   calculateScopeFromFacets = () => {
@@ -92,7 +92,7 @@ class KeeperProjectCatalog extends React.Component {
         }
       }
     }
-    return Array.from(scope)
+    return Array.from(scope);
   }
 
   updateFacets = (newFs, reset) => {
@@ -106,9 +106,9 @@ class KeeperProjectCatalog extends React.Component {
         // check timestamp of latest
         termEntries: Object.keys(oldFs).length == 0 ? newFs[fkey].termEntries : oldFs,
         termsChecked: newFs[fkey].termsChecked,
-      }
+      };
     }
-//    console.log(f)
+    //    console.log(f)
     return f;
   }
 
@@ -120,9 +120,9 @@ class KeeperProjectCatalog extends React.Component {
     let scope =
         resetScope ? [] : this.calculateScopeFromFacets();
     keeperAPI.getProjectCatalog(page, st.perPage,
-        fs.author, fs.year, fs.institute, fs.director,
-        scope,
-        st.searchTerm
+      fs.author, fs.year, fs.institute, fs.director,
+      scope,
+      st.searchTerm
     ).then((res) => {
       let d = res.data;
       console.log(d.items);
@@ -159,7 +159,7 @@ class KeeperProjectCatalog extends React.Component {
     let fs = this.state.facets;
     this.setState({
       hasTermsChecked: this._chk(fs.author) || this._chk(fs.year) || this._chk(fs.director) || this._chk(fs.institute)
-    })
+    });
   }
 
   applyFacet = (fkey, termsChecked, order) => {
@@ -170,10 +170,10 @@ class KeeperProjectCatalog extends React.Component {
           ...this.state.facets[fkey],
           termsChecked: termsChecked,
           order: order,
-      }},
+        }},
     }, () => {
       this.getItems(1, termsChecked && termsChecked.length == 0);
-    })
+    });
   }
 
   cleanAllFacets = () => {
@@ -193,53 +193,54 @@ class KeeperProjectCatalog extends React.Component {
   }
 
   toggleAuthorFacetDialog = () => {
-      this.setState({isAuthorFacetDialogOpen: !this.state.isAuthorFacetDialogOpen});
-    }
+    this.setState({isAuthorFacetDialogOpen: !this.state.isAuthorFacetDialogOpen});
+  }
 
   toggleYearFacetDialog = () => {
-      this.setState({isYearFacetDialogOpen: !this.state.isYearFacetDialogOpen});
-    }
+    this.setState({isYearFacetDialogOpen: !this.state.isYearFacetDialogOpen});
+  }
 
   toggleInstituteFacetDialog = () => {
-      this.setState({isInstituteFacetDialogOpen: !this.state.isInstituteFacetDialogOpen});
-    }
+    this.setState({isInstituteFacetDialogOpen: !this.state.isInstituteFacetDialogOpen});
+  }
 
   toggleDirectorFacetDialog = () => {
-      this.setState({isDirectorFacetDialogOpen: !this.state.isDirectorFacetDialogOpen});
-    }
+    this.setState({isDirectorFacetDialogOpen: !this.state.isDirectorFacetDialogOpen});
+  }
 
   inputSearchTerm = e => {
     this.setState({searchTerm: e.target.value},
-        () => {
-      this.getItems(1, true);
-    });
+      () => {
+        this.getItems(1, true);
+      });
   }
 
   getFacetFragment = fkey => {
-    let f = this.state.facets[fkey]
+    let f = this.state.facets[fkey];
     return (
-        <Fragment>
-              <a href="#" style={{color: "#575859", fontWeight: "lighter"}}>{gettext(fkey.charAt(0).toUpperCase() + fkey.slice(1))}</a>
-              {f.termsChecked.length > 0 &&
-                <i className={"ml-1 fa fa-arrow-" + (f.order == "desc" ? "up" : "down")}/>
-              }
-              <ul>
-                {f.termsChecked.map((t, idx) =>  (
-                    t in f.termEntries &&
-                      <Fragment key={`${t}~${idx}`}>
-                        <li className="ml-5 mb-0">{t +
+      <Fragment>
+        <a href="#" style={{color: "#575859", fontWeight: "lighter"}}>{gettext(fkey.charAt(0).toUpperCase() + fkey.slice(1))}</a>
+        {f.termsChecked.length > 0 &&
+        <i className={"ml-1 fa fa-arrow-" + (f.order == "desc" ? "up" : "down")}/>
+        }
+        <ul>
+          {f.termsChecked.map((t, idx) =>  (
+            t in f.termEntries &&
+            <Fragment key={`${t}~${idx}`}>
+              <li className="ml-5 mb-0">{t +
                           (t in f.termEntries ? " (" + f.termEntries[t].length + ")" : "")
-                        }</li>
-                      </Fragment>
-                ))}
-              </ul>
-        </Fragment>
-    )
+              }</li>
+            </Fragment>
+          ))}
+        </ul>
+      </Fragment>
+    );
   }
 
   render() {
     const {isAuthorFacetDialogOpen, isYearFacetDialogOpen, isInstituteFacetDialogOpen, isDirectorFacetDialogOpen,
       facets, searchTerm} = this.state;
+    const hasSearchTerm = Boolean(searchTerm && searchTerm.trim() != "");
     return (
       <Fragment>
         <div className="h-100 d-flex flex-column">
@@ -253,100 +254,104 @@ class KeeperProjectCatalog extends React.Component {
             <div className="row">
               {this.state.isAccessDenied
                 ? <h3 className="offset-md-2 col-md-8 mt-9 text-center error">
-                    {gettext('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.')}
-                  </h3>
+                  {gettext('Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.')}
+                </h3>
                 : <div className="col-md-8 offset-md-2">
-                    <h3 className="d-flex offset-md-3"
-                        id="header">{(gettext('The KEEPER Project Catalog of the Max Planck Society'))}</h3>
-                    <div className="row">
-                      <div id="facet" className="col-md-3">
-                        <h3 style={{color: "#57a5b8", fontSize: "1.75em", fontWeight: 500}}>{gettext('Show Projects')} ({this.state.catalogScope.length})</h3>
+                  <h3 className="d-flex offset-md-3"
+                    id="header">{(gettext('The KEEPER Project Catalog of the Max Planck Society'))}</h3>
+                  <div className="row">
+                    <div id="facet" className="col-md-3">
+                      <h3 style={{color: "#57a5b8", fontSize: "1.75em", fontWeight: 500}}>{gettext('Show Projects')} ({this.state.catalogScope.length})</h3>
                       <div onClick={this.toggleAuthorFacetDialog}>
-                          {this.getFacetFragment("author")}
-                        </div>
-                        <div onClick={this.toggleYearFacetDialog}>
-                          {this.getFacetFragment("year")}
-                        </div>
-                        <div onClick={this.toggleInstituteFacetDialog}>
-                          {this.getFacetFragment("institute")}
-                        </div>
-                        <div onClick={this.toggleDirectorFacetDialog}>
-                          {this.getFacetFragment("director")}
-                        </div>
-                        {this.state.hasTermsChecked &&
-                          <div className="mt-1">
-                            <a href="#" onClick={this.cleanAllFacets}>{gettext("Reset all")}</a>
-                          </div>
-                        }
+                        {this.getFacetFragment("author")}
                       </div>
-                      <div className="col-md-9">
-                        <Form>
-                          <FormGroup>
-                            <Input type="search" style={{height: "60%"}} placeholder={gettext('Search') + "..."} value={this.state.searchTerm} onChange={this.inputSearchTerm}/>
-                          </FormGroup>
-                        </Form>
-                        <Content
-                            isLoading={this.state.isLoading}
-                            errorMsg={this.state.errorMsg}
-                            items={this.state.items}
-                        />
+                      <div onClick={this.toggleYearFacetDialog}>
+                        {this.getFacetFragment("year")}
                       </div>
+                      <div onClick={this.toggleInstituteFacetDialog}>
+                        {this.getFacetFragment("institute")}
+                      </div>
+                      <div onClick={this.toggleDirectorFacetDialog}>
+                        {this.getFacetFragment("director")}
+                      </div>
+                      {this.state.hasTermsChecked &&
+                      <div className="mt-1">
+                        <a href="#" onClick={this.cleanAllFacets}>{gettext("Reset all")}</a>
+                      </div>
+                      }
                     </div>
-                    <div className="row justify-content-center">
-                      <Paginator
-                          gotoPreviousPage={() => {
-                            this.getItems(this.state.currentPage - 1, false)
-                          }}
-                          gotoNextPage={() => {
-                            this.getItems(this.state.currentPage + 1, false)
-                          }}
-                          currentPage={this.state.currentPage}
-                          hasNextPage={this.state.hasNextPage}
-                          curPerPage={this.state.perPage}
-                          resetPerPage={this.resetPerPage}
+                    <div className="col-md-9">
+                      <Form>
+                        <FormGroup>
+                          <Input type="search" style={{height: "60%"}} placeholder={gettext('Search') + "..."} value={this.state.searchTerm} onChange={this.inputSearchTerm}/>
+                        </FormGroup>
+                      </Form>
+                      <Content
+                        isLoading={this.state.isLoading}
+                        errorMsg={this.state.errorMsg}
+                        items={this.state.items}
                       />
                     </div>
-                    <Footer/>
                   </div>
+                  <div className="row justify-content-center">
+                    <Paginator
+                      gotoPreviousPage={() => {
+                        this.getItems(this.state.currentPage - 1, false);
+                      }}
+                      gotoNextPage={() => {
+                        this.getItems(this.state.currentPage + 1, false);
+                      }}
+                      currentPage={this.state.currentPage}
+                      hasNextPage={this.state.hasNextPage}
+                      curPerPage={this.state.perPage}
+                      resetPerPage={this.resetPerPage}
+                    />
+                  </div>
+                  <Footer/>
+                </div>
               }
             </div>
           </div>
         </div>
         {isAuthorFacetDialogOpen &&
-            <KeeperCatalogFacetDialog
-              name={"author"}
-              values={facets.author}
-              catalogScope={this.state.catalogScope}
-              toggleDialog={this.toggleAuthorFacetDialog}
-              applyFacet={this.applyFacet}
-            />
+          <KeeperCatalogFacetDialog
+            name={"author"}
+            values={facets.author}
+            hasCatalogSearchTerm={hasSearchTerm}
+            catalogScope={this.state.catalogScope}
+            toggleDialog={this.toggleAuthorFacetDialog}
+            applyFacet={this.applyFacet}
+          />
         }
         {isYearFacetDialogOpen &&
-            <KeeperCatalogFacetDialog
-              name={"year"}
-              values={facets.year}
-              catalogScope={this.state.catalogScope}
-              toggleDialog={this.toggleYearFacetDialog}
-              applyFacet={this.applyFacet}
-            />
+          <KeeperCatalogFacetDialog
+            name={"year"}
+            values={facets.year}
+            hasCatalogSearchTerm={hasSearchTerm}
+            catalogScope={this.state.catalogScope}
+            toggleDialog={this.toggleYearFacetDialog}
+            applyFacet={this.applyFacet}
+          />
         }
         {isInstituteFacetDialogOpen &&
-            <KeeperCatalogFacetDialog
-              name={"institute"}
-              values={facets.institute}
-              catalogScope={this.state.catalogScope}
-              toggleDialog={this.toggleInstituteFacetDialog}
-              applyFacet={this.applyFacet}
-            />
+          <KeeperCatalogFacetDialog
+            name={"institute"}
+            values={facets.institute}
+            hasCatalogSearchTerm={hasSearchTerm}
+            catalogScope={this.state.catalogScope}
+            toggleDialog={this.toggleInstituteFacetDialog}
+            applyFacet={this.applyFacet}
+          />
         }
         {isDirectorFacetDialogOpen &&
-            <KeeperCatalogFacetDialog
-              name={"director"}
-              values={facets.director}
-              catalogScope={this.state.catalogScope}
-              toggleDialog={this.toggleDirectorFacetDialog}
-              applyFacet={this.applyFacet}
-            />
+          <KeeperCatalogFacetDialog
+            name={"director"}
+            values={facets.director}
+            hasCatalogSearchTerm={hasSearchTerm}
+            catalogScope={this.state.catalogScope}
+            toggleDialog={this.toggleDirectorFacetDialog}
+            applyFacet={this.applyFacet}
+          />
         }
       </Fragment>
     );
@@ -370,9 +375,9 @@ class Content extends React.Component {
 
     return (
       <Fragment>
-          {items.map((item, index) => {
-            return <Item key={index} item={item} />;
-          })}
+        {items.map((item, index) => {
+          return <Item key={index} item={item} />;
+        })}
       </Fragment>
     );
   }
@@ -388,8 +393,8 @@ class Item extends React.Component {
   }
 
    toggleDescription = () => {
-    this.setState({descExpanded: !this.state.descExpanded});
-  }
+     this.setState({descExpanded: !this.state.descExpanded});
+   }
 
   toTitleCase = (txt) => {
     let str = txt.replace(/([^\W_]+[^\s-]*) */g, (t) => {
@@ -401,7 +406,7 @@ class Item extends React.Component {
   getAuthors = (item) => {
     let author = [];
     if ("authors" in item && item.authors.length > 0) {
-      let authors = item.authors
+      let authors = item.authors;
       for (let j = 0; j < authors.length; j++) {
         let tauthor = "";
         let tauthors = this.toTitleCase(authors[j].name).split(", ");
@@ -413,7 +418,7 @@ class Item extends React.Component {
         }
         tauthor = tauthor.trim().slice(0, -1);
         if (j >= 5)
-          tauthor = "et al."
+          tauthor = "et al.";
         author.push(tauthor);
         if (j >= 5)
           break;
@@ -436,22 +441,22 @@ class Item extends React.Component {
   instituteFragment = (ins) => {
     const split = ins.split(";").map((s) => s.trim()).filter(s => s.length > 0);
     if (!(split && split.length && split.length > 0))
-      return
+      return;
 
     const dirs = split.length >= 3 ? this.getDirectors(split[2]) : null;
     return (
-        <Fragment>
-          {split[0] &&
-            <p>{gettext("Institute") + ": " + split[0]}</p>
-          }
-          {split[1] &&
-            <p>{gettext("Department") + ": " + split[1]}</p>
-          }
-          {/*{dirs &&*/}
-          {/*  <p>{gettext("Directors or PIs") + ": " + dirs}</p>*/}
-          {/*}*/}
-        </Fragment>
-    )
+      <Fragment>
+        {split[0] &&
+        <p>{gettext("Institute") + ": " + split[0]}</p>
+        }
+        {split[1] &&
+        <p>{gettext("Department") + ": " + split[1]}</p>
+        }
+        {/*{dirs &&*/}
+        {/*  <p>{gettext("Directors or PIs") + ": " + dirs}</p>*/}
+        {/*}*/}
+      </Fragment>
+    );
   }
 
   render() {
@@ -476,10 +481,10 @@ class Item extends React.Component {
               {
                 item.description && <p>{
                   showExpandDesc
-                      ? !this.state.descExpanded
-                        ? item.description.substring(0, maxDescLength - 4) + "..."
-                        : item.description
+                    ? !this.state.descExpanded
+                      ? item.description.substring(0, maxDescLength - 4) + "..."
                       : item.description
+                    : item.description
                 }
                 {
                   showExpandDesc &&
@@ -504,7 +509,7 @@ class Item extends React.Component {
               {
                 item.landing_page_url &&
                   <p>
-                      <a href={"/landing-page/libs/" + item.repo_id + "/"}>{gettext("Landing Page")}</a>
+                    <a href={"/landing-page/libs/" + item.repo_id + "/"}>{gettext("Landing Page")}</a>
                   </p>
               }
               {/*{JSON.stringify(item)}*/}
@@ -519,53 +524,53 @@ class Item extends React.Component {
 class Footer extends React.Component {
   render() {
     return (
-        <Fragment>
-          <div id="lg_footer">
-            <div className="container">
-              <div id="keeper-links" className="row">
-                <div className="col-md-3">
-                  <h4>Be informed</h4>
-                  <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a><br/>
-                  <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a><br/>
-                  <a href="/catalog" target="_blank">Project Catalog</a><br/>
-                </div>
-                <div className="col-md-3">
-                  <h4>Get the desktop sync client</h4>
-                  <a href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and
+      <Fragment>
+        <div id="lg_footer">
+          <div className="container">
+            <div id="keeper-links" className="row">
+              <div className="col-md-3">
+                <h4>Be informed</h4>
+                <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a><br/>
+                <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a><br/>
+                <a href="/catalog" target="_blank">Project Catalog</a><br/>
+              </div>
+              <div className="col-md-3">
+                <h4>Get the desktop sync client</h4>
+                <a href="/download_client_program/" target="_blank">Download the Keeper client for Windows, Linux and
                     Mac</a>
-                </div>
-                <div className="col-md-3">
-                  <h4>Find help</h4>
-                  <a href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a> <br/>
-                  <a href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper" target="_blank">Help /
+              </div>
+              <div className="col-md-3">
+                <h4>Find help</h4>
+                <a href="mailto:keeper@mpdl.mpg.de">Contact Keeper Support</a> <br/>
+                <a href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper" target="_blank">Help /
                     Knowledge
                     Base</a>
-                </div>
-                <div className="col-md-3">
-                  <h4>Check terms</h4>
-                  <a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a> <br/>
-                  <a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Disclaimer</a><br/>
-                  <a href="https://keeper.mpdl.mpg.de/f/bf2c8a977f70428587eb/" target="_blank">Privacy Policy</a>
-                </div>
               </div>
-              <div id="seafile-credits" className="row">
-                <div className="col-md-12 text-center">
-                  <div>
-                    <a href="https://www.seafile.com/en/home/" target="_blank">The software behind Keeper <img
-                        id="seafile-logo"
-                        src="/media/custom/seafile_logo_footer.png"
-                        height="35"/>© 2020 Seafile</a>
-                  </div>
+              <div className="col-md-3">
+                <h4>Check terms</h4>
+                <a href="https://keeper.mpdl.mpg.de/f/f62758e53c/" target="_blank">Terms of Services</a> <br/>
+                <a href="https://keeper.mpdl.mpg.de/f/17e4e9d648/" target="_blank">Disclaimer</a><br/>
+                <a href="https://keeper.mpdl.mpg.de/f/bf2c8a977f70428587eb/" target="_blank">Privacy Policy</a>
+              </div>
+            </div>
+            <div id="seafile-credits" className="row">
+              <div className="col-md-12 text-center">
+                <div>
+                  <a href="https://www.seafile.com/en/home/" target="_blank">The software behind Keeper <img
+                    id="seafile-logo"
+                    src="/media/custom/seafile_logo_footer.png"
+                    height="35"/>© 2020 Seafile</a>
                 </div>
               </div>
             </div>
           </div>
-        </Fragment>
+        </div>
+      </Fragment>
     );
   }
 }
 
-  ReactDOM.render(
+ReactDOM.render(
   <KeeperProjectCatalog />,
   document.getElementById('wrapper')
-  );
+);
