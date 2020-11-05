@@ -125,7 +125,7 @@ class KeeperProjectCatalog extends React.Component {
       st.searchTerm
     ).then((res) => {
       let d = res.data;
-      console.log(d.items);
+      //console.log(d.items);
       this.setState({
         isLoading: false,
         currentPage: page,
