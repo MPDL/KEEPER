@@ -558,6 +558,13 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
 ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 
+# OnlyIffice settings
+ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
+ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
+ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
+ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
+
+
 ##########################################################################
 ####  KEEPER specific settings
 
