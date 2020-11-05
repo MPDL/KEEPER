@@ -21,6 +21,7 @@ fi
 
 # Change the value of "user" to linux user name who runs seafile
 user=${__OS_USER__}
+group=${__OS_GROUP__}
 
 WEB_SERVER=${__HTTP_SERVER__}
 
@@ -166,6 +167,11 @@ case "$1" in
             fi
 
             pushd ${seafile_dir} >/dev/null
+
+	    if [ ${__OFFICE_CONVERTER_ENABLED__} == "true" ] && [ ! -d ${__OFFICE_CONVERTER_OUTPUTDIR__} ]
+	    then
+		    mkdir -p ${__OFFICE_CONVERTER_OUTPUTDIR__} && chown -R ${user}.${group} ${__OFFICE_CONVERTER_OUTPUTDIR__}
+	    fi
 
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
