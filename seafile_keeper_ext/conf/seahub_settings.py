@@ -387,6 +387,17 @@ ENABLED_ROLE_PERMISSIONS = {
     },
 }
 
+ENABLED_ADMIN_ROLE_PERMISSIONS = {
+    'users_and_logs_manager': {
+        'can_view_system_info': True,
+        'can_view_statistic': True,
+        'can_manage_user': True,
+        'can_view_user_log': True,
+        'can_view_admin_log': True,
+        'other_permission': True,
+    },
+}
+
 ##########################################################################
 #### Other
 
