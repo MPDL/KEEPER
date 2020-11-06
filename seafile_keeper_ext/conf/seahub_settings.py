@@ -569,6 +569,10 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
 ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 
+# Enable Onlyoffice
+ENABLE_ONLYOFFICE = __ENABLE_ONLYOFFICE__
+VERIFY_ONLYOFFICE_CERTIFICATE = True
+
 # OnlyIffice settings
 ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
 ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
