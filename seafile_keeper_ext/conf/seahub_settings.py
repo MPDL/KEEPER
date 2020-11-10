@@ -96,6 +96,14 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
+        'post_office': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'post_office.log'),
+            'maxBytes': 1024*1024*10, # 10 MB
+            'backupCount': 52,
+            'formatter': 'standard'
+        },
         # 'syslog-django_request': {
             # 'level': 'INFO',
             # 'class': 'logging.handlers.SysLogHandler',
@@ -123,6 +131,11 @@ LOGGING = {
             'handlers': ['request_handler', 'mail_admins'],
             'level': 'INFO',
             'propagate': False
+        },
+        'post_office': {
+            'handlers': ['post_office'],
+            'level': 'DEBUG',
+            'propagate': True
         },
     }
 }
