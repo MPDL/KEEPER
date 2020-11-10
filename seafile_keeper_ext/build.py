@@ -588,7 +588,7 @@ def backup(path, mv=True):
 
 
 
-def deploy_file(path, expand=False, dest_dir=None):
+def deploy_file(path, expand=False, dest_dir=None, skip_backup=False):
 
     Utils.check_file(path)
 
@@ -615,7 +615,8 @@ def deploy_file(path, expand=False, dest_dir=None):
     dest_dir = os.path.dirname(dest_path)
 
     if os.path.exists(dest_path):
-        backup(dest_path)
+        if skip_backup == False:
+            backup(dest_path)
     else:
         if not Utils.ask_question("Deploy file {} into {}?".format(path, dest_path),
                                   default="yes",
@@ -759,6 +760,7 @@ def deploy_system_conf():
     # deploy APP node related confs
     node_type = keep_ini.get('global', '__NODE_TYPE__')
     if node_type == 'APP':
+        deploy_file('system/cron.d.keeper', expand=True, skip_backup=True)
         deploy_file('system/memcached.conf')
         deploy_file('system/keepalived.conf', expand=True)
         deploy_file('system/memcached.service.d.local.conf', expand=True)
@@ -773,7 +775,7 @@ def deploy_system_conf():
 
 
     if node_type in ('BACKGROUND', 'SINGLE'):
-        deploy_file('system/cron.d.keeper@background', expand=True)
+        deploy_file('system/cron.d.keeper@background', expand=True, skip_backup=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
         deploy_file('system/keeper.service@background')
@@ -783,11 +785,6 @@ def deploy_system_conf():
     if node_type in ('SINGLE'):
         deploy_file('system/my.cnf@single', expand=True)
 
-
-    # deploy CRON node conf
-    cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
-    if cron_node.lower() == 'true':
-        deploy_file('system/cron.d.keeper', expand=True)
 
 
     # create system symlinks
