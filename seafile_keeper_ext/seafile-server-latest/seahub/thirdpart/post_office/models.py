@@ -17,7 +17,9 @@ from post_office.fields import CommaSeparatedEmailField
 from .connections import connections
 from .settings import context_field_class, get_log_level, get_template_engine, get_override_recipients
 from .validators import validate_email_with_name, validate_template_syntax
+from .logutils import setup_loghandlers
 
+logger = setup_loghandlers("INFO")
 
 PRIORITY = namedtuple('PRIORITY', 'low medium high now')._make(range(4))
 STATUS = namedtuple('STATUS', 'sent failed queued')._make(range(3))
@@ -181,9 +183,16 @@ class Email(models.Model):
                 if status == STATUS.failed:
                     self.logs.create(status=status, message=message,
                                      exception_type=exception_type)
+                    logger.error("Failed to send email to %s: %s [%s]" % (self.email_message().to, exception_type, message))
+
             elif log_level == 2:
                 self.logs.create(status=status, message=message,
                                  exception_type=exception_type)
+                if status == STATUS.failed:
+                    logger.error("Failed to send email to %s: %s [%s]" % (self.email_message().to, exception_type, message))
+
+                else:
+                    logger.info("Successfully sent email to %s " % self.email_message().to)
 
         return status
 
