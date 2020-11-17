@@ -8,6 +8,7 @@ const propTypes = {
   name: PropTypes.string.isRequired,
   values: PropTypes.object.isRequired,
   catalogScope: PropTypes.arrayOf(PropTypes.number).isRequired,
+  applyFacet: PropTypes.func.isRequired,
 };
 
 const maxTerms = 30;
