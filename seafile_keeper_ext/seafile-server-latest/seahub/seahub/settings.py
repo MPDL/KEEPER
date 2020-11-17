@@ -529,7 +529,7 @@ FAVICON_PATH = 'img/favicon.ico'
 # Path to the Logo Imagefile (relative to the media path)
 LOGO_PATH = 'img/seafile-logo.png'
 # logo size. the unit is 'px'
-LOGO_WIDTH = 128
+LOGO_WIDTH = ''
 LOGO_HEIGHT = 32
 
 CUSTOM_LOGO_PATH = 'custom/mylogo.png'
@@ -741,10 +741,10 @@ ENABLE_FORCE_2FA_TO_ALL_USERS = False
 ENABLE_WIKI = True
 
 # Enable 'repo snapshot label' feature
-ENABLE_REPO_SNAPSHOT_LABEL = True
+ENABLE_REPO_SNAPSHOT_LABEL = False
 
 #  Repo wiki mode
-# ENABLE_REPO_WIKI_MODE = True
+ENABLE_REPO_WIKI_MODE = True
 
 ############################
 # HU berlin additional #
@@ -917,4 +917,4 @@ if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
 #      },
 # ]
 
-SEAFILE_VERSION = "7.1.7"
+SEAFILE_VERSION = "7.1.8"

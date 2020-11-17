@@ -44,7 +44,7 @@ const cssFilename = 'css/[name].css';
 // To have this structure working with relative paths, we have to use custom options.
 const extractTextPluginOptions = shouldUseRelativeAssetPaths
   ? // Making sure that the publicPath goes back to to build folder.
-  { publicPath: Array(cssFilename.split('/').length).join('../') }
+    { publicPath: Array(cssFilename.split('/').length).join('../') }
   : {};
 
 // This is the production configuration.
@@ -59,39 +59,39 @@ module.exports = {
   // In production, we only want to load the polyfills and the app code.
   entry: {
     markdownEditor: [require.resolve('./polyfills'), paths.appIndexJs],
-    TCAccept: [require.resolve('./polyfills'), paths.appSrc + '/tc-accept.js'],
-    TCView: [require.resolve('./polyfills'), paths.appSrc + '/tc-view.js'],
-    userNotifications: [require.resolve('./polyfills'), paths.appSrc + '/user-notifications.js'],
-    wiki: [require.resolve('./polyfills'), paths.appSrc + '/wiki.js'],
-    fileHistory: [require.resolve('./polyfills'), paths.appSrc + '/file-history.js'],
-    fileHistoryOld: [require.resolve('./polyfills'), paths.appSrc + '/file-history-old.js'],
-    app: [require.resolve('./polyfills'), paths.appSrc + '/app.js'],
-    draft: [require.resolve('./polyfills'), paths.appSrc + '/draft.js'],
-    sharedDirView: [require.resolve('./polyfills'), paths.appSrc + '/shared-dir-view.js'],
-    sharedFileViewMarkdown: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-markdown.js'],
-    sharedFileViewText: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-text.js'],
-    sharedFileViewImage: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-image.js'],
-    sharedFileViewVideo: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-video.js'],
-    sharedFileViewPDF: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-pdf.js'],
-    sharedFileViewSVG: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-svg.js'],
-    sharedFileViewAudio: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-audio.js'],
-    sharedFileViewDocument: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-document.js'],
-    sharedFileViewSpreadsheet: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-spreadsheet.js'],
-    sharedFileViewUnknown: [require.resolve('./polyfills'), paths.appSrc + '/shared-file-view-unknown.js'],
-    historyTrashFileView: [require.resolve('./polyfills'), paths.appSrc + '/history-trash-file-view.js'],
-    fileView: [require.resolve('./polyfills'), paths.appSrc + '/file-view.js'],
-    viewFileText: [require.resolve('./polyfills'), paths.appSrc + '/view-file-text.js'],
-    viewFileDocument: [require.resolve('./polyfills'), paths.appSrc + '/view-file-document.js'],
-    viewFileSpreadsheet: [require.resolve('./polyfills'), paths.appSrc + '/view-file-spreadsheet.js'],
-    settings: [require.resolve('./polyfills'), paths.appSrc + '/settings.js'],
-    repoHistory: [require.resolve('./polyfills'), paths.appSrc + '/repo-history.js'],
-    repoSnapshot: [require.resolve('./polyfills'), paths.appSrc + '/repo-snapshot.js'],
-    repoFolderTrash: [require.resolve('./polyfills'), paths.appSrc + '/repo-folder-trash.js'],
-    orgAdmin: [require.resolve('./polyfills'), paths.appSrc + '/pages/org-admin'],
-    sysAdmin: [require.resolve('./polyfills'), paths.appSrc + '/pages/sys-admin'],
-    viewCdoc: [require.resolve('./polyfills'), paths.appSrc + '/view-file-cdoc.js'],
-    search: [require.resolve('./polyfills'), paths.appSrc + '/pages/search'],
-    keeperProjectCatalog: [require.resolve('./polyfills'), paths.appSrc + '/keeper-project-catalog.js'],
+    TCAccept: [require.resolve('./polyfills'), paths.appSrc + "/tc-accept.js"],
+    TCView: [require.resolve('./polyfills'), paths.appSrc + "/tc-view.js"],
+    userNotifications: [require.resolve('./polyfills'), paths.appSrc + "/user-notifications.js"],
+    wiki: [require.resolve('./polyfills'), paths.appSrc + "/wiki.js"],
+    fileHistory: [require.resolve('./polyfills'), paths.appSrc + "/file-history.js"],
+    fileHistoryOld: [require.resolve('./polyfills'), paths.appSrc + "/file-history-old.js"],
+    app: [require.resolve('./polyfills'), paths.appSrc + "/app.js"],
+    draft: [require.resolve('./polyfills'), paths.appSrc + "/draft.js"],
+    sharedDirView: [require.resolve('./polyfills'), paths.appSrc + "/shared-dir-view.js"],
+    sharedFileViewMarkdown: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-markdown.js"],
+    sharedFileViewText: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-text.js"],
+    sharedFileViewImage: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-image.js"],
+    sharedFileViewVideo: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-video.js"],
+    sharedFileViewPDF: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-pdf.js"],
+    sharedFileViewSVG: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-svg.js"],
+    sharedFileViewAudio: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-audio.js"],
+    sharedFileViewDocument: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-document.js"],
+    sharedFileViewSpreadsheet: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-spreadsheet.js"],
+    sharedFileViewUnknown: [require.resolve('./polyfills'), paths.appSrc + "/shared-file-view-unknown.js"],
+    historyTrashFileView: [require.resolve('./polyfills'), paths.appSrc + "/history-trash-file-view.js"],
+    fileView: [require.resolve('./polyfills'), paths.appSrc + "/file-view.js"],
+    viewFileText: [require.resolve('./polyfills'), paths.appSrc + "/view-file-text.js"],
+    viewFileDocument: [require.resolve('./polyfills'), paths.appSrc + "/view-file-document.js"],
+    viewFileSpreadsheet: [require.resolve('./polyfills'), paths.appSrc + "/view-file-spreadsheet.js"],
+    settings: [require.resolve('./polyfills'), paths.appSrc + "/settings.js"],
+    repoHistory: [require.resolve('./polyfills'), paths.appSrc + "/repo-history.js"],
+    repoSnapshot: [require.resolve('./polyfills'), paths.appSrc + "/repo-snapshot.js"],
+    repoFolderTrash: [require.resolve('./polyfills'), paths.appSrc + "/repo-folder-trash.js"],
+    orgAdmin: [require.resolve('./polyfills'), paths.appSrc + "/pages/org-admin"],
+    sysAdmin: [require.resolve('./polyfills'), paths.appSrc + "/pages/sys-admin"],
+    viewCdoc: [require.resolve('./polyfills'), paths.appSrc + "/view-file-cdoc.js"],
+    search: [require.resolve('./polyfills'), paths.appSrc + "/pages/search"],
+    keeperProjectCatalog: [require.resolve('./polyfills'), paths.appSrc + "/keeper-project-catalog.js"],
   },
 
   output: {
@@ -341,31 +341,31 @@ module.exports = {
     // Generate a service worker script that will precache, and keep up to date,
     // the HTML & assets that are part of the Webpack build.
     // new SWPrecacheWebpackPlugin({
-    // By default, a cache-busting query parameter is appended to requests
-    // used to populate the caches, to ensure the responses are fresh.
-    // If a URL is already hashed by Webpack, then there is no concern
-    // about it being stale, and the cache-busting can be skipped.
-    // dontCacheBustUrlsMatching: /\.\w{8}\./,
-    // filename: 'service-worker.js',
-    // logger(message) {
-    //   if (message.indexOf('Total precache size is') === 0) {
-    // This message occurs for every build and is a bit too noisy.
-    //     return;
-    //   }
-    //   if (message.indexOf('Skipping static resource') === 0) {
-    // This message obscures real errors so we ignore it.
-    // https://github.com/facebookincubator/create-react-app/issues/2612
-    //     return;
-    //   }
-    //   console.log(message);
+      // By default, a cache-busting query parameter is appended to requests
+      // used to populate the caches, to ensure the responses are fresh.
+      // If a URL is already hashed by Webpack, then there is no concern
+      // about it being stale, and the cache-busting can be skipped.
+     // dontCacheBustUrlsMatching: /\.\w{8}\./,
+     // filename: 'service-worker.js',
+     // logger(message) {
+     //   if (message.indexOf('Total precache size is') === 0) {
+          // This message occurs for every build and is a bit too noisy.
+     //     return;
+     //   }
+     //   if (message.indexOf('Skipping static resource') === 0) {
+          // This message obscures real errors so we ignore it.
+          // https://github.com/facebookincubator/create-react-app/issues/2612
+     //     return;
+     //   }
+     //   console.log(message);
     //  },
     //  minify: true,
-    // For unknown URLs, fallback to the index page
-    // navigateFallback: publicUrl + '/index.html',
-    // Ignores URLs starting from /__ (useful for Firebase):
-    // https://github.com/facebookincubator/create-react-app/issues/2237#issuecomment-302693219
+      // For unknown URLs, fallback to the index page
+      // navigateFallback: publicUrl + '/index.html',
+      // Ignores URLs starting from /__ (useful for Firebase):
+      // https://github.com/facebookincubator/create-react-app/issues/2237#issuecomment-302693219
     //  navigateFallbackWhitelist: [/^(?!\/__).*/],
-    // Don't precache sourcemaps (they're large) and build asset manifest:
+      // Don't precache sourcemaps (they're large) and build asset manifest:
     //  staticFileGlobsIgnorePatterns: [/\.map$/, /asset-manifest\.json$/],
     // }),
     // Moment.js is an extremely popular library that bundles large locale files
@@ -380,15 +380,15 @@ module.exports = {
 
     // https://webpack.js.org/plugins/commons-chunk-plugin/
     new webpack.optimize.CommonsChunkPlugin({
-      name: 'commons',
-      filename: '[name]/bundle.common.js',
-      minChunks: function(module, count) {
-        if(module.resource && (/^.*\.(css|scss)$/).test(module.resource)) {
-          return false;
+        name: 'commons',
+        filename: '[name]/bundle.common.js',
+        minChunks: function(module, count) {
+          if(module.resource && (/^.*\.(css|scss)$/).test(module.resource)) {
+            return false;
+          }
+          return module.context && module.context.includes('node_modules') && count >=5;
         }
-        return module.context && module.context.includes('node_modules') && count >=5;
-      }
-    })
+      })
   ],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.

@@ -58,157 +58,157 @@ module.exports = {
     TCAccept: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/tc-accept.js',
+      paths.appSrc + "/tc-accept.js",
     ],
     TCView: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/tc-view.js',
+      paths.appSrc + "/tc-view.js",
     ],
     userNotifications: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/user-notifications.js',
+      paths.appSrc + "/user-notifications.js",
     ],
     wiki: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/wiki.js',
+      paths.appSrc + "/wiki.js",
     ],
     fileHistory: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/file-history.js',
+      paths.appSrc + "/file-history.js",
     ],
     fileHistoryOld: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/file-history-old.js',
+      paths.appSrc + "/file-history-old.js",
     ],
     app: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/app.js',
+      paths.appSrc + "/app.js",
     ],
     draft: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/draft.js',
+      paths.appSrc + "/draft.js",
     ],
     sharedDirView: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-dir-view.js',
+      paths.appSrc + "/shared-dir-view.js",
     ],
     sharedFileViewMarkdown: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-markdown.js',
+      paths.appSrc + "/shared-file-view-markdown.js",
     ],
     sharedFileViewText: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-text.js',
+      paths.appSrc + "/shared-file-view-text.js",
     ],
     sharedFileViewImage: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-image.js',
+      paths.appSrc + "/shared-file-view-image.js",
     ],
     sharedFileViewVideo: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-video.js',
+      paths.appSrc + "/shared-file-view-video.js",
     ],
     sharedFileViewPDF: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-pdf.js',
+      paths.appSrc + "/shared-file-view-pdf.js",
     ],
     sharedFileViewSVG: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-svg.js',
+      paths.appSrc + "/shared-file-view-svg.js",
     ],
     sharedFileViewAudio: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-audio.js',
+      paths.appSrc + "/shared-file-view-audio.js",
     ],
     sharedFileViewDocument: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-document.js',
+      paths.appSrc + "/shared-file-view-document.js",
     ],
     sharedFileViewSpreadsheet: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-spreadsheet.js',
+      paths.appSrc + "/shared-file-view-spreadsheet.js",
     ],
     sharedFileViewUnknown: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/shared-file-view-unknown.js',
+      paths.appSrc + "/shared-file-view-unknown.js",
     ],
     historyTrashFileView: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/history-trash-file-view.js',
+      paths.appSrc + "/history-trash-file-view.js",
     ],
     fileView: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/file-view.js',
+      paths.appSrc + "/file-view.js",
     ],
     viewFileText: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/view-file-text.js',
+      paths.appSrc + "/view-file-text.js",
     ],
     viewFileDocument: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/view-file-document.js',
+      paths.appSrc + "/view-file-document.js",
     ],
     viewFileSpreadsheet: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/view-file-spreadsheet.js',
+      paths.appSrc + "/view-file-spreadsheet.js",
     ],
     settings: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/settings.js',
+      paths.appSrc + "/settings.js",
     ],
     repoHistory: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/repo-history.js',
+      paths.appSrc + "/repo-history.js",
     ],
     repoSnapshot: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/repo-snapshot.js',
+      paths.appSrc + "/repo-snapshot.js",
     ],
     repoFolderTrash: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/repo-folder-trash.js',
+      paths.appSrc + "/repo-folder-trash.js",
     ],
     orgAdmin: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/pages/org-admin',
+      paths.appSrc + "/pages/org-admin",
     ],
     sysAdmin: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/pages/sys-admin',
+      paths.appSrc + "/pages/sys-admin",
     ],
     viewCdoc: [
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
-      paths.appSrc + '/view-file-cdoc.js',
+      paths.appSrc + "/view-file-cdoc.js",
     ],
     search: [
       require.resolve('./polyfills'),
@@ -428,15 +428,15 @@ module.exports = {
     new BundleTracker({filename: './webpack-stats.dev.json'}),
 
     new webpack.optimize.CommonsChunkPlugin({
-      name: 'commons',
-      filename: '[name]/bundle.common.js',
-      minChunks: function(module, count) {
-        if(module.resource && (/^.*\.(css|scss)$/).test(module.resource)) {
-          return false;
+        name: 'commons',
+        filename: '[name]/bundle.common.js',
+        minChunks: function(module, count) {
+          if(module.resource && (/^.*\.(css|scss)$/).test(module.resource)) {
+            return false;
+          }
+          return module.context && module.context.includes('node_modules') && count >=5;
         }
-        return module.context && module.context.includes('node_modules') && count >=5;
-      }
-    })
+      })
   ],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
@@ -464,9 +464,9 @@ module.exports = {
     contentBase: '../assets',
     historyApiFallback: true,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
     },
 
     // watchOptions: {

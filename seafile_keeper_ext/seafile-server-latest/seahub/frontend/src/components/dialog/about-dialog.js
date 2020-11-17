@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Modal, ModalBody } from 'reactstrap';
-import { gettext, lang, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion, additionalAboutDialogLinks } from '../../utils/constants';
+import { gettext, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion } from '../../utils/constants';
 
 const propTypes = {
   onCloseAboutDialog: PropTypes.func.isRequired,
@@ -13,18 +13,7 @@ class AboutDialog extends React.Component {
     this.props.onCloseAboutDialog();
   }
 
-  renderExternalAboutLinks = () => {
-    if (additionalAboutDialogLinks && (typeof additionalAboutDialogLinks) === 'object') {
-      let keys = Object.keys(additionalAboutDialogLinks);
-      return keys.map((key, index) => {
-        return <a key={index} className="d-block" href={additionalAboutDialogLinks[key]}>{key}</a>;
-      });
-    }
-    return null;
-  }
-
   render() {
-    //let href = lang === lang == 'zh-cn' ? 'http://seafile.com/about/' : 'http://seafile.com/en/about/';
     return (
       <Modal isOpen={true} toggle={this.toggle}>
         <ModalBody>
@@ -32,10 +21,6 @@ class AboutDialog extends React.Component {
           <div className="about-content">
             <p><img src={mediaUrl + logoPath} height={logoHeight} width={logoWidth} title={siteTitle} alt="logo" /></p>
             <p>{gettext('Server Version: ')}{seafileVersion}<br />© 2020 {gettext('KEEPER')}</p>
-            {/*
-            <p>{this.renderExternalAboutLinks()}</p>            
-            <p><a href={href} target="_blank">{gettext('About Us')}</a></p>
-            */}
           </div>
         </ModalBody>
       </Modal>

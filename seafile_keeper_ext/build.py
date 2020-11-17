@@ -886,7 +886,7 @@ def do_generate(args):
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
     elif args.frontend:
         Utils.info('Generate frontend...')
-        cmd = "sudo npm run build"
+        cmd = "npm install && npm run build"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))

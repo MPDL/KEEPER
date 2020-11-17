@@ -1916,7 +1916,7 @@ msgid ""
 "manual.seafile.com/security/security_features.html\">Seafile Manual</a>."
 msgstr ""
 "More technical details of encrypted library can be found at <a href=\"http://"
-"manual.seafile.com/security/security_features.html\">Seafile Manual</a>."
+"manual.seafile.com/security/security_features.html\">KEEPER Manual</a>."
 
 #: seahub/help/templates/help/ignore.html:6
 msgid "Excluding files/folders from syncing"
@@ -5859,3 +5859,167 @@ msgstr "Unable to view Wiki"
 #: seahub/work_weixin/views.py:220
 msgid "Feature is not enabled."
 msgstr "Feature is not enabled."
+
+
+# KEEPER
+msgid "Assign DOI to current state"
+msgstr ""
+
+msgid "Cannot assign DOI if the library has no content."
+msgstr ""
+
+msgid "Cannot archive library if the library has no content."
+msgstr ""
+
+msgid "Cannot assign DOI if archive-metadata.md file is not filled or missing."
+msgstr ""
+
+msgid "Cannot archive library if archive-metadata.md file is not filled or missing."
+msgstr ""
+
+msgid "%(field)s field is either invalid or not filled."
+msgstr ""
+
+msgid "%(fields)s fields are either invalid or not filled."
+msgstr ""
+
+msgid "DOI successfully created"
+msgstr ""
+
+msgid "Please check out notifications for more details."
+msgstr ""
+
+msgid "Library Details"
+msgstr ""
+
+msgid "Archive Library"
+msgstr ""
+
+msgid "Archive"
+msgstr ""
+
+msgid "Error by DB query."
+msgstr ""
+
+msgid "Cannot add task."
+msgstr ""
+
+msgid "Cannot archive. User is not the owner of the library."
+msgstr ""
+
+msgid "Maximum number of archives for the library has been reached."
+msgstr ""
+
+msgid "Cannot get archiving quota."
+msgstr ""
+
+msgid "Cannot check library size."
+msgstr ""
+
+msgid "Cannot check archiving status of the snapshot."
+msgstr ""
+
+msgid "The library is too big to be archived."
+msgstr ""
+
+msgid "Cannot extract library."
+msgstr ""
+
+msgid "Cannot attach metadata file to the library archive."
+msgstr ""
+
+msgid "Cannot create tar file for the archive."
+msgstr ""
+
+msgid "Cannot calculate checksum for the archive."
+msgstr ""
+
+msgid "Cannot push archive to HPSS."
+msgstr ""
+
+msgid "Archive for %(name)s has been successfully created."
+msgstr ""
+
+msgid "Cannot find archive."
+msgstr ""
+
+msgid "The snapshot of the library has already been archived."
+msgstr ""
+
+msgid "Archiving has failed. Please try again in a few minutes."
+msgstr ""
+
+msgid "Cannot query archiving task."
+msgstr ""
+
+msgid "Unknown status of archiving task."
+msgstr ""
+
+msgid "Archiving has failed."
+msgstr ""
+
+msgid "Archiving task has failed due to a system error. The Keeper team has been informed and is looking for a solution."
+msgstr ""
+
+msgid "Archiving has started."
+msgstr ""
+
+msgid "Extracting library from object storage."
+msgstr ""
+
+msgid "Adding metadata file to archive."
+msgstr ""
+
+msgid "Creating archive tar file from extracted library."
+msgstr ""
+
+msgid "Pushing archive to HPSS."
+msgstr ""
+
+msgid "This library is currently being archived."
+msgstr ""
+
+msgid "Your request to archive has encountered an unexpected error. The Keeper team has been informed and is going to look into it. The archiving functionality for this library (and only this library) has been deactivated in the meanwhile. You can still work and use Keeper without any restrictions."
+msgstr ""
+
+msgid "We will be in touch. You can also ask us for a status update by sending an email to the Keeper Support."
+msgstr ""
+
+msgid "Your library has been successfully archived. While you have access to Keeper, you can find the archived snapshot under Library Details in the sidebar. In case you want to restore it at a later stage from the dedicated archive, please contact Keeper Support."
+msgstr ""
+
+msgid "You can find more information about archiving in our knowledge base. (comment: please have knowledge base as a link to https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving)"
+msgstr ""
+
+msgid "You can use this email to request your archive later from the Keeper Support."
+msgstr ""
+
+msgid "Landing Page"
+msgstr ""
+
+msgid "Author(s)"
+msgstr ""
+
+msgid "Institute"
+msgstr ""
+
+msgid "Year"
+msgstr ""
+
+msgid "Archives"
+msgstr ""
+
+msgid "Digital Object Identifier(DOI)"
+msgstr ""
+
+msgid "Contact"
+msgstr ""
+
+msgid "Archive Page"
+msgstr ""
+
+msgid "Link to dataset (login required)"
+msgstr ""
+
+msgid "*If you don't have access to the dataset, please get in touch with the listed contact."
+msgstr ""

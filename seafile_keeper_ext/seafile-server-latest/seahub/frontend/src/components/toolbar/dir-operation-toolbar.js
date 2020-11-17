@@ -9,7 +9,7 @@ import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
 import ViewModeToolbar from './view-mode-toolbar';
 import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
-import KeeperEditMetadataDialog from "../dialog/keeper-edit-metadata-dialog";
+import KeeperEditMetadataDialog from '../dialog/keeper-edit-metadata-dialog';
 import { keeperAPI } from '../../utils/seafile-api';
 import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
 

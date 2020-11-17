@@ -24,7 +24,6 @@ class MylibRepoMenu extends React.Component {
 
   onMenuItemClick = (e) => {
     let operation = Utils.getEventData(e, 'toggle');
-    console.log(operation)
     this.props.onMenuItemClick(operation);
   }
 
