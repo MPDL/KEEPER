@@ -220,6 +220,11 @@ module.exports = {
       require.resolve('react-dev-utils/webpackHotDevClient'),
       paths.appSrc + '/keeper-project-catalog.js',
     ],
+    bloxbergCertificate: [
+      require.resolve('./polyfills'),
+      require.resolve('react-dev-utils/webpackHotDevClient'),
+      paths.appSrc + "/bloxberg-certificate.js",
+    ],    
   },
 
   output: {

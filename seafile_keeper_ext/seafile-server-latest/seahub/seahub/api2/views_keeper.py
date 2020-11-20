@@ -3,7 +3,8 @@ from thirdpart.rest_framework import status
 from thirdpart.rest_framework.response import Response
 
 from seahub.auth.decorators import login_required
-from seahub.settings import DEBUG, DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, BLOXBERG_SERVER, SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET
+from seahub.settings import DEBUG, DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, \
+    SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET, BLOXBERG_CERTS_STORAGE
 from seahub.base.templatetags.seahub_tags import email2contact_email
 from seahub.auth.decorators import login_required
 from seahub.api2.utils import api_error, json_response
@@ -11,11 +12,16 @@ from seahub.api2.utils import api_error, json_response
 from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog, add_landing_page_entry
-from keeper.bloxberg.bloxberg_manager import hash_file, create_bloxberg_certificate
-from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, get_latest_commit_id, send_notification, MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
-from keeper.models import CDC, DoiRepo, Catalog
+from keeper.bloxberg.bloxberg_manager import generate_certify_payload, \
+    get_file_by_path, hash_file, hash_library, create_bloxberg_certificate, \
+    get_md_json, decode_metadata, request_create_bloxberg_certificate, \
+    generate_bloxberg_certificate_pdf
+from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, \
+    get_latest_commit_id, send_notification, \
+    MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
+from keeper.models import CDC, DoiRepo, Catalog, BCertificate
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import render
 
 from django.utils.translation import ugettext as _
@@ -24,8 +30,10 @@ from django.utils.translation import activate
 from urllib.parse import quote_plus
 
 import logging
+import json
 import datetime
 import requests
+import os
 from requests.exceptions import ConnectionError, Timeout
 
 from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status,\
@@ -38,7 +46,6 @@ from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK,
 
 logger = logging.getLogger(__name__)
 
-BLOXBERG_URL = BLOXBERG_SERVER + "/certifyData"
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
 
 allowed_ip_prefixes = []
@@ -142,26 +149,48 @@ class BloxbergView(APIView):
     def post(self, request, format=None):
         repo_id = request.data['repo_id']
         path = request.data['path']
-
+        content_name = request.data['name']
+        content_type = request.data['type']
+        md = get_md_json(repo_id)
         user_email = request.user.username
-        hash_data = hash_file(repo_id, path, user_email)
-        response_bloxberg = request_bloxberg(hash_data)
+        checksumArr = []
 
-        if response_bloxberg is not None:
-            if response_bloxberg.status_code == 200:
-                transaction_id = response_bloxberg.json()['txReceipt']['transactionHash']
-                checksum = hash_data['certifyVariables']['checksum']
-                created_time = datetime.datetime.fromtimestamp(float(hash_data['certifyVariables']['timestampString']))
-                create_bloxberg_certificate(repo_id, path, transaction_id, created_time, checksum, user_email)
-                return JsonResponse(response_bloxberg.json())
+        if content_type == 'dir':
+            file_map = hash_library(repo_id, user_email)
+            for dPath, dHash in file_map.items():
+                checksumArr.append(dHash)
+                logger.info(checksumArr)
+
+            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, checksumArr))
+            if response_bloxberg is not None:
+                if response_bloxberg.status_code == 200:
+                    certificates = response_bloxberg.json()
+                    logger.info(certificates)
+                    transaction_id = decode_metadata(certificates)
+                    created_time = datetime.datetime.now()
+                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, md, json.dumps(certificates))
+                    for dPath, dHash in file_map.items():
+                        create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, md, '')
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email)
+                    return JsonResponse(response_bloxberg.json(), safe=False)
+
+        elif content_type == 'file':
+            file = get_file_by_path(repo_id, path)
+            checksum = hash_file(file)
+            checksumArr.append(checksum)
+            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, checksumArr))
+            if response_bloxberg is not None:
+                if response_bloxberg.status_code == 200:
+                    certificates = response_bloxberg.json()
+                    logger.info(certificates)
+                    transaction_id = decode_metadata(certificates)
+                    # proof_time = datetime.datetime.strptime(certificates[0]['proof']['created'], "%Y-%m-%dT%H:%M:%S.%f")
+                    created_time = datetime.datetime.now()
+                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, md, json.dumps(certificates[0]))
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email)
+                    return JsonResponse(certificates, safe=False)
+
         return api_error(status.HTTP_400_BAD_REQUEST, 'Transaction failed')
-
-def request_bloxberg(certify_payload):
-    try:
-        response = requests.post(BLOXBERG_URL, json=certify_payload)
-        return response
-    except ConnectionError as e:
-        logger.error(str(e))
 
 def request_doxi(shared_link, doxi_payload):
     try:
@@ -298,11 +327,10 @@ def get_cdc_id_by_repo(repo_id):
 
 @login_required
 def LandingPageView(request, repo_id):
-
     repo_owner = get_repo_owner(repo_id)
     repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
-
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
+    bloxberg_certs = BCertificate.objects.get_bloxberg_certificates_by_owner_by_repo_id(repo_owner, repo_id)
 
     archive_repos = DBOper().get_archives(repo_id=repo_id)
     if archive_repos is not None and len(archive_repos) == 0:
@@ -316,6 +344,7 @@ def LandingPageView(request, repo_id):
         'md': md,
         'doi_repos': doi_repos,
         'archive_repos': archive_repos,
+        'bloxberg_certs': bloxberg_certs,
         'hasCDC': get_cdc_id_by_repo(repo_id) is not None,
         'owner_contact_email':  repo_contact_email
     })
@@ -532,7 +561,60 @@ class LibraryDetailsView(APIView):
     """ list LibraryDetails for sidenav """
 
     def get(self, request):
-        return Response([
+        return JsonResponse([
             {"repo_id": e.repo_id, "repo_name": e.repo_name}
             for e in Catalog.objects.get_library_details_entries(request.user.username)
-        ])
+         ], safe=False)
+
+@login_required
+def BloxbergCertView(request, transaction_id):
+    certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
+    if certificate.owner != request.user.username:
+        return render(request, '404.html')
+    repo_id = certificate.repo_id
+    md_json = json.loads(certificate.md)
+    pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/"
+    metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/"
+    history_file_url = ""
+    logger.info("metadata_url:" + metadata_url)
+    all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
+    history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
+
+    return render(request, './catalog_detail/bloxberg_cert_page.html', {
+    'repo_name': md_json.get('Title'),
+    'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
+    'institute': md_json.get('Institute') if md_json.get('Institute') else '',
+    'authors': md_json.get('Author'),
+    'year': md_json.get('Year'),
+    'transaction_id': certificate.transaction_id,
+    'pdf_url': pdf_url,
+    'metadata_url': metadata_url,
+    'history_file_url': history_file_url})
+
+class BloxbergPdfView(APIView):
+    def get(self, request, transaction_id, format=None):
+        try:
+            certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
+            if not certificate:
+                return Http404('not found')
+            pdf_url = BLOXBERG_CERTS_STORAGE + '/' + certificate.owner + '/' + transaction_id + '/' + certificate.pdf
+            response = StreamingHttpResponse(open(pdf_url, 'rb'))
+            response['Content-Disposition'] = 'inline;filename=' + pdf_url
+            return response
+        except FileNotFoundError:
+            raise Http404('not found')
+
+class BloxbergMetadataJsonView(APIView):
+    def get(self, request, transaction_id, format=None):
+        try:
+            certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
+            if not certificate:
+                return Http404('not found')
+            if certificate.md_json.contains("@context"):
+                response = HttpResponse(certificate.md_json, content_type='application/text charset=utf-8')
+            else:
+                response = HttpResponse(certificate.md_json.replace("context","@context", 1), content_type='application/text charset=utf-8')
+            response['Content-Disposition'] = 'attachment; filename="metadata.json"'
+            return response
+        except FileNotFoundError:
+            raise Http404('not found')

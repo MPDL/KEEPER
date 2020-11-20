@@ -9,6 +9,7 @@ import CreateFile from '../../components/dialog/create-file-dialog';
 import ShareDialog from '../../components/dialog/share-dialog';
 import ViewModeToolbar from './view-mode-toolbar';
 import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
+import CertifyLibraryDialog from '../dialog/certify-library-dialog';
 import KeeperEditMetadataDialog from '../dialog/keeper-edit-metadata-dialog';
 import { keeperAPI } from '../../utils/seafile-api';
 import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
@@ -48,6 +49,7 @@ class DirOperationToolbar extends React.Component {
       isMobileOpMenuOpen: false,
       isArchiveLibraryDialogShow: false,
       isEditMetadataDialogShow: false,
+      isCertifyLibraryDialogShow: false,
     };
   }
 
@@ -196,7 +198,13 @@ class DirOperationToolbar extends React.Component {
     this.setState({isEditMetadataDialogShow: true});
   }
 
+  onCertifyLibraryHide = () => {
+    this.setState({isCertifyLibraryDialogShow: false});
+  }
 
+  onCertifyLibraryToggle = () => {
+    this.setState({isCertifyLibraryDialogShow: true})
+  }
 
   render() {
     let { path, repoName, userPerm } = this.props;
@@ -212,6 +220,7 @@ class DirOperationToolbar extends React.Component {
 
     let isArchiveBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
     let isEditMetadataBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
+    let isCertifyBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
 
     let content = null;
     if (Utils.isDesktop()) {
@@ -228,6 +237,9 @@ class DirOperationToolbar extends React.Component {
           }
           {isEditMetadataBtnShow &&
             <button className="btn btn-secondary operation-item" title={gettext('Metadata')} onClick={this.onEditMetadataToggle}>{gettext('Metadata')}</button>
+          }
+          {isCertifyBtnShow &&
+            <button className="btn btn-secondary operation-item" title={gettext('Certify')} onClick={this.onCertifyLibraryToggle}>{gettext('Certify')}</button>
           }
         </Fragment>
       );
@@ -324,6 +336,15 @@ class DirOperationToolbar extends React.Component {
               repoName={this.props.repoName}
               hideDialog={this.onEditMetadataHide}
               toggleDialog={this.onEditMetadataToggle}/>
+          </ModalPortal>
+        )}
+        {this.state.isCertifyLibraryDialogShow && (
+          <ModalPortal>
+            <CertifyLibraryDialog
+              repoID={this.props.repoID}
+              repoName={this.props.repoName}
+              hideDialog={this.onCertifyLibraryHide}
+              toggleDialog={this.onCertifyLibraryToggle}/>
           </ModalPortal>
         )}
 

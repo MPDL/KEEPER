@@ -39,10 +39,17 @@
 					{% endfor %}
 					<br />
 				{% endif %}
-				{% if doi_repos.count > 0 %}
+				{% if doi_repos|length > 0 %}
 					<b>{% trans "Digital Object Identifier(DOI)" %}</b><br />
 					{% for doi_repo in doi_repos%}
 					<a href="{{doi_repo.doi}}">{{doi_repo.doi}}</a><br />
+					{% endfor %}
+					<br />
+				{% endif %}
+				{% if bloxberg_certs|length > 0 %}
+					<b>Bloxberg Transactions</b><br />
+					{% for bloxberg_cert in bloxberg_certs%}
+					<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/">{{bloxberg_cert.content_name}} {{bloxberg_cert.created}}</a><br />
 					{% endfor %}
 					<br />
 				{% endif %}

@@ -472,19 +472,31 @@ def remove_keeper_entries(sender, **kwargs):
 
 class BCertificateManager(models.Manager):
 
-    def add_bloxberg_certificate(self, transaction_id, repo_id, path, commit_id, created_time, owner, checksum):
+    def add_bloxberg_certificate(self, transaction_id, content_type, content_name, repo_id, path, commit_id, created_time, owner, checksum, md, md_json):
         """
         Add to DB a new Bloxberg certificate, modify currently is not needed
         Returns Bloxberg certificate id and EVENT: db_create
         """
-        b_certificate = BCertificate(transaction_id=transaction_id, repo_id=repo_id, path=path, commit_id=commit_id,
-                                     created=created_time, owner=owner, checksum=checksum)
+        b_certificate = BCertificate(transaction_id=transaction_id, content_type=content_type, content_name=content_name, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner, checksum=checksum, md=md, md_json=md_json)
         b_certificate.save()
         return b_certificate.obj_id
 
     def has_bloxberg_certificate(self, repo_id, path, commit_id):
         return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count()
 
+    def get_bloxberg_certificates_by_owner_by_repo_id(self, owner, repo_id):
+        return super(BCertificateManager, self).filter(owner=owner, repo_id=repo_id, content_type='file')
+        # return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)
+
+    def get_bloxberg_certificate_by_transaction_id(self, transaction_id):
+        try:
+            certificate = self.get(transaction_id=transaction_id)
+        except BCertificate.DoesNotExist:
+            return None
+        return certificate
+
+    def get_bloxberg_certificate_by_transaction_id_by_checksum(self, transaction_id, checksum):
+        return super(BCertificateManager, self).exclude(pdf__isnull=False).filter(transaction_id=transaction_id, checksum=checksum).first()
 
 class BCertificate(models.Model):
     """ Bloxberg Certificate model """
@@ -493,6 +505,8 @@ class BCertificate(models.Model):
         db_table = 'bloxberg_certificate'
 
     transaction_id = models.CharField(max_length=255, null=False)
+    content_type = models.CharField(max_length=16, null=False)
+    content_name = models.CharField(max_length=255, null=False)
     repo_id = models.CharField(max_length=37, null=False)
     commit_id = models.CharField(max_length=41, null=False)
     path = models.TextField(null=False)
@@ -500,6 +514,9 @@ class BCertificate(models.Model):
     created = models.DateTimeField()
     owner = models.CharField(max_length=255, null=False)
     checksum = models.CharField(max_length=64, null=False)
+    md = models.TextField(null=False)
+    md_json = models.TextField(null=False)
+    pdf = models.TextField(default=None) # null=True
     objects = BCertificateManager()
 
 

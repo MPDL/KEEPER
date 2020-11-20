@@ -92,6 +92,7 @@ module.exports = {
     viewCdoc: [require.resolve('./polyfills'), paths.appSrc + "/view-file-cdoc.js"],
     search: [require.resolve('./polyfills'), paths.appSrc + "/pages/search"],
     keeperProjectCatalog: [require.resolve('./polyfills'), paths.appSrc + "/keeper-project-catalog.js"],
+    bloxbergCertificate: [require.resolve('./polyfills'), paths.appSrc + "/bloxberg-certificate.js"],
   },
 
   output: {

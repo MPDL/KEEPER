@@ -54,11 +54,13 @@ class KeeperAPI {
       });
   }
 
-  certifyOnBloxberg(repoID, path) {
+  certifyOnBloxberg(repoID, path, type, name) {
     const url = this.server + '/api2/certify/';
     const params = {
       repo_id: repoID,
       path: path,
+      type: type,
+      name: name
     };
     return this.req.post(url, params);
   }

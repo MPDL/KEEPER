@@ -195,7 +195,7 @@ class DirentListItem extends React.Component {
     let filePath = this.getDirentPath(dirent);
 
     toaster.success('Certify the file through Bloxberg...', {duration: 4});
-    keeperAPI.certifyOnBloxberg(repoID, filePath).then(() => {
+    keeperAPI.certifyOnBloxberg(repoID, filePath, dirent.type, dirent.name).then(() => {
       toaster.success('Transaction succeeded');
     }).catch(error => {
       let errMessage = Utils.getErrorMsg(error);

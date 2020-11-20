@@ -19,7 +19,8 @@ from .endpoints.send_upload_link_email import SendUploadLinkView
 # KEEPER
 from .views_keeper import CatalogView, BloxbergView, AddDoiView, ArchiveLib, \
     CanArchive, LibraryDetailsView, ArchiveMetadata, \
-    MPGInstitutes, CatalogReactView
+    MPGInstitutes, CatalogReactView, \
+    BloxbergPdfView, BloxbergMetadataJsonView
 
 urlpatterns = [
     url(r'^ping/$', Ping.as_view()),
@@ -118,6 +119,8 @@ urlpatterns = [
 
     # Bloxberg
     url(r'^certify/$', BloxbergView.as_view()),
+    url(r'^bloxberg-pdf/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergPdfView.as_view(), name="bloxberg-pdf"),
+    url(r'^bloxberg-metadata/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergMetadataJsonView.as_view(), name="bloxberg-metadata"),
 
     # DOI
     url(r'^doi/$', AddDoiView.as_view()),
