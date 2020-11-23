@@ -733,6 +733,7 @@ urlpatterns = [
     url(r'^archive/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<version_id>\d+)/(?P<is_tombstone>\d+)/$', ArchiveView, name='Archive_page'),
     url(r'^project-catalog/$', project_catalog_starter, name='project_catalog_starter'),
     url(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergCertView, name='bloxberg_cert_page'),
+    url(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/(?P<checksum>[-0-9a-z]{64})/$', BloxbergCertView, name='bloxberg_cert_page'),
 ]
 
 try:

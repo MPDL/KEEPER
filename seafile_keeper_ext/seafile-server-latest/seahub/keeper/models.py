@@ -485,17 +485,18 @@ class BCertificateManager(models.Manager):
         return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count()
 
     def get_bloxberg_certificates_by_owner_by_repo_id(self, owner, repo_id):
-        return super(BCertificateManager, self).filter(owner=owner, repo_id=repo_id, content_type='file')
-        # return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)
+        return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)
 
-    def get_bloxberg_certificate_by_transaction_id(self, transaction_id):
-        try:
-            certificate = self.get(transaction_id=transaction_id)
-        except BCertificate.DoesNotExist:
-            return None
-        return certificate
+    def get_presentable_certificate(self, transaction_id, checksum):
+        return super(BCertificateManager, self).exclude(content_type='child').filter(transaction_id=transaction_id, checksum=checksum).first()
 
-    def get_bloxberg_certificate_by_transaction_id_by_checksum(self, transaction_id, checksum):
+    def get_child_bloxberg_certificates(self, transaction_id, repo_id):
+        return super(BCertificateManager, self).filter(transaction_id=transaction_id, repo_id=repo_id, content_type='child')
+
+    def get_bloxberg_certificate(self, transaction_id, checksum, path):
+        return super(BCertificateManager, self).filter(transaction_id=transaction_id, checksum=checksum, path=path).first()
+
+    def get_semi_bloxberg_certificate(self, transaction_id, checksum):
         return super(BCertificateManager, self).exclude(pdf__isnull=False).filter(transaction_id=transaction_id, checksum=checksum).first()
 
 class BCertificate(models.Model):

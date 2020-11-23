@@ -153,7 +153,7 @@ def scan_certificates(directory):
                 transaction_id = decode_metadata(metadata_json)
                 logger.info(transaction_id)
                 try:
-                    certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id_by_checksum(transaction_id, fHash)
+                    certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, fHash)
                     certificate.pdf = pdfName
                     certificate.md_json = fData
                     certificate.save()

@@ -224,7 +224,12 @@ module.exports = {
       require.resolve('./polyfills'),
       require.resolve('react-dev-utils/webpackHotDevClient'),
       paths.appSrc + "/bloxberg-certificate.js",
-    ],    
+    ],
+    bloxbergRepoSnapshot: [
+      require.resolve('./polyfills'),
+      require.resolve('react-dev-utils/webpackHotDevClient'),
+      paths.appSrc + "/bloxberg-repo-snapshot.js",
+    ],
   },
 
   output: {

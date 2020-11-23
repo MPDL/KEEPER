@@ -19,11 +19,6 @@
 
 		<div class="container doi_root">
 			<div>
-				{% if hasCDC == True %}
-				<img id="cared" src="/catalog/static/certified.png" />
-				{% endif %}
-			</div>
-			<div>
 				<h1 class="doi_title">{{md.title}}</h1>
 				<p class="doi_desc more">{{md.description}}</p>
 
@@ -49,7 +44,11 @@
 				{% if bloxberg_certs|length > 0 %}
 					<b>Bloxberg Transactions</b><br />
 					{% for bloxberg_cert in bloxberg_certs%}
-					<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/">{{bloxberg_cert.content_name}} {{bloxberg_cert.created}}</a><br />
+						{% if bloxberg_cert.path == '/' %}
+							<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/">{{bloxberg_cert.content_name}}(repo) {{bloxberg_cert.created}}</a><br />
+						{% else %}
+							<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/{{bloxberg_cert.checksum}}/">{{bloxberg_cert.content_name}} {{bloxberg_cert.created}}</a><br />
+						{% endif %}
 					{% endfor %}
 					<br />
 				{% endif %}

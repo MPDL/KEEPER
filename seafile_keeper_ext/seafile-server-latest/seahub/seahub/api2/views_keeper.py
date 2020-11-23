@@ -2,13 +2,16 @@ from thirdpart.rest_framework.views import APIView
 from thirdpart.rest_framework import status
 from thirdpart.rest_framework.response import Response
 
-from seahub.auth.decorators import login_required
 from seahub.settings import DEBUG, DOI_SERVER, DOI_USER, DOI_PASSWORD, DOI_TIMEOUT, \
     SERVICE_URL, SERVER_EMAIL, ARCHIVE_METADATA_TARGET, BLOXBERG_CERTS_STORAGE
 from seahub.base.templatetags.seahub_tags import email2contact_email
 from seahub.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from seahub.api2.utils import api_error, json_response
-
+from seahub.views import check_folder_permission
+from seahub.utils import render_error
+from seahub.utils.repo import is_repo_owner
+from seahub.options.models import UserOptions, CryptoOptionNotSetError
 from seaserv import seafile_api
 
 from keeper.catalog.catalog_manager import get_catalog, add_landing_page_entry
@@ -26,6 +29,7 @@ from django.shortcuts import render
 
 from django.utils.translation import ugettext as _
 from django.utils.translation import activate
+from django.core.urlresolvers import reverse
 
 from urllib.parse import quote_plus
 
@@ -43,6 +47,7 @@ from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_statu
 from keeper.common import parse_markdown_doi
 from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
+import seaserv
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +56,14 @@ DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
 allowed_ip_prefixes = []
 # allowed_ip_prefixes = ['','172.16.1','10.10.','192.168.1.10','192.129.1.102']
 
+def is_password_set(repo_id, username):
+    return seafile_api.is_password_set(repo_id, username)
+
+def get_next_url_from_request(request):
+    return request.GET.get('next', None)
+
+def get_commit(repo_id, repo_version, commit_id):
+    return seaserv.get_commit(repo_id, repo_version, commit_id)
 
 @login_required
 def project_catalog_starter(request):
@@ -567,36 +580,85 @@ class LibraryDetailsView(APIView):
          ], safe=False)
 
 @login_required
-def BloxbergCertView(request, transaction_id):
-    certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
-    if certificate.owner != request.user.username:
-        return render(request, '404.html')
+def BloxbergCertView(request, transaction_id, checksum=''):
+    """ View bloxberg certificate(s) """
+    certificate = BCertificate.objects.get_presentable_certificate(transaction_id, checksum)
     repo_id = certificate.repo_id
-    md_json = json.loads(certificate.md)
-    pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/"
-    metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/"
-    history_file_url = ""
-    logger.info("metadata_url:" + metadata_url)
-    all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
-    history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
+    repo = get_repo(repo_id)
+    if not repo:
+        raise Http404
 
-    return render(request, './catalog_detail/bloxberg_cert_page.html', {
-    'repo_name': md_json.get('Title'),
-    'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
-    'institute': md_json.get('Institute') if md_json.get('Institute') else '',
-    'authors': md_json.get('Author'),
-    'year': md_json.get('Year'),
-    'transaction_id': certificate.transaction_id,
-    'pdf_url': pdf_url,
-    'metadata_url': metadata_url,
-    'history_file_url': history_file_url})
+    username = request.user.username
+    user_perm = check_folder_permission(request, repo.id, '/')
+    if user_perm is None or certificate.owner != username:
+        return render_error(request, _('Permission denied'))
+
+    try:
+        server_crypto = UserOptions.objects.is_server_crypto(username)
+    except CryptoOptionNotSetError:
+        # Assume server_crypto is ``False`` if this option is not set.
+        server_crypto = False
+
+    reverse_url = reverse('lib_view', args=[repo_id, repo.name, ''])
+    if repo.encrypted and \
+        (repo.enc_version == 1 or (repo.enc_version == 2 and server_crypto)) \
+        and not is_password_set(repo.id, username):
+        return render(request, 'decrypt_repo_form.html', {
+                'repo': repo,
+                'next': get_next_url_from_request(request) or reverse_url,
+                })
+
+    if certificate.content_type == 'dir':
+        commit_id = certificate.commit_id
+
+        current_commit = get_commit(repo.id, repo.version, commit_id)
+        if not current_commit:
+            current_commit = get_commit(repo.id, repo.version, repo.head_cmmt_id)
+
+        certificates = BCertificate.objects.get_child_bloxberg_certificates(transaction_id, repo_id)
+        checksum_map = {}
+        for certificate in certificates:
+            checksum_map[str(certificate.path)] = certificate.checksum
+
+        return render(request, 'bloxberg_repo_snapshot_react.html', {
+                'repo': repo,
+                'current_commit': current_commit,
+                'transaction_id': transaction_id,
+                'checksums': json.dumps(checksum_map),
+                })
+
+    else:
+        md_json = json.loads(certificate.md)
+        pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)    # todo: test path with space in it
+        metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
+        history_file_url = ""
+        logger.info("metadata_url:" + metadata_url)
+        all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
+        history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
+
+        return render(request, './catalog_detail/bloxberg_cert_page.html', {
+            'repo_name': md_json.get('Title'),
+            'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
+            'institute': md_json.get('Institute') if md_json.get('Institute') else '',
+            'authors': md_json.get('Author'),
+            'year': md_json.get('Year'),
+            'transaction_id': certificate.transaction_id,
+            'pdf_url': pdf_url,
+            'metadata_url': metadata_url,
+            'history_file_url': history_file_url
+        })
 
 class BloxbergPdfView(APIView):
-    def get(self, request, transaction_id, format=None):
+    @method_decorator(login_required)
+    def get(self, request, transaction_id, checksum, format=None):
+        username = request.user.username
+        path = request.GET.get('p', '')
         try:
-            certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
+            certificate = BCertificate.objects.get_bloxberg_certificate(transaction_id, checksum, path)
             if not certificate:
                 return Http404('not found')
+            if certificate.owner != username:
+                return render_error(request, _('Permission denied'))
             pdf_url = BLOXBERG_CERTS_STORAGE + '/' + certificate.owner + '/' + transaction_id + '/' + certificate.pdf
             response = StreamingHttpResponse(open(pdf_url, 'rb'))
             response['Content-Disposition'] = 'inline;filename=' + pdf_url
@@ -605,12 +667,16 @@ class BloxbergPdfView(APIView):
             raise Http404('not found')
 
 class BloxbergMetadataJsonView(APIView):
-    def get(self, request, transaction_id, format=None):
+    @method_decorator(login_required)
+    def get(self, request, transaction_id, checksum, format=None):
+        username = request.user.username
         try:
-            certificate = BCertificate.objects.get_bloxberg_certificate_by_transaction_id(transaction_id)
+            certificate = BCertificate.objects.get_presentable_certificate(transaction_id, checksum)
             if not certificate:
                 return Http404('not found')
-            if certificate.md_json.contains("@context"):
+            if certificate.owner != username:
+                return render_error(request, _('Permission denied'))
+            if "@context" in certificate.md_json:
                 response = HttpResponse(certificate.md_json, content_type='application/text charset=utf-8')
             else:
                 response = HttpResponse(certificate.md_json.replace("context","@context", 1), content_type='application/text charset=utf-8')

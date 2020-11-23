@@ -119,8 +119,8 @@ urlpatterns = [
 
     # Bloxberg
     url(r'^certify/$', BloxbergView.as_view()),
-    url(r'^bloxberg-pdf/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergPdfView.as_view(), name="bloxberg-pdf"),
-    url(r'^bloxberg-metadata/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergMetadataJsonView.as_view(), name="bloxberg-metadata"),
+    url(r'^bloxberg-pdf/(?P<transaction_id>[-0-9a-z]{66})/(?P<checksum>[-0-9a-z]{64})/$', BloxbergPdfView.as_view(), name="bloxberg-pdf"),
+    url(r'^bloxberg-metadata/(?P<transaction_id>[-0-9a-z]{66})/(?P<checksum>[-0-9a-z]{64})/$', BloxbergMetadataJsonView.as_view(), name="bloxberg-metadata"),
 
     # DOI
     url(r'^doi/$', AddDoiView.as_view()),
