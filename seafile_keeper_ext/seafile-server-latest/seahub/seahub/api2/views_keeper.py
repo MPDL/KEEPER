@@ -172,13 +172,11 @@ class BloxbergView(APIView):
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
-                logger.info(checksumArr)
 
             response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, checksumArr))
             if response_bloxberg is not None:
                 if response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
-                    logger.info(certificates)
                     transaction_id = decode_metadata(certificates)
                     created_time = datetime.datetime.now()
                     create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, md, json.dumps(certificates))
@@ -195,7 +193,6 @@ class BloxbergView(APIView):
             if response_bloxberg is not None:
                 if response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
-                    logger.info(certificates)
                     transaction_id = decode_metadata(certificates)
                     # proof_time = datetime.datetime.strptime(certificates[0]['proof']['created'], "%Y-%m-%dT%H:%M:%S.%f")
                     created_time = datetime.datetime.now()
@@ -632,7 +629,6 @@ def BloxbergCertView(request, transaction_id, checksum=''):
         pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)    # todo: test path with space in it
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""
-        logger.info("metadata_url:" + metadata_url)
         all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
         history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
 

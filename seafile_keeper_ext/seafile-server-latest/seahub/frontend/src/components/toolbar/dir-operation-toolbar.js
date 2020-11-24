@@ -235,11 +235,11 @@ class DirOperationToolbar extends React.Component {
           {isArchiveBtnShow &&
             <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>
           }
-          {isEditMetadataBtnShow &&
-            <button className="btn btn-secondary operation-item" title={gettext('Metadata')} onClick={this.onEditMetadataToggle}>{gettext('Metadata')}</button>
-          }
           {isCertifyBtnShow &&
             <button className="btn btn-secondary operation-item" title={gettext('Certify')} onClick={this.onCertifyLibraryToggle}>{gettext('Certify')}</button>
+          }
+          {isEditMetadataBtnShow &&
+            <button className="btn btn-secondary operation-item" title={gettext('Metadata')} onClick={this.onEditMetadataToggle}>{gettext('Metadata')}</button>
           }
         </Fragment>
       );

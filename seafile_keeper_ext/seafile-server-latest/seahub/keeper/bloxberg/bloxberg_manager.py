@@ -65,7 +65,6 @@ def hash_library(repo_id, user_email):
     repo = seafile_api.get_repo(repo_id)
     dir = fs_mgr.load_seafdir(repo.id, repo.version, get_commit_root_id(repo_id))
     file_map = get_all_files_by_path(dir, repo, '', {})
-    logger.info(file_map)
     return file_map
 
 def decode_metadata(metadata_json):
@@ -140,18 +139,14 @@ def silentremove(filename):
 def scan_certificates(directory):
     for entry in os.scandir(directory):
         if entry.path.endswith(".pdf") and entry.is_file():
-            logger.info(entry.path)
             pdfPath, pdfName = os.path.split(entry.path)
             handler = open(entry.path, 'rb')
             reader = PyPDF2.PdfFileReader(handler)
             dictionary = getAttachments(reader)
-            logger.info(dictionary)
             for fName, fData in dictionary.items():
                 metadata_json = json.loads(fData)
                 fHash = metadata_json['crid']
-                logger.info(fHash)
                 transaction_id = decode_metadata(metadata_json)
-                logger.info(transaction_id)
                 try:
                     certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, fHash)
                     certificate.pdf = pdfName
@@ -192,11 +187,8 @@ def get_all_files_by_path(dir, repo, path, dir_map):
     for dName, dObj in list(dir.dirents.items()):
         dPath = path + os.sep + dObj.name
         if dObj.is_dir():
-            logger.info(dObj.__dict__)
-            logger.info(dObj.id)
             get_all_files_by_path(fs_mgr.load_seafdir(repo.id, repo.version, dObj.id), repo, dPath, dir_map)
         if dObj.is_file():
-            logger.info(dir.lookup(dObj.name))
             dir_map.update({dPath: hash_file(dir.lookup(dObj.name))})
     return dir_map
 
