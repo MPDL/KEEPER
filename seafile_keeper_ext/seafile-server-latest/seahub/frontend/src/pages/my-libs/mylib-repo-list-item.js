@@ -22,6 +22,7 @@ import RepoAPITokenDialog from '../../components/dialog/repo-api-token-dialog';
 import RepoShareUploadLinksDialog from '../../components/dialog/repo-share-upload-links-dialog';
 import AssignDoiDialog from '../../components/dialog/assign-doi-dialog';
 import ArchiveLibraryDialog from '../../components/dialog/archive-library-dialog';
+import CertifyLibraryDialog from '../../components/dialog/certify-library-dialog';
 
 const propTypes = {
   repo: PropTypes.object.isRequired,
@@ -83,6 +84,7 @@ class MylibRepoListItem extends React.Component {
       isRepoDeleted: false,
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
+      isCertifyLibraryDialogShow: false,
       isEditMetadataDialogShow: false,
     };
   }
@@ -149,6 +151,9 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'Archive Library':
         this.onArchiveLibraryToggle();
+        break;
+      case 'Certify Library':
+        this.onCertifyLibraryToggle();
         break;
       case 'Edit Metadata':
         this.onEditMetadataToggle();
@@ -249,6 +254,14 @@ class MylibRepoListItem extends React.Component {
       let errorMsg = Utils.getErrorMsg(error);
       handleCanArchiveResponse(this,{data: {status: 'system_error', msg: errorMsg}});
     });
+  }
+
+  onCertifyLibraryHide = () => {
+    this.setState({isCertifyLibraryDialogShow: false});
+  }
+
+  onCertifyLibraryToggle = () => {
+    this.setState({isCertifyLibraryDialogShow: true});
   }
 
   onEditMetadataHide = () => {
@@ -548,6 +561,15 @@ class MylibRepoListItem extends React.Component {
               quota={this.state.quota}
               hideDialog={this.onArchiveLibraryHide}
               toggleDialog={this.onArchiveLibraryToggle}/>
+          </ModalPortal>
+        )}
+        {this.state.isCertifyLibraryDialogShow && (
+          <ModalPortal>
+            <CertifyLibraryDialog
+              repoID={repo.repo_id}
+              repoName={repo.repo_name}
+              hideDialog={this.onCertifyLibraryHide}
+              toggleDialog={this.onCertifyLibraryToggle}/>
           </ModalPortal>
         )}
         {this.state.isEditMetadataDialogShow && (

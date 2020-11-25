@@ -194,7 +194,7 @@ class DirentListItem extends React.Component {
     let repoID = this.props.repoID;
     let filePath = this.getDirentPath(dirent);
 
-    toaster.success('Certify the file through Bloxberg...', {duration: 4});
+    toaster.success('Certify the file through bloxberg...', {duration: 4});
     keeperAPI.certifyOnBloxberg(repoID, filePath, dirent.type, dirent.name).then(() => {
       toaster.success('Transaction succeeded');
     }).catch(error => {
@@ -578,7 +578,7 @@ class DirentListItem extends React.Component {
                       <i className="op-icon" data-tip data-for="bloxberg"><img className="small-icon" src={bergImage} onClick={this.onItemCertify} /></i>
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
                         <span className="tooltip-title">Beta Status ---- only for testing</span>
-                        <p><span className="tooltip-bold">Certify your data via the bloxberg blockchain.</span>
+                        <p><span className="tooltip-bold">Certify your file via the bloxberg blockchain.</span>
                           <span className="tooltip-nomal">Check out <a href='https://bloxberg.org' target="_blank">https://bloxberg.org</a></span></p>
                       </ReactTooltip>
                     </li>

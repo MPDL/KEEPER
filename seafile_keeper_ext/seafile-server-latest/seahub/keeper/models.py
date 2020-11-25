@@ -319,7 +319,7 @@ class CatalogManager(models.Manager):
             try:
                 entries = Catalog.objects.extra(where=[
                     "owner='" + owner + "'",
-                    "EXISTS (SELECT repo_id FROM doi_repos WHERE doi_repos.repo_id=keeper_catalog.repo_id AND doi_repos.rm is NULL) OR keeper_catalog.is_archived=1"
+                    "EXISTS (SELECT repo_id FROM doi_repos WHERE doi_repos.repo_id=keeper_catalog.repo_id AND doi_repos.rm is NULL) OR keeper_catalog.is_archived=1 OR EXISTS (SELECT repo_id FROM bloxberg_certificate WHERE bloxberg_certificate.repo_id=keeper_catalog.repo_id)"
                 ])
             except Exception as e:
                 logger.error('Cannot retrieve library details entries: %s', e)

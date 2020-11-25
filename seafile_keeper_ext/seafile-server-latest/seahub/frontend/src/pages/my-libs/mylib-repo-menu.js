@@ -55,6 +55,7 @@ class MylibRepoMenu extends React.Component {
     let showResetPasswordMenuItem = isPro && repo.encrypted && enableResetEncryptedRepoPassword && isEmailConfigured;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let showArchiveLibraryMenuItem = !repo.encrypted;
+    let showCertifyLibraryMenuItem = !repo.encrypted;
     let showEditMetadatayMenuItem = !repo.encrypted;
     let operations = ['Rename', 'Transfer'];
     if (folderPermEnabled) {
@@ -77,6 +78,9 @@ class MylibRepoMenu extends React.Component {
     }
     if (showArchiveLibraryMenuItem) {
       operations.push('Archive Library');
+    }
+    if (showCertifyLibraryMenuItem) {
+      operations.push('Certify Library');
     }
     if (showEditMetadatayMenuItem) {
       operations.push('Edit Metadata');
@@ -131,6 +135,9 @@ class MylibRepoMenu extends React.Component {
         break;
       case 'Archive Library':
         translateResult = gettext('Archive Library');
+        break;
+      case 'Certify Library':
+          translateResult = gettext('Certify Library');
         break;
       case 'Edit Metadata':
         translateResult = gettext('Edit Metadata');

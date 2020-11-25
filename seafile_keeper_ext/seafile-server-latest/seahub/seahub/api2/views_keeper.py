@@ -348,9 +348,13 @@ def LandingPageView(request, repo_id):
 
     catalog = Catalog.objects.get_by_repo_id(repo_id)
     md = catalog.md
+    if md and md.get("authors"):
+        authors = get_authors_from_catalog_md(md)
+    else:
+        authors = repo_owner
 
     return render(request, './catalog_detail/lib_detail_landing_page.html', {
-        'authors': get_authors_from_catalog_md(md),
+        'authors': authors,
         'md': md,
         'doi_repos': doi_repos,
         'archive_repos': archive_repos,

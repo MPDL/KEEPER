@@ -202,7 +202,7 @@ class NoticeItem extends React.Component {
     if (noticeType === BLOXBERG_MSG) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = 'Your data was successfully certified. Check your transaction on Bloxberg. ' +
+      let notice = 'Your data was successfully certified. Check your transaction on bloxberg. ' +
           '<a target="_blank" href="https://blockexplorer.bloxberg.org/tx/' +  detail.transaction_id + '/internal_transactions">'
           + 'View transaction</a>.';
       return {avatar_url, notice};
