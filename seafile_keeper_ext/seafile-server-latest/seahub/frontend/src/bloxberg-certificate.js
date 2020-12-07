@@ -53,8 +53,8 @@ class BloxbergCertificatePage extends React.Component {
                   <h1 className="cert_title">{repoName}</h1>
                   <div className="cert_desc more">{repoDesc}</div>
                   <div className="table_row"><b>Author(s): </b>{authors}</div>
-                  <div className="cert_table_row"><b>Institute: </b>{institute}</div>
-                  <div className="cert_table_row"><b>Year: </b>{year}</div>
+                  {institute && <div className="cert_table_row"><b>Institute: </b>{institute}</div>}
+                  {year && <div className="cert_table_row"><b>Year: </b>{year}</div>}
                   <div className="cert_table_row"><b>Transaction: </b><a href={transactionLink} target="_blank">{transactionId}</a></div>
                   <div className="cert_table_row"><a href={ historyFileUrl }>Link to dataset</a></div>
                   <div className="cert_table_row"><a href={ pdfUrl } download>download certificate</a></div>

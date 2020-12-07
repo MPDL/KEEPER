@@ -168,6 +168,10 @@ class BloxbergView(APIView):
         user_email = request.user.username
         checksumArr = []
 
+        repo_owner = get_repo_owner(repo_id)
+        if repo_owner != user_email:
+            return api_error(status.HTTP_400_BAD_REQUEST, 'Permission denied')
+
         if content_type == 'dir':
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
@@ -338,6 +342,7 @@ def get_cdc_id_by_repo(repo_id):
 @login_required
 def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
+    title = get_repo(repo_id).repo_name
     repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
     doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
     bloxberg_certs = BCertificate.objects.get_bloxberg_certificates_by_owner_by_repo_id(repo_owner, repo_id)
@@ -350,10 +355,13 @@ def LandingPageView(request, repo_id):
     md = catalog.md
     if md and md.get("authors"):
         authors = get_authors_from_catalog_md(md)
+        title = md.get("title")
     else:
+        title = get_repo(repo_id).name
         authors = repo_owner
 
     return render(request, './catalog_detail/lib_detail_landing_page.html', {
+        'title': title,
         'authors': authors,
         'md': md,
         'doi_repos': doi_repos,
@@ -590,8 +598,8 @@ def BloxbergCertView(request, transaction_id, checksum=''):
         raise Http404
 
     username = request.user.username
-    user_perm = check_folder_permission(request, repo.id, '/')
-    if user_perm is None or certificate.owner != username:
+    repo_owner = get_repo_owner(repo_id)
+    if repo_owner != username:
         return render_error(request, _('Permission denied'))
 
     try:
@@ -657,7 +665,8 @@ class BloxbergPdfView(APIView):
             certificate = BCertificate.objects.get_bloxberg_certificate(transaction_id, checksum, path)
             if not certificate:
                 return Http404('not found')
-            if certificate.owner != username:
+            repo_owner = get_repo_owner(certificate.repo_id)
+            if repo_owner != username:
                 return render_error(request, _('Permission denied'))
             pdf_url = BLOXBERG_CERTS_STORAGE + '/' + certificate.owner + '/' + transaction_id + '/' + certificate.pdf
             response = StreamingHttpResponse(open(pdf_url, 'rb'))
@@ -674,7 +683,8 @@ class BloxbergMetadataJsonView(APIView):
             certificate = BCertificate.objects.get_presentable_certificate(transaction_id, checksum)
             if not certificate:
                 return Http404('not found')
-            if certificate.owner != username:
+            repo_owner = get_repo_owner(certificate.repo_id)
+            if repo_owner != username:
                 return render_error(request, _('Permission denied'))
             if "@context" in certificate.md_json:
                 response = HttpResponse(certificate.md_json, content_type='application/text charset=utf-8')

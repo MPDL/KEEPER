@@ -573,13 +573,11 @@ class DirentListItem extends React.Component {
                       <i className="op-icon sf2-icon-delete" title={gettext('Delete')} onClick={this.onItemDelete}></i>
                     </li>
                   )}
-                  {dirent.permission === 'rw' && dirent.type === 'file' && (
+                  {this.props.isRepoOwner && dirent.permission === 'rw' && dirent.type === 'file' && (
                     <li className="operation-group-item">
                       <i className="op-icon" data-tip data-for="bloxberg"><img className="small-icon" src={bergImage} onClick={this.onItemCertify} /></i>
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
-                        <span className="tooltip-title">Beta Status ---- only for testing</span>
-                        <p><span className="tooltip-bold">Certify your file via the bloxberg blockchain.</span>
-                          <span className="tooltip-nomal">Check out <a href='https://bloxberg.org' target="_blank">https://bloxberg.org</a></span></p>
+                        <span className="tooltip-bold">Certify your file via the bloxberg blockchain.</span>
                       </ReactTooltip>
                     </li>
                   )}

@@ -203,11 +203,11 @@ def get_md_json(repo_id):
 
     md_dict = parse_markdown_doi(file.get_content().decode())
     if not md_dict.get('Author'):
-        md_dict['Author'] = email2nickname(seafile_api.get_repo_owner(repo_id))
+        md_dict['Author'] = seafile_api.get_repo(repo_id).owner
     if not md_dict.get('Title'):
         md_dict['Title'] = seafile_api.get_repo(repo_id).name
     if not md_dict.get('Year'):
-        md_dict['Year'] = str(datetime.date.today().year)
+        md_dict['Year'] = ""
 
     md_json = json.dumps(md_dict)
     return md_json

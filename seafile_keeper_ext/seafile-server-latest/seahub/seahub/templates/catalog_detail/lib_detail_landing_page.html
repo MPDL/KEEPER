@@ -19,12 +19,17 @@
 
 		<div class="container doi_root">
 			<div>
-				<h1 class="doi_title">{{md.title}}</h1>
+				<h1 class="doi_title">{{title}}</h1>
 				<p class="doi_desc more">{{md.description}}</p>
 
 				<div class="doi_table_row"><b>{% trans "Author(s)" %}: </b>{{authors}}</div>
-				<div class="doi_table_row"><b>{% trans "Institute" %}: </b>{{md.institute}}</div>
-				<div class="doi_table_row"><b>{% trans "Year" %}: </b>{{md.year}}</div>
+
+				{% if md.institute|length > 0 %}
+					<div class="doi_table_row"><b>{% trans "Institute" %}: </b>{{md.institute}}</div>
+				{% endif %}
+				{% if md.year|length > 0 %}
+					<div class="doi_table_row"><b>{% trans "Year" %}: </b>{{md.year}}</div>
+				{% endif %}
 				<br />
 
 				{% if archive_repos|length > 0 %}
