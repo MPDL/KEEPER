@@ -199,15 +199,16 @@ def get_md_json(repo_id):
     dir = fs_mgr.load_seafdir(repo.id, repo.version, commit_id)
     file = dir.lookup(ARCHIVE_METADATA_TARGET)
     if not file:
+        md_dict = {}
         logger.info('archive-metadata.md file is not filled or missing.')
-
-    md_dict = parse_markdown_doi(file.get_content().decode())
+    else:
+        md_dict = parse_markdown_doi(file.get_content().decode())
     if not md_dict.get('Author'):
-        md_dict['Author'] = seafile_api.get_repo(repo_id).owner
+        md_dict['Author'] = seafile_api.get_repo_owner(repo_id)
     if not md_dict.get('Title'):
         md_dict['Title'] = seafile_api.get_repo(repo_id).name
     if not md_dict.get('Year'):
-        md_dict['Year'] = ""
+        md_dict['Year'] = str(datetime.date.today().year)
 
     md_json = json.dumps(md_dict)
     return md_json
