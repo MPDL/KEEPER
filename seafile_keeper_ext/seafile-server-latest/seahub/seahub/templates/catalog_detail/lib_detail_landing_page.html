@@ -34,27 +34,58 @@
 
 				{% if archive_repos|length > 0 %}
 					<b>{% trans "Archives" %}</b><br />
-					{% for archive_repo in archive_repos%}
-					<a href="/archive/libs/{{archive_repo.repo_id}}/{{archive_repo.version}}/0/">Archive {{archive_repo.created}}</a><br />
+					<table style="width:100%">
+						<tr>
+							<th>Version</th>
+							<th>Date</th>
+							<th>Link to Archive</th>
+						</tr>
+						{% for archive_repo in archive_repos%}
+						<tr>
+							<th>{{archive_repo.version}}</th>
+							<th>{{archive_repo.created}}</th>
+							<th><a href="/archive/libs/{{archive_repo.repo_id}}/{{archive_repo.version}}/0/">Link</a><br /></th>
+						</tr>
 					{% endfor %}
+					</table>
 					<br />
 				{% endif %}
 				{% if doi_repos|length > 0 %}
 					<b>{% trans "Digital Object Identifier(DOI)" %}</b><br />
+					<table style="width:100%">
+						<tr>
+							<th>Date</th>
+							<th>DOI</th>
+						</tr>
 					{% for doi_repo in doi_repos%}
-					<a href="{{doi_repo.doi}}">{{doi_repo.doi}}</a><br />
+						<tr>
+							<th>{{doi_repo.created}}</th>
+							<th><a href="{{doi_repo.doi}}">{{doi_repo.doi}}</a><br /></th>
+						</tr>
 					{% endfor %}
+					</table>
 					<br />
 				{% endif %}
 				{% if bloxberg_certs|length > 0 %}
 					<b>Bloxberg Transactions</b><br />
+					<table style="width:100%">
+						<tr>
+							<th>Name</th>
+							<th>Date</th>
+							<th>Link</th>
+						</tr>
 					{% for bloxberg_cert in bloxberg_certs%}
+						<tr>
+							<th>{{bloxberg_cert.content_name}}</th>
+							<th>{{bloxberg_cert.created}}</th>
 						{% if bloxberg_cert.path == '/' %}
-							<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/">{{bloxberg_cert.content_name}}(repo) {{bloxberg_cert.created}}</a><br />
+							<th><a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/">Link to certificates</a><br /></th>
 						{% else %}
-							<a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/{{bloxberg_cert.checksum}}/">{{bloxberg_cert.content_name}} {{bloxberg_cert.created}}</a><br />
+							<th><a href="/bloxberg-cert/transaction/{{bloxberg_cert.transaction_id}}/{{bloxberg_cert.checksum}}/">Link to certificate</a><br /></th>
 						{% endif %}
+						</tr>
 					{% endfor %}
+					</table>
 					<br />
 				{% endif %}
 				<div class="doi_table_row"><b>{% trans "Contact" %}: </b><a class="doi_contact" href="mailto:{{owner_contact_email}}">{{owner_contact_email}}</a></div>
