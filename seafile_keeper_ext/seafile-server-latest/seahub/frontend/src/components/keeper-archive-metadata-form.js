@@ -168,8 +168,10 @@ class KeeperArchiveMetadataForm extends React.Component {
     if (key == "title" || key == "description" || key == "publisher" || key == "department" || key == "institute") {
       isValid = value.trim() != "";
     } else if (key == "year") {
-      const parsed = parseInt(value, 10);
-      isValid = !isNaN(parsed) && parsed > 0;
+      const reg = new RegExp("^\\d{4}$");
+      //const parsed = parseInt(value, 10);
+      //isValid = !isNaN(parsed) && parsed > 0;
+      isValid = reg.test(value);
     } else if (key == "author" || key == "director") {
       isValid = [Boolean(value.firstName && value.firstName.trim()), Boolean(value.lastName && value.lastName.trim())];
     }
@@ -198,19 +200,19 @@ class KeeperArchiveMetadataForm extends React.Component {
     this.setState({
       isButton1Disabled: this.state.isSaved && isValid,
       isButton2Disabled: !this.state.isSaved || !isValid,
-    })
+    });
   }
 
   getValidMd = (md) => {
     Object.keys(defaultValidMd).map(k => {
       if (k == "authors" || k == "directors") {
         for (let idx in md[k]) {
-          this.state.validMd[k][idx] = this.isFieldValid(k.slice(0, -1), md[k][idx])
+          this.state.validMd[k][idx] = this.isFieldValid(k.slice(0, -1), md[k][idx]);
         }
       } else {
         this.state.validMd[k] = this.isFieldValid(k, md[k]);
       }
-    })
+    });
     return this.state.validMd;
   }
 
@@ -246,11 +248,11 @@ class KeeperArchiveMetadataForm extends React.Component {
   handleInputChange(e, key) {
     this.state.validMd[key] = this.isFieldValid(key, e.target.value);
     this.setState({
-        [key]: e.target.value,
-        validMd: this.state.validMd,
-        isSaved: false,
-      },
-      () => this.setButtons()
+      [key]: e.target.value,
+      validMd: this.state.validMd,
+      isSaved: false,
+    },
+    () => this.setButtons()
     );
   }
 
@@ -259,15 +261,13 @@ class KeeperArchiveMetadataForm extends React.Component {
       this.state.validMd.authors[idx] = this.isFieldValid("author", values[idx]);
     }
     this.setState({
-        authors: values,
-        validMd: this.state.validMd,
-        isSaved: false,
-      },
-      () => {
-        this.setButtons()
-        console.log("validMd")
-        console.log(this.state.validMd)
-      }
+      authors: values,
+      validMd: this.state.validMd,
+      isSaved: false,
+    },
+    () => {
+      this.setButtons();
+    }
     );
   }
 
@@ -316,11 +316,11 @@ class KeeperArchiveMetadataForm extends React.Component {
       this.state.validMd.directors[idx] = this.isFieldValid("director", values[idx]);
     }
     this.setState({
-        directors: values,
-        validMd: this.state.validMd,
-        isSaved: false,
-      },
-      () => this.setButtons()
+      directors: values,
+      validMd: this.state.validMd,
+      isSaved: false,
+    },
+    () => this.setButtons()
     );
   }
 
@@ -372,32 +372,32 @@ class KeeperArchiveMetadataForm extends React.Component {
       option == null
         ? ""
         : !("value" in option) || option.value.trim() === ""
-        ? ""
-        : option.value;
+          ? ""
+          : option.value;
     this.state.validMd.institute = this.isFieldValid("institute", insName);
     this.setState({
-        institute: insName,
-        validMd: this.state.validMd,
-        isSaved: false,
-      },
-      () => this.setButtons()
+      institute: insName,
+      validMd: this.state.validMd,
+      isSaved: false,
+    },
+    () => this.setButtons()
     );
   };
 
   validationProps = key => {
-    return (this.state.validMd[key] ? {valid: true} : {invalid: true})
+    return (this.state.validMd[key] ? {valid: true} : {invalid: true});
   }
 
   validationInSelects = key => {
-    return (this.state.validMd[key] ? "is-valid" : "is-invalid")
+    return (this.state.validMd[key] ? "is-valid" : "is-invalid");
   }
 
   validationInAuthors = (idx, nidx) => {
-    return (this.state.validMd.authors[idx][nidx] ? {valid: true} : {invalid: true})
+    return (this.state.validMd.authors[idx][nidx] ? {valid: true} : {invalid: true});
   }
 
   validationInDirectors = (idx, nidx) => {
-    return (this.state.validMd.directors[idx][nidx] ? {valid: true} : {invalid: true})
+    return (this.state.validMd.directors[idx][nidx] ? {valid: true} : {invalid: true});
   }
 
   render() {
@@ -444,7 +444,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             </Col>
                             <Col sm={1}>
                               <InfoArea id="title"
-                                        helpText="Please enter the title of your research project."
+                                helpText="Please enter the title of your research project."
                               />
                             </Col>
                           </Row>
@@ -515,12 +515,12 @@ class KeeperArchiveMetadataForm extends React.Component {
                             </div>
                             {index == 0 &&
                             <span className="info-area-names">
-                                <InfoArea
-                                  id="author"
-                                  className="info-area-names"
-                                  helpText="Please enter the authors and affiliation of your research project"
-                                />
-                              </span>
+                              <InfoArea
+                                id="author"
+                                className="info-area-names"
+                                helpText="Please enter the authors and affiliation of your research project"
+                              />
+                            </span>
                             }
 
                             {inputField.affs.map((_, aidx) => (
@@ -719,11 +719,11 @@ class KeeperArchiveMetadataForm extends React.Component {
                           />
                         </Col>
                         <span className="info-area-names">
-                      <InfoArea
-                        id="institute"
-                        helpText="Please enter the related Max Planck Institute for this research project."
-                      />
-                    </span>
+                          <InfoArea
+                            id="institute"
+                            helpText="Please enter the related Max Planck Institute for this research project."
+                          />
+                        </span>
                         {this.state.directors.map((inputField, index) => (
                           <React.Fragment key={`${inputField}~${index}`}>
                             <Label
@@ -851,17 +851,17 @@ class KeeperArchiveMetadataForm extends React.Component {
             <ModalFooter>
               {this.props.onButton1 &&
               <button type="submit"
-                      className="btn btn-outline-primary offset-sm-1 col-sm-2"
-                      disabled={this.state.isButton1Disabled}
-                      onClick={(e) => this.onButton1(e)}>
+                className="btn btn-outline-primary offset-sm-1 col-sm-2"
+                disabled={this.state.isButton1Disabled}
+                onClick={(e) => this.onButton1(e)}>
                 {this.props.button1Label}
               </button>
               }
               {this.props.onButton2 &&
               <button type="submit"
-                      className="btn btn-outline-primary offset-sm-9 col-sm-3"
-                      disabled={this.state.isButton2Disabled}
-                      onClick={(e) => this.onButton2(e)}>
+                className="btn btn-outline-primary offset-sm-9 col-sm-3"
+                disabled={this.state.isButton2Disabled}
+                onClick={(e) => this.onButton2(e)}>
                 {this.props.button2Label}
               </button>
               }
