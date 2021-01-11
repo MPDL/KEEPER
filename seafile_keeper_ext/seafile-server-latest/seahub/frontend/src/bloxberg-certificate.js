@@ -8,6 +8,8 @@ import Paginator from './components/paginator';
 import CommonToolbar from './components/toolbar/common-toolbar';
 import NoticeItem from './components/common/notice-item';
 import PDFViewer from './components/pdf-viewer';
+import ExpandText from './components/expand-text';
+import ShowMore from 'react-show-more';
 
 import './css/bloxberg-certificate.css';
 import './css/pdf-file-view.css';
@@ -50,8 +52,20 @@ class BloxbergCertificatePage extends React.Component {
           {!this.state.modalIsOpen && <div className="pt-4 pb-6 o-auto">
               <div className="row">
                 <div className="col-md-6 offset-md-1 shadow">
-                  <h1 className="cert_title">{repoName}</h1>
-                  <div className="cert_desc more">{repoDesc}</div>
+                  <h1><ExpandText
+                    maxLength={40}
+                    className='cert_title'
+                    text={repoName}
+                  />
+                  </h1>
+                  <ShowMore
+                      lines={3}
+                      more='Show more'
+                      less='Show less'
+                      anchorClass=''
+                  >
+                      {repoDesc}
+                  </ShowMore>
                   <div className="table_row"><b>Author(s): </b>{authors}</div>
                   {institute && <div className="cert_table_row"><b>Institute: </b>{institute}</div>}
                   {year && <div className="cert_table_row"><b>Year: </b>{year}</div>}

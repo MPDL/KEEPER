@@ -24,6 +24,10 @@ body {
 	margin-bottom: 0.3rem;
 }
 
+.cert_title{
+	color:#57a5b8;
+}
+
 .cert_desc{
 	font-weight: normal;
 	margin-bottom: 2.4rem;
