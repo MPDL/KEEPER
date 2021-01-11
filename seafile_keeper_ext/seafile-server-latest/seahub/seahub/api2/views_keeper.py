@@ -644,7 +644,7 @@ def BloxbergCertView(request, transaction_id, checksum=''):
         all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
         history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
 
-        if md_json.get('id'):
+        if md_json.get('authors'):
             authors = get_authors_from_catalog_md(md_json)
             return render(request, './catalog_detail/bloxberg_cert_page.html', {
                 'repo_name': md_json.get('title'),
@@ -657,13 +657,25 @@ def BloxbergCertView(request, transaction_id, checksum=''):
                 'metadata_url': metadata_url,
                 'history_file_url': history_file_url
             })
-        else: #backwards compatible(certificates created before 2.0)
+        elif md_json.get('Title'): #backwards compatible(certificates created before 2.0)
             return render(request, './catalog_detail/bloxberg_cert_page.html', {
                 'repo_name': md_json.get('Title'),
                 'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
                 'institute': md_json.get('Institute') if md_json.get('Institute') else '',
                 'authors': md_json.get('Author'),
                 'year': md_json.get('Year'),
+                'transaction_id': certificate.transaction_id,
+                'pdf_url': pdf_url,
+                'metadata_url': metadata_url,
+                'history_file_url': history_file_url
+            })
+        else:
+            return render(request, './catalog_detail/bloxberg_cert_page.html', {
+                'repo_name': md_json.get('name'),
+                'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
+                'institute': md_json.get('Institute') if md_json.get('Institute') else '',
+                'authors': md_json.get('owner'),
+                'year': '',
                 'transaction_id': certificate.transaction_id,
                 'pdf_url': pdf_url,
                 'metadata_url': metadata_url,
