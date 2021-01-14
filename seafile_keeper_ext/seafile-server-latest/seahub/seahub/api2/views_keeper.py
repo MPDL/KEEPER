@@ -49,6 +49,9 @@ from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVIN
 from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 import seaserv
 
+from base64 import b64decode
+from pickle import loads
+
 logger = logging.getLogger(__name__)
 
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
@@ -279,32 +282,50 @@ class AddDoiView(APIView):
             send_notification(msg, repo_id, MSG_TYPE_KEEPER_DOI_MSG, user_email)
             return api_error(status.HTTP_400_BAD_REQUEST, msg)
 
+
+def _try_decode_md(md):                                                                                                                                                                                                               
+    #fix pickle object if not converted to dict TODO:
+    if md is not None and isinstance(md, str):
+        try:
+            md = md.encode()
+            md = b64decode(md)
+            md = loads(md, encoding="UTF8")
+        except Exception as e:
+            logger.error(f'Cannot parse md: {str(e)}, set md = {{}}')
+            md = {}
+
+    return md
+
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
+    logging.error("doi_repos: %s", doi_repos)
     repo_owner = get_repo_owner(repo_id)
 
     if len(doi_repos) == 0:
         return render(request, '404.html')
-    elif len(doi_repos) > 0 and doi_repos[0].rm is not None:
+
+    doi_repo = doi_repos[0]
+    md = _try_decode_md(doi_repo.md)
+    # TODO: hanldle case if md is empty
+    if doi_repo.rm is not None:
         return render(request, './catalog_detail/tombstone_page.html', {
-            'doi': doi_repos[0].doi,
-            'md_dict': doi_repos[0].md,
-            'authors': '; '.join(get_authors_from_md(doi_repos[0].md)),
-            'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
-            'library_name': doi_repos[0].repo_name,
+            'doi': doi_repo.doi,
+            'md_dict': md,
+            'authors': '; '.join(get_authors_from_md(md)),
+            'institute': md.get("Institute").replace(";", "; "),
+            'library_name': doi_repo.repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
 
     cdc = False if get_cdc_id_by_repo(repo_id) is None else True
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
-
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
-        'authors': '; '.join(get_authors_from_md(doi_repos[0].md)),
-        'institute': doi_repos[0].md.get("Institute").replace(";", "; "),
+        'authors': '; '.join(get_authors_from_md(md)),
+        'institute': md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
-        'doi_dict': doi_repos[0].md,
-        'doi': doi_repos[0].doi,
+        'doi_dict': md,
+        'doi': doi_repo.doi,
         'owner_contact_email': email2contact_email(repo_owner) })
 
 def get_authors_from_md(md):
