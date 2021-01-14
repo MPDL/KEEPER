@@ -167,8 +167,9 @@ class BloxbergView(APIView):
         path = request.data['path']
         content_name = request.data['name']
         content_type = request.data['type']
-        md = get_md_json(repo_id)
         user_email = request.user.username
+        catalog = Catalog.objects.get_by_repo_id(repo_id)
+        catalog_md = catalog.md
         checksumArr = []
 
         repo_owner = get_repo_owner(repo_id)
@@ -180,15 +181,15 @@ class BloxbergView(APIView):
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
 
-            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, checksumArr))
+            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
             if response_bloxberg is not None:
                 if response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
                     created_time = datetime.datetime.now()
-                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, md, json.dumps(certificates))
+                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, json.dumps(catalog_md), json.dumps(certificates))
                     for dPath, dHash in file_map.items():
-                        create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, md, '')
+                        create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, json.dumps(catalog_md), '')
                     generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email)
                     return JsonResponse(response_bloxberg.json(), safe=False)
 
@@ -196,14 +197,13 @@ class BloxbergView(APIView):
             file = get_file_by_path(repo_id, path)
             checksum = hash_file(file)
             checksumArr.append(checksum)
-            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, checksumArr))
+            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
             if response_bloxberg is not None:
                 if response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
-                    # proof_time = datetime.datetime.strptime(certificates[0]['proof']['created'], "%Y-%m-%dT%H:%M:%S.%f")
                     created_time = datetime.datetime.now()
-                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, md, json.dumps(certificates[0]))
+                    create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, json.dumps(catalog_md), json.dumps(certificates[0]))
                     generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email)
                     return JsonResponse(certificates, safe=False)
 
@@ -330,6 +330,7 @@ def DoiView(request, repo_id, commit_id):
         'doi': doi_repo.doi,
         'owner_contact_email': email2contact_email(repo_owner) })
 
+
 def get_authors_from_md(md):
     authors = md.get("Author").split('\n')
     result_author = []
@@ -424,7 +425,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
         if is_tombstone == '1':
             return render(request, './catalog_detail/tombstone_page.html', {
                     'md_dict': archive_md,
-                    'authors': '; '.join(get_authors_from_md(archive_md)),
+                    'authors': '; '.join(read_authors_from_md(archive_md.get("Author").split('\n'))),
                     'institute': archive_md.get("Institute").replace(";", "; "),
                     'library_name': archive_repo.repo_name,
                     'owner_contact_email': email2contact_email(repo_owner) })
@@ -437,7 +438,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,
-        'authors': '; '.join(get_authors_from_md(archive_md)),
+        'authors': '; '.join(read_authors_from_md(archive_md.get("Author").split('\n'))),
         'institute': archive_md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
         'md_dict': archive_md,
@@ -661,23 +662,50 @@ def BloxbergCertView(request, transaction_id, checksum=''):
 
     else:
         md_json = json.loads(certificate.md)
+        logger.info(md_json)
         pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)    # todo: test path with space in it
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""
         all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
         history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
 
-        return render(request, './catalog_detail/bloxberg_cert_page.html', {
-            'repo_name': md_json.get('Title'),
-            'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
-            'institute': md_json.get('Institute') if md_json.get('Institute') else '',
-            'authors': md_json.get('Author'),
-            'year': md_json.get('Year'),
-            'transaction_id': certificate.transaction_id,
-            'pdf_url': pdf_url,
-            'metadata_url': metadata_url,
-            'history_file_url': history_file_url
-        })
+        if md_json.get('authors'):
+            authors = get_authors_from_catalog_md(md_json)
+            return render(request, './catalog_detail/bloxberg_cert_page.html', {
+                'repo_name': md_json.get('title'),
+                'repo_desc': md_json.get('description') if md_json.get('description') else '',
+                'institute': md_json.get('institute') if md_json.get('Institute') else '',
+                'authors': authors,
+                'year': md_json.get('year'),
+                'transaction_id': certificate.transaction_id,
+                'pdf_url': pdf_url,
+                'metadata_url': metadata_url,
+                'history_file_url': history_file_url
+            })
+        elif md_json.get('Title'): #backwards compatible(certificates created before 2.0)
+            return render(request, './catalog_detail/bloxberg_cert_page.html', {
+                'repo_name': md_json.get('Title'),
+                'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
+                'institute': md_json.get('Institute') if md_json.get('Institute') else '',
+                'authors': md_json.get('Author'),
+                'year': md_json.get('Year'),
+                'transaction_id': certificate.transaction_id,
+                'pdf_url': pdf_url,
+                'metadata_url': metadata_url,
+                'history_file_url': history_file_url
+            })
+        else:
+            return render(request, './catalog_detail/bloxberg_cert_page.html', {
+                'repo_name': md_json.get('name'),
+                'repo_desc': md_json.get('Description') if md_json.get('Description') else '',
+                'institute': md_json.get('Institute') if md_json.get('Institute') else '',
+                'authors': md_json.get('owner'),
+                'year': '',
+                'transaction_id': certificate.transaction_id,
+                'pdf_url': pdf_url,
+                'metadata_url': metadata_url,
+                'history_file_url': history_file_url
+            })
 
 class BloxbergPdfView(APIView):
     @method_decorator(login_required)

@@ -14,16 +14,16 @@
 // overwrite the one in base_for_react.html
 window.bloxbergCertificate = {
   pageOptions: {
-    repoName: '{{ repo_name }}',
-    repoDesc: '{{ repo_desc }}',
-    institute: '{{institute}}',
-    authors: '{{authors}}',
-    year: '{{year}}',
-    transactionId: '{{transaction_id}}',
-    pdfUrl: '{{pdf_url}}',
-    metadataUrl: '{{metadata_url}}',
-    historyFileUrl: '{{history_file_url}}',
-    datasetLink: '{{dataset_link}}',
+    repoName: '{{ repo_name|escapejs }}',
+    repoDesc: '{{ repo_desc|escapejs }}',
+    institute: '{{institute|escapejs}}',
+    authors: '{{authors|escapejs}}',
+    year: '{{year|escapejs}}',
+    transactionId: '{{transaction_id|escapejs}}',
+    pdfUrl: '{{pdf_url|escapejs}}',
+    metadataUrl: '{{metadata_url|escapejs}}',
+    historyFileUrl: '{{history_file_url|escapejs}}',
+    datasetLink: '{{dataset_link|escapejs}}',
   }
 };
 </script>

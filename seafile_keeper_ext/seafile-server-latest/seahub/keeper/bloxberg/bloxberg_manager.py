@@ -32,10 +32,12 @@ BLOXBERG_CERTIFY_URL = BLOXBERG_SERVER + "/createBloxbergCertificate"
 BLOXBERG_GENERATE_CERTIFICATE_URL = BLOXBERG_SERVER + "/generatePDF"
 MSG_TYPE_KEEPER_BLOXBERG_MSG = 'bloxberg_msg'
 
-def generate_certify_payload(user_email, checksumArr):
+def generate_certify_payload(user_email, catalog_md, checksumArr):
     metadataJson = {
-        'authors': email2nickname(user_email)
+        "email": user_email,
+        "catalog_md": catalog_md
     }
+    logger.info(metadataJson)
     data = {
         "publicKey": "0x69575606E8b8F0cAaA5A3BD1fc5D032024Bb85AF",
         "crid": checksumArr,
@@ -43,6 +45,7 @@ def generate_certify_payload(user_email, checksumArr):
         "enableIPFS": False,
         "metadataJson": json.dumps(metadataJson)
     }
+    logger.info(data)
     return data
 
 def hash_file_payload(repo_id, path, user_email):
