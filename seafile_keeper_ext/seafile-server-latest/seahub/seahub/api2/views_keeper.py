@@ -283,8 +283,8 @@ class AddDoiView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, msg)
 
 
-def _try_decode_md(md):                                                                                                                                                                                                               
-    #fix pickle object if not converted to dict TODO:
+def _try_decode_md(md):
+    #fix pickle object if not converted to dict
     if md is not None and isinstance(md, str):
         try:
             md = md.encode()
@@ -292,21 +292,23 @@ def _try_decode_md(md):
             md = loads(md, encoding="UTF8")
         except Exception as e:
             logger.error(f'Cannot parse md: {str(e)}, set md = {{}}')
-            md = {}
+            return None 
 
     return md
 
 def DoiView(request, repo_id, commit_id):
     doi_repos = DoiRepo.objects.get_doi_by_commit_id(repo_id, commit_id)
-    logging.error("doi_repos: %s", doi_repos)
     repo_owner = get_repo_owner(repo_id)
 
     if len(doi_repos) == 0:
         return render(request, '404.html')
 
     doi_repo = doi_repos[0]
+
     md = _try_decode_md(doi_repo.md)
-    # TODO: hanldle case if md is empty
+    if md is None:
+        return render(request, '404.html')
+
     if doi_repo.rm is not None:
         return render(request, './catalog_detail/tombstone_page.html', {
             'doi': doi_repo.doi,
@@ -316,7 +318,7 @@ def DoiView(request, repo_id, commit_id):
             'library_name': doi_repo.repo_name,
             'owner_contact_email': email2contact_email(repo_owner) })
 
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
+    cdc = get_cdc_id_by_repo(repo_id) is not None
     link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
