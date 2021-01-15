@@ -241,17 +241,19 @@ class CatalogManager(models.Manager):
 
 
         SCOPE = (" AND c.catalog_id IN ('%s')" % "','".join(str(x) for x in scope)) if scope else ""
-        RAW = """
+        RAW = f"""
             SELECT *,
                 IF(c.is_archived = 1 OR EXISTS(SELECT 1 FROM doi_repos WHERE doi_repos.repo_id = c.repo_id AND doi_repos.rm is NULL), 
-                CONCAT('%s/landing-page/libs/', c.repo_id, '/'), NULL) AS lpu
+                CONCAT('{SERVICE_URL}/landing-page/libs/', c.repo_id, '/'), NULL) AS lpu
             FROM
-                `keeper_catalog` AS c
+                `keeper_catalog` AS c,
+                `cdc_repos` AS cdc
             WHERE
                 c.rm is NULL
-            %s 
+                AND cdc.repo_id=c.repo_id
+            {SCOPE} 
             ORDER by c.modified DESC
-            """ % (SERVICE_URL, SCOPE)
+            """
 
         # cat_entries = self.raw(RAW)
         cat_entries = self.raw(RAW)
@@ -280,9 +282,7 @@ class CatalogManager(models.Manager):
                 continue
 
             #add landing page link
-            # if c.is_archived == 1 or DoiRepo.objects.get_valid_doi_repos(c.repo_id):
             if c.lpu:
-                # c.md.update(landing_page_url="%s/landing-page/libs/%s/"%(SERVICE_URL, c.repo_id))
                 c.md.update(landing_page_url=c.lpu)
             c.md.update(
                 catalog_id=c.catalog_id,
