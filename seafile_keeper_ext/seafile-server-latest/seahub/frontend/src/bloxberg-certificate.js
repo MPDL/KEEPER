@@ -10,6 +10,7 @@ import NoticeItem from './components/common/notice-item';
 import PDFViewer from './components/pdf-viewer';
 import ExpandText from './components/expand-text';
 import ShowMore from 'react-show-more';
+import '@bloxberg-org/blockcerts-verifier/dist/ie11.js'
 
 import './css/bloxberg-certificate.css';
 import './css/pdf-file-view.css';
