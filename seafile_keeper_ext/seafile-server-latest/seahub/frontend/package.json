@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@bloxberg-org/blockcerts-verifier": "1.1.2",
     "@reach/router": "^1.2.0",
     "@seafile/react-image-lightbox": "0.0.1",
     "@seafile/resumablejs": "^1.1.15",
