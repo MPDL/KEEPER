@@ -481,8 +481,8 @@ class BCertificateManager(models.Manager):
         b_certificate.save()
         return b_certificate.obj_id
 
-    def has_bloxberg_certificate(self, repo_id, path, commit_id):
-        return super(BCertificateManager, self).filter(repo_id=repo_id, path=path, commit_id=commit_id).count()
+    def is_snapshot_certified(self, repo_id, commit_id):
+        return super(BCertificateManager, self).filter(repo_id=repo_id, path= '/', commit_id=commit_id).count() > 0
 
     def get_bloxberg_certificates_by_owner_by_repo_id(self, owner, repo_id):
         return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)

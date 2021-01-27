@@ -18,7 +18,7 @@ from keeper.catalog.catalog_manager import get_catalog, add_landing_page_entry
 from keeper.bloxberg.bloxberg_manager import generate_certify_payload, \
     get_file_by_path, hash_file, hash_library, create_bloxberg_certificate, \
     get_md_json, decode_metadata, request_create_bloxberg_certificate, \
-    generate_bloxberg_certificate_pdf
+    generate_bloxberg_certificate_pdf, is_snapshot_certified
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, \
     get_latest_commit_id, send_notification, \
     MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
@@ -177,6 +177,9 @@ class BloxbergView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, 'Permission denied')
 
         if content_type == 'dir':
+            if is_snapshot_certified(repo_id):
+                return api_error(status.HTTP_400_BAD_REQUEST, 'This version of the library has already been successfully certified.')
+            
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
@@ -667,7 +670,7 @@ def BloxbergCertView(request, transaction_id, checksum=''):
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""
         all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
-        history_file_url =  "/repo/" + repo_id + "/history/files/?obj_id=" + all_file_revisions[0].rev_file_id + "&commit_id=" + certificate.commit_id + "&p=" + certificate.path
+        history_file_url =  "/repo/" + repo_id + "/" + all_file_revisions[0].rev_file_id + "/download/?file_name=" + quote_plus(certificate.content_name) + "&p=" + quote_plus(certificate.path)
 
         if md_json.get('authors'):
             authors = get_authors_from_catalog_md(md_json)

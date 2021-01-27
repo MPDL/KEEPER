@@ -242,9 +242,9 @@ def create_bloxberg_certificate(repo_id, path, transaction_id, content_type, con
 def update_bloxberg_certificate(repo_id, path, commit_id, checksum, pdf):
     BCertificate.objects.get_bloxberg_certificate_by_checksum(repo_id, path, commit_id, checksum)
 
-def certified_with_keeper(repo_id, path):
+def is_snapshot_certified(repo_id):
     commit_id = get_commit_id(repo_id)
-    return BCertificate.objects.has_bloxberg_certificate(repo_id, path, commit_id)
+    return BCertificate.objects.is_snapshot_certified(repo_id, commit_id)
 
 def send_notification(repo_id, path, transaction_id, timestamp, user_email):
     BLOXBERG_MSG=[]
