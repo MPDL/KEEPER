@@ -371,8 +371,8 @@ def LandingPageView(request, repo_id):
     repo_owner = get_repo_owner(repo_id)
     title = get_repo(repo_id).repo_name
     repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
-    doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
-    bloxberg_certs = BCertificate.objects.get_bloxberg_certificates_by_owner_by_repo_id(repo_owner, repo_id)
+    qs_doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
+    qs_bloxberg_certs = BCertificate.objects.get_bloxberg_certificates_by_owner_by_repo_id(repo_owner, repo_id)
 
     archive_repos = DBOper().get_archives(repo_id=repo_id)
     if archive_repos is not None and len(archive_repos) == 0:
@@ -380,20 +380,54 @@ def LandingPageView(request, repo_id):
 
     catalog = Catalog.objects.get_by_repo_id(repo_id)
     md = catalog.md
-    if md and md.get("authors"):
+    if md and md.get('authors'):
         authors = get_authors_from_catalog_md(md)
-        title = md.get("title")
+        title = md.get('title')
     else:
         title = get_repo(repo_id).name
         authors = repo_owner
 
-    return render(request, './catalog_detail/lib_detail_landing_page.html', {
-        'title': title,
+    archives = []
+    if archive_repos is not None:
+        for archive_repo in archive_repos:
+            archive = {
+                'version': archive_repo.version,
+                'created': archive_repo.created.strftime("%c"),
+                'repo_id': archive_repo.repo_id
+            }
+            archives.append(archive)
+
+    doi_repos = []
+    if qs_doi_repos is not None:
+        for doi_repo in qs_doi_repos:
+            doi = {
+                'created': doi_repo.created.strftime("%c"),
+                'doi': doi_repo.doi
+            }
+            doi_repos.append(doi)
+
+    bloxberg_certs = []
+    if qs_bloxberg_certs is not None:
+        for bloxberg_cert in qs_bloxberg_certs:
+            cert = {
+                'content_name': bloxberg_cert.content_name,
+                'created': bloxberg_cert.created.strftime("%c"),
+                'path': bloxberg_cert.path,
+                'transaction_id': bloxberg_cert.transaction_id,
+                'checksum': bloxberg_cert.checksum
+            }
+            bloxberg_certs.append(cert)
+
+    return render(request, './catalog_detail/lib_detail_react.html', {
+        'repo_name': title,
+        'repo_desc': md.get('description') if md.get('description') else '',
+        'institute': md.get('Institute') if md.get('Institute') else '',
         'authors': authors,
-        'md': md,
-        'doi_repos': doi_repos,
-        'archive_repos': archive_repos,
-        'bloxberg_certs': bloxberg_certs,
+        'year': md.get('year') if md.get('year') else '',
+
+        'doi_repos': json.dumps(doi_repos),
+        'archive_repos': json.dumps(archives),
+        'bloxberg_certs': json.dumps(bloxberg_certs),
         'hasCDC': get_cdc_id_by_repo(repo_id) is not None,
         'owner_contact_email':  repo_contact_email
     })
@@ -428,7 +462,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
         if is_tombstone == '1':
             return render(request, './catalog_detail/tombstone_page.html', {
                     'md_dict': archive_md,
-                    'authors': '; '.join(read_authors_from_md(archive_md.get("Author").split('\n'))),
+                    'authors': '; '.join(get_authors_from_md(archive_md)),
                     'institute': archive_md.get("Institute").replace(";", "; "),
                     'library_name': archive_repo.repo_name,
                     'owner_contact_email': email2contact_email(repo_owner) })
@@ -441,7 +475,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,
-        'authors': '; '.join(read_authors_from_md(archive_md.get("Author").split('\n'))),
+        'authors': '; '.join(get_authors_from_md(archive_md)),
         'institute': archive_md.get("Institute").replace(";", "; "),
         'commit_id': commit_id,
         'md_dict': archive_md,

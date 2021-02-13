@@ -230,6 +230,11 @@ module.exports = {
       require.resolve('react-dev-utils/webpackHotDevClient'),
       paths.appSrc + "/bloxberg-repo-snapshot.js",
     ],
+    libraryDetails: [
+      require.resolve('./polyfills'),
+      require.resolve('react-dev-utils/webpackHotDevClient'),
+      paths.appSrc + "/library-details-page.js",
+    ],
   },
 
   output: {

@@ -94,6 +94,7 @@ module.exports = {
     keeperProjectCatalog: [require.resolve('./polyfills'), paths.appSrc + "/keeper-project-catalog.js"],
     bloxbergCertificate: [require.resolve('./polyfills'), paths.appSrc + "/bloxberg-certificate.js"],
     bloxbergRepoSnapshot: [require.resolve('./polyfills'), paths.appSrc + "/bloxberg-repo-snapshot.js"],
+    libraryDetails: [require.resolve('./polyfills'), paths.appSrc + "/library-details-page.js"],
   },
 
   output: {
