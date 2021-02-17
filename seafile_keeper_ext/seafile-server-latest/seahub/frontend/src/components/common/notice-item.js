@@ -202,9 +202,25 @@ class NoticeItem extends React.Component {
     if (noticeType === BLOXBERG_MSG) {
       let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = 'Your data was successfully certified. Check your transaction on bloxberg. ' +
-          '<a target="_blank" href="https://blockexplorer.bloxberg.org/tx/' +  detail.transaction_id + '/internal_transactions">'
-          + 'View transaction</a>.';
+      let notice = ""
+      if (detail.transaction_id) {
+        if (detail.content_type === 'dir') {
+          let landing_page_link = `${siteRoot}landing-page/libs/${encodeURIComponent(detail.repo_id)}/`
+          notice = 'This notice verifies that ' + detail.author_name + ' certified the files within the library ' + detail.repo_name +
+          ' via the bloxberg blockchain. Additional information like the files and the corresponding certificates can be found at ' +
+          '<a target="_blank" href="' + landing_page_link +'">' + detail.repo_name + '</a>.';
+        } else {
+          let file_link = `${siteRoot}lib/${encodeURIComponent(detail.repo_id)}/file/${encodeURIComponent(detail.link_to_file)}`
+          let landing_page_link = `${siteRoot}landing-page/libs/${encodeURIComponent(detail.repo_id)}/`
+          notice = 'This notice verifies that ' + detail.author_name + ' certified the file ' +
+          '<a target="_blank" href="' + file_link +'">' + detail.file_name + '</a>' + ' within the library ' + detail.repo_name +
+          ' via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at ' +
+          '<a target="_blank" href="' + landing_page_link +'">' + detail.repo_name + '</a>.';
+        }
+      } else {
+        notice = detail.message;
+      }
+
       return {avatar_url, notice};
     }
 

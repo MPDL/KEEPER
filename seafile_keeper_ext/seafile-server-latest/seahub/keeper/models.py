@@ -472,17 +472,17 @@ def remove_keeper_entries(sender, **kwargs):
 
 class BCertificateManager(models.Manager):
 
-    def add_bloxberg_certificate(self, transaction_id, content_type, content_name, repo_id, path, commit_id, created_time, owner, checksum, md, md_json):
+    def add_bloxberg_certificate(self, transaction_id, content_type, content_name, repo_id, path, commit_id, created_time, owner, checksum, md, md_json, status):
         """
         Add to DB a new Bloxberg certificate, modify currently is not needed
         Returns Bloxberg certificate id and EVENT: db_create
         """
-        b_certificate = BCertificate(transaction_id=transaction_id, content_type=content_type, content_name=content_name, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner, checksum=checksum, md=md, md_json=md_json)
+        b_certificate = BCertificate(transaction_id=transaction_id, content_type=content_type, content_name=content_name, repo_id=repo_id, path=path, commit_id=commit_id, created=created_time, owner=owner, checksum=checksum, md=md, md_json=md_json, status=status)
         b_certificate.save()
         return b_certificate.obj_id
 
-    def is_snapshot_certified(self, repo_id, commit_id):
-        return super(BCertificateManager, self).filter(repo_id=repo_id, path= '/', commit_id=commit_id).count() > 0
+    def get_latest_snapshot_certificate(self, repo_id, commit_id):
+        return super(BCertificateManager, self).filter(repo_id=repo_id, path= '/', commit_id=commit_id).order_by('-created').first()
 
     def get_bloxberg_certificates_by_owner_by_repo_id(self, owner, repo_id):
         return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)
@@ -490,7 +490,7 @@ class BCertificateManager(models.Manager):
     def get_presentable_certificate(self, transaction_id, checksum):
         return super(BCertificateManager, self).exclude(content_type='child').filter(transaction_id=transaction_id, checksum=checksum).first()
 
-    def get_child_bloxberg_certificates(self, transaction_id, repo_id):
+    def get_children_bloxberg_certificates(self, transaction_id, repo_id):
         return super(BCertificateManager, self).filter(transaction_id=transaction_id, repo_id=repo_id, content_type='child')
 
     def get_bloxberg_certificate(self, transaction_id, checksum, path):
@@ -518,6 +518,8 @@ class BCertificate(models.Model):
     md = models.TextField(null=False)
     md_json = models.TextField(null=False)
     pdf = models.TextField(default=None) # null=True
+    status = models.CharField(max_length=30, null=False)
+    error_msg = models.TextField(default=None)
     objects = BCertificateManager()
 
 

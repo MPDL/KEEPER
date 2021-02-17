@@ -21,13 +21,23 @@ class CertifyLibraryDialog extends React.Component {
 
     formSubmit = () => {
         this.props.hideDialog();
-        const {repoID, repoName} = this.props;
-        toaster.success("Certifying the library through bloxberg", {duration: 4});
-        keeperAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
-          toaster.success("Transaction succeeded");
+        const {repoID} = this.props;
+        keeperAPI.canCertify(repoID).then(() => {
+            this.certifyLibrary()
         }).catch(error => {
-          let errMessage = Utils.getErrorMsg(error);
-          toaster.danger(errMessage);
+            let errMessage = Utils.getErrorMsg(error);
+            toaster.danger(errMessage);
+        })
+    }
+
+    certifyLibrary = () => {
+        const {repoID, repoName} = this.props;
+        toaster.success("Certifying the library through bloxberg", {duration: 3});
+        keeperAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
+            toaster.success(`Your files with the library ${repoName} are currently being certified. We will inform you once the task has successfully finished. This may take a while.`, {duration: 3});
+            }).catch(error => {
+            let errMessage = Utils.getErrorMsg(error);
+            toaster.danger(errMessage);
         });
     }
 
