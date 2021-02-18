@@ -438,6 +438,7 @@ def LandingPageView(request, repo_id):
                 'repo_id': archive_repo.repo_id
             }
             archives.append(archive)
+        archives.reverse()
 
     doi_repos = []
     if qs_doi_repos is not None:

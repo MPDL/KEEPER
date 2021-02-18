@@ -55,7 +55,7 @@ class LibraryDetailsPage extends React.Component {
             </a>
           </div>
 
-          <div className="pt-4 pb-6 o-auto">
+          <div className="flex-auto container-fluid pt-4 pb-6 o-auto">
               <div className="row">
                 <div className="col-md-6 offset-md-1">
                   <h1><ExpandText
@@ -106,7 +106,7 @@ class LibraryDetailsPage extends React.Component {
                   {this.state.showDoi && <br/>}
                   {this.state.showCerts && 
                     <div className="d-flex justify-content-between align-items-center op-bar">
-                      <p className="m-0">{gettext('Digital Object Identifier(DOI)')}</p>
+                      <p className="m-0">{gettext('Bloxberg Transactions')}</p>
                     </div>
                   }
                   {this.state.showCerts &&
@@ -121,11 +121,10 @@ class LibraryDetailsPage extends React.Component {
                   <div className="table_row"><b>Contact: </b><a href={"mailto:" + owner_contact_email}>{owner_contact_email}</a></div>
                 </div>
               </div>
-          </div>}
+          </div>
         </div>
     )
   }
-
 }
 
 class Content extends React.Component {

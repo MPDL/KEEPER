@@ -485,7 +485,7 @@ class BCertificateManager(models.Manager):
         return super(BCertificateManager, self).filter(repo_id=repo_id, path= '/', commit_id=commit_id).order_by('-created').first()
 
     def get_bloxberg_certificates_by_owner_by_repo_id(self, owner, repo_id):
-        return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id)
+        return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id).order_by('-created')
 
     def get_presentable_certificate(self, transaction_id, checksum):
         return super(BCertificateManager, self).exclude(content_type='child').filter(transaction_id=transaction_id, checksum=checksum).first()
@@ -542,7 +542,7 @@ class DoiRepoManager(models.Manager):
         return super(DoiRepoManager, self).exclude(rm__isnull=False).filter(owner=owner)
 
     def get_doi_repos_by_repo_id(self, repo_id):
-        return super(DoiRepoManager, self).filter(repo_id=repo_id)
+        return super(DoiRepoManager, self).filter(repo_id=repo_id).order_by('-created')
 
 
 class DoiRepo(models.Model):
