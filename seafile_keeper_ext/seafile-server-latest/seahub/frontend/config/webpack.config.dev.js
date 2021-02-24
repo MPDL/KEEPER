@@ -12,6 +12,7 @@ const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 const BundleTracker = require('webpack-bundle-tracker');
+const fs = require('fs')
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -483,6 +484,10 @@ module.exports = {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
     },
+    https: {
+      key: fs.readFileSync("/etc/ssl/private/__NODE_FQDN__.key"),
+      cert: fs.readFileSync("/etc/ssl/certs/__NODE_FQDN__.crt")
+    }
 
     // watchOptions: {
     //   aggregateTimeout: 1000,

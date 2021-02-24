@@ -50,15 +50,18 @@ class KeeperEditMetadataDialog extends React.Component {
   };
 
   render() {
+    const title = gettext("Edit Metadata for {library_name} library") 
+    const split = title.split("{library_name}")
+
     return (
       <KeeperArchiveMetadataForm
         hideDialog={this.props.hideDialog}
         repoID={this.props.repoID}
         header={
           <Fragment>
-            <span>{gettext("Edit Metadata for ")}</span>
+            {split[0]}
             <span style={{ color: "#57a5b8" }}> {this.props.repoName}</span>
-            <span> {gettext("library")}</span>
+            {split.length>1 && split[1]}
           </Fragment>
         }
         onButton1={this.onUpdateArchiveMetadata}

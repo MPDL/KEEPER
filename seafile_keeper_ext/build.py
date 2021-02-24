@@ -732,6 +732,19 @@ def deploy_ext():
         user=keep_ini.get('system', '__OS_USER__'),
     )
 
+def deploy_i18n():
+    """
+    Deploy i18n 
+    """
+
+    Utils.info('Deploy i18n...')
+    ## deploy dirs
+    deploy_dir('seafile-server-latest/seahub/locale', expand=True)
+    Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+
+    Utils.info('Done.')
+
+
 def deploy_system_conf():
     """
     Deploy keeper system confs
@@ -845,6 +858,8 @@ def do_deploy(args):
         deploy_dir('conf', expand=True)
     elif args.ext:
         deploy_ext()
+    elif args.i18n:
+        deploy_i18n()
     elif args.http_conf:
         deploy_http_conf()
     elif args.system_conf:
@@ -956,6 +971,7 @@ def main():
     parser_deploy.set_defaults(func=do_deploy)
     parser_deploy.add_argument('--all', help='deploy all KEEPER components', action='store_true')
     parser_deploy.add_argument('--ext', help='deploy KEEPER ext sources', action='store_true')
+    parser_deploy.add_argument('--i18n', help='generate and deploy KEEPER i18n sources', action='store_true')
     parser_deploy.add_argument('--conf', help='deploy conf files in KEEPER ~ext/conf directory', action='store_true')
     parser_deploy.add_argument('--http-conf', help='deploy http-confs', action='store_true')
     parser_deploy.add_argument('--system-conf', help='deploy all system conf files on the node, --http-conf is included', action='store_true')

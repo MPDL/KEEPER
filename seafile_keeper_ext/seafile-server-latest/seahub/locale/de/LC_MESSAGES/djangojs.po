@@ -5536,3 +5536,83 @@ msgstr "Projektkatalog"
 
 msgid "Help / Knowledge Base"
 msgstr "Hilfe / Wissensdatenbank"
+
+# archive metadata form 
+
+msgid "Edit Metadata for {library_name} library"
+msgstr "Metadaten editieren für die Bibliothek {library_name}"
+
+msgid "Metadata"
+msgstr "Metadaten"
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Author/in"
+msgstr "Autor/in"
+
+msgid "First Name"
+msgstr "Vorname"
+
+msgid "Last Name"
+msgstr "Nachname"
+
+msgid "Affiliation"
+msgstr "Zugehörigkeit"
+
+msgid "Year"
+msgstr "Jahr"
+
+msgid "Institute"
+msgstr "Institut"
+
+msgid "Institute name"
+msgstr "Name des Instituts"
+
+msgid "Department"
+msgstr "Abteilung"
+
+msgid "Director or PI"
+msgstr "Direktor oder PI"
+
+msgid "Resource Type"
+msgstr "Typ"
+
+msgid "Project"
+msgstr "Projekt"
+
+msgid "License"
+msgstr "Lizenz"
+
+msgid "Save metadata"
+msgstr "Metadaten speichern"
+
+msgid "Title of your research project"
+msgstr "Titel Ihres Forschungsprojekts"
+
+msgid "Please enter the title of your research project."
+msgstr "Bitte geben Sie den Titel Ihres Forschungsprojekts ein."
+
+msgid "Please enter the authors and affiliation of your research project."
+msgstr "Bitte geben Sie die Autoren und die Zugehörigkeit Ihres Forschungsprojekts an."
+
+msgid "Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource"
+msgstr "Bitte geben Sie den Namen der Einrichtung an, die die Daten besitzt, archiviert, veröffentlicht, druckt, verteilt, freigibt, herausgibt oder produziert"
+
+msgid "Please enter the description of your research project"
+msgstr "Bitte geben Sie eine Beschreibung Ihres Forschungsprojekts ein"
+
+msgid "Year of project start..."
+msgstr "Jahr des Projektbeginns..."
+
+msgid "Please enter year of project start."
+msgstr "Bitte geben Sie das Jahr des Projektbeginns ein."
+
+msgid "Please enter the related Max Planck Institute for this research project."
+msgstr "Bitte geben Sie das zugehörige Max-Planck-Institut für dieses Forschungsprojekt ein."
+
+msgid "Please enter the resource type of the entity. Allowed values for this field: Library (default), Project."
+msgstr "Bitte geben Sie den Ressourcentyp ein. Erlaubte Werte für dieses Feld: Bibliothek (Standard), Projekt."
+
+msgid "Please enter the license"
+msgstr "Bitte geben Sie die Lizenz ein"

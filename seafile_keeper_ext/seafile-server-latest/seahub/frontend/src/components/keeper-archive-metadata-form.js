@@ -89,7 +89,7 @@ class InfoArea extends React.Component {
             placement="right"
             isOpen={this.state.helpTooltipOpen}
           >
-            {gettext(this.props.helpText)}
+            {this.props.helpText}
           </Tooltip>
         </div>
       </Fragment>
@@ -353,7 +353,7 @@ class KeeperArchiveMetadataForm extends React.Component {
   };
 
   resourceOptions = resourceTypes.map((item) => {
-    return {value: item, label: item};
+    return {value: item, label: gettext(item)};
   });
 
   filterInstitutes = input => {
@@ -444,7 +444,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             </Col>
                             <Col sm={1}>
                               <InfoArea id="title"
-                                helpText="Please enter the title of your research project."
+                                helpText={gettext("Please enter the title of your research project.")}
                               />
                             </Col>
                           </Row>
@@ -518,7 +518,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                               <InfoArea
                                 id="author"
                                 className="info-area-names"
-                                helpText="Please enter the authors and affiliation of your research project"
+                                helpText={gettext("Please enter the authors and affiliation of your research project.")}
                               />
                             </span>
                             }
@@ -610,7 +610,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             <Col sm={1}>
                               <InfoArea
                                 id="publisher"
-                                helpText="Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource."
+                                helpText={gettext("Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource") + "."}
                               />
                             </Col>
                           </Row>
@@ -645,7 +645,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             <Col sm={1}>
                               <InfoArea
                                 id="description"
-                                helpText="Please enter the description of your research project."
+                                helpText={gettext("Please enter the description of your research project") + "."}
                               />
                             </Col>
                           </Row>
@@ -676,7 +676,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         </Col>
                         <InfoArea
                           id="year"
-                          helpText="Please enter year of project start."
+                          helpText={gettext("Please enter year of project start.")}
                         />
                       </FormGroup>
 
@@ -721,7 +721,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         <span className="info-area-names">
                           <InfoArea
                             id="institute"
-                            helpText="Please enter the related Max Planck Institute for this research project."
+                            helpText={gettext("Please enter the related Max Planck Institute for this research project.")}
                           />
                         </span>
                         {this.state.directors.map((inputField, index) => (
@@ -804,7 +804,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             id="resource-type"
                             value={{
                               value: this.state.resourceType,
-                              label: this.state.resourceType
+                              label: gettext(this.state.resourceType)
                             }}
                             options={this.resourceOptions}
                             onChange={this.onResourceSelectChange}
@@ -812,7 +812,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         </Col>
                         <InfoArea
                           id="resource-type"
-                          helpText="Please enter the resource type of the entity. Allowed values for this field: Library (default), Project."
+                          helpText={gettext("Please enter the resource type of the entity. Allowed values for this field: Library (default), Project.")}
                         />
                       </Row>
 
@@ -838,7 +838,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                           />
                         </Col>
                         <InfoArea
-                          id="license" helpText="Please enter the license."
+                          id="license" helpText={gettext("Please enter the license") + "."}
                         />
                       </Row>
                       {/*<br />*/}
@@ -851,7 +851,7 @@ class KeeperArchiveMetadataForm extends React.Component {
             <ModalFooter>
               {this.props.onButton1 &&
               <button type="submit"
-                className="btn btn-outline-primary offset-sm-1 col-sm-2"
+                className="btn btn-outline-primary offset-sm-1 col-sm-3"
                 disabled={this.state.isButton1Disabled}
                 onClick={(e) => this.onButton1(e)}>
                 {this.props.button1Label}
