@@ -32,9 +32,9 @@ class CertifyLibraryDialog extends React.Component {
 
     certifyLibrary = () => {
         const {repoID, repoName} = this.props;
-        toaster.success("Certifying the library through bloxberg", {duration: 3});
+        toaster.success(gettext('Certifying the library through bloxberg'), {duration: 3});
         keeperAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
-            toaster.success(`Your files with the library ${repoName} are currently being certified. We will inform you once the task has successfully finished. This may take a while.`, {duration: 3});
+            toaster.success(gettext('Your files with the library {repoName} are currently being certified. We will inform you once the task has successfully finished. This may take a while.').replace('{repoName}', repoName), {duration: 3});
             }).catch(error => {
             let errMessage = Utils.getErrorMsg(error);
             toaster.danger(errMessage);
@@ -45,13 +45,12 @@ class CertifyLibraryDialog extends React.Component {
         return (
             <Modal isOpen={true} toggle={this.props.hideDialog}>
                 <ModalHeader toggle={this.props.hideDialog}>
-                    <span>{gettext('Certify {library_name}').replace('{library_name}', '')}</span> <span
-                    style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
+                    <span>{gettext('Certify')}</span> <span style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
                 <ModalBody>
-                    <span>Certify all files within the library via the bloxberg blockchain. A new entry under “Library Details” on the left sidebar will be created, where you can access the certified version and the file and a proof of certification. Certifying may take some time, depending on the size of the library. Adding metadata is optional, but recommended.</span>
+                    <span>{gettext('Certify all files within the library via the bloxberg blockchain. A new entry under “Library Details” on the left sidebar will be created, where you can access the certified version and the file and a proof of certification. Certifying may take some time, depending on the size of the library. Adding metadata is optional, but recommended.')}</span>
                 </ModalBody>
                 <ModalFooter>
-                    <button className="btn btn-primary" onClick={this.formSubmit}>Certify</button>
+                    <button className="btn btn-primary" onClick={this.formSubmit}>{gettext('Certify')}</button>
                 </ModalFooter>
             </Modal>
         )

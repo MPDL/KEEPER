@@ -3982,3 +3982,37 @@ msgstr "Mit Metadaten"
 msgid "with certificate"
 msgstr "Mit Zertifikat"
 
+msgid "The library contains too many files for the certification. The current limit is %(limit)s files per library."
+msgstr "Die Bibliothek enthält zu viele Dateien für die Zertifizierung. Das aktuelle Limit ist %(limit)s Dateien pro Bibliothek."
+
+msgid "This version of the library has already been successfully certified."
+msgstr "Diese Version der Bibliothek wurde bereits erfolgreich zertifiziert."
+
+msgid "Certification is already in progress."
+msgstr "Die Zertifizierung ist bereits im Gange."
+
+msgid "The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support."
+msgstr "Die Zertifizierung ist fehlgeschlagen, bitte versuchen Sie es in ein paar Minuten erneut. Falls sie weiterhin fehlschlägt, wenden Sie sich bitte an den Keeper Support."
+
+msgid "Your data was successfully certified!"
+msgstr "Ihre Daten wurden erfolgreich zertifiziert!"
+
+msgid "Your files with the library %(name)s are currently being certified. We will inform you once the task has successfully finished. This may take a while."
+msgstr "Ihre Dateien in der Bibliothek %(name)s werden gerade zertifiziert. Wir werden Sie informieren, sobald die Aufgabe erfolgreich abgeschlossen ist. Dies kann eine Weile dauern."
+
+msgid "Your files with the library are currently being certified. We will inform you once the task has successfully finished. This may take a while."
+msgstr "Ihre Dateien in der Bibliothek werden gerade zertifiziert. Wir werden Sie informieren, sobald die Aufgabe erfolgreich abgeschlossen ist. Dies kann eine Weile dauern."
+
+#: seahub/notifications/templates/notifications/keeper_email.html
+#, python-format
+msgid "This notice verifies that %(to_user)s certified the file <a href=\"%(url_base)s/lib/%(repo_id)s/file%(link_to_file)s\">%(file_name)s</a> within the library %(repo_name)s via the bloxberg blockchain."
+msgstr "Dieser Hinweis verifiziert, dass %(to_user)s die Datei <a href=\"%(url_base)s/lib/%(repo_id)s/file%(link_to_file)s\">%(file_name)s</a> innerhalb der Bibliothek %(repo_name)s über die bloxberg-Blockchain zertifiziert hat."
+
+msgid "Additional information like the file and the corresponding certificate can be found at <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a>."
+msgstr "Zusätzliche Informationen wie die Datei und das entsprechende Zertifikat finden Sie unter <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a>."
+
+msgid "This notice verifies that %(to_user)s certified the files within the library %(repo_name)s via the bloxberg blockchain."
+msgstr "Dieser Hinweis verifiziert, dass %(to_user)s die Dateien innerhalb der Bibliothek %(repo_name)s über die bloxberg-Blockchain zertifiziert hat."
+
+msgid "Additional information like the files and the corresponding certificates can be found at <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a>."
+msgstr "Zusätzliche Informationen wie die Dateien und die dazugehörigen Zertifikate können unter <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a> gefunden werden."

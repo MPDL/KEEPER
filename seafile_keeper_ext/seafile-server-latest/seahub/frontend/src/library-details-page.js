@@ -23,7 +23,7 @@ class LibraryDetailsPage extends React.Component {
   constructor(props) {
     super(props);
     this.archiveTheadData = [
-      {width: '20%', text: gettext('Vision')},
+      {width: '20%', text: gettext('Version')},
       {width: '50%', text: gettext('Date')},
       {width: '30%', text: gettext('Link to Archive')},
     ];
@@ -74,8 +74,8 @@ class LibraryDetailsPage extends React.Component {
                   </ShowMore>
                   <br/>
                   <div className="table_row"><b>Author(s): </b>{authors}</div>
-                  {institute && <div className="cert_table_row"><b>Institute: </b>{institute}</div>}
-                  {year && <div className="cert_table_row"><b>Year: </b>{year}</div>}
+                  {institute && <div className="cert_table_row"><b>{gettext('Institute')}: </b>{institute}</div>}
+                  {year && <div className="cert_table_row"><b>{gettext('Year')}: </b>{year}</div>}
                   <br/>
                   {this.state.showArchives && 
                     <div className="d-flex justify-content-between align-items-center op-bar">
@@ -106,7 +106,7 @@ class LibraryDetailsPage extends React.Component {
                   {this.state.showDoi && <br/>}
                   {this.state.showCerts && 
                     <div className="d-flex justify-content-between align-items-center op-bar">
-                      <p className="m-0">{gettext('Bloxberg Transactions')}</p>
+                      <p className="m-0">{gettext('bloxberg Transactions')}</p>
                     </div>
                   }
                   {this.state.showCerts &&
@@ -118,7 +118,7 @@ class LibraryDetailsPage extends React.Component {
                   }
                   {this.state.showCerts && <br/>}
 
-                  <div className="table_row"><b>Contact: </b><a href={"mailto:" + owner_contact_email}>{owner_contact_email}</a></div>
+                  <div className="table_row"><b>{gettext('Contact')}: </b><a href={"mailto:" + owner_contact_email}>{owner_contact_email}</a></div>
                 </div>
               </div>
           </div>

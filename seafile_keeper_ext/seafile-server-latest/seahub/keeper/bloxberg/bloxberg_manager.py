@@ -19,7 +19,7 @@ from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.utils import send_html_email, get_site_name
 from seahub.settings import ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown_doi
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext as _, activate
 from lds_merkle_proof_2019.merkle_proof_2019 import MerkleProof2019
 from seahub.settings import BLOXBERG_SERVER, BLOXBERG_CERTS_STORAGE
 from django.db import connection
@@ -38,7 +38,6 @@ def generate_certify_payload(user_email, catalog_md, checksumArr):
         "email": user_email,
         "catalog_md": catalog_md
     }
-    logger.info(metadataJson)
     data = {
         "publicKey": "0x69575606E8b8F0cAaA5A3BD1fc5D032024Bb85AF",
         "crid": checksumArr,
@@ -46,7 +45,7 @@ def generate_certify_payload(user_email, catalog_md, checksumArr):
         "enableIPFS": False,
         "metadataJson": json.dumps(metadataJson)
     }
-    logger.info(data)
+    logger.info(f"Payload generated. checksumArr length: {str(len(checksumArr))}")
     return data
 
 def hash_file_payload(repo_id, path, user_email):
@@ -88,44 +87,61 @@ def start_new_thread(function):
     return decorator
 
 @start_new_thread
-def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, user_email, content_type):
+def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, user_email, content_type, language_code):
+    logger.info(f'Start new thread, now send gererate pdf request for transaction: {transaction_id}')
+    activate(language_code)
     path = BLOXBERG_CERTS_STORAGE + '/' + user_email + '/' + transaction_id
-
     response_generate_certificate = request_generate_pdf(metadata_json)
-    if response_generate_certificate is not None:
-        if response_generate_certificate.status_code == 200:
-            Path(path).mkdir(parents=True, exist_ok=True)
-            try:
-                zipname = repo_id + '_' + transaction_id + '.zip'
-                with open(path + '/' + zipname, 'wb') as f:
-                    for chunk in response_generate_certificate:
-                        f.write(chunk)
-                logger.info(zipname + ' is saved.')
-                with zipfile.ZipFile(path + '/' + zipname, 'r') as zip_ref:
-                    zip_ref.extractall(path + '/')
-                silentremove(path + '/' + zipname)
-                scan_certificates(path)
-                if content_type == 'dir':
-                    snapshot_certificate = get_latest_snapshot_certificate(repo_id)
-                    if snapshot_certificate is not None:
-                        snapshot_certificate.status = "DONE"
-                        snapshot_certificate.transaction_id = transaction_id
-                        snapshot_certificate.save()
-                        send_final_notification(repo_id, path, transaction_id, datetime.datetime.now(), user_email, 'dir')
-                connection.close()
-                logger.info("Thread ends, close db connection")
-                # final notification
-            except Exception as e:
-                logger.error(traceback.format_exc())
+    if response_generate_certificate is not None and response_generate_certificate.status_code == 200:
+        logger.info(f'Zip is generated. transaction_id: {transaction_id}')
+        Path(path).mkdir(parents=True, exist_ok=True)
+        try:
+            zipname = repo_id + '_' + transaction_id + '.zip'
+            with open(path + '/' + zipname, 'wb') as f:
+                for chunk in response_generate_certificate:
+                    f.write(chunk)
+            logger.info(f'Zip is opened. transaction_id: {transaction_id}, content_type: {content_type}.')
+            with zipfile.ZipFile(path + '/' + zipname, 'r') as zip_ref:
+                zip_ref.extractall(path + '/')
+            logger.info(f'Zip is extracted, will be removed. transaction_id: {transaction_id}, content_type: {content_type}.')
+            silentremove(path + '/' + zipname)
+            scan_certificates(path)
+            if content_type == 'dir':
                 snapshot_certificate = get_latest_snapshot_certificate(repo_id)
                 if snapshot_certificate is not None:
-                    snapshot_certificate.status = "FAILED"
-                    snapshot_certificate.error_msg = str(e)
+                    snapshot_certificate.status = "DONE"
                     snapshot_certificate.transaction_id = transaction_id
                     snapshot_certificate.save()
-                    send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
-                BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
-                raise Exception("generate_bloxberg_certificate_pdf", str(e))
+                    send_final_notification(repo_id, path, transaction_id, datetime.datetime.now(), user_email, 'dir')
+            connection.close()
+            logger.info(f'Thread ends, close db connection. transaction_id: {transaction_id}')
+            # final notification
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            snapshot_certificate = get_latest_snapshot_certificate(repo_id)
+            if snapshot_certificate is not None:
+                snapshot_certificate.status = "FAILED"
+                snapshot_certificate.error_msg = str(e)
+                snapshot_certificate.transaction_id = transaction_id
+                snapshot_certificate.save()
+                send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
+            BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
+            connection.close()
+            logger.error(f'Generate certificates pdf failed, close db connection. transaction_id: {transaction_id}')
+    else:
+        error_msg = response_generate_certificate.text if response_generate_certificate is not None else "Generate pdf request failed, response is None."
+        logger.error(error_msg)
+        snapshot_certificate = get_latest_snapshot_certificate(repo_id)
+        if snapshot_certificate is not None:
+            snapshot_certificate.status = "FAILED"
+            snapshot_certificate.error_msg = f'Generate pdf request failed.'
+            snapshot_certificate.transaction_id = transaction_id
+            snapshot_certificate.save()
+            send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
+        BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
+        connection.close()
+        logger.error(f'Generate certificates pdf failed, close db connection. transaction_id: {transaction_id}')
+
 
 def request_create_bloxberg_certificate(certify_payload):
     try:
@@ -271,7 +287,7 @@ def get_latest_snapshot_certificate(repo_id):
 def send_final_notification(repo_id, path, transaction_id, timestamp, user_email, content_type):
     logger.info(f'send_final_notification for {content_type}')
     BLOXBERG_MSG=[]
-    msg = 'Your data was successfully certified!'
+    msg = _('Your data was successfully certified!')
     msg_transaction = 'Transaction ID: ' + transaction_id
     file_name = path.rsplit('/', 1)[-1]
     repo_name = get_repo(repo_id).repo_name
@@ -292,6 +308,7 @@ def send_final_notification(repo_id, path, transaction_id, timestamp, user_email
 
     c = {
         'to_user': user_email,
+        'notice_count': 1,
         'message_type': 'bloxberg_msg',
         'content_type': content_type,
         'message':('; '.join(BLOXBERG_MSG)),
@@ -315,7 +332,7 @@ def send_final_notification(repo_id, path, transaction_id, timestamp, user_email
 
 def send_failed_notice(repo_id, transaction_id, timestamp, user_email):
     BLOXBERG_MSG=[]
-    msg = 'The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'
+    msg = _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.')
     BLOXBERG_MSG.append(msg)
 
     UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_BLOXBERG_MSG,
@@ -327,6 +344,7 @@ def send_failed_notice(repo_id, transaction_id, timestamp, user_email):
 
     c1 = {
         'to_user': user_email,
+        'notice_count': 1,
         'message_type': 'certify_snapshot_failed_msg', #message_type for email
         'message':('; '.join(BLOXBERG_MSG)),
         'repo_id': repo_id,
@@ -348,6 +366,7 @@ def send_failed_notice(repo_id, transaction_id, timestamp, user_email):
     BLOXBERG_MSG.append(f'transaction_id: {transaction_id}')
     c2 = {
         'to_user': admin_email,
+        'notice_count': 1,
         'message_type': 'certify_snapshot_failed_msg', #message_type for email
         'message':('; '.join(BLOXBERG_MSG)),
         'repo_id': repo_id,
@@ -367,7 +386,7 @@ def send_failed_notice(repo_id, transaction_id, timestamp, user_email):
 def send_start_snapshot_notification(repo_id, timestamp, user_email):
     BLOXBERG_MSG=[]
     repo_name = get_repo(repo_id).repo_name
-    msg = f'Your files with the library {repo_name} are currently being certified. We will inform you once the task has successfully finished. This may take a while.'
+    msg = _('Your files with the library %(name)s are currently being certified. We will inform you once the task has successfully finished. This may take a while.') % { 'name':  repo_name}
     BLOXBERG_MSG.append(msg)
 
     UserNotification.objects._add_user_notification(user_email, MSG_TYPE_KEEPER_BLOXBERG_MSG,
@@ -379,6 +398,7 @@ def send_start_snapshot_notification(repo_id, timestamp, user_email):
 
     c = {
         'to_user': user_email,
+        'notice_count': 1,
         'message_type': 'start_snapshot_msg', #message_type for email
         'message':('; '.join(BLOXBERG_MSG)),
         'repo_id': repo_id,

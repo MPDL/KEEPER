@@ -28,8 +28,7 @@ from keeper.models import CDC, DoiRepo, Catalog, BCertificate
 from django.http import JsonResponse, HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import render
 
-from django.utils.translation import ugettext as _
-from django.utils.translation import activate
+from django.utils.translation import ugettext as _, activate, get_language
 from django.core.urlresolvers import reverse
 
 from urllib.parse import quote_plus
@@ -167,11 +166,11 @@ class CanCertify(APIView):
 
         repo_owner = get_repo_owner(repo_id)
         if repo_owner != user_email:
-            return api_error(status.HTTP_400_BAD_REQUEST, 'Permission denied')
+            return api_error(status.HTTP_400_BAD_REQUEST, _('Permission denied'))
 
         repo = get_repo(repo_id)
         if repo.file_count > int(BLOXBERG_CERTS_LIMIT):
-            return api_error(status.HTTP_400_BAD_REQUEST, f'The library contains too many files for the certification. The current limit is {BLOXBERG_CERTS_LIMIT} files per library')
+            return api_error(status.HTTP_400_BAD_REQUEST, _('The library contains too many files for the certification. The current limit is %(limit)s files per library.') % { 'limit':  BLOXBERG_CERTS_LIMIT})
 
         snapshot_cert = get_latest_snapshot_certificate(repo_id)
         if snapshot_cert is None:
@@ -185,11 +184,11 @@ class CanCertify(APIView):
                 'status': 'success'
             })
         elif snapshot_cert.status == "DONE":
-            return api_error(status.HTTP_400_BAD_REQUEST, 'This version of the library has already been successfully certified.')
+            return api_error(status.HTTP_400_BAD_REQUEST, _('This version of the library has already been successfully certified.'))
         elif snapshot_cert.status == "IN_PROGRESS":
-            return api_error(status.HTTP_400_BAD_REQUEST, 'Certification is already in progress.')
+            return api_error(status.HTTP_400_BAD_REQUEST, _('Certification is already in progress.'))
 
-        return api_error(status.HTTP_400_BAD_REQUEST, 'The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.')
+        return api_error(status.HTTP_400_BAD_REQUEST, _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'))
 
 class BloxbergView(APIView):
     """
@@ -202,21 +201,25 @@ class BloxbergView(APIView):
         content_name = request.data['name']
         content_type = request.data['type']
         user_email = request.user.username
-        catalog = Catalog.objects.get_by_repo_id(repo_id)
-        catalog_md = catalog.md
         checksumArr = []
+        language_code = get_language()
+
+        catalog = Catalog.objects.get_by_repo_id(repo_id)
+        if catalog is None:
+            return api_error(status.HTTP_400_BAD_REQUEST, _('Permission denied'))
+        catalog_md = catalog.md
 
         repo_owner = get_repo_owner(repo_id)
         if repo_owner != user_email:
-            return api_error(status.HTTP_400_BAD_REQUEST, 'Permission denied')
+            return api_error(status.HTTP_400_BAD_REQUEST, _('Permission denied'))
 
         if content_type == 'dir':
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
 
-            # Set status "IN_PROGRESS"
             create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
+            logger.info(f'Set status to IN_PROGESS for repo: {repo_id}')
             response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
             if response_bloxberg is not None:
                 if response_bloxberg.status_code == 200:
@@ -226,17 +229,18 @@ class BloxbergView(APIView):
                     send_start_snapshot_notification(repo_id, created_time, user_email)
                     snapshot_cert = get_latest_snapshot_certificate(repo_id)
                     snapshot_cert.certificates = json.dumps(certificates)
+                    snapshot_cert.transaction_id = transaction_id
                     snapshot_cert.save()
                     # create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, json.dumps(catalog_md), json.dumps(certificates), "IN_PROGRESS")
                     for dPath, dHash in file_map.items():
                         create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, json.dumps(catalog_md), '', "IN_PROGRESS")
-                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type)
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type, language_code)
                     return JsonResponse(response_bloxberg.json(), safe=False)
                 else:
+                    logger.info(f'Transaction failed. repo_id: {repo_id}')
                     snapshot_cert = get_latest_snapshot_certificate(repo_id)
                     snapshot_cert.status = "FAILED"
                     snapshot_cert.save()
-                    # TODO: periodical db task to update status?
 
         elif content_type == 'file':
             file = get_file_by_path(repo_id, path)
@@ -249,10 +253,10 @@ class BloxbergView(APIView):
                     transaction_id = decode_metadata(certificates)
                     created_time = datetime.datetime.now()
                     create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, json.dumps(catalog_md), json.dumps(certificates[0]), "IN_PROGRESS")
-                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type)
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type, language_code)
                     return JsonResponse(certificates, safe=False)
 
-        return api_error(status.HTTP_400_BAD_REQUEST, 'The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.')
+        return api_error(status.HTTP_400_BAD_REQUEST, _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'))
 
 def request_doxi(shared_link, doxi_payload):
     try:
@@ -414,7 +418,7 @@ def LandingPageView(request, repo_id):
     title = get_repo(repo_id).repo_name
     repo_contact_email = SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
     qs_doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
-    qs_bloxberg_certs = BCertificate.objects.get_bloxberg_certificates_by_owner_by_repo_id(repo_owner, repo_id)
+    qs_bloxberg_certs = BCertificate.objects.get_finished_bloxberg_certificates(repo_owner, repo_id)
 
     archive_repos = DBOper().get_archives(repo_id=repo_id)
     if archive_repos is not None and len(archive_repos) == 0:
@@ -434,7 +438,7 @@ def LandingPageView(request, repo_id):
         for archive_repo in archive_repos:
             archive = {
                 'version': archive_repo.version,
-                'created': archive_repo.created.strftime("%c"),
+                'created': archive_repo.created.strftime('%Y-%m-%d %H:%M:%S'),
                 'repo_id': archive_repo.repo_id
             }
             archives.append(archive)
@@ -444,7 +448,7 @@ def LandingPageView(request, repo_id):
     if qs_doi_repos is not None:
         for doi_repo in qs_doi_repos:
             doi = {
-                'created': doi_repo.created.strftime("%c"),
+                'created': doi_repo.created.strftime('%Y-%m-%d %H:%M:%S'),
                 'doi': doi_repo.doi
             }
             doi_repos.append(doi)
@@ -452,15 +456,14 @@ def LandingPageView(request, repo_id):
     bloxberg_certs = []
     if qs_bloxberg_certs is not None:
         for bloxberg_cert in qs_bloxberg_certs:
-            if bloxberg_cert.transaction_id is not '0': # remove in_progress certificates
-                cert = {
-                    'content_name': bloxberg_cert.content_name,
-                    'created': bloxberg_cert.created.strftime("%c"),
-                    'path': bloxberg_cert.path,
-                    'transaction_id': bloxberg_cert.transaction_id,
-                    'checksum': bloxberg_cert.checksum
-                }
-                bloxberg_certs.append(cert)
+            cert = {
+                'content_name': bloxberg_cert.content_name,
+                'created': bloxberg_cert.created.strftime('%Y-%m-%d %H:%M:%S'),
+                'path': bloxberg_cert.path,
+                'transaction_id': bloxberg_cert.transaction_id,
+                'checksum': bloxberg_cert.checksum
+            }
+            bloxberg_certs.append(cert)
 
     return render(request, './catalog_detail/lib_detail_react.html', {
         'repo_name': title,
@@ -743,7 +746,6 @@ def BloxbergCertView(request, transaction_id, checksum=''):
 
     else:
         md_json = json.loads(certificate.md)
-        logger.info(md_json)
         pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)    # todo: test path with space in it
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""

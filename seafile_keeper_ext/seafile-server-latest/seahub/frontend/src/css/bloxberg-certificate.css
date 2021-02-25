@@ -63,3 +63,7 @@ body {
 .keeper-hide {
 	display: none;
 }
+
+#viewerContainer {
+	overflow: hidden !important;
+}
