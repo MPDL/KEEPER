@@ -99,13 +99,17 @@ class CatalogReactView(APIView):
         can_access = DEBUG
         if not can_access:
             remote_addr = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
+            # HTTP_X_FORWARDED_FOR now contains full proxy chain: if 2 IPs here, take first one!! (client)
             if remote_addr:
-                for allowed_ip_prefix in allowed_ip_prefixes:
-                    if remote_addr.startswith(allowed_ip_prefix):
+                s = [ip.strip() for ip in remote_addr.split(",")]
+                remote_addr = s.pop(0)
+                if remote_addr:
+                    for allowed_ip_prefix in allowed_ip_prefixes:
+                        if remote_addr.startswith(allowed_ip_prefix):
+                            can_access = True
+                            break
+                    if not can_access and is_in_mpg_ip_range(remote_addr):
                         can_access = True
-                        break
-                if not can_access and is_in_mpg_ip_range(remote_addr):
-                    can_access = True
 
         if not can_access:
             return {"is_access_denied": True}
