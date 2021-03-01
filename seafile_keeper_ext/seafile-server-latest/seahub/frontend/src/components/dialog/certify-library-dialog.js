@@ -32,7 +32,6 @@ class CertifyLibraryDialog extends React.Component {
 
     certifyLibrary = () => {
         const {repoID, repoName} = this.props;
-        toaster.success(gettext('Certifying the library through bloxberg'), {duration: 3});
         keeperAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
             toaster.success(gettext('Your files with the library {repoName} are currently being certified. We will inform you once the task has successfully finished. This may take a while.').replace('{repoName}', repoName), {duration: 3});
             }).catch(error => {

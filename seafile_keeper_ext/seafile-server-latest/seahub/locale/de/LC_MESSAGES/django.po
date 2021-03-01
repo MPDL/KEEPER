@@ -4016,3 +4016,17 @@ msgstr "Dieser Hinweis verifiziert, dass %(to_user)s die Dateien innerhalb der B
 
 msgid "Additional information like the files and the corresponding certificates can be found at <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a>."
 msgstr "Zusätzliche Informationen wie die Dateien und die dazugehörigen Zertifikate können unter <a href=\"%(url_base)s/landing-page/libs/%(repo_id)s\">%(repo_name)s</a> gefunden werden."
+
+#: seahub/seahub/templates/catalog_detail/timbstone_page.html
+#, python-format
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Dataset does not exist anymore"
+msgstr "Datensatz existiert nicht mehr"
+
+msgid "The dataset with identifier <strong class=\"doi_link\">%(doi)s</strong> was removed along with removal of the library <strong>%(library_name)s</strong>."
+msgstr "Der Datensatz mit dem Bezeichner <strong class=\"doi_link\">%(doi)s</strong> wurde zusammen mit dem Entfernen der Bibliothek <strong>%(library_name)s</strong> entfernt."
+
+msgid "The library has been removed, but an archive exists. Please contact the library owner or Keeper support in order to retrieve the data."
+msgstr "Die Bibliothek wurde entfernt, es existiert jedoch ein Archiv. Bitte wenden Sie sich an den Eigentümer der Bibliothek oder den Keeper-Support, um die Daten abzurufen."

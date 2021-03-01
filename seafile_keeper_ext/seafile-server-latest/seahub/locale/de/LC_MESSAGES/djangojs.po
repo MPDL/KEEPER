@@ -5667,7 +5667,7 @@ msgstr "Link zum Zertifikat"
 
 #: frontend/src/bloxberg-repo-snapshot.js
 msgid "Download Certificate"
-msgstr "Download Zertifikat"
+msgstr "Zertifikat herunterladen"
 
 #: frontend/src/bloxberg-repo-snapshot.js
 msgid "Download File"
@@ -5688,3 +5688,10 @@ msgstr "Zertifizieren Sie die Datei durch bloxberg..."
 #: frontend/src/components/dirent-list-view/dir-list-item.js
 msgid "Transaction succeeded"
 msgstr "Transaktion erfolgreich"
+
+#: frontend/src/bloxberg-certificate.js
+msgid "Author(s)"
+msgstr "Autor(en)"
+
+msgid "Transaction"
+msgstr "Transaktion"

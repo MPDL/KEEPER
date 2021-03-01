@@ -19,7 +19,7 @@ from keeper.bloxberg.bloxberg_manager import generate_certify_payload, \
     get_file_by_path, hash_file, hash_library, create_bloxberg_certificate, \
     get_md_json, decode_metadata, request_create_bloxberg_certificate, \
     generate_bloxberg_certificate_pdf, get_latest_snapshot_certificate, \
-    send_start_snapshot_notification
+    send_start_snapshot_notification, send_failed_notice
 from keeper.doi.doi_manager import get_metadata, generate_metadata_xml, \
     get_latest_commit_id, send_notification, \
     MSG_TYPE_KEEPER_DOI_MSG, MSG_TYPE_KEEPER_DOI_SUC_MSG
@@ -218,25 +218,26 @@ class BloxbergView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, _('Permission denied'))
 
         if content_type == 'dir':
+            create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
+            logger.info(f'Set status to IN_PROGESS for repo: {repo_id}')
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
+            logger.info(f'Hash for repo: {repo_id}')
 
-            create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
-            logger.info(f'Set status to IN_PROGESS for repo: {repo_id}')
-            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
-            if response_bloxberg is not None:
-                if response_bloxberg.status_code == 200:
+            send_start_snapshot_notification(repo_id, datetime.datetime.now(), user_email)
+            try:
+                response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
+                if response_bloxberg is not None and response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
-                    created_time = datetime.datetime.now()
-                    send_start_snapshot_notification(repo_id, created_time, user_email)
                     snapshot_cert = get_latest_snapshot_certificate(repo_id)
-                    snapshot_cert.certificates = json.dumps(certificates)
-                    snapshot_cert.transaction_id = transaction_id
-                    snapshot_cert.save()
-                    # create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, '', user_email, json.dumps(catalog_md), json.dumps(certificates), "IN_PROGRESS")
+                    if snapshot_cert is not None:
+                        snapshot_cert.certificates = json.dumps(certificates)
+                        snapshot_cert.transaction_id = transaction_id
+                        snapshot_cert.save()
                     for dPath, dHash in file_map.items():
+                        created_time = datetime.datetime.now()
                         create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, json.dumps(catalog_md), '', "IN_PROGRESS")
                     generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type, language_code)
                     return JsonResponse(response_bloxberg.json(), safe=False)
@@ -245,20 +246,43 @@ class BloxbergView(APIView):
                     snapshot_cert = get_latest_snapshot_certificate(repo_id)
                     snapshot_cert.status = "FAILED"
                     snapshot_cert.save()
+            except Exception as e:
+                import traceback
+                logger.error(traceback.format_exc())
+                snapshot_cert = get_latest_snapshot_certificate(repo_id)
+                if snapshot_cert is not None:
+                    snapshot_cert.status = "FAILED"
+                    snapshot_cert.error_msg = str(e)
+                    snapshot_cert.transaction_id = transaction_id
+                    snapshot_cert.save()
+                    send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
+
 
         elif content_type == 'file':
             file = get_file_by_path(repo_id, path)
             checksum = hash_file(file)
             checksumArr.append(checksum)
-            response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
-            if response_bloxberg is not None:
-                if response_bloxberg.status_code == 200:
+            try:
+                response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
+                if response_bloxberg is not None and response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
                     created_time = datetime.datetime.now()
                     create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, json.dumps(catalog_md), json.dumps(certificates[0]), "IN_PROGRESS")
                     generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, user_email, content_type, language_code)
                     return JsonResponse(certificates, safe=False)
+                else:
+                    error_msg = response_bloxberg.text if response_bloxberg is not None else "Generate pdf request failed, response is None."
+                    logger.error(error_msg)
+
+            except Exception as e:
+                import traceback
+                logger.error(traceback.format_exc())
+                certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, checksum)
+                if certificate is not None:
+                    certificate.status = "FAILED"
+                    certificate.error_msg = str(e)
+                    certificate.save()
 
         return api_error(status.HTTP_400_BAD_REQUEST, _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'))
 

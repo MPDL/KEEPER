@@ -25,7 +25,6 @@ from seahub.settings import BLOXBERG_SERVER, BLOXBERG_CERTS_STORAGE
 from django.db import connection
 from threading import Thread
 from pathlib import Path
-import traceback
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -91,11 +90,11 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, us
     logger.info(f'Start new thread, now send gererate pdf request for transaction: {transaction_id}')
     activate(language_code)
     path = BLOXBERG_CERTS_STORAGE + '/' + user_email + '/' + transaction_id
-    response_generate_certificate = request_generate_pdf(metadata_json)
-    if response_generate_certificate is not None and response_generate_certificate.status_code == 200:
-        logger.info(f'Zip is generated. transaction_id: {transaction_id}')
-        Path(path).mkdir(parents=True, exist_ok=True)
-        try:
+    try:
+        response_generate_certificate = request_generate_pdf(metadata_json)
+        if response_generate_certificate is not None and response_generate_certificate.status_code == 200:
+            logger.info(f'Zip is generated. transaction_id: {transaction_id}')
+            Path(path).mkdir(parents=True, exist_ok=True)
             zipname = repo_id + '_' + transaction_id + '.zip'
             with open(path + '/' + zipname, 'wb') as f:
                 for chunk in response_generate_certificate:
@@ -115,26 +114,27 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, us
                     send_final_notification(repo_id, path, transaction_id, datetime.datetime.now(), user_email, 'dir')
             connection.close()
             logger.info(f'Thread ends, close db connection. transaction_id: {transaction_id}')
-            # final notification
-        except Exception as e:
-            logger.error(traceback.format_exc())
+        else:
+            error_msg = response_generate_certificate.text if response_generate_certificate is not None else "Generate pdf request failed, response is None."
+            logger.error(error_msg)
             snapshot_certificate = get_latest_snapshot_certificate(repo_id)
             if snapshot_certificate is not None:
                 snapshot_certificate.status = "FAILED"
-                snapshot_certificate.error_msg = str(e)
+                snapshot_certificate.error_msg = f'Generate pdf request failed.'
                 snapshot_certificate.transaction_id = transaction_id
                 snapshot_certificate.save()
                 send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
             BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
             connection.close()
             logger.error(f'Generate certificates pdf failed, close db connection. transaction_id: {transaction_id}')
-    else:
-        error_msg = response_generate_certificate.text if response_generate_certificate is not None else "Generate pdf request failed, response is None."
-        logger.error(error_msg)
+
+    except Exception as e:
+        import traceback
+        logger.error(traceback.format_exc())
         snapshot_certificate = get_latest_snapshot_certificate(repo_id)
         if snapshot_certificate is not None:
             snapshot_certificate.status = "FAILED"
-            snapshot_certificate.error_msg = f'Generate pdf request failed.'
+            snapshot_certificate.error_msg = str(e)
             snapshot_certificate.transaction_id = transaction_id
             snapshot_certificate.save()
             send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
@@ -144,25 +144,12 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, us
 
 
 def request_create_bloxberg_certificate(certify_payload):
-    try:
-        response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload)
-        return response
-    except ConnectionError as e:
-        logger.error(str(e))
-
-def request_bloxberg(certify_payload):
-    try:
-        response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload)
-        return response
-    except ConnectionError as e:
-        logger.error(str(e))
+    response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload)
+    return response
 
 def request_generate_pdf(certificate_payload):
-    try:
-        response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, json=certificate_payload, stream=True)
-        return response
-    except ConnectionError as e:
-        logger.error(str(e))
+    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, json=certificate_payload, stream=True)
+    return response
 
 def silentremove(filename):
     try:

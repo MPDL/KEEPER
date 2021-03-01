@@ -73,7 +73,7 @@ class LibraryDetailsPage extends React.Component {
                       {repoDesc}
                   </ShowMore>
                   <br/>
-                  <div className="table_row"><b>Author(s): </b>{authors}</div>
+                  <div className="table_row"><b>{gettext('Author(s)')}: </b>{authors}</div>
                   {institute && <div className="cert_table_row"><b>{gettext('Institute')}: </b>{institute}</div>}
                   {year && <div className="cert_table_row"><b>{gettext('Year')}: </b>{year}</div>}
                   <br/>
