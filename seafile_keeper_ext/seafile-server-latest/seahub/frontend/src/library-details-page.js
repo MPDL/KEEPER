@@ -21,6 +21,7 @@ const {
 class LibraryDetailsPage extends React.Component {
 
   constructor(props) {
+    console.log(bloxberg_certs)
     super(props);
     this.archiveTheadData = [
       {width: '20%', text: gettext('Version')},

@@ -86,62 +86,64 @@ def start_new_thread(function):
     return decorator
 
 @start_new_thread
-def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, user_email, content_type, language_code):
+def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, commit_id, user_email, content_type, path, language_code):
     logger.info(f'Start new thread, now send gererate pdf request for transaction: {transaction_id}')
     activate(language_code)
-    path = BLOXBERG_CERTS_STORAGE + '/' + user_email + '/' + transaction_id
+    cert_path = BLOXBERG_CERTS_STORAGE + '/' + user_email + '/' + transaction_id
     try:
         response_generate_certificate = request_generate_pdf(metadata_json)
         if response_generate_certificate is not None and response_generate_certificate.status_code == 200:
             logger.info(f'Zip is generated. transaction_id: {transaction_id}')
-            Path(path).mkdir(parents=True, exist_ok=True)
+            Path(cert_path).mkdir(parents=True, exist_ok=True)
             zipname = repo_id + '_' + transaction_id + '.zip'
-            with open(path + '/' + zipname, 'wb') as f:
+            with open(cert_path + '/' + zipname, 'wb') as f:
                 for chunk in response_generate_certificate:
                     f.write(chunk)
             logger.info(f'Zip is opened. transaction_id: {transaction_id}, content_type: {content_type}.')
-            with zipfile.ZipFile(path + '/' + zipname, 'r') as zip_ref:
-                zip_ref.extractall(path + '/')
-            logger.info(f'Zip is extracted, will be removed. transaction_id: {transaction_id}, content_type: {content_type}.')
-            silentremove(path + '/' + zipname)
-            scan_certificates(path)
+            with zipfile.ZipFile(cert_path + '/' + zipname, 'r') as zip_ref:
+                zip_ref.extractall(cert_path + '/')
+            logger.info(f'Zip is extracted. transaction_id: {transaction_id}, content_type: {content_type}.')
+            #silentremove(cert_path + '/' + zipname) #keep zip for debugging
+            scan_certificates(cert_path)
             if content_type == 'dir':
-                snapshot_certificate = get_latest_snapshot_certificate(repo_id)
-                if snapshot_certificate is not None:
-                    snapshot_certificate.status = "DONE"
-                    snapshot_certificate.transaction_id = transaction_id
-                    snapshot_certificate.save()
-                    send_final_notification(repo_id, path, transaction_id, datetime.datetime.now(), user_email, 'dir')
+                update_snapshot_certificate(repo_id, commit_id, path, status="DONE", transaction_id=transaction_id)
+            send_final_notification(repo_id, cert_path, transaction_id, datetime.datetime.now(), user_email, content_type)
             connection.close()
             logger.info(f'Thread ends, close db connection. transaction_id: {transaction_id}')
         else:
             error_msg = response_generate_certificate.text if response_generate_certificate is not None else "Generate pdf request failed, response is None."
             logger.error(error_msg)
-            snapshot_certificate = get_latest_snapshot_certificate(repo_id)
-            if snapshot_certificate is not None:
-                snapshot_certificate.status = "FAILED"
-                snapshot_certificate.error_msg = f'Generate pdf request failed.'
-                snapshot_certificate.transaction_id = transaction_id
-                snapshot_certificate.save()
+            update_snapshot_certificate(repo_id, commit_id, path, status="FAILED", error_msg=error_msg, transaction_id=transaction_id)
+
+            if content_type == 'dir':
                 send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
-            BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
+                BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
             connection.close()
             logger.error(f'Generate certificates pdf failed, close db connection. transaction_id: {transaction_id}')
 
     except Exception as e:
         import traceback
         logger.error(traceback.format_exc())
-        snapshot_certificate = get_latest_snapshot_certificate(repo_id)
-        if snapshot_certificate is not None:
-            snapshot_certificate.status = "FAILED"
-            snapshot_certificate.error_msg = str(e)
-            snapshot_certificate.transaction_id = transaction_id
-            snapshot_certificate.save()
-            send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
+        update_snapshot_certificate(repo_id, commit_id, path, status='FAILED', error_msg=str(e), transaction_id=transaction_id)
+        send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
         BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
         connection.close()
         logger.error(f'Generate certificates pdf failed, close db connection. transaction_id: {transaction_id}')
 
+def update_snapshot_certificate(repo_id, commit_id, path, status=None, error_msg=None, certificates=None, transaction_id=None, checksum=None):
+    snapshot_certificate = get_snapshot_certificate(repo_id, commit_id, path)
+    if snapshot_certificate is not None:
+        if status is not None:
+            snapshot_certificate.status = status
+        if transaction_id is not None:
+            snapshot_certificate.transaction_id = transaction_id
+        if certificates is not None:
+            snapshot_certificate.certificates = certificates
+        if error_msg is not None:
+            snapshot_certificate.error_msg = error_msg
+        if checksum is not None:
+            snapshot_certificate.checksum = checksum
+        snapshot_certificate.save()
 
 def request_create_bloxberg_certificate(certify_payload):
     response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload)
@@ -172,15 +174,12 @@ def scan_certificates(directory):
                 metadata_json = json.loads(fData)
                 fHash = metadata_json['crid']
                 transaction_id = decode_metadata(metadata_json)
-                try:
-                    certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, fHash)
-                    certificate.pdf = pdfName
-                    certificate.md_json = fData
-                    certificate.status = "DONE"
-                    certificate.save()
-                except BCertificate.DoesNotExist:
-                    logger.error("Update certificate pdf failed, certificate not found")
-                # Other Exceptions handled outside
+                certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, fHash)
+                #todo: not exist exception
+                certificate.pdf = pdfName
+                certificate.md_json = fData
+                certificate.status = "DONE"
+                certificate.save()
 
 def getAttachments(reader):
       """
@@ -258,18 +257,15 @@ def get_commit_root_id(repo_id):
 
 def create_bloxberg_certificate(repo_id, path, transaction_id, content_type, content_name, created_time, checksum, user_email, md, md_json, status):
     commit_id = get_commit_id(repo_id)
-    repo_name = get_repo(repo_id).repo_name
     obj_id =  BCertificate.objects.add_bloxberg_certificate(transaction_id, content_type, content_name, repo_id, path, commit_id, created_time, user_email, checksum, md, md_json, status)
-    if content_type == 'file':
-        send_final_notification(repo_id, path, transaction_id, created_time, user_email, content_type)
     return obj_id
 
-def get_latest_snapshot_certificate(repo_id):
+def get_latest_snapshot_certificate(repo_id, path):
     commit_id = get_commit_id(repo_id)
-    return BCertificate.objects.get_latest_snapshot_certificate(repo_id, commit_id)
+    return BCertificate.objects.get_latest_snapshot_certificate(repo_id, commit_id, path)
 
-# def get_snapshot_certificate_by_transaction_id(repo_id, transaction_id):
-#     return BCertificate.objects.get_snapshot_certificate_by_transaction_id(repo_id, transaction_id)
+def get_snapshot_certificate(repo_id, commit_id, path):
+    return BCertificate.objects.get_latest_snapshot_certificate(repo_id, commit_id, path)
 
 def send_final_notification(repo_id, path, transaction_id, timestamp, user_email, content_type):
     logger.info(f'send_final_notification for {content_type}')

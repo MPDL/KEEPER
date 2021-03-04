@@ -3988,6 +3988,9 @@ msgstr "Die Bibliothek enthält zu viele Dateien für die Zertifizierung. Das ak
 msgid "This version of the library has already been successfully certified."
 msgstr "Diese Version der Bibliothek wurde bereits erfolgreich zertifiziert."
 
+msgid "This version of the file has already been successfully certified."
+msgstr "Diese Version der Datei wurde bereits erfolgreich zertifiziert."
+
 msgid "Certification is already in progress."
 msgstr "Die Zertifizierung ist bereits im Gange."
 
