@@ -96,6 +96,14 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
+        'post_office': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'post_office.log'),
+            'maxBytes': 1024*1024*10, # 10 MB
+            'backupCount': 52,
+            'formatter': 'standard'
+        },
         # 'syslog-django_request': {
             # 'level': 'INFO',
             # 'class': 'logging.handlers.SysLogHandler',
@@ -123,6 +131,11 @@ LOGGING = {
             'handlers': ['request_handler', 'mail_admins'],
             'level': 'INFO',
             'propagate': False
+        },
+        'post_office': {
+            'handlers': ['post_office'],
+            'level': 'DEBUG',
+            'propagate': True
         },
     }
 }
@@ -387,6 +400,17 @@ ENABLED_ROLE_PERMISSIONS = {
     },
 }
 
+ENABLED_ADMIN_ROLE_PERMISSIONS = {
+    'users_and_logs_manager': {
+        'can_view_system_info': True,
+        'can_view_statistic': True,
+        'can_manage_user': True,
+        'can_view_user_log': True,
+        'can_view_admin_log': True,
+        'other_permission': True,
+    },
+}
+
 ##########################################################################
 #### Other
 
@@ -559,6 +583,17 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 # Admin users page default sorting
 
 ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
+
+# Enable Onlyoffice
+ENABLE_ONLYOFFICE = __ENABLE_ONLYOFFICE__
+VERIFY_ONLYOFFICE_CERTIFICATE = True
+
+# OnlyIffice settings
+ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
+ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
+ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
+ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
+
 
 ##########################################################################
 ####  KEEPER specific settings
