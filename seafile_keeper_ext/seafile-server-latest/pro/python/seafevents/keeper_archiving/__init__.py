@@ -52,6 +52,7 @@ class KeeperArchiving(object):
             '/pro/python'
         )]
         env = {
+            'LC_CTYPE': 'C.UTF-8',
             'CCNET_CONF_DIR': SEAFILE_DIR + '/ccnet',
             'SEAFILE_CONF_DIR': SEAFILE_DIR + '/seafile-data',
             'SEAFILE_CENTRAL_CONF_DIR': SEAFILE_DIR + '/conf',

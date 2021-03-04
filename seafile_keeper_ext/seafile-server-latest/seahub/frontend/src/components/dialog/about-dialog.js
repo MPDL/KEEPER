@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Modal, ModalBody } from 'reactstrap';
-import { gettext, lang, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion } from '../../utils/constants';
+import { gettext, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion } from '../../utils/constants';
 
 const propTypes = {
   onCloseAboutDialog: PropTypes.func.isRequired,
@@ -14,7 +14,6 @@ class AboutDialog extends React.Component {
   }
 
   render() {
-
     return (
       <Modal isOpen={true} toggle={this.toggle}>
         <ModalBody>
