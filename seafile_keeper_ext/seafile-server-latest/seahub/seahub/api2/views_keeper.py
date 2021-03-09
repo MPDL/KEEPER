@@ -220,12 +220,11 @@ class BloxbergView(APIView):
 
         commit_id = get_commit_id(repo_id)
         if content_type == 'dir':
-            create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
-            logger.info(f'Set status to IN_PROGESS for repo: {repo_id}')
+            obj_id = create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
+            logger.info(f'{obj_id} IN_PROGESS')
             file_map = hash_library(repo_id, user_email)
             for dPath, dHash in file_map.items():
                 checksumArr.append(dHash)
-            logger.info(f'Hash for repo: {repo_id}')
 
             send_start_snapshot_notification(repo_id, datetime.datetime.now(), user_email)
             try:
@@ -233,49 +232,48 @@ class BloxbergView(APIView):
                 if response_bloxberg is not None and response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
-                    update_snapshot_certificate(repo_id, commit_id, path, certificates=json.dumps(certificates), transaction_id = transaction_id)
+                    logger.info(f'Transaction successful! {obj_id}')
+                    update_snapshot_certificate(obj_id, certificates=json.dumps(certificates), transaction_id = transaction_id)
                     for dPath, dHash in file_map.items():
                         created_time = datetime.datetime.now()
                         create_bloxberg_certificate(repo_id, dPath, transaction_id, 'child', os.path.basename(dPath), created_time, dHash, user_email, json.dumps(catalog_md), '', "IN_PROGRESS")
-                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, commit_id, user_email, content_type, path, language_code)
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, obj_id, user_email, content_type, path, language_code)
                     return JsonResponse(response_bloxberg.json(), safe=False)
                 else:
-                    logger.info(f'Transaction failed. repo_id: {repo_id} path:{path}')
-                    update_snapshot_certificate(repo_id, commit_id, commit_id, path, status="FAILED", error_msg="transaction failed")
+                    logger.info(f'Transaction failed. {obj_id}')
+                    update_snapshot_certificate(obj_id, path, status="FAILED", error_msg="transaction failed")
 
             except Exception as e:
                 logger.error(traceback.format_exc())
                 if transaction_id is None:
                     transaction_id = 0
-                update_snapshot_certificate(repo_id, commit_id, path, status="FAILED", error_msg = str(e), transaction_id = transaction_id)
+                update_snapshot_certificate(obj_id, status="FAILED", error_msg = str(e), transaction_id = transaction_id)
                 send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
 
         elif content_type == 'file':
-            create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
-            logger.info(f'Set status to IN_PROGESS for file: {path}')
+            obj_id = create_bloxberg_certificate(repo_id, path, 0, content_type, content_name, datetime.datetime.now(), '', user_email, json.dumps(catalog_md), {}, "IN_PROGRESS")
+            logger.info(f'{obj_id} IN_PROGESS')
             file = get_file_by_path(repo_id, path)
             checksum = hash_file(file)
             checksumArr.append(checksum)
-            logger.info(f'Hash for file. repo_id: {repo_id} path:{path}')
 
             try:
                 response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
                 if response_bloxberg is not None and response_bloxberg.status_code == 200:
+                    logger.info(f'Transaction successful! {obj_id}')
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
                     created_time = datetime.datetime.now()
-                    update_snapshot_certificate(repo_id, commit_id, path, certificates=json.dumps(certificates[0]), transaction_id=transaction_id, checksum=checksum)
-                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, commit_id, user_email, content_type, path, language_code)
+                    update_snapshot_certificate(obj_id, certificates=json.dumps(certificates[0]), transaction_id=transaction_id, checksum=checksum)
+                    generate_bloxberg_certificate_pdf(certificates, transaction_id, repo_id, obj_id, user_email, content_type, path, language_code)
                     return JsonResponse(certificates, safe=False)
                 else:
-                    logger.info(f'Transaction failed. repo_id: {repo_id} path:{path}')
+                    logger.info(f'Transaction failed. {obj_id}')
                     error_msg = response_bloxberg.text if response_bloxberg is not None else "Generate pdf request failed, response is None."
                     logger.error(error_msg)
             except Exception as e:
-                if transaction_id is None:
-                    transaction_id = 0
                 logger.error(traceback.format_exc())
-                update_snapshot_certificate(repo_id, commit_id, path, status = "FAILED", error_msg = str(e))
+                update_snapshot_certificate(obj_id, status = "FAILED", error_msg = str(e))
 
         return api_error(status.HTTP_400_BAD_REQUEST, _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'))
 
@@ -755,7 +753,7 @@ def BloxbergCertView(request, transaction_id, checksum=''):
 
     else:
         md_json = json.loads(certificate.md)
-        pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)    # todo: test path with space in it
+        pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""
         all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)

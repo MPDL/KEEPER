@@ -481,6 +481,9 @@ class BCertificateManager(models.Manager):
         b_certificate.save()
         return b_certificate.obj_id
 
+    def get_certificate_by_obj_id(self, obj_id):
+        return super(BCertificateManager, self).filter(obj_id=obj_id).first()
+
     def get_latest_snapshot_certificate(self, repo_id, commit_id, path):
         """
         Find the certificate of current snapshot (file or library, distinct by path)
