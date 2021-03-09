@@ -58,7 +58,7 @@ class SideNavFooter extends React.Component {
               <div className="left">
                 <h4>The software behind Keeper</h4>
                 <a href="https://seafile.com/en/home/" target="_blank">
-                  <img className="logo" id="seafile-logo" src="/media/custom/seafile_logo_footer.png"/>&nbsp;© 2020 Seafile
+                  <img className="logo" id="seafile-logo" src="/media/custom/seafile_logo_footer.png"/>&nbsp;© 2021 Seafile
                 </a>
               </div>
               <div className="right">
