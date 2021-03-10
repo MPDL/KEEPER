@@ -69,7 +69,6 @@ def get_next_url_from_request(request):
 def get_commit(repo_id, repo_version, commit_id):
     return seaserv.get_commit(repo_id, repo_version, commit_id)
 
-@login_required
 def project_catalog_starter(request):
     """
     Get project catalog, first call
