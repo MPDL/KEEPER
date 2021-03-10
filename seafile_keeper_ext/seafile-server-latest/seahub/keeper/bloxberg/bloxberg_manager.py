@@ -140,11 +140,11 @@ def update_snapshot_certificate(obj_id, status=None, error_msg=None, certificate
         snapshot_certificate.save()
 
 def request_create_bloxberg_certificate(certify_payload):
-    response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload, timeout=(5, 600))
+    response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload, timeout=(5, 1800))
     return response
 
 def request_generate_pdf(certificate_payload):
-    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, json=certificate_payload, stream=True, timeout=(5, 7200))
+    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, json=certificate_payload, stream=True, timeout=(5, 1800))
     return response
 
 def silentremove(filename):

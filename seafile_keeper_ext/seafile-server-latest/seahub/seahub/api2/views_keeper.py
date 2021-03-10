@@ -190,6 +190,13 @@ class CanCertify(APIView):
             elif content_type == 'file':
                 return api_error(status.HTTP_400_BAD_REQUEST, _('This version of the file has already been successfully certified.'))
         elif snapshot_cert.status == "IN_PROGRESS":
+            if snapshot_cert.created + datetime.timedelta(seconds=3600) < datetime.datetime.now():# lazy update certificate status
+                snapshot_cert.status = "FAILED"
+                snapshot_cert.error_msg = "timeout(lazy update)"
+                snapshot_cert.save()
+                return JsonResponse({
+                    'status': 'success'
+                })
             return api_error(status.HTTP_400_BAD_REQUEST, _('Certification is already in progress.'))
 
         return api_error(status.HTTP_400_BAD_REQUEST, _('The certification has failed, please try again in a few minutes. In case it keeps failing, please contact the Keeper Support.'))

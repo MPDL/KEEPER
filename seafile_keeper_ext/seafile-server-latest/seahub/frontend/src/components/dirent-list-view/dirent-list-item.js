@@ -585,7 +585,7 @@ class DirentListItem extends React.Component {
                     <li className="operation-group-item">
                       <i className="op-icon" data-tip data-for="bloxberg"><img className="small-icon" src={bergImage} onClick={this.onItemCertify} /></i>
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
-                        <span className="tooltip-bold">Certify your file via the bloxberg blockchain.</span>
+                        <span className="tooltip-bold">{gettext('Certify your file via the bloxberg blockchain.')}</span>
                       </ReactTooltip>
                     </li>
                   )}
