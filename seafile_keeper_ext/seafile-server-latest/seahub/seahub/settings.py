@@ -220,7 +220,7 @@ INSTALLED_APPS = (
     'statici18n',
     'constance',
     'constance.backends.database',
-    'post_office',
+    # 'post_office',
     'termsandconditions',
     'webpack_loader',
 
