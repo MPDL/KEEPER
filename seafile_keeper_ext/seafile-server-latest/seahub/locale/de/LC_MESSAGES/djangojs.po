@@ -5693,5 +5693,10 @@ msgstr "Transaktion erfolgreich"
 msgid "Author(s)"
 msgstr "Autor(en)"
 
+#: frontend/src/components/dirent-list-view/dir-list-item.js
 msgid "Transaction"
 msgstr "Transaktion"
+
+#: frontend/src/components/dirent-list-view/dir-list-item.js
+msgid "Certify your file via the bloxberg blockchain."
+msgstr "Zertifizieren Sie Ihre Datei über die bloxberg-Blockchain."
