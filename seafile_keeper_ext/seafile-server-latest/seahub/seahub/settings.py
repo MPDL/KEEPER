@@ -394,6 +394,9 @@ FORCE_PASSWORD_CHANGE = True
 # Enable a user to change password in 'settings' page.
 ENABLE_CHANGE_PASSWORD = True
 
+# Enable a user to get auth token in 'settings' page.
+ENABLE_GET_AUTH_TOKEN_BY_SESSION = False
+
 ENABLE_DELETE_ACCOUNT = True
 ENABLE_UPDATE_USER_INFO = True
 
@@ -469,6 +472,9 @@ CACHES = {
 
 # rest_framwork
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
     'DEFAULT_THROTTLE_RATES': {
         'ping': '3000/minute',
         'anon': '60/minute',
@@ -771,10 +777,10 @@ ADDITIONAL_ABOUT_DIALOG_LINKS = None
 ############################
 # Settings for SeafileDocs #
 ############################
-# if os.environ.get('SEAFILE_DOCS', None):
-    # LOGO_PATH = 'img/seafile-docs-logo.png'
-    # LOGO_WIDTH = ''
-    # ENABLE_WIKI = True
+if os.environ.get('SEAFILE_DOCS', None):
+    LOGO_PATH = 'img/seafile-docs-logo.png'
+    LOGO_WIDTH = ''
+    ENABLE_WIKI = True
 
 d = os.path.dirname
 EVENTS_CONFIG_FILE = os.environ.get(
@@ -917,4 +923,4 @@ if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
 #      },
 # ]
 
-SEAFILE_VERSION = "7.1.8"
+SEAFILE_VERSION = "7.1.17"

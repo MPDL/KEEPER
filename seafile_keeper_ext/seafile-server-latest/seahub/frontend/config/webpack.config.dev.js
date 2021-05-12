@@ -18,6 +18,9 @@ const fs = require('fs')
 // In development, we always serve from the root. This makes config easier.
 //const publicPath = 'http://127.0.0.1:3000/assets/bundles/';
 const publicPath = '__SERVICE_URL__:3000/assets/bundles/';
+const devHttps '__SERVICE_URL__'.startsWith('https://') ? { key: fs.readFileSync("/etc/ssl/private/__NODE_FQDN__.key"), cert: fs.readFileSync("/etc/ssl/certs/__NODE_FQDN__.crt") } : {};
+
+ 
 // `publicUrl` is just like `publicPath`, but we will provide it to our app
 // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
 // Omit trailing slash as %PUBLIC_PATH%/xyz looks better than %PUBLIC_PATH%xyz.
@@ -484,11 +487,7 @@ module.exports = {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
     },
-    https: {
-      key: fs.readFileSync("/etc/ssl/private/__NODE_FQDN__.key"),
-      cert: fs.readFileSync("/etc/ssl/certs/__NODE_FQDN__.crt")
-    }
-
+    https: devHttps, 
     // watchOptions: {
     //   aggregateTimeout: 1000,
     //   poll: 5000,

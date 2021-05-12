@@ -7,6 +7,8 @@ view_snapshot_file, view_shared_file, etc.
 
 import os
 import json
+import time
+import uuid
 import stat
 import urllib.request, urllib.error, urllib.parse
 import chardet
@@ -130,6 +132,10 @@ from seahub.bisheng_office.utils import get_bisheng_dict, \
         get_bisheng_editor_url, get_bisheng_preivew_url
 from seahub.bisheng_office.settings import ENABLE_BISHENG_OFFICE
 from seahub.bisheng_office.settings import BISHENG_OFFICE_FILE_EXTENSION
+
+from seahub.thirdparty_editor.settings import ENABLE_THIRDPARTY_EDITOR
+from seahub.thirdparty_editor.settings import THIRDPARTY_EDITOR_ACTION_URL_DICT
+from seahub.thirdparty_editor.settings import THIRDPARTY_EDITOR_ACCESS_TOKEN_EXPIRATION
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -310,7 +316,6 @@ def convert_md_link(file_content, repo_id, username):
 
             return '<img class="wiki-image" src="%s" alt="%s" />' % (gen_file_get_url(token, filename), filename)
         else:
-            from seahub.base.templatetags.seahub_tags import file_icon_filter
 
             # convert other types of filelinks to clickable links
             path = "/" + link_name
@@ -511,6 +516,39 @@ def view_lib_file(request, repo_id, path):
 
         return HttpResponseRedirect(dl_or_raw_url)
 
+    if ENABLE_THIRDPARTY_EDITOR:
+
+
+        filename = os.path.basename(path)
+        filetype, fileext = get_file_type_and_ext(filename)
+
+        action_url = THIRDPARTY_EDITOR_ACTION_URL_DICT.get(fileext, '')
+        if action_url:
+
+
+            user_repo_path_info = {
+                'request_user': request.user.username,
+                'repo_id': repo_id,
+                'file_path': path,
+                'permission': {
+                    # Only can preview file for now
+                    'can_edit': False
+                }
+            }
+
+            uid = uuid.uuid4()
+            access_token = uid.hex
+            cache.set('thirdparty_editor_access_token_' + access_token,
+                      user_repo_path_info,
+                      THIRDPARTY_EDITOR_ACCESS_TOKEN_EXPIRATION)
+
+            editor_dict = {}
+            editor_dict['action_url'] = action_url
+            editor_dict['access_token'] = access_token
+            editor_dict['access_token_ttl'] = int(time.time()) + THIRDPARTY_EDITOR_ACCESS_TOKEN_EXPIRATION
+
+            return render(request, 'view_file_thirdparty_editor.html', editor_dict)
+
     org_id = request.user.org.org_id if is_org_context(request) else -1
     # basic file info
     return_dict = {
@@ -610,13 +648,6 @@ def view_lib_file(request, repo_id, path):
     if filetype in (IMAGE, VIDEO, AUDIO, PDF, SVG, XMIND, 'Unknown'):
         template = 'common_file_view_react.html'
 
-    # KEEPER
-    # if filename =='archive-metadata.md':
-    #     template = 'edit_keeper_archive_md_react.html'
-    #     return_dict['repo_id'] = repo_id
-
-    # KEEPER
-    # if filetype == TEXT or fileext in get_conf_text_ext() or filename == 'archive-metadata.md':
     if filetype == TEXT or fileext in get_conf_text_ext():
 
         # get file size
@@ -754,8 +785,9 @@ def view_lib_file(request, repo_id, path):
             action_name = None
             # first check if can view file
             # KEEPER: view for readonly files
-            if fileext in OFFICE_WEB_APP_FILE_EXTENSION or \
-                    (fileext in OFFICE_WEB_APP_EDIT_FILE_EXTENSION and permission == 'r'):
+            # if fileext in OFFICE_WEB_APP_FILE_EXTENSION or \
+                    # (fileext in OFFICE_WEB_APP_EDIT_FILE_EXTENSION and permission == 'r'):
+            if fileext in OFFICE_WEB_APP_FILE_EXTENSION:
                 action_name = 'view'
 
             # then check if can edit file
@@ -771,15 +803,6 @@ def view_lib_file(request, repo_id, path):
                     can_download=parse_repo_perm(permission).can_download)
 
             if wopi_dict:
-                if is_pro_version() and action_name == 'edit':
-                    try:
-                        if not is_locked:
-                            seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER, 0)
-                        elif locked_by_online_office:
-                            seafile_api.refresh_file_lock(repo_id, path)
-                    except Exception as e:
-                        logger.error(e)
-
                 send_file_access_msg(request, repo, path, 'web')
                 return render(request, 'view_file_wopi.html', wopi_dict)
             else:
@@ -801,9 +824,11 @@ def view_lib_file(request, repo_id, path):
                 if is_pro_version() and can_edit:
                     try:
                         if not is_locked:
-                            seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER, 0)
+                            seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
+                                                  int(time.time()) + 40 * 60)
                         elif locked_by_online_office:
-                            seafile_api.refresh_file_lock(repo_id, path)
+                            seafile_api.refresh_file_lock(repo_id, path,
+                                                          int(time.time()) + 40 * 60)
                     except Exception as e:
                         logger.error(e)
 
@@ -1175,9 +1200,11 @@ def view_shared_file(request, fileshare):
             locked_by_online_office = if_locked_by_online_office(repo_id, path)
             try:
                 if not is_locked:
-                    seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER, 0)
+                    seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
+                                          int(time.time()) + 40 * 60)
                 elif locked_by_online_office:
-                    seafile_api.refresh_file_lock(repo_id, path)
+                    seafile_api.refresh_file_lock(repo_id, path,
+                                                  int(time.time()) + 40 * 60)
             except Exception as e:
                 logger.error(e)
 
@@ -1189,8 +1216,6 @@ def view_shared_file(request, fileshare):
                     language_code=request.LANGUAGE_CODE)
 
             if wopi_dict:
-                if is_pro_version() and can_edit:
-                    online_office_lock_or_refresh_lock(repo_id, path, username)
 
                 wopi_dict['share_link_token'] = token
 
