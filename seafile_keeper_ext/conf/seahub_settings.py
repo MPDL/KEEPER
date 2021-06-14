@@ -277,7 +277,7 @@ groovy, rst, patch, go"""
 ENABLE_THUMBNAIL = True
 
 # Seafile only generates thumbnails for images smaller than the following size.
-THUMBNAIL_IMAGE_SIZE_LIMIT = 30 # MB
+THUMBNAIL_IMAGE_SIZE_LIMIT = 50 # MB
 
 # Enable or disable thumbnail for video. ffmpeg and moviepy should be installed first.
 # For details, please refer to https://manual.seafile.com/deploy/video_thumbnails.html
@@ -443,7 +443,7 @@ SITE_ROOT = '/'
 
 # Max number of files when user upload file/folder.
 # Since version 6.0.4
-MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 500
+MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 5000
 
 # Control the language that send email. Default to user's current language.
 # Since version 6.1.1
