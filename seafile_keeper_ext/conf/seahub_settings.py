@@ -191,12 +191,12 @@ LOGIN_ATTEMPT_LIMIT = 3
 FREEZE_USER_ON_LOGIN_FAILED = False
 
 # mininum length for user's password
-USER_PASSWORD_MIN_LENGTH = 6
+USER_PASSWORD_MIN_LENGTH = 8
 
 # LEVEL based on four types of input:
 # num, upper letter, lower letter, other symbols
 # '3' means password must have at least 3 types of the above.
-USER_PASSWORD_STRENGTH_LEVEL = 3
+USER_PASSWORD_STRENGTH_LEVEL = 4
 
 # default False, only check USER_PASSWORD_MIN_LENGTH
 # when True, check password strength level, STRONG(or above) is allowed
