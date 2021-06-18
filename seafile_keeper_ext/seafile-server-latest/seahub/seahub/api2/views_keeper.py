@@ -249,6 +249,7 @@ class BloxbergView(APIView):
                 else:
                     logger.info(f'Transaction failed. {obj_id}')
                     update_snapshot_certificate(obj_id, status="FAILED", error_msg="transaction failed")
+                    send_failed_notice(repo_id, '', datetime.datetime.now(), user_email)
                     if response_bloxberg is not None:
                         logger.info(response_bloxberg.json())
 
