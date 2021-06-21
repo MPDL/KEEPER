@@ -766,12 +766,10 @@ def BloxbergCertView(request, transaction_id, checksum=''):
         pdf_url = SERVICE_URL + "/api2/bloxberg-pdf/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         metadata_url = SERVICE_URL + "/api2/bloxberg-metadata/"+ transaction_id + "/" + checksum + "/?p=" + quote_plus(certificate.path)
         history_file_url = ""
-        all_file_revisions = seafile_api.get_file_revisions(repo_id, certificate.commit_id, certificate.path, 50)
-        if all_file_revisions is not None:
-            history_file_url =  "/repo/" + repo_id + "/" + all_file_revisions[0].rev_file_id + "/download/?file_name=" + quote_plus(certificate.content_name) + "&p=" + quote_plus(certificate.path)
-        else:
-            logger.error(f'commit_id: {certificate.commit_id}')
-            logger.error(f'path: {certificate.path}')
+        obj_id = seafile_api.get_file_id_by_commit_and_path(repo_id, certificate.commit_id, certificate.path)
+        if obj_id is not None:
+            history_file_url =  "/repo/" + repo_id + "/" + obj_id + "/download/?file_name=" + quote_plus(certificate.content_name) + "&p=" + quote_plus(certificate.path)
+
         if md_json.get('authors'):
             authors = get_authors_from_catalog_md(md_json)
             return render(request, './catalog_detail/bloxberg_cert_page.html', {
