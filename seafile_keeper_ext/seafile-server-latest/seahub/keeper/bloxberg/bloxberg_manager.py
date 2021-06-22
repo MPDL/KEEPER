@@ -21,7 +21,7 @@ from seahub.settings import ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown_doi
 from django.utils.translation import ugettext as _, activate
 from lds_merkle_proof_2019.merkle_proof_2019 import MerkleProof2019
-from seahub.settings import BLOXBERG_SERVER, BLOXBERG_CERTS_STORAGE, BLOXBERG_PUBLIC_KEY
+from seahub.settings import BLOXBERG_SERVER, BLOXBERG_CERTS_STORAGE, BLOXBERG_PUBLIC_KEY, BLOXBERG_API_KEY
 from django.db import connection
 from pathlib import Path
 # Get an instance of a logger
@@ -140,11 +140,13 @@ def update_snapshot_certificate(obj_id, status=None, error_msg=None, certificate
         snapshot_certificate.save()
 
 def request_create_bloxberg_certificate(certify_payload):
-    response = requests.post(BLOXBERG_CERTIFY_URL, json=certify_payload, timeout=(5, 1800))
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
+    response = requests.post(BLOXBERG_CERTIFY_URL, headers=headers, json=certify_payload, timeout=(5, 1800))
     return response
 
 def request_generate_pdf(certificate_payload):
-    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, json=certificate_payload, stream=True, timeout=(5, 1800))
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
+    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, headers=headers, json=certificate_payload, stream=True, timeout=(5, 1800))
     return response
 
 def silentremove(filename):
