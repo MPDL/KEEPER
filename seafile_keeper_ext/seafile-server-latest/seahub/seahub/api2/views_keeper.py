@@ -235,7 +235,8 @@ class BloxbergView(APIView):
 
             send_start_snapshot_notification(repo_id, datetime.datetime.now(), user_email)
             try:
-                response_bloxberg = request_create_bloxberg_certificate(generate_certify_payload(user_email, catalog_md, checksumArr))
+                request_body = generate_certify_payload(user_email, catalog_md, checksumArr)
+                response_bloxberg = request_create_bloxberg_certificate(request_body)
                 if response_bloxberg is not None and response_bloxberg.status_code == 200:
                     certificates = response_bloxberg.json()
                     transaction_id = decode_metadata(certificates)
@@ -251,7 +252,9 @@ class BloxbergView(APIView):
                     update_snapshot_certificate(obj_id, status="FAILED", error_msg="transaction failed")
                     send_failed_notice(repo_id, '', datetime.datetime.now(), user_email)
                     if response_bloxberg is not None:
-                        logger.info(response_bloxberg.json())
+                        logger.info(f'code: {response_bloxberg.status_code}')
+                        logger.info(f'text: {response_bloxberg.text}')
+                        logger.info(f'request: {json.dumps(request_body)}')
 
             except Exception as e:
                 logger.error(traceback.format_exc())

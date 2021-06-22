@@ -254,7 +254,6 @@ class NoticeItem extends React.Component {
           ' <a target="_blank" href="' + landing_page_link +'">' + detail.repo_name + '</a>.';
           notice = notice.replace('{detail.author_name}', detail.author_name).replace('{detail.repo_name}', detail.repo_name)
         } else {
-          let file_link = `${siteRoot}lib/${encodeURIComponent(detail.repo_id)}/file/${encodeURIComponent(detail.link_to_file)}`
           let landing_page_link = `${siteRoot}landing-page/libs/${encodeURIComponent(detail.repo_id)}/`
           notice = gettext('This notice verifies that {detail.author_name} certified the file within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at') +
           ' <a target="_blank" href="' + landing_page_link +'">' + detail.repo_name + '</a>.';

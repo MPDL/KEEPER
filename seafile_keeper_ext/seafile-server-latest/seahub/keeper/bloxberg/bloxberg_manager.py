@@ -84,6 +84,7 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, ob
     try:
         response_generate_certificate = request_generate_pdf(metadata_json)
         if response_generate_certificate is not None and response_generate_certificate.status_code == 200:
+            logger.info(f'Gererate PDF successful with response {obj_id}')
             Path(cert_path).mkdir(parents=True, exist_ok=True)
             zipname = repo_id + '_' + transaction_id + '.zip'
             with open(cert_path + '/' + zipname, 'wb') as f:
@@ -98,14 +99,16 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, ob
             scan_certificates(cert_path)
             if content_type == 'dir':
                 update_snapshot_certificate(obj_id, status="DONE", transaction_id=transaction_id)
-            send_final_notification(repo_id, cert_path, transaction_id, datetime.datetime.now(), user_email, content_type)
+            send_final_notification(repo_id, path, transaction_id, datetime.datetime.now(), user_email, content_type)
             connection.close()
             logger.info(f'Thread ends, close db connection. {obj_id}')
         else:
+            logger.info(f'Gererate PDF failed with response {obj_id}')
             error_msg = response_generate_certificate.text if response_generate_certificate is not None else "Generate pdf request failed, response is None."
-            logger.info(str(response_generate_certificate))
-            logger.error(error_msg)
             update_snapshot_certificate(obj_id, status="FAILED", error_msg=error_msg, transaction_id=transaction_id)
+            logger.info(f'code: {response_generate_certificate.status_code} {obj_id}')
+            logger.info(f'text: {response_generate_certificate.text} {obj_id}')
+            logger.error(error_msg)
 
             if content_type == 'dir':
                 send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
@@ -116,7 +119,7 @@ def generate_bloxberg_certificate_pdf(metadata_json, transaction_id, repo_id, ob
     except Exception as e:
         import traceback
         logger.error(traceback.format_exc())
-        logger.error(f'obj_id: {obj_id}')
+        logger.info(f'Gererate PDF failed with exception {obj_id}')
         update_snapshot_certificate(obj_id, status='FAILED', error_msg=str(e), transaction_id=transaction_id)
         send_failed_notice(repo_id, transaction_id, datetime.datetime.now(), user_email)
         BCertificate.objects.get_children_bloxberg_certificates(transaction_id, repo_id).delete()
@@ -171,6 +174,10 @@ def scan_certificates(directory):
                 fHash = metadata_json['crid']
                 transaction_id = decode_metadata(metadata_json)
                 certificate = BCertificate.objects.get_semi_bloxberg_certificate(transaction_id, fHash)
+                if certificate is None:
+                    logger.error('no file matches the certificate, continue to throw the exception')
+                    logger.error(f'transaction_id: {transaction_id}')
+                    logger.error(f'crid: {fHash}')
                 certificate.pdf = pdfName
                 certificate.md_json = fData
                 certificate.status = "DONE"
