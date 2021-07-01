@@ -1,13 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { navigate } from '@reach/router';
-import { Utils } from './utils/utils';
 import { gettext, siteRoot, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle } from './utils/constants';
-import Loading from './components/loading';
-import Paginator from './components/paginator';
-import CommonToolbar from './components/toolbar/common-toolbar';
-import NoticeItem from './components/common/notice-item';
-import PDFViewer from './components/pdf-viewer';
 import ExpandText from './components/expand-text';
 import ShowMore from 'react-show-more';
 

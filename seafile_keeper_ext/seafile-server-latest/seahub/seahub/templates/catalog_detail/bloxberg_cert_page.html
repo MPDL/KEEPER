@@ -7,6 +7,7 @@
 {% block extra_style %}
 <link rel="resource" type="application/l10n" href="{{ MEDIA_URL }}js/pdf/locale/locale.properties" />
 {% render_bundle 'historyTrashFileView' 'css' %}
+{% render_bundle 'bloxbergCertificate' 'css' %}
 {% endblock %}
 
 {% block extra_script %}
@@ -36,8 +37,6 @@ window.bloxbergCertificate = {
   var sf_pdf_cmaps_path = '{{MEDIA_URL}}js/pdf/cmaps/';
   var metadata_url = '{{ metadata_url|escapejs }}'
   var pdf_url = '{{ pdf_url|escapejs }}'
-  console.log("pdf_url: " + sf_file_url)
-  console.log("metadata_url: " + metadata_url)
 </script>
 <script type="text/javascript" src="{{MEDIA_URL}}js/pdf/pdf.min.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}js/pdf/viewer.js"></script>
