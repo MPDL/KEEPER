@@ -104,6 +104,14 @@ LOGGING = {
             'backupCount': 52,
             'formatter': 'standard'
         },
+        'onlyoffice_handler': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'onlyoffice.log'),
+            'maxBytes': 1024*1024*100,  # 100 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
         # 'syslog-django_request': {
             # 'level': 'INFO',
             # 'class': 'logging.handlers.SysLogHandler',
@@ -136,6 +144,11 @@ LOGGING = {
             'handlers': ['post_office'],
             'level': 'DEBUG',
             'propagate': True
+        },
+        'onlyoffice': {
+            'handlers': ['onlyoffice_handler', ],
+            'level': 'INFO',
+            'propagate': False
         },
     }
 }
