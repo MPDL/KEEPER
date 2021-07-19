@@ -5617,6 +5617,47 @@ msgstr "Bitte geben Sie den Ressourcentyp ein. Erlaubte Werte für dieses Feld: 
 msgid "Please enter the license"
 msgstr "Bitte geben Sie die Lizenz ein"
 
+msgid "The KEEPER Project Catalog of the Max Planck Society"
+msgstr " Der KEEPER Projektkatalog für die Max Planck Gesellschaft"
+
+msgid "Search..."
+msgstr "Suchen..."
+
+msgid "Show Projects"
+msgstr "Projekte Filtern"
+
+msgid "Director" 
+msgstr "Direktor"
+
+msgid "Landing Page"
+msgstr "Details"
+
+msgid "Select Author(s)"
+msgstr "Autor(en) auswählen"
+
+msgid "Select Year(s)"
+msgstr "Jahr(e) auswählen"
+
+msgid "Select Institute(s)"
+msgstr "Institut(e) auswählen"
+
+msgid "Select Director(s)"
+msgstr "Direktor(en) auswählen"
+
+msgid "Ascending"
+msgstr "Aufsteigend"
+
+msgid "Descending"
+msgstr "Absteigend"
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Apply"
+"Anwenden"
+
+
+
 #: frontend/src/components/dialog/certify-library-dialog.js
 msgid "Certify {library_name}"
 msgstr "{library_name} zertifizieren"
