@@ -5618,10 +5618,7 @@ msgid "Please enter the license"
 msgstr "Bitte geben Sie die Lizenz ein"
 
 msgid "The KEEPER Project Catalog of the Max Planck Society"
-msgstr " Der KEEPER Projektkatalog für die Max Planck Gesellschaft"
-
-msgid "Search..."
-msgstr "Suchen..."
+msgstr "Der KEEPER Projektkatalog für die Max Planck Gesellschaft"
 
 msgid "Show Projects"
 msgstr "Projekte Filtern"
@@ -5654,9 +5651,7 @@ msgid "Search"
 msgstr "Suchen"
 
 msgid "Apply"
-"Anwenden"
-
-
+msgstr "Anwenden"
 
 #: frontend/src/components/dialog/certify-library-dialog.js
 msgid "Certify {library_name}"
