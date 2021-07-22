@@ -230,7 +230,7 @@ SESSION_SAVE_EVERY_REQUEST = False
 
 # Whether enable personal wiki and group wiki. Default is `False`
 # Since 6.1.0 CE
-ENABLE_WIKI = True
+ENABLE_WIKI = False
 
 ##########################################################################
 #### Repo snapshot label feature
