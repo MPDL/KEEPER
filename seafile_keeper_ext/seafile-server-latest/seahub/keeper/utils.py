@@ -14,7 +14,7 @@ from seahub.profile.models import Profile
 
 from thirdpart.seafobj import fs_mgr, commit_mgr
 from seaserv import seafile_api, get_repo
-from seahub.settings import KEEPER_MPG_DOMAINS_URL, KEEPER_MPG_IP_LIST_URL, ARCHIVE_METADATA_TARGET, SERVER_EMAIL, DEBUG
+from seahub.settings import KEEPER_MPG_DOMAINS_URL, KEEPER_MPG_IP_LIST_URL, ARCHIVE_METADATA_TARGET, SERVER_EMAIL, EXTENDED_WHITE_LIST_DOMAINS, DEBUG
 
 from keeper.common import parse_markdown, get_repo_root_dir
 
@@ -258,6 +258,7 @@ TS_FORMAT = "%a %b %d %H:%M:%S %Y"
 # time to live of the mpg IP set: day
 IP_SET_TTL = 60 * 60 * 24
 
+EXTENDED_WHITE_LIST_DOMAIN_LIST = EXTENDED_WHITE_LIST_DOMAINS.split(',')
 
 def has_to_be_updated(domains_dict):
     """
@@ -330,6 +331,9 @@ def get_domain_list():
                 KEEPER_DOMAINS_LAST_FETCHED_KEY,
                 str(datetime.utcnow()),
                 KEEPER_DOMAINS_TTL)
+
+    # extend domains with keeper domains whitelist
+    domains.extend(EXTENDED_WHITE_LIST_DOMAIN_LIST)
 
     return domains
 
