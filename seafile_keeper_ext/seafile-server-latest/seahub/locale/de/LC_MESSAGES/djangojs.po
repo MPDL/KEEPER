@@ -5617,6 +5617,42 @@ msgstr "Bitte geben Sie den Ressourcentyp ein. Erlaubte Werte für dieses Feld: 
 msgid "Please enter the license"
 msgstr "Bitte geben Sie die Lizenz ein"
 
+msgid "The KEEPER Project Catalog of the Max Planck Society"
+msgstr "Der KEEPER Projektkatalog für die Max Planck Gesellschaft"
+
+msgid "Show Projects"
+msgstr "Projekte Filtern"
+
+msgid "Director" 
+msgstr "Direktor"
+
+msgid "Landing Page"
+msgstr "Details"
+
+msgid "Select Author(s)"
+msgstr "Autor(en) auswählen"
+
+msgid "Select Year(s)"
+msgstr "Jahr(e) auswählen"
+
+msgid "Select Institute(s)"
+msgstr "Institut(e) auswählen"
+
+msgid "Select Director(s)"
+msgstr "Direktor(en) auswählen"
+
+msgid "Ascending"
+msgstr "Aufsteigend"
+
+msgid "Descending"
+msgstr "Absteigend"
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Apply"
+msgstr "Anwenden"
+
 #: frontend/src/components/dialog/certify-library-dialog.js
 msgid "Certify {library_name}"
 msgstr "{library_name} zertifizieren"
@@ -5667,7 +5703,7 @@ msgstr "Link zum Zertifikat"
 
 #: frontend/src/bloxberg-repo-snapshot.js
 msgid "Download Certificate"
-msgstr "Download Zertifikat"
+msgstr "Zertifikat herunterladen"
 
 #: frontend/src/bloxberg-repo-snapshot.js
 msgid "Download File"
@@ -5678,8 +5714,10 @@ msgid "This notice verifies that {detail.author_name} certified the files within
 msgstr "Dieser Hinweis verifiziert, dass {detail.author_name} die Dateien innerhalb der Bibliothek {detail.repo_name} über die bloxberg-Blockchain zertifiziert hat. Zusätzliche Informationen wie die Dateien und die dazugehörigen Zertifikate finden Sie unter"
 
 #: frontend/src/components/common/notice-item.js
-msgid "This notice verifies that {detail.author_name} certified the file within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at"
-msgstr "Dieser Hinweis verifiziert, dass {detail.author_name} die Datei innerhalb der Bibliothek {detail.repo_name} über die bloxberg-Blockchain zertifiziert hat. Zusätzliche Informationen wie die Datei und das entsprechende Zertifikat finden Sie unter"
+msgid "This notice verifies that {detail.author_name} certified the file"
+msgstr "Dieser Hinweis verifiziert, dass {detail.author_name} die Datei"
+msgid "within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at"
+msgstr "innerhalb der Bibliothek {detail.repo_name} über die bloxberg-Blockchain zertifiziert hat. Zusätzliche Informationen wie die Datei und das entsprechende Zertifikat finden Sie unter"
 
 #: frontend/src/components/dirent-list-view/dir-list-item.js
 msgid "Certify the file through bloxberg..."
@@ -5688,3 +5726,15 @@ msgstr "Zertifizieren Sie die Datei durch bloxberg..."
 #: frontend/src/components/dirent-list-view/dir-list-item.js
 msgid "Transaction succeeded"
 msgstr "Transaktion erfolgreich"
+
+#: frontend/src/bloxberg-certificate.js
+msgid "Author(s)"
+msgstr "Autor(en)"
+
+#: frontend/src/components/dirent-list-view/dir-list-item.js
+msgid "Transaction"
+msgstr "Transaktion"
+
+#: frontend/src/components/dirent-list-view/dir-list-item.js
+msgid "Certify your file via the bloxberg blockchain."
+msgstr "Zertifizieren Sie Ihre Datei über die bloxberg-Blockchain."

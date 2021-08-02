@@ -84,8 +84,10 @@ case $1 in
 			if [ $MARIADB -eq 1 ]; then
 	                        sed -i s/"PermissionsStartOnly=true"/"PermissionsStartOnly=true\n\n\nExecStartPre=\/bin\/bash -c 'while [ ! -d \/keeper\/mysql\/logs ]; do sleep 1; done'\n"/ /lib/systemd/system/mariadb.service
 	                        systemctl daemon-reload
-	                        systemctl start mariadb
-	                        systemctl start keeper
+				if [ $KERNEL -eq 0 ]; then
+		                        systemctl start mariadb
+		                        systemctl start keeper
+				fi
 	                fi
 		fi
 

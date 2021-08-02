@@ -173,8 +173,10 @@ class DirentListItem extends React.Component {
 
   onItemClick = (e) => {
     e.preventDefault();
-
     const dirent = this.props.dirent;
+    if (this.state.isRenameing) {
+      return;
+    }
     if (Utils.imageCheck(dirent.name)) {
       this.props.showImagePopup(dirent);
     } else {
@@ -189,12 +191,20 @@ class DirentListItem extends React.Component {
 
   onItemCertify = (e) => {
     e.nativeEvent.stopImmediatePropagation();
-
-    let dirent = this.props.dirent;
-    let repoID = this.props.repoID;
+    const {dirent, repoID} = this.props;
     let filePath = this.getDirentPath(dirent);
+    keeperAPI.canCertify(repoID, dirent.type, filePath).then(() => {
+        this.certifyFile()
+    }).catch(error => {
+        let errMessage = Utils.getErrorMsg(error);
+        toaster.danger(errMessage);
+    })
+  }
 
-    toaster.success(gettext('Certify the file through bloxberg...'), {duration: 4});
+  certifyFile = () => {
+    const {dirent, repoID} = this.props;
+    let filePath = this.getDirentPath(dirent);
+    toaster.success(gettext('Certify the file through bloxberg...'), {duration: 3});
     keeperAPI.certifyOnBloxberg(repoID, filePath, dirent.type, dirent.name).then(() => {
       toaster.success(gettext('Transaction succeeded'));
     }).catch(error => {
@@ -577,7 +587,7 @@ class DirentListItem extends React.Component {
                     <li className="operation-group-item">
                       <i className="op-icon" data-tip data-for="bloxberg"><img className="small-icon" src={bergImage} onClick={this.onItemCertify} /></i>
                       <ReactTooltip className='hover-keep' id="bloxberg" delayHide={1000} effect="solid">
-                        <span className="tooltip-bold">Certify your file via the bloxberg blockchain.</span>
+                        <span className="tooltip-bold">{gettext('Certify your file via the bloxberg blockchain.')}</span>
                       </ReactTooltip>
                     </li>
                   )}
@@ -690,19 +700,19 @@ class DirentListItem extends React.Component {
     ); 
     const mobileItem = (
       <tr>
-        <td>
+        <td onClick={this.onItemClick}>
           <div className="dir-icon">
             {dirent.encoded_thumbnail_src ?
-              <img src={`${siteRoot}${dirent.encoded_thumbnail_src}`} className="thumbnail cursor-pointer" onClick={this.onItemClick} alt="" /> :
+              <img src={`${siteRoot}${dirent.encoded_thumbnail_src}`} className="thumbnail cursor-pointer" alt="" /> :
               <img src={iconUrl} width="24" alt="" />
             }
             {dirent.is_locked && <img className="locked" src={mediaUrl + 'img/file-locked-32.png'} alt={gettext('locked')} title={lockedInfo}/>}
           </div>
         </td>
-        <td>
+        <td onClick={this.onItemClick}>
           {this.state.isRenameing ?
             <Rename hasSuffix={dirent.type !== 'dir'} name={dirent.name} onRenameConfirm={this.onRenameConfirm} onRenameCancel={this.onRenameCancel} /> :
-            <a href={dirent.type === 'dir' ? dirHref : fileHref} onClick={this.onItemClick}>{dirent.name}</a>
+            <a href={dirent.type === 'dir' ? dirHref : fileHref}>{dirent.name}</a>
           }
           <br />
           {dirent.size && <span className="item-meta-info">{dirent.size}</span>}

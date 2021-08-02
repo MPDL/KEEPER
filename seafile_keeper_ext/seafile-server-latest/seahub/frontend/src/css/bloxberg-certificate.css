@@ -52,7 +52,7 @@ body {
 .file-view-content {
 	padding: 30px 0;
 	border-right: 4px solid transparent;
-	width: 400px;
+	background: #ffffff;
 }
 
 .file-view-content-full {

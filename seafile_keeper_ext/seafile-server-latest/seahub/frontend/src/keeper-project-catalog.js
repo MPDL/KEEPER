@@ -532,7 +532,7 @@ class Footer extends React.Component {
                 <h4>Be informed</h4>
                 <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" target="_blank">About Keeper</a><br/>
                 <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">Cared Data Commitment</a><br/>
-                <a href="/catalog" target="_blank">Project Catalog</a><br/>
+                <a href="/project-catalog" target="_blank">Project Catalog</a><br/>
               </div>
               <div className="col-md-3">
                 <h4>Get the desktop sync client</h4>
@@ -559,7 +559,7 @@ class Footer extends React.Component {
                   <a href="https://www.seafile.com/en/home/" target="_blank">The software behind Keeper <img
                     id="seafile-logo"
                     src="/media/custom/seafile_logo_footer.png"
-                    height="35"/>© 2020 Seafile</a>
+                    height="35"/>© 2021 Seafile</a>
                 </div>
               </div>
             </div>

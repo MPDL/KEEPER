@@ -481,8 +481,14 @@ class BCertificateManager(models.Manager):
         b_certificate.save()
         return b_certificate.obj_id
 
-    def get_latest_snapshot_certificate(self, repo_id, commit_id):
-        return super(BCertificateManager, self).filter(repo_id=repo_id, path= '/', commit_id=commit_id).order_by('-created').first()
+    def get_certificate_by_obj_id(self, obj_id):
+        return super(BCertificateManager, self).filter(obj_id=obj_id).first()
+
+    def get_latest_snapshot_certificate(self, repo_id, commit_id, path):
+        """
+        Find the certificate of current snapshot (file or library, distinct by path)
+        """
+        return super(BCertificateManager, self).exclude(content_type='child').filter(repo_id=repo_id, commit_id=commit_id, path= path).order_by('-created').first()
 
     def get_finished_bloxberg_certificates(self, owner, repo_id):
         return super(BCertificateManager, self).exclude(content_type='child').filter(owner=owner, repo_id=repo_id, status="DONE").order_by('-created')

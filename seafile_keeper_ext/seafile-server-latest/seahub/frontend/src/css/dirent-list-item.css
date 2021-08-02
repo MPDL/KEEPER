@@ -40,12 +40,12 @@
 }
 
 .hover-keep {
-  width: 330px;
   height: 32px;
   pointer-events: auto !important;
+  display: inline-block;
   &:hover {
-  visibility: visible !important;
-  opacity: 1 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
@@ -58,26 +58,27 @@
 }
 
 .tooltip-title {
-  color:#b02318; 
-  font-weight:bold;
-  display:block;
+  color: #b02318;
+  font-weight: bold;
+  display: block;
   font-size: 12px;
   margin-bottom: 3px;
 }
 
 .tooltip-bold {
-  color:black;
-  font-weight:bold;
+  color: black;
+  font-weight: bold;
   font-size: 12px;
 }
 
 .tooltip-nomal {
-  color:black;
-  font-weight:normal;
+  color: black;
+  font-weight: normal;
   font-size: 12px;
 }
 
 .tooltip-nomal a {
-  font-weight:bold;
+  font-weight: bold;
   font-size: 12px;
 }
+

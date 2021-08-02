@@ -96,6 +96,22 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
+        'post_office': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'post_office.log'),
+            'maxBytes': 1024*1024*10, # 10 MB
+            'backupCount': 52,
+            'formatter': 'standard'
+        },
+        'onlyoffice_handler': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'onlyoffice.log'),
+            'maxBytes': 1024*1024*100,  # 100 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
         # 'syslog-django_request': {
             # 'level': 'INFO',
             # 'class': 'logging.handlers.SysLogHandler',
@@ -121,6 +137,16 @@ LOGGING = {
         'django.request': {
             # 'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
             'handlers': ['request_handler', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'post_office': {
+            'handlers': ['post_office'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'onlyoffice': {
+            'handlers': ['onlyoffice_handler', ],
             'level': 'INFO',
             'propagate': False
         },
@@ -178,12 +204,12 @@ LOGIN_ATTEMPT_LIMIT = 3
 FREEZE_USER_ON_LOGIN_FAILED = False
 
 # mininum length for user's password
-USER_PASSWORD_MIN_LENGTH = 6
+USER_PASSWORD_MIN_LENGTH = 8
 
 # LEVEL based on four types of input:
 # num, upper letter, lower letter, other symbols
 # '3' means password must have at least 3 types of the above.
-USER_PASSWORD_STRENGTH_LEVEL = 3
+USER_PASSWORD_STRENGTH_LEVEL = 4
 
 # default False, only check USER_PASSWORD_MIN_LENGTH
 # when True, check password strength level, STRONG(or above) is allowed
@@ -204,7 +230,7 @@ SESSION_SAVE_EVERY_REQUEST = False
 
 # Whether enable personal wiki and group wiki. Default is `False`
 # Since 6.1.0 CE
-ENABLE_WIKI = True
+ENABLE_WIKI = False
 
 ##########################################################################
 #### Repo snapshot label feature
@@ -264,7 +290,7 @@ groovy, rst, patch, go"""
 ENABLE_THUMBNAIL = True
 
 # Seafile only generates thumbnails for images smaller than the following size.
-THUMBNAIL_IMAGE_SIZE_LIMIT = 30 # MB
+THUMBNAIL_IMAGE_SIZE_LIMIT = 50 # MB
 
 # Enable or disable thumbnail for video. ffmpeg and moviepy should be installed first.
 # For details, please refer to https://manual.seafile.com/deploy/video_thumbnails.html
@@ -387,6 +413,17 @@ ENABLED_ROLE_PERMISSIONS = {
     },
 }
 
+ENABLED_ADMIN_ROLE_PERMISSIONS = {
+    'users_and_logs_manager': {
+        'can_view_system_info': True,
+        'can_view_statistic': True,
+        'can_manage_user': True,
+        'can_view_user_log': True,
+        'can_view_admin_log': True,
+        'other_permission': True,
+    },
+}
+
 ##########################################################################
 #### Other
 
@@ -419,7 +456,7 @@ SITE_ROOT = '/'
 
 # Max number of files when user upload file/folder.
 # Since version 6.0.4
-MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 500
+MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 5000
 
 # Control the language that send email. Default to user's current language.
 # Since version 6.1.1
@@ -560,6 +597,17 @@ OFFICE_WEB_APP_EDIT_FILE_EXTENSION = ( 'xlsx','xlsb', 'pptx', 'docx' )
 
 ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 
+# Enable Onlyoffice
+ENABLE_ONLYOFFICE = __ENABLE_ONLYOFFICE__
+VERIFY_ONLYOFFICE_CERTIFICATE = True
+
+# OnlyIffice settings
+ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
+ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
+ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
+ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
+
+
 ##########################################################################
 ####  KEEPER specific settings
 
@@ -592,11 +640,14 @@ KEEPER_ARCHIVING_NODE = KEEPER_ARCHIVING_ROOT == 'http://__NODE_FQDN__'
 # KEEPER external resources
 KEEPER_MPG_DOMAINS_URL = '__KEEPER_MPG_DOMAINS_URL__'
 KEEPER_MPG_IP_LIST_URL = '__KEEPER_MPG_IP_LIST_URL__'
+EXTENDED_WHITE_LIST_DOMAINS = '__EXTENDED_WHITE_LIST_DOMAINS__'
 
 # Keeper bloxberg integration
 BLOXBERG_SERVER = '__BLOXBERG_SERVER__'
 BLOXBERG_CERTS_STORAGE = '__BLOXBERG_CERTS_STORAGE__'
 BLOXBERG_CERTS_LIMIT = '__BLOXBERG_CERTS_LIMIT__'
+BLOXBERG_PUBLIC_KEY = '__BLOXBERG_PUBLIC_KEY__'
+BLOXBERG_API_KEY = '__BLOXBERG_API_KEY__'
 
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'

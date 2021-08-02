@@ -54,10 +54,12 @@ class KeeperAPI {
       });
   }
 
-  canCertify(repoID) {
+  canCertify(repoID, type, path) {
     const url = this.server + '/api2/can-certify/';
     const params = {
       repo_id: repoID,
+      type: type,
+      path: path
     };
     return this.req.post(url, params);
   }
