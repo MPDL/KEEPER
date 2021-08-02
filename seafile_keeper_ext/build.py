@@ -723,7 +723,7 @@ def deploy_ext():
 
     Utils.set_perms(dirs=(
         env_mgr.ccnet_dir,
-        env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+        # env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
         env_mgr.central_config_dir,
         env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
         env_mgr.pro_data_dir,
