@@ -283,6 +283,7 @@ class BloxbergView(APIView):
                 else:
                     logger.info(f'Transaction failed. {obj_id}')
                     error_msg = response_bloxberg.text if response_bloxberg is not None else "Generate pdf request failed, response is None."
+                    update_snapshot_certificate(obj_id, status="FAILED", error_msg=error_msg)
                     logger.error(error_msg)
             except Exception as e:
                 logger.error(traceback.format_exc())
