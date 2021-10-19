@@ -283,6 +283,7 @@ class BloxbergView(APIView):
                 else:
                     logger.info(f'Transaction failed. {obj_id}')
                     error_msg = response_bloxberg.text if response_bloxberg is not None else "Generate pdf request failed, response is None."
+                    update_snapshot_certificate(obj_id, status="FAILED", error_msg=error_msg)
                     logger.error(error_msg)
             except Exception as e:
                 logger.error(traceback.format_exc())
@@ -295,8 +296,8 @@ def request_doxi(shared_link, doxi_payload):
         # credentials for https://test.doi.mpdl.mpg.de/
         user=DOI_USER
         pwd=DOI_PASSWORD
-        headers = {'Content-Type': 'text/xml'}
-        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload, timeout=DOI_TIMEOUT)
+        headers = {'Content-Type': 'text/xml', 'charset': 'utf-8'}
+        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload.encode('utf-8'), timeout=DOI_TIMEOUT)
         return response
     except Timeout:
         return JsonResponse({
