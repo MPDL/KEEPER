@@ -988,7 +988,7 @@ def main():
     parser_upgrade.add_argument('--seafile-src-to-ext', help='''Upgrade KEEPER ext files to current Seafile sources.
                                 Upgrade should be done BEFORE deploy-all command, on fresh untarred seafile-server files.
                                 Upgraded files should be merged with the current KEEPER code!
-                                Check https://keeper.mpdl.mpg.de/lib/a0b4567a-8f72-4680-8a76-6100b6ebbc3e/file/Keeper%%20System%%20Administration/Upgrade2Current-Seafie.md
+                                Check https://keeper.mpdl.mpg.de/smart-link/bbc95ef0-c09c-48bd-851b-a5a4a4029058/
                                 ''', action='store_true')
     parser_upgrade.add_argument('--frontend-build', help='''Copied generated frontend/build files into KEEPER ext.
                                 HowTo generate the build: https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/. 
