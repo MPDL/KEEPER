@@ -55,16 +55,17 @@ class LibContentToolbar extends React.Component {
 
   render() {
 
-    if (!this.props.userPerm) {
-      return <div className="cur-view-toolbar"></div>
-    }
+    //KEEPER
+    //if (!this.props.userPerm) {
+    //  return <div className="cur-view-toolbar"></div>
+    //}
 
     if (this.props.isViewFile) {
       return (
         <Fragment>
           <div className="cur-view-toolbar">
             <span className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle" title={gettext('Side Nav Menu')} onClick={this.props.onSideNavMenuClick}></span>
-            <ViewFileToolbar 
+            <ViewFileToolbar
               path={this.props.path}
               repoID={this.props.repoID}
               userPerm={this.props.userPerm}
@@ -82,7 +83,7 @@ class LibContentToolbar extends React.Component {
             />
             <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode}/>
           </div>
-          <CommonToolbar repoID={this.props.repoID} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
+          <CommonToolbar isLibView={true} repoID={this.props.repoID} repoName={this.props.repoName} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
         </Fragment>
       );
     }
@@ -93,7 +94,7 @@ class LibContentToolbar extends React.Component {
           <span className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle" title={gettext('Side Nav Menu')} onClick={this.props.onSideNavMenuClick}></span>
           {this.props.isDirentSelected ?
             <MultipleDirOperationToolbar
-              repoID={this.props.repoID} 
+              repoID={this.props.repoID}
               path={this.props.path}
               userPerm={this.props.userPerm}
               repoEncrypted={this.props.repoEncrypted}
@@ -116,7 +117,7 @@ class LibContentToolbar extends React.Component {
               currentMode={this.props.currentMode}
               switchViewMode={this.props.switchViewMode}
             /> :
-            <DirOperationToolBar 
+            <DirOperationToolBar
               path={this.props.path}
               repoID={this.props.repoID}
               repoName={this.props.repoName}
@@ -136,7 +137,7 @@ class LibContentToolbar extends React.Component {
             />
           }
         </div>
-        <CommonToolbar repoID={this.props.repoID} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
+        <CommonToolbar isLibView={true} repoID={this.props.repoID} repoName={this.props.repoName} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
       </Fragment>
     );
   }

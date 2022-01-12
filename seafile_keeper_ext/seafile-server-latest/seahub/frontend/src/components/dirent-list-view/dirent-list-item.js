@@ -351,7 +351,7 @@ class DirentListItem extends React.Component {
     let url = URLDecorator.getUrl({type: 'file_revisions', repoID: repoID, filePath: filePath});
     location.href = url;
   }
-  
+
   onAccessLog = () => {
     let filePath = this.getDirentPath(this.props.dirent);
     let path = siteRoot + 'repo/file-access/' + this.props.repoID + '/?p=' + encodeURIComponent(filePath) ;
@@ -439,7 +439,7 @@ class DirentListItem extends React.Component {
       this.setState({isDropTipshow: true});
     }
   }
-  
+
   onItemDragOver = (e) => {
     if (Utils.isIEBrower()) {
       return false;
@@ -487,7 +487,7 @@ class DirentListItem extends React.Component {
       if (direntPaths.some(direntPath => { return direntPath === selectedPath;})) { //eg; A/B, A/C --> A/B
         return;
       }
-      
+
       this.props.onItemsMove(this.props.currentRepoInfo, selectedPath);
       return ;
     }
@@ -529,7 +529,7 @@ class DirentListItem extends React.Component {
 
     return (
       <Fragment>
-        {selectedDirentList.length > 1 ? 
+        {selectedDirentList.length > 1 ?
           <Fragment>
             {this.state.isOperationShow && !dirent.isSelected &&
               <div className="operations">
@@ -563,9 +563,9 @@ class DirentListItem extends React.Component {
                 </ul>
               </div>
             }
-          </Fragment> : 
+          </Fragment> :
           <Fragment>
-            {this.state.isOperationShow && 
+            {this.state.isOperationShow &&
               <div className="operations">
                 <ul className="operation-group">
                   {(dirent.permission === 'rw' || dirent.permission === 'r') && (
@@ -638,17 +638,17 @@ class DirentListItem extends React.Component {
 
     const isDesktop = Utils.isDesktop();
     const desktopItem = (
-      <tr 
-        className={trClass} 
+      <tr
+        className={trClass}
         draggable="true"
-        onMouseEnter={this.onMouseEnter} 
-        onMouseOver={this.onMouseOver} 
-        onMouseLeave={this.onMouseLeave} 
-        onClick={this.onDirentClick} 
-        onDragStart={this.onItemDragStart} 
-        onDragEnter={this.onItemDragEnter} 
-        onDragOver={this.onItemDragOver} 
-        onDragLeave={this.onItemDragLeave} 
+        onMouseEnter={this.onMouseEnter}
+        onMouseOver={this.onMouseOver}
+        onMouseLeave={this.onMouseLeave}
+        onClick={this.onDirentClick}
+        onDragStart={this.onItemDragStart}
+        onDragEnter={this.onItemDragEnter}
+        onDragOver={this.onItemDragOver}
+        onDragLeave={this.onItemDragLeave}
         onDrop={this.onItemDragDrop}
         onMouseDown={this.onItemMouseDown}
         onContextMenu={this.onItemContextMenu}
@@ -691,13 +691,13 @@ class DirentListItem extends React.Component {
                 {tagTitle}
               </UncontrolledTooltip>
             </Fragment>
-          )} 
+          )}
         </td>
         <td className="operation">{this.renderItemOperation()}</td>
         <td className="file-size">{dirent.size && dirent.size}</td>
         <td className="last-update">{dirent.mtime_relative}</td>
       </tr>
-    ); 
+    );
     const mobileItem = (
       <tr>
         <td onClick={this.onItemClick}>
@@ -744,11 +744,11 @@ class DirentListItem extends React.Component {
           </Dropdown>
         </td>
       </tr>
-    ); 
+    );
 
     return (
       <Fragment>
-        {isDesktop ? desktopItem : mobileItem} 
+        {isDesktop ? desktopItem : mobileItem}
         {this.state.isMoveDialogShow &&
           <ModalPortal>
             <MoveDirentDialog
@@ -796,7 +796,7 @@ class DirentListItem extends React.Component {
         }
         {this.state.isShareDialogShow &&
           <ModalPortal>
-            <ShareDialog 
+            <ShareDialog
               itemType={dirent.type}
               itemName={dirent.name}
               itemPath={direntPath}
@@ -811,7 +811,7 @@ class DirentListItem extends React.Component {
         }
         {this.state.isPermissionDialogOpen &&
           <ModalPortal>
-            <LibSubFolderPermissionDialog 
+            <LibSubFolderPermissionDialog
               toggleDialog={this.onPermissionItem}
               repoID={this.props.repoID}
               folderPath={direntPath}

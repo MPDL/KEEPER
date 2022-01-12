@@ -2026,14 +2026,14 @@ msgstr ""
 
 #: seahub/help/templates/help/install.html:6
 msgid "Installing Seafile Client Program"
-msgstr "Installing KEEPER Client Program"
+msgstr "Installing Seafile Client Program"
 
 #: seahub/help/templates/help/install.html:8
 msgid ""
 "After downloading Seafile client program, you have 3 steps left to get it up "
 "and running."
 msgstr ""
-"After downloading KEEPER client program, you have 3 steps left to get it up "
+"After downloading Seafile client program, you have 3 steps left to get it up "
 "and running."
 
 #: seahub/help/templates/help/install.html:10
@@ -2098,10 +2098,10 @@ msgstr "Selective Sync Sub-folders"
 msgid ""
 "You may have some very large libraries on the Seafile server. And you're "
 "currently only interested in a sub-folder inside one library. If your "
-"Seafile server is Pro edition, you can selectively sync a sub-folder in a "
+"KEEPER server is Pro edition, you can selectively sync a sub-folder in a "
 "library, instead of syncing the entire library."
 msgstr ""
-"You may have some very large libraries on the KEEPER server. And you're "
+"You may have some very large libraries on the Seafile server. And you're "
 "currently only interested in a sub-folder inside one library. If your "
 "KEEPER server is Pro edition, you can selectively sync a sub-folder in a "
 "library, instead of syncing the entire library."

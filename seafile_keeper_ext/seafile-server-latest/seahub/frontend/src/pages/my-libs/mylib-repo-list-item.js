@@ -20,9 +20,11 @@ import Rename from '../../components/rename';
 import MylibRepoMenu from './mylib-repo-menu';
 import RepoAPITokenDialog from '../../components/dialog/repo-api-token-dialog';
 import RepoShareUploadLinksDialog from '../../components/dialog/repo-share-upload-links-dialog';
+import LibOldFilesAutoDelDialog from '../../components/dialog/lib-old-files-auto-del-dialog';
 import AssignDoiDialog from '../../components/dialog/assign-doi-dialog';
 import ArchiveLibraryDialog from '../../components/dialog/archive-library-dialog';
 import CertifyLibraryDialog from '../../components/dialog/certify-library-dialog';
+
 
 const propTypes = {
   repo: PropTypes.object.isRequired,
@@ -82,6 +84,7 @@ class MylibRepoListItem extends React.Component {
       isAPITokenDialogShow: false,
       isRepoShareUploadLinksDialogOpen: false,
       isRepoDeleted: false,
+      isOldFilesAutoDelDialogOpen: false,
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
       isCertifyLibraryDialogShow: false,
@@ -145,6 +148,9 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'Share Links Admin':
         this.toggleRepoShareUploadLinksDialog();
+        break;
+      case 'Old Files Auto Delete':
+        this.toggleOldFilesAutoDelDialog();
         break;
       case 'Assign DOI to current state':
         this.onAssignDoiToggle();
@@ -242,6 +248,11 @@ class MylibRepoListItem extends React.Component {
   toggleRepoShareUploadLinksDialog = () => {
     this.setState({isRepoShareUploadLinksDialogOpen: !this.state.isRepoShareUploadLinksDialogOpen});
   }
+
+  toggleOldFilesAutoDelDialog = () => {
+    this.setState({isOldFilesAutoDelDialogOpen: !this.state.isOldFilesAutoDelDialogOpen});
+  }
+
   onAssignDoiToggle = () => {
     this.setState({isAssignDoiDialogShow: !this.state.isAssignDoiDialogShow});
   }
@@ -287,7 +298,6 @@ class MylibRepoListItem extends React.Component {
     });
   }
 
-
   onUnfreezedItem = () => {
     this.setState({
       highlight: false,
@@ -331,12 +341,12 @@ class MylibRepoListItem extends React.Component {
 
   onDeleteRepo = (repo) => {
     seafileAPI.deleteRepo(repo.repo_id).then((res) => {
-      
+
       this.setState({
         isRepoDeleted: true,
         isDeleteDialogShow: false,
       });
-      
+
       this.props.onDeleteRepo(repo);
       let name = repo.repo_name;
       var msg = gettext('Successfully deleted {name}.').replace('{name}', name);
@@ -547,6 +557,14 @@ class MylibRepoListItem extends React.Component {
             <RepoShareUploadLinksDialog
               repo={repo}
               toggleDialog={this.toggleRepoShareUploadLinksDialog}
+            />
+          </ModalPortal>
+        )}
+        {this.state.isOldFilesAutoDelDialogOpen && (
+          <ModalPortal>
+            <LibOldFilesAutoDelDialog
+              repoID={repo.repo_id}
+              toggleDialog={this.toggleOldFilesAutoDelDialog}
             />
           </ModalPortal>
         )}

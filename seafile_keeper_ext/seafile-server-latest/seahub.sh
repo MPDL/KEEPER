@@ -170,10 +170,7 @@ function before_start() {
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
     export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
-
     export SEAFES_DIR=$pro_pylibs_dir/seafes
-
-    #export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 }
 
 function start_seahub () {

@@ -16,7 +16,11 @@ class MainPanel extends Component {
   }
 
   render() {
-    return <div className="main-panel o-hidden">{this.props.children}</div>;
+    return (
+      <div className="main-panel o-hidden">
+        {this.props.children}
+      </div>
+    );
   }
 }
 

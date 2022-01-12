@@ -1,4 +1,5 @@
 # coding: utf-8
+from sqlalchemy import or_, and_
 
 from .models import VirusScanRecord, VirusFile
 from .scan_settings import logger
@@ -70,7 +71,7 @@ class DBOper(object):
     def add_virus_record(self, records):
         session = self.edb_session()
         try:
-            session.add_all(VirusFile(repo_id, commit_id, file_path, 0)
+            session.add_all(VirusFile(repo_id, commit_id, file_path, 0, 0)
                             for repo_id, commit_id, file_path in records)
             session.commit()
             return 0
@@ -81,7 +82,7 @@ class DBOper(object):
             session.close()
 
 
-def get_virus_record(session, repo_id, start, limit):
+def get_virus_files(session, repo_id, has_handled, start, limit):
     if start < 0:
         logger.error('start must be non-negative')
         raise RuntimeError('start must be non-negative')
@@ -90,33 +91,54 @@ def get_virus_record(session, repo_id, start, limit):
         logger.error('limit must be positive')
         raise RuntimeError('limit must be positive')
 
+    if has_handled not in (True, False, None):
+        logger.error('has_handled must be True or False or None')
+        raise RuntimeError('has_handled must be True or False or None')
+
     try:
         q = session.query(VirusFile)
         if repo_id:
             q = q.filter(VirusFile.repo_id == repo_id)
+        if has_handled is not None:
+            if has_handled:
+                q = q.filter(or_(VirusFile.has_deleted == 1, VirusFile.has_ignored == 1))
+            else:
+                q = q.filter(and_(VirusFile.has_deleted == 0, VirusFile.has_ignored == 0))
         q = q.slice(start, start+limit)
         return q.all()
     except Exception as e:
-        logger.warning('Failed to get virus record from db: %s.', e)
+        logger.warning('Failed to get virus files from db: %s.', e)
         return None
 
 
-def handle_virus_record(session, vid):
+def delete_virus_file(session, vid):
     try:
         q = session.query(VirusFile).filter(VirusFile.vid == vid)
         r = q.first()
-        r.has_handle = 1
+        r.has_deleted = 1
         session.commit()
         return 0
     except Exception as e:
-        logger.warning('Failed to handle virus record: %s.', e)
+        logger.warning('Failed to delete virus file: %s.', e)
         return -1
 
 
-def get_virus_record_by_id(session, vid):
+def operate_virus_file(session, vid, ignore):
+    try:
+        q = session.query(VirusFile).filter(VirusFile.vid == vid)
+        r = q.first()
+        r.has_ignored = ignore
+        session.commit()
+        return 0
+    except Exception as e:
+        logger.warning('Failed to operate virus file: %s.', e)
+        return -1
+
+
+def get_virus_file_by_vid(session, vid):
     try:
         q = session.query(VirusFile).filter(VirusFile.vid == vid)
         return q.first()
     except Exception as e:
-        logger.warning('Failed to get virus record by id: %s.', e)
+        logger.warning('Failed to get virus file by vid: %s.', e)
         return None

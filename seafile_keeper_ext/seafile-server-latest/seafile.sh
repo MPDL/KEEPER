@@ -24,7 +24,6 @@ seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 export SEAFILE_LD_LIBRARY_PATH=${INSTALLPATH}/seafile/lib/:${INSTALLPATH}/seafile/lib64:${LD_LIBRARY_PATH}
-export SEAHUB_LOG_DIR=${SEAFILE_DIR}/logs
 
 script_name=$0
 function usage () {
@@ -55,8 +54,6 @@ export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
 
-#export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
-
 function validate_ccnet_conf_dir () {
     if [[ ! -d ${default_ccnet_conf_dir} ]]; then
         echo "Error: there is no ccnet config directory."
@@ -84,13 +81,10 @@ function validate_seafile_data_dir () {
     fi
 }
 
-function test_config() {
-    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} --test \
-         -c "${default_ccnet_conf_dir}" \
-         -d "${default_seafile_data_dir}" \
-         -F "${central_config_dir}" ; then
-        exit 1;
-    fi
+function test_config() {	
+    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -t -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}" ; then	
+        exit 1;	
+    fi	
 }
 
 function check_component_running() {
@@ -114,7 +108,6 @@ function validate_already_running () {
         exit 1;
     fi
 
-    check_component_running "ccnet-server" "ccnet-server -c ${default_ccnet_conf_dir}"
     check_component_running "seaf-server" "seaf-server -c ${default_ccnet_conf_dir}"
     check_component_running "fileserver" "fileserver -c ${default_ccnet_conf_dir}"
     check_component_running "seafdav" "wsgidav.server.server_cli"
@@ -161,7 +154,6 @@ function start_seafile_server () {
 }
 
 function kill_all () {
-    pkill -f "ccnet-server -c ${default_ccnet_conf_dir}"
     pkill -f "seaf-server -c ${default_ccnet_conf_dir}"
     pkill -f "fileserver -c ${default_ccnet_conf_dir}"
     pkill -f "seafevents.main"

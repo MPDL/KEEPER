@@ -288,7 +288,7 @@ class Utils(object):
     def get_python_executable():
         '''Find a suitable python executable'''
         try_list = [
-            'python3.6',
+            'python3',
         ]
 
         for prog in try_list:

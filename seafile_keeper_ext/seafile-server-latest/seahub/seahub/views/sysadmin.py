@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 
 from django.db.models import Q
 from django.conf import settings as dj_settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import messages
 from django.http import HttpResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.shortcuts import render, get_object_or_404
@@ -48,8 +48,8 @@ from seahub.role_permissions.models import AdminRole
 from seahub.two_factor.models import default_device
 from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
     is_pro_version, send_html_email, \
-    get_server_id, handle_virus_record, get_virus_record_by_id, \
-    get_virus_record, FILE_AUDIT_ENABLED, get_max_upload_file_size, \
+    get_server_id, delete_virus_file, get_virus_file_by_vid, \
+    get_virus_files, FILE_AUDIT_ENABLED, get_max_upload_file_size, \
     get_site_name, seafevents_api
 from seahub.utils.ip import get_remote_ip
 from seahub.utils.file_size import get_file_size_unit

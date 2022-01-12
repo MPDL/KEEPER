@@ -470,8 +470,8 @@ a:hover {
 .op-icon:focus,
 .op-icon:hover {
   padding-bottom: 0.125rem;
-  border-bottom: 0.125rem solid #006f7b;
-  color: #006f7b;
+  border-bottom: 0.125rem solid #e0873b;
+  color: #e0873b;
 }
 
 .action-icon,
@@ -649,9 +649,9 @@ a:hover {
 }
 
 .nav .nav-item .nav-link.active {
-  color: #006f7b;
+  color: #eb8205;
   text-decoration: none;
-  border-bottom: 0.125rem solid #006f7b;
+  border-bottom: 0.125rem solid #eb8205;
 }
 
 .nav-pills .nav-item .nav-link {
@@ -664,7 +664,7 @@ a:hover {
 }
 
 .nav-pills .nav-item .nav-link.active {
-  background-color: #57a5b8;
+  background-color: #feac74;
   color: #fff;
   border: none;
 }
@@ -709,11 +709,11 @@ a:hover {
   margin: 24px 12px;
   color: #ffffff;
   border-radius: 0.25rem;
-  background-color: #57a5b8;
+  background-color: #feac74;
 }
 
 .side-nav-link:hover {
-  background-color: #57a5b8;
+  background-color: #f3985a;
   cursor: pointer;
 }
 
@@ -896,8 +896,8 @@ a:hover {
   font-size: 12px;
   line-height: 1;
   padding: 1px 2px;
-  background: #57a5b8;
-  border: 1px solid #006f7b;
+  background: #feac74;
+  border: 1px solid #cb8a5d;
   top: 0;
   left: 15px;
 }
@@ -919,7 +919,7 @@ a:hover {
   background: #f5f5f7;
   padding-right: 10px;
   padding-left: 8px;
-  border-left: 2px solid #57a5b8;
+  border-left: 2px solid #feac74;
   margin: 0 -10px;
 }
 #notice-popover .avatar {
@@ -1046,7 +1046,7 @@ a.sf-popover-item:hover {
   color: #818a91;
 }
 .path-link {
-  color: #57a5b8 !important;
+  color: #eb8205 !important;
   text-decoration: none;
 }
 .path-link:hover {
@@ -1150,7 +1150,7 @@ table td {
   padding: 0.25rem 0.75rem;
   line-height: 2rem;
   text-align: center;
-  color: #57a5b8;
+  color: #eb8205;
   cursor: pointer;
 }
 
@@ -1292,7 +1292,7 @@ a.table-sort-op:focus {
     display: inline-block;
     margin: 0 0 0.2em 0.8em;
     padding: 0 0.5em;
-    background: #57a5b8;
+    background: #ffbd6f;
     border-radius: 2px;
     color: #fff;
     font-size: 0.75rem;

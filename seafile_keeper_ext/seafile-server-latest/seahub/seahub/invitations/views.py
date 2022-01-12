@@ -11,7 +11,7 @@ from seaserv import seafile_api
 from seahub.auth import login as auth_login, authenticate
 from seahub.auth import get_backends
 from seahub.base.accounts import User
-from seahub.constants import GUEST_USER, DEFAULT_USER
+from seahub.constants import GUEST_USER
 from seahub.invitations.models import Invitation, RepoShareInvitation
 from seahub.invitations.signals import accept_guest_invitation_successful
 from seahub.settings import SITE_ROOT, NOTIFY_ADMIN_AFTER_REGISTRATION
@@ -22,6 +22,7 @@ from seahub.share.utils import share_dir_to_user
 logger = logging.getLogger(__name__)
 
 # KEEPER
+from seahub.constants import DEFAULT_USER
 from keeper.utils import account_can_be_auto_activated
 
 
@@ -116,10 +117,10 @@ def token_view(request, token):
                     continue
 
                 repo_owner = seafile_api.get_repo_owner(repo_id)
-                share_dir_to_user(repo, path, repo_owner, 
+                share_dir_to_user(repo, path, repo_owner,
                     inviter, accepter, permission, None)
 
-                send_perm_audit_msg('modify-repo-perm', 
+                send_perm_audit_msg('modify-repo-perm',
                     inviter, accepter, repo_id, path, permission)
 
             # delete

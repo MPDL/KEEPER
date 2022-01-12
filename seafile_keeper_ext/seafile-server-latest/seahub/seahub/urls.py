@@ -20,6 +20,8 @@ from seahub.views.repo import repo_history_view, repo_snapshot, view_shared_dir,
 from seahub.dingtalk.views import dingtalk_login, dingtalk_callback, \
         dingtalk_connect, dingtalk_connect_callback, dingtalk_disconnect
 
+from seahub.api2.endpoints.search_file import SearchFile
+
 from seahub.api2.endpoints.smart_link import SmartLink, SmartLinkToken
 from seahub.api2.endpoints.groups import Groups, Group
 from seahub.api2.endpoints.all_groups import AllGroups
@@ -34,11 +36,12 @@ from seahub.api2.endpoints.group_owned_libraries import GroupOwnedLibraries, \
 from seahub.api2.endpoints.address_book.groups import AddressBookGroupsSubGroups
 from seahub.api2.endpoints.address_book.members import AddressBookGroupsSearchMember
 
-from seahub.api2.endpoints.group_members import GroupMembers, GroupMember, \
+from seahub.api2.endpoints.group_members import GroupMembers, GroupSearchMember, GroupMember, \
         GroupMembersBulk, GroupMembersImport, GroupMembersImportExample
 from seahub.api2.endpoints.search_group import SearchGroup
 from seahub.api2.endpoints.share_links import ShareLinks, ShareLink, \
-        ShareLinkOnlineOfficeLock, ShareLinkDirents, ShareLinkSaveFileToRepo
+        ShareLinkOnlineOfficeLock, ShareLinkDirents, ShareLinkSaveFileToRepo, \
+        ShareLinkUpload, ShareLinkUploadDone
 from seahub.api2.endpoints.shared_folders import SharedFolders
 from seahub.api2.endpoints.shared_repos import SharedRepos, SharedRepo
 from seahub.api2.endpoints.upload_links import UploadLinks, UploadLink, \
@@ -99,6 +102,10 @@ from seahub.api2.endpoints.repo_api_tokens import RepoAPITokensView, RepoAPIToke
 from seahub.api2.endpoints.via_repo_token import ViaRepoDirView, ViaRepoUploadLinkView, RepoInfoView, \
     ViaRepoDownloadLinkView
 from seahub.api2.endpoints.abuse_reports import AbuseReportsView
+from seahub.api2.endpoints.ocm import OCMProtocolView, OCMSharesView, OCMNotificationsView, \
+    OCMSharesPrepareView, OCMSharePrepareView, OCMSharesReceivedView, OCMShareReceivedView
+from seahub.api2.endpoints.ocm_repos import OCMReposDirView, OCMReposDownloadLinkView, \
+    OCMReposUploadLinkView
 
 from seahub.api2.endpoints.repo_share_links import RepoShareLinks, RepoShareLink
 from seahub.api2.endpoints.repo_upload_links import RepoUploadLinks, RepoUploadLink
@@ -111,6 +118,7 @@ from seahub.api2.endpoints.admin.file_audit import FileAudit
 from seahub.api2.endpoints.admin.file_update import FileUpdate
 from seahub.api2.endpoints.admin.perm_audit import PermAudit
 from seahub.api2.endpoints.admin.sysinfo import SysInfo
+from seahub.api2.endpoints.admin.generate_user_auth_token import AdminGenerateUserAuthToken
 from seahub.api2.endpoints.admin.web_settings import AdminWebSettings
 from seahub.api2.endpoints.admin.statistics import (
     FileOperationsView, TotalStorageView, ActiveUsersView, SystemTrafficView, \
@@ -121,7 +129,7 @@ from seahub.api2.endpoints.admin.devices import AdminDevices
 from seahub.api2.endpoints.admin.device_errors import AdminDeviceErrors
 from seahub.api2.endpoints.admin.users import AdminUsers, AdminUser, AdminUserResetPassword, AdminAdminUsers, \
     AdminUserGroups, AdminUserShareLinks, AdminUserUploadLinks, AdminUserBeSharedRepos, \
-    AdminLDAPUsers, AdminSearchUser
+    AdminLDAPUsers, AdminSearchUser, AdminUpdateUserCcnetEmail
 from seahub.api2.endpoints.admin.device_trusted_ip import AdminDeviceTrustedIP
 from seahub.api2.endpoints.admin.libraries import AdminLibraries, AdminLibrary, \
         AdminSearchLibrary
@@ -173,18 +181,24 @@ from seahub.api2.endpoints.admin.work_weixin import AdminWorkWeixinDepartments, 
 from seahub.api2.endpoints.admin.dingtalk import AdminDingtalkDepartments, \
         AdminDingtalkDepartmentMembers, AdminDingtalkUsersBatch, \
         AdminDingtalkDepartmentsImport
-from seahub.api2.endpoints.admin.virus_scan_records import AdminVirusScanRecords, AdminVirusScanRecord
+from seahub.api2.endpoints.admin.virus_scan_records import AdminVirusFilesView, AdminVirusFileView, \
+    AdminVirusFilesBatchView
 from seahub.api2.endpoints.file_participants import FileParticipantsView, FileParticipantView
 from seahub.api2.endpoints.repo_related_users import RepoRelatedUsersView
+from seahub.api2.endpoints.repo_auto_delete import RepoAutoDeleteView
+
+from seahub.ocm.settings import OCM_ENDPOINT
 
 # KEEPER
 from seahub.api2.views_keeper import DoiView, LandingPageView, ArchiveView, project_catalog_starter, \
     BloxbergCertView
 
+
 urlpatterns = [
     url(r'^accounts/', include('seahub.base.registration_urls')),
 
     url(r'^sso/$', sso, name='sso'),
+    url(r'^jwt-sso/$', jwt_sso, name='jwt_sso'),
     url(r'^shib-login/', shib_login, name="shib_login"),
     url(r'^oauth/', include('seahub.oauth.urls')),
     url(r'^thirdparty-editor/', include('seahub.thirdparty_editor.urls')),
@@ -251,11 +265,13 @@ urlpatterns = [
     url(r'^share-admin-share-links/$', react_fake_view, name="share_admin_share_links"),
     url(r'^share-admin-upload-links/$', react_fake_view, name="share_admin_upload_links"),
     url(r'^shared-libs/$', react_fake_view, name="shared_libs"),
+    url(r'^shared-with-ocm/$', react_fake_view, name="shared_with_ocm"),
     url(r'^my-libs/$', react_fake_view, name="my_libs"),
     url(r'^groups/$', react_fake_view, name="groups"),
     url(r'^group/(?P<group_id>\d+)/$', react_fake_view, name="group"),
     url(r'^library/(?P<repo_id>[-0-9a-f]{36})/$', react_fake_view, name="library_view"),
     url(r'^library/(?P<repo_id>[-0-9a-f]{36})/(?P<repo_name>[^/]+)/(?P<path>.*)$', react_fake_view, name="lib_view"),
+    url(r'^remote-library/(?P<provider_id>[-0-9a-f]{36})/(?P<repo_id>[-0-9a-f]{36})/(?P<repo_name>[^/]+)/(?P<path>.*)$', react_fake_view, name="remote_lib_view"),
     url(r'^my-libs/deleted/$', react_fake_view, name="my_libs_deleted"),
     url(r'^org/$', react_fake_view, name="org"),
     url(r'^invitations/$', react_fake_view, name="invitations"),
@@ -282,6 +298,9 @@ urlpatterns = [
     url(r'^api/v2.1/smart-link/$', SmartLink.as_view(), name="api-v2.1-smart-link"),
     url(r'^api/v2.1/smart-links/(?P<token>[-0-9a-f]{36})/$', SmartLinkToken.as_view(), name="api-v2.1-smart-links-token"),
 
+    # search file by name
+    url(r'^api/v2.1/search-file/$', SearchFile.as_view(), name='api-v2.1-search-file'),
+
     # departments
     url(r'api/v2.1/departments/$', Departments.as_view(), name='api-v2.1-all-departments'),
 
@@ -295,6 +314,7 @@ urlpatterns = [
     url(r'^api/v2.1/groups/(?P<group_id>\d+)/group-owned-libraries/$', GroupOwnedLibraries.as_view(), name='api-v2.1-group-owned-libraries'),
     url(r'^api/v2.1/groups/(?P<group_id>\d+)/group-owned-libraries/(?P<repo_id>[-0-9a-f]{36})/$', GroupOwnedLibrary.as_view(), name='api-v2.1-owned-group-library'),
     url(r'^api/v2.1/groups/(?P<group_id>\d+)/members/$', GroupMembers.as_view(), name='api-v2.1-group-members'),
+    url(r'^api/v2.1/groups/(?P<group_id>\d+)/search-member/$', GroupSearchMember.as_view(), name='api-v2.1-group-search-member'),
     url(r'^api/v2.1/groups/(?P<group_id>\d+)/members/bulk/$', GroupMembersBulk.as_view(), name='api-v2.1-group-members-bulk'),
     url(r'^api/v2.1/groups/(?P<group_id>\d+)/members/import/$', GroupMembersImport.as_view(), name='api-v2.1-group-members-import'),
     url(r'^api/v2.1/group-members-import-example/$', GroupMembersImportExample.as_view(), name='api-v2.1-group-members-import-example'),
@@ -324,6 +344,8 @@ urlpatterns = [
     url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/dirents/$', ShareLinkDirents.as_view(), name='api-v2.1-share-link-dirents'),
     url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/online-office-lock/$',
             ShareLinkOnlineOfficeLock.as_view(), name='api-v2.1-share-link-online-office-lock'),
+    url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/upload/$', ShareLinkUpload.as_view(), name='api-v2.1-share-link-upload'),
+    url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/upload/done/$', ShareLinkUploadDone.as_view(), name='api-v2.1-share-link-upload-done'),
 
     ## user::shared-upload-links
     url(r'^api/v2.1/upload-links/$', UploadLinks.as_view(), name='api-v2.1-upload-links'),
@@ -374,6 +396,8 @@ urlpatterns = [
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/participants/$', FileParticipantsView.as_view(), name='api-v2.1-file-participants'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/participant/$', FileParticipantView.as_view(), name='api-v2.1-file-participant'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/related-users/$', RepoRelatedUsersView.as_view(), name='api-v2.1-related-user'),
+
+    url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/auto-delete/$', RepoAutoDeleteView.as_view(), name='api-v2.1-repo-auto-delete'),
 
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/share-links/$', RepoShareLinks.as_view(), name='api-v2.1-repo-share-links'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/share-links/(?P<token>[a-f0-9]+)/$', RepoShareLink.as_view(), name='api-v2.1-repo-share-link'),
@@ -455,6 +479,22 @@ urlpatterns = [
     ## user::activities
     url(r'^api/v2.1/activities/$', ActivitiesView.as_view(), name='api-v2.1-acitvity'),
 
+    ## user::ocm
+    # ocm inter-server api, interact with other server
+    url(r'ocm-provider/$', OCMProtocolView.as_view(), name='api-v2.1-ocm-protocol'),
+    url(r'' + OCM_ENDPOINT + 'shares/$', OCMSharesView.as_view(), name='api-v2.1-ocm-shares'),
+    url(r'' + OCM_ENDPOINT + 'notifications/$', OCMNotificationsView.as_view(), name='api-v2.1-ocm-notifications'),
+
+    # ocm local api, no interaction with other server
+    url(r'api/v2.1/ocm/shares-prepare/$', OCMSharesPrepareView.as_view(), name='api-v2.1-ocm-shares-prepare'),
+    url(r'api/v2.1/ocm/shares-prepare/(?P<pk>\d+)/$', OCMSharePrepareView.as_view(), name='api-v2.1-ocm-share-prepare'),
+    url(r'api/v2.1/ocm/shares-received/$', OCMSharesReceivedView.as_view(), name='api-v2.1-ocm-shares-received'),
+    url(r'api/v2.1/ocm/shares-received/(?P<pk>\d+)/$', OCMShareReceivedView.as_view(), name='api-v2.1-ocm-share-received'),
+    # ocm local api, repo related operations
+    url(r'api/v2.1/ocm/providers/(?P<provider_id>[-0-9a-f]{36})/repos/(?P<repo_id>[-0-9a-f]{36})/dir/$', OCMReposDirView.as_view(), name='api-v2.1-ocm-repos-dir'),
+    url(r'api/v2.1/ocm/providers/(?P<provider_id>[-0-9a-f]{36})/repos/(?P<repo_id>[-0-9a-f]{36})/download-link/$', OCMReposDownloadLinkView.as_view(), name='api-v2.1-ocm-repos-dir'),
+    url(r'api/v2.1/ocm/providers/(?P<provider_id>[-0-9a-f]{36})/repos/(?P<repo_id>[-0-9a-f]{36})/upload-link/$', OCMReposUploadLinkView.as_view(), name='api-v2.1-ocm-repos-dir'),
+
     # admin: activities
     url(r'^api/v2.1/admin/user-activities/$', UserActivitiesView.as_view(), name='api-v2.1-admin-user-activity'),
 
@@ -467,6 +507,9 @@ urlpatterns = [
     url(r'^api/v2.1/admin/abuse-reports/$', AdminAbuseReportsView.as_view(), name='api-v2.1-admin-abuse-reports'),
     url(r'^api/v2.1/admin/abuse-reports/(?P<pk>\d+)/$', AdminAbuseReportView.as_view(), name='api-v2.1-admin-abuse-report'),
 
+
+    ## admin::generate user auth token
+    url(r'^api/v2.1/admin/generate-user-auth-token/$', AdminGenerateUserAuthToken.as_view(), name='api-v2.1-admin-generate-user-auth-token'),
 
     ## admin::sysinfo
     url(r'^api/v2.1/admin/sysinfo/$', SysInfo.as_view(), name='api-v2.1-sysinfo'),
@@ -490,6 +533,8 @@ urlpatterns = [
     url(r'^api/v2.1/admin/users/$', AdminUsers.as_view(), name='api-v2.1-admin-users'),
     url(r'^api/v2.1/admin/ldap-users/$', AdminLDAPUsers.as_view(), name='api-v2.1-admin-ldap-users'),
     url(r'^api/v2.1/admin/search-user/$', AdminSearchUser.as_view(), name='api-v2.1-admin-search-user'),
+    url(r'^api/v2.1/admin/update-user-ccnet-email/$', AdminUpdateUserCcnetEmail.as_view(), name='api-v2.1-admin-update-user-ccnet-email'),
+
     # [^...] Matches any single character not in brackets
     # + Matches between one and unlimited times, as many times as possible
     url(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/$', AdminUser.as_view(), name='api-v2.1-admin-user'),
@@ -611,14 +656,14 @@ urlpatterns = [
     url(r'^help/', include('seahub.help.urls')),
     url(r'^captcha/', include('captcha.urls')),
     url(r'^thumbnail/', include('seahub.thumbnail.urls')),
-    url(r'^inst/', include('seahub.institutions.urls', app_name='institutions', namespace='institutions')),
-    url(r'^invite/', include('seahub.invitations.urls', app_name='invitations', namespace='invitations')),
+    url(r'^inst/', include(('seahub.institutions.urls', 'institutions'), namespace='institutions')),
+    url(r'^invite/', include(('seahub.invitations.urls', 'invitations'), namespace='invitations')),
     url(r'^terms/', include('termsandconditions.urls')),
-    url(r'^published/', include('seahub.wiki.urls', app_name='wiki', namespace='wiki')),
+    url(r'^published/', include(('seahub.wiki.urls', 'wiki'), namespace='wiki')),
     url(r'^work-weixin/', include('seahub.work_weixin.urls')),
     url(r'^weixin/', include('seahub.weixin.urls')),
     # Must specify a namespace if specifying app_name.
-    url(r'^drafts/', include('seahub.drafts.urls', app_name='drafts', namespace='drafts')),
+    url(r'^drafts/', include(('seahub.drafts.urls', 'drafts'), namespace='drafts')),
 
     ## admin::address book
     url(r'^api/v2.1/admin/address-book/groups/$', AdminAddressBookGroups.as_view(), name='api-v2.1-admin-address-book-groups'),
@@ -627,9 +672,10 @@ urlpatterns = [
     ## admin::file-scan-records
     url(r'^api/v2.1/admin/file-scan-records/$', AdminFileScanRecords.as_view(), name='api-v2.1-admin-file-scan-records'),
 
-    # admin::virus-scan-records
-    url(r'^api/v2.1/admin/virus-scan-records/$', AdminVirusScanRecords.as_view(), name='api-v2.1-admin-virus-scan-records'),
-    url(r'^api/v2.1/admin/virus-scan-records/(?P<virus_id>\d+)/$', AdminVirusScanRecord.as_view(), name='api-v2.1-admin-virus-scan-record'),
+    # admin::virus-files
+    url(r'^api/v2.1/admin/virus-files/$', AdminVirusFilesView.as_view(), name='api-v2.1-admin-virus-files'),
+    url(r'^api/v2.1/admin/virus-files/(?P<virus_id>\d+)/$', AdminVirusFileView.as_view(), name='api-v2.1-admin-virus-file'),
+    url(r'^api/v2.1/admin/virus-files/batch/$', AdminVirusFilesBatchView.as_view(), name='api-v2.1-admin-virus-files-batch'),
 
     ## admin::notifications
     url(r'^api/v2.1/admin/notifications/$', AdminNotificationsView.as_view(), name='api-2.1-admin-notifications'),
@@ -752,7 +798,8 @@ if ENABLE_FILE_SCAN:
 from seahub.utils import EVENTS_ENABLED
 if EVENTS_ENABLED:
     urlpatterns += [
-        url(r'^sys/virus-scan-records/$', sysadmin_react_fake_view, name='sys_virus_scan_records'),
+        url(r'^sys/virus-files/all/$', sysadmin_react_fake_view, name='sys_virus_scan_records'),
+        url(r'^sys/virus-files/unhandled/$', sysadmin_react_fake_view, name='sys_virus_scan_records'),
     ]
 
 if settings.SERVE_STATIC:

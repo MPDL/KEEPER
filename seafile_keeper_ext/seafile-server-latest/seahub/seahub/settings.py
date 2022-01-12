@@ -14,9 +14,9 @@ DEBUG = __DEBUG__
 
 CLOUD_MODE = False
 
-ADMINS = (
+ADMINS = [
     # ('Your Name', 'your_email@domain.com'),
-)
+]
 
 MANAGERS = ADMINS
 
@@ -110,7 +110,8 @@ SECRET_KEY = 'n*v0=jz-1rz@(4gx^tf%6^e7c&um@2)g-l=3_)t@19a69n1nv6'
 ENABLE_REMOTE_USER_AUTHENTICATION = False
 
 # Order is important
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
+    'seahub.base.middleware.SameSiteNoneMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -124,9 +125,8 @@ MIDDLEWARE_CLASSES = (
     'termsandconditions.middleware.TermsAndConditionsRedirectMiddleware',
     'seahub.two_factor.middleware.OTPMiddleware',
     'seahub.two_factor.middleware.ForceTwoFactorAuthMiddleware',
-    'seahub.trusted_ip.middleware.LimitIpMiddleware',
-)
-
+    'seahub.trusted_ip.middleware.LimitIpMiddleware'
+]
 
 SITE_ROOT_URLCONF = 'seahub.urls'
 ROOT_URLCONF = 'seahub.utils.rooturl'
@@ -162,7 +162,7 @@ TEMPLATES = [
 ]
 
 
-LANGUAGES = (
+LANGUAGES = [
     # ('bg', gettext_noop(u'български език')),
     ('ca', 'Català'),
     ('cs', 'Čeština'),
@@ -197,14 +197,14 @@ LANGUAGES = (
     # ('lt', 'Lietuvių kalba'),
     ('zh-cn', '简体中文'),
     ('zh-tw', '繁體中文'),
-)
+]
 
-LOCALE_PATHS = (
+LOCALE_PATHS = [
     os.path.join(PROJECT_ROOT, 'locale'),
     os.path.join(PROJECT_ROOT, 'seahub/trusted_ip/locale'),
-)
+]
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -220,7 +220,6 @@ INSTALLED_APPS = (
     'statici18n',
     'constance',
     'constance.backends.database',
-    # 'post_office',
     'termsandconditions',
     'webpack_loader',
 
@@ -251,11 +250,15 @@ INSTALLED_APPS = (
     'seahub.file_tags',
     'seahub.related_files',
     'seahub.work_weixin',
+    'seahub.dingtalk',
     'seahub.file_participants',
     'seahub.repo_api_tokens',
     'seahub.abuse_reports',
+    'seahub.repo_auto_delete',
+    'seahub.ocm',
     'keeper',
-)
+]
+
 
 # Enable or disable view File Scan
 # ENABLE_FILE_SCAN = True
@@ -295,15 +298,17 @@ ENABLE_USER_CLEAN_TRASH = True
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/accounts/login/'
 LOGIN_ERROR_DETAILS = False
-LOGOUT_URL = '/accounts/logout/'
 LOGOUT_REDIRECT_URL = None
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
-# allow seafile amdin view user's repo
+# allow seafile admin view user's repo
 ENABLE_SYS_ADMIN_VIEW_REPO = False
 
-#allow search from LDAP directly during auto-completion (not only search imported users)
+# allow seafile admin generate user auth token
+ENABLE_SYS_ADMIN_GENERATE_USER_AUTH_TOKEN = False
+
+# allow search from LDAP directly during auto-completion (not only search imported users)
 ENABLE_SEARCH_FROM_LDAP_DIRECTLY = False
 
 # show traffic on the UI
@@ -354,8 +359,17 @@ UPLOAD_LINK_EXPIRE_DAYS_MAX = 0 # 0 means no limit
 # greater than or equal to MIN and less than or equal to MAX
 UPLOAD_LINK_EXPIRE_DAYS_DEFAULT = 0
 
-# mininum length for the password of a share link
-SHARE_LINK_PASSWORD_MIN_LENGTH = 8
+# force use password when generate a share/upload link
+SHARE_LINK_FORCE_USE_PASSWORD = False
+
+# mininum length for the password of a share/upload link
+SHARE_LINK_PASSWORD_MIN_LENGTH = 10
+
+# LEVEL for the password of a share/upload link
+# based on four types of input:
+# num, upper letter, lower letter, other symbols
+# '3' means password must have at least 3 types of the above.
+SHARE_LINK_PASSWORD_STRENGTH_LEVEL = 1
 
 # enable or disable share link audit
 ENABLE_SHARE_LINK_AUDIT = False
@@ -412,6 +426,9 @@ ENABLE_TERMS_AND_CONDITIONS = False
 
 # Enable or disable sharing to all groups
 ENABLE_SHARE_TO_ALL_GROUPS = False
+
+# Enable or disable sharing to departments
+ENABLE_SHARE_TO_DEPARTMENT = True
 
 # interval for request unread notifications
 UNREAD_NOTIFICATIONS_REQUEST_INTERVAL = 3 * 60 # seconds
@@ -603,6 +620,14 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'standard',
         },
+        'onlyoffice_handler': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'onlyoffice.log'),
+            'maxBytes': 1024*1024*100,  # 100 MB
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -622,6 +647,11 @@ LOGGING = {
         },
         'py.warnings': {
             'handlers': ['console', ],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'onlyoffice': {
+            'handlers': ['onlyoffice_handler', ],
             'level': 'INFO',
             'propagate': False
         },
@@ -850,7 +880,7 @@ else:
     DATABASES['default']['NAME'] = os.path.join(install_topdir, 'seahub.db')
 
     # In server release, gunicorn is used to deploy seahub
-    INSTALLED_APPS += ('gunicorn', )
+    INSTALLED_APPS.append('gunicorn')
 
     load_local_settings(seahub_settings)
     del seahub_settings
@@ -886,7 +916,9 @@ CONSTANCE_CONFIG = {
     'USER_PASSWORD_STRENGTH_LEVEL': (USER_PASSWORD_STRENGTH_LEVEL, ''),
 
     'SHARE_LINK_TOKEN_LENGTH': (SHARE_LINK_TOKEN_LENGTH, ''),
+    'SHARE_LINK_FORCE_USE_PASSWORD': (SHARE_LINK_FORCE_USE_PASSWORD, ''),
     'SHARE_LINK_PASSWORD_MIN_LENGTH': (SHARE_LINK_PASSWORD_MIN_LENGTH, ''),
+    'SHARE_LINK_PASSWORD_STRENGTH_LEVEL': (SHARE_LINK_PASSWORD_STRENGTH_LEVEL, ''),
     'ENABLE_TWO_FACTOR_AUTH': (ENABLE_TWO_FACTOR_AUTH, ''),
 
     'TEXT_PREVIEW_EXT': (TEXT_PREVIEW_EXT, ''),
@@ -906,7 +938,7 @@ CONSTANCE_CONFIG = {
 # then add 'seahub.auth.middleware.SeafileRemoteUserMiddleware' and
 # 'seahub.auth.backends.SeafileRemoteUserBackend' to settings.
 if ENABLE_REMOTE_USER_AUTHENTICATION:
-    MIDDLEWARE_CLASSES += ('seahub.auth.middleware.SeafileRemoteUserMiddleware',)
+    MIDDLEWARE.append('seahub.auth.middleware.SeafileRemoteUserMiddleware')
     AUTHENTICATION_BACKENDS += ('seahub.auth.backends.SeafileRemoteUserBackend',)
 
 if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
@@ -923,4 +955,4 @@ if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
 #      },
 # ]
 
-SEAFILE_VERSION = "7.1.17"
+SEAFILE_VERSION = "8.0.17"

@@ -37,7 +37,7 @@ class MylibRepoMenu extends React.Component {
       this.setState({isItemMenuShow: !this.state.isItemMenuShow});
       return;
     }
-    
+
     this.setState(
       {isItemMenuShow: !this.state.isItemMenuShow},
       () => {
@@ -72,6 +72,9 @@ class MylibRepoMenu extends React.Component {
     if (this.props.isPC && enableRepoSnapshotLabel) {
       operations.push('Label Current State');
     }
+    if (isPro) {
+      operations.push('Old Files Auto Delete');
+    //KEEPER
     operations.push('Divider');
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
@@ -130,6 +133,10 @@ class MylibRepoMenu extends React.Component {
       case 'Share Links Admin':
         translateResult = gettext('Share Links Admin');
         break;
+      case 'Old Files Auto Delete':
+        translateResult = gettext('Auto deletion');
+        break;
+      //KEEPER
       case 'Assign DOI to current state':
         translateResult = gettext('Assign DOI to current state');
         break;
@@ -156,18 +163,18 @@ class MylibRepoMenu extends React.Component {
     if (this.props.isPC) {
       return (
         <Dropdown isOpen={this.state.isItemMenuShow} toggle={this.toggleOperationMenu}>
-          <DropdownToggle 
+          <DropdownToggle
             tag="i"
             className="sf-dropdown-toggle sf2-icon-caret-down"
             title={gettext('More Operations')}
             // onClick={this.clickOperationMenuToggle}
-            data-toggle="dropdown" 
+            data-toggle="dropdown"
             aria-expanded={this.state.isItemMenuShow}
           />
           <DropdownMenu>
             {operations.map((item, index)=> {
               if (item == 'Divider') {
-                return <DropdownItem key={index} divider />; 
+                return <DropdownItem key={index} divider />;
               } else {
                 return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick}>{this.translateOperations(item)}</DropdownItem>);
               }
@@ -184,12 +191,12 @@ class MylibRepoMenu extends React.Component {
 
     return (
       <Dropdown isOpen={this.state.isItemMenuShow} toggle={this.toggleOperationMenu}>
-        <DropdownToggle 
+        <DropdownToggle
           tag="i"
           className="sf-dropdown-toggle fa fa-ellipsis-v ml-0"
           title={gettext('More Operations')}
           // onClick={this.clickOperationMenuToggle}
-          data-toggle="dropdown" 
+          data-toggle="dropdown"
           aria-expanded={this.state.isItemMenuShow}
         />
         <div className={`${this.state.isItemMenuShow ? '' : 'd-none'}`} onClick={this.toggleOperationMenu}>

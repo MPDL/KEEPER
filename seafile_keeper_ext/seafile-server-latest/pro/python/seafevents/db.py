@@ -1,10 +1,10 @@
 import os
 import configparser
 import logging
-
+import uuid
 from urllib.parse import quote_plus
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
 from sqlalchemy.exc import DisconnectionError
 from sqlalchemy.ext.declarative import declarative_base
@@ -155,3 +155,22 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy): # py
 
         # Raise DisconnectionError so the pool would create a new connection
         raise DisconnectionError()
+
+
+class GroupIdLDAPUuidPair(Base):
+    """
+    """
+    __tablename__ = 'GroupIdLDAPUuidPair'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    group_id = Column(Integer, unique=True, nullable=False)
+    group_uuid = Column(String(36), default=uuid.uuid4, unique=True, nullable=False)
+
+
+    def __init__(self, record):
+        self.group_id = record['group_id']
+        self.group_uuid = record['group_uuid']
+
+    def __str__(self):
+        return 'GroupIdLDAPUuidPair<id: %s, group_id: %s, group_uuid: %s>' % \
+            (self.id, self.group_id, self.group_uuid)

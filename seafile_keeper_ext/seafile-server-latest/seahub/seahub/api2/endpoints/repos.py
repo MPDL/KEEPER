@@ -126,7 +126,7 @@ class ReposView(APIView):
                     "permission": 'rw',  # Always have read-write permission to owned repo
                     "starred": r.repo_id in starred_repo_id_list,
                     "status": normalize_repo_status_code(r.status),
-                    "salt": r.salt if r.enc_version == 3 else '',
+                    "salt": r.salt if r.enc_version >= 3 else '',
                     "doi": len(doi_repos) <= 0 and history_limit <= -1 and not r.encrypted,
                 }
 
@@ -190,7 +190,7 @@ class ReposView(APIView):
                     "permission": r.permission,
                     "starred": r.repo_id in starred_repo_id_list,
                     "status": normalize_repo_status_code(r.status),
-                    "salt": r.salt if r.enc_version == 3 else '',
+                    "salt": r.salt if r.enc_version >= 3 else '',
                 }
 
                 if r.repo_id in repos_with_admin_share_to:
@@ -234,7 +234,7 @@ class ReposView(APIView):
                     "permission": r.permission,
                     "starred": r.repo_id in starred_repo_id_list,
                     "status": normalize_repo_status_code(r.status),
-                    "salt": r.salt if r.enc_version == 3 else '',
+                    "salt": r.salt if r.enc_version >= 3 else '',
                 }
                 repo_info_list.append(repo_info)
 
@@ -279,7 +279,7 @@ class ReposView(APIView):
                     "permission": r.permission,
                     "starred": r.repo_id in starred_repo_id_list,
                     "status": normalize_repo_status_code(r.status),
-                    "salt": r.salt if r.enc_version == 3 else '',
+                    "salt": r.salt if r.enc_version >= 3 else '',
                 }
                 repo_info_list.append(repo_info)
 

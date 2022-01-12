@@ -10,7 +10,9 @@ import json
 import time
 import uuid
 import stat
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import chardet
 import logging
 import posixpath
@@ -22,7 +24,7 @@ from django.core import signing
 from django.core.cache import cache
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import F
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
@@ -45,7 +47,7 @@ from seahub.onlyoffice.utils import get_onlyoffice_dict
 from seahub.auth.decorators import login_required
 from seahub.base.decorators import repo_passwd_set_required
 from seahub.base.accounts import ANONYMOUS_EMAIL
-from seahub.base.templatetags.seahub_tags import file_icon_filter, email2nickname
+from seahub.base.templatetags.seahub_tags import file_icon_filter
 from seahub.share.models import FileShare, check_share_link_common
 from seahub.share.decorators import share_link_audit, share_link_login_required
 from seahub.wiki.utils import get_wiki_dirent
@@ -87,6 +89,7 @@ import seahub.settings as settings
 from seahub.settings import FILE_ENCODING_LIST, FILE_PREVIEW_MAX_SIZE, \
     FILE_ENCODING_TRY_LIST, MEDIA_URL, SEAFILE_COLLAB_SERVER, ENABLE_WATERMARK, \
     SHARE_LINK_EXPIRE_DAYS_MIN, SHARE_LINK_EXPIRE_DAYS_MAX, SHARE_LINK_PASSWORD_MIN_LENGTH, \
+    SHARE_LINK_FORCE_USE_PASSWORD, SHARE_LINK_PASSWORD_STRENGTH_LEVEL, \
     SHARE_LINK_EXPIRE_DAYS_DEFAULT, ENABLE_SHARE_LINK_REPORT_ABUSE
 
 
@@ -564,7 +567,9 @@ def view_lib_file(request, repo_id, path):
         'highlight_keyword': settings.HIGHLIGHT_KEYWORD,
         'enable_file_comment': settings.ENABLE_FILE_COMMENT,
         'enable_watermark': ENABLE_WATERMARK,
+        'share_link_force_use_password': SHARE_LINK_FORCE_USE_PASSWORD,
         'share_link_password_min_length': SHARE_LINK_PASSWORD_MIN_LENGTH,
+        'share_link_password_strength_level': SHARE_LINK_PASSWORD_STRENGTH_LEVEL,
         'share_link_expire_days_default': SHARE_LINK_EXPIRE_DAYS_DEFAULT,
         'share_link_expire_days_min': SHARE_LINK_EXPIRE_DAYS_MIN,
         'share_link_expire_days_max': SHARE_LINK_EXPIRE_DAYS_MAX,
@@ -793,8 +798,7 @@ def view_lib_file(request, repo_id, path):
             # then check if can edit file
             if ENABLE_OFFICE_WEB_APP_EDIT and parse_repo_perm(permission).can_edit_on_web and \
                     fileext in OFFICE_WEB_APP_EDIT_FILE_EXTENSION and \
-                    ((not is_locked) or (is_locked and locked_by_me) or \
-                    (is_locked and locked_by_online_office)):
+                    ((not is_locked) or (is_locked and locked_by_online_office)):
                 action_name = 'edit'
 
             wopi_dict = get_wopi_dict(username, repo_id, path,
@@ -813,8 +817,7 @@ def view_lib_file(request, repo_id, path):
             can_edit = False
             if parse_repo_perm(permission).can_edit_on_web and \
                     fileext in ONLYOFFICE_EDIT_FILE_EXTENSION and \
-                    ((not is_locked) or (is_locked and locked_by_me) or \
-                    (is_locked and locked_by_online_office)):
+                    ((not is_locked) or (is_locked and locked_by_online_office)):
                 can_edit = True
 
             onlyoffice_dict = get_onlyoffice_dict(request, username, repo_id, path,
@@ -824,9 +827,11 @@ def view_lib_file(request, repo_id, path):
                 if is_pro_version() and can_edit:
                     try:
                         if not is_locked:
+                            logger.info('{} lock {} in repo {} when open it via OnlyOffice.'.format(ONLINE_OFFICE_LOCK_OWNER, path, repo_id))
                             seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
                                                   int(time.time()) + 40 * 60)
                         elif locked_by_online_office:
+                            logger.info('{} relock {} in repo {} when open it via OnlyOffice.'.format(ONLINE_OFFICE_LOCK_OWNER, path, repo_id))
                             seafile_api.refresh_file_lock(repo_id, path,
                                                           int(time.time()) + 40 * 60)
                     except Exception as e:
@@ -848,8 +853,7 @@ def view_lib_file(request, repo_id, path):
             # openEditor vs openPreview
             can_edit = False
             if parse_repo_perm(permission).can_edit_on_web and \
-                    ((not is_locked) or (is_locked and locked_by_me) or \
-                    (is_locked and locked_by_online_office)):
+                    ((not is_locked) or (is_locked and locked_by_online_office)):
                 can_edit = True
 
             if can_edit:
@@ -1112,8 +1116,10 @@ def view_shared_file(request, fileshare):
 
     # check if share link is encrypted
     password_check_passed, err_msg = check_share_link_common(request, fileshare)
+    direct_download = request.GET.get('dl', '') == '1'
     if not password_check_passed:
-        d = {'token': token, 'view_name': 'view_shared_file', 'err_msg': err_msg}
+        d = {'token': token, 'view_name': 'view_shared_file',
+             'err_msg': err_msg, 'direct_download': direct_download}
         return render(request, 'share_access_validation.html', d)
 
     # recourse check
@@ -1136,9 +1142,25 @@ def view_shared_file(request, fileshare):
     fileshare.view_cnt = F('view_cnt') + 1
     fileshare.save()
 
+    if not request.user.is_authenticated:
+        username = ANONYMOUS_EMAIL
+    else:
+        username = request.user.username
+
+    # check file lock info
+    try:
+        is_locked, locked_by_me = check_file_lock(repo_id, path, username)
+    except Exception as e:
+        logger.error(e)
+        is_locked = False
+        locked_by_me = False
+
+    locked_by_online_office = if_locked_by_online_office(repo_id, path)
+
     # get share link permission
     can_download = fileshare.get_permissions()['can_download']
-    can_edit = fileshare.get_permissions()['can_edit']
+    can_edit = fileshare.get_permissions()['can_edit'] and \
+            (not is_locked or locked_by_online_office)
 
     # download shared file
     if request.GET.get('dl', '') == '1':
@@ -1184,20 +1206,7 @@ def view_shared_file(request, fileshare):
 
     if filetype in (DOCUMENT, SPREADSHEET):
 
-        if not request.user.is_authenticated():
-            username = ANONYMOUS_EMAIL
-        else:
-            username = request.user.username
-
         def online_office_lock_or_refresh_lock(repo_id, path, username):
-            # check file lock info
-            try:
-                is_locked, locked_by_me = check_file_lock(repo_id, path, username)
-            except Exception as e:
-                logger.error(e)
-                is_locked = False
-
-            locked_by_online_office = if_locked_by_online_office(repo_id, path)
             try:
                 if not is_locked:
                     seafile_api.lock_file(repo_id, path, ONLINE_OFFICE_LOCK_OWNER,
@@ -1393,7 +1402,7 @@ def view_file_via_shared_dir(request, fileshare):
 
     if filetype in (DOCUMENT, SPREADSHEET):
 
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             username = ANONYMOUS_EMAIL
         else:
             username = request.user.username
@@ -1755,7 +1764,7 @@ def _check_office_convert_perm(request, repo_id, path, ret):
             return True
         return False
     else:
-        return request.user.is_authenticated() and \
+        return request.user.is_authenticated and \
             check_folder_permission(request, repo_id, '/') is not None
 
 def _check_cluster_internal_token(request, file_id):
