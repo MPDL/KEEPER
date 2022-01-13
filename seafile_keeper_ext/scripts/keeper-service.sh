@@ -46,7 +46,7 @@ function check_gpfs() {
 
 function restart_gpfs () {
     $0 status
-    [ $? -eq 0 ] && err_and_exit "Keeper is running, please shutdown it first"
+    [ $? -eq 0 ] && err_and_exit "Keeper is running, please shutdown it first."
     mmshutdown && mmstartup
     sleep 10
     check_gpfs 
@@ -58,6 +58,13 @@ function check_en_dis_nginx () {
         err_and_exit "Please install nginx_[en|dis]site: https://github.com/perusio/nginx_ensite"
     fi
 }
+
+function check_run_tmp() {
+    [ ! -d "/run" ] && err_and_exit "/run directory DOES NOT exists, cannot start."
+    mkdir -p /run/tmp && chmod 1777 /run/tmp
+    [ $? -ne 0 ] && err_and_exit "Cannot create /run/tmp."
+}
+
 function check_mysql () {
     RESULT=$(systemctl status mysql.service)
     if [ $? -ne 0 ] ; then
@@ -166,12 +173,13 @@ case "$1" in
                 echo "Starting..."
             fi
 
+            check_run_tmp
+
             pushd ${seafile_dir} >/dev/null
 
-	    if [ ${__OFFICE_CONVERTER_ENABLED__} == "true" ] && [ ! -d ${__OFFICE_CONVERTER_OUTPUTDIR__} ]
-	    then
-		    mkdir -p ${__OFFICE_CONVERTER_OUTPUTDIR__} && chown -R ${user}.${group} ${__OFFICE_CONVERTER_OUTPUTDIR__}
-	    fi
+            if [ ${__OFFICE_CONVERTER_ENABLED__} == "true" ] && [ ! -d ${__OFFICE_CONVERTER_OUTPUTDIR__} ]; then
+                mkdir -p ${__OFFICE_CONVERTER_OUTPUTDIR__} && chown -R ${user}.${group} ${__OFFICE_CONVERTER_OUTPUTDIR__}
+            fi
 
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
