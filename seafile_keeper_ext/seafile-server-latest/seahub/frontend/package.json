@@ -35,6 +35,7 @@
     "react-qr-code": "^1.0.5",
     "react-responsive": "^6.1.2",
     "react-select": "^2.4.1",
+    "react-show-more": "^2.0.0",
     "react-tooltip": "^4.2.21",
     "reactstrap": "^6.4.0",
     "seafile-js": "0.2.178",
