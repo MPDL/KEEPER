@@ -723,7 +723,7 @@ def deploy_ext():
 
     Utils.set_perms(dirs=(
         env_mgr.ccnet_dir,
-        # env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+        env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
         env_mgr.central_config_dir,
         env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
         env_mgr.pro_data_dir,
@@ -807,6 +807,11 @@ def deploy_system_conf():
     if node_type in ('SINGLE'):
         deploy_file('system/my.cnf@single', expand=True)
 
+
+    # deploy CRON node conf
+    cron_node = keep_ini.get('global', '__IS_CRON_JOBS_NODE__')
+    if cron_node.lower() == 'true':
+        deploy_file('system/cron.d.keeper', expand=True)
 
 
     # create system symlinks
