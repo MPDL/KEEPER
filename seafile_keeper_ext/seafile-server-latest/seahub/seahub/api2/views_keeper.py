@@ -297,7 +297,8 @@ def request_doxi(shared_link, doxi_payload):
         user=DOI_USER
         pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml'}
-        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload, timeout=DOI_TIMEOUT)
+        cafile = "/etc/ssl/certs/ca-certificates.crt"
+        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, verify=cafile, data=doxi_payload.encode('utf-8'), timeout=DOI_TIMEOUT)
         return response
     except Timeout:
         return JsonResponse({
