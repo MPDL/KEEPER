@@ -30,7 +30,7 @@ from django.http import JsonResponse, HttpResponse, Http404, StreamingHttpRespon
 from django.shortcuts import render
 
 from django.utils.translation import ugettext as _, activate, get_language
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from urllib.parse import quote_plus
 

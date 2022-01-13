@@ -6039,8 +6039,8 @@ msgstr "Aufsteigend"
 msgid "Descending"
 msgstr "Absteigend"
 
-msgid "Search"
-msgstr "Suchen"
+#msgid "Search"
+#msgstr "Suchen"
 
 msgid "Apply"
 msgstr "Anwenden"

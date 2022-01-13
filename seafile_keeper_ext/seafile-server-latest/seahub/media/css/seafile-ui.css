@@ -2254,8 +2254,8 @@ fieldset:disabled a.btn {
 }
 .btn-primary:hover {
   color: #fff;
-  background-color: #ee8221;
-  border-color: #ed7b16;
+  background-color: #006f7b;
+  border-color: #006f7b;
 }
 .btn-primary:focus,
 .btn-primary.focus {
@@ -14987,4 +14987,3 @@ a.tag-addon:hover {
 }
 
 /*# sourceMappingURL=seafile-ui.map*/
-

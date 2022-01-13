@@ -74,6 +74,7 @@ class MylibRepoMenu extends React.Component {
     }
     if (isPro) {
       operations.push('Old Files Auto Delete');
+    }
     //KEEPER
     operations.push('Divider');
     if (showAssignDoiMenuItem) {
