@@ -607,6 +607,18 @@ ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt',
 ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
 ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
 
+# If show contact email when search user.
+ENABLE_SHOW_CONTACT_EMAIL_WHEN_SEARCH_USER = True
+
+# allow seafile admin generate user auth token
+ENABLE_SYS_ADMIN_GENERATE_USER_AUTH_TOKEN = True
+
+
+# LEVEL for the password of a share/upload link
+# based on four types of input:
+# num, upper letter, lower letter, other symbols
+# '3' means password must have at least 3 types of the above.
+SHARE_LINK_PASSWORD_STRENGTH_LEVEL = 3
 
 ##########################################################################
 ####  KEEPER specific settings
