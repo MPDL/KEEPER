@@ -57,6 +57,7 @@ from pickle import loads
 logger = logging.getLogger(__name__)
 
 DOXI_URL = DOI_SERVER + "/doxi/rest/doi"
+CA_PATH = "/etc/ssl/certs/ca-certificates.crt"
 allowed_ip_prefixes = []
 # allowed_ip_prefixes = ['','172.16.1','10.10.','192.168.1.10','192.129.1.102']
 
@@ -297,7 +298,7 @@ def request_doxi(shared_link, doxi_payload):
         user=DOI_USER
         pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml', 'charset': 'utf-8'}
-        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, data=doxi_payload.encode('utf-8'), timeout=DOI_TIMEOUT)
+        response = requests.put(DOXI_URL, auth=(user, pwd), headers=headers, params={'url': shared_link}, verify=CA_PATH, data=doxi_payload.encode('utf-8'), timeout=DOI_TIMEOUT)
         return response
     except Timeout:
         return JsonResponse({
