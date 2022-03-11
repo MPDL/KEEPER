@@ -27,7 +27,7 @@ rows = cur.fetchall()
 # for row in rows:
     # print(row)
 
-if rows[0] == 1:
+if rows[0] != 0:
     print("No new FileOpsStat entries since {HOURS} hours. WARNING: libevents propagation probably does not work anymore.")
     RC = 2
 
