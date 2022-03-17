@@ -7,11 +7,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
 from django.db import connection
 
-"""Get FileOpsStat status, and thus libevents correct propogation"""
+"""Get FileOpsStat last update status, and thus try to indicate libevents correct propagation"""
 
 """
-If there are no entries in the `FileOpsStat` since x `HOURS` then most probably libevents propagation does not work
-**NOTE:** timestamp in `FileOpsStat` saved in other timezone (from NOW() - x - 2 `HOURS`), thus add 2 HOURS. 1 HOUR is added to set time span to be in.
+If there are no entries in the `FileOpsStat` since x `HOURS` then most probably libevents propagation does not work.
+**NOTE:** `HOURS`>1 because aggragation task takes some time and one HOUR is added to set time span to be in.
 """
 
 RC = 0
