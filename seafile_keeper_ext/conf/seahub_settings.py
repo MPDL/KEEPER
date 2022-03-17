@@ -57,40 +57,53 @@ import os
 LOG_DIR = os.environ.get('SEAHUB_LOG_DIR', '/tmp')
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    # Enable existing loggers so that gunicorn errors will be bubbled up when
+      # server side error page "Internal Server Error" occurs.
+      # ref: https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+    'disable_existing_loggers': False,
     'formatters': {
         'standard': {
             'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         },
-        'syslog-django_request': {
-            'format': '__NODE_FQDN__ django_request: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
-        },
-        'syslog-seahub': {
-            'format': '__NODE_FQDN__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
-        },
+        # 'syslog-django_request': {
+            # 'format': '__NODE_FQDN__ django_request: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+        # },
+        # 'syslog-seahub': {
+            # 'format': '__NODE_FQDN__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+        # },
     },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-         }
-     },
+         },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
+         },
+    },
     'handlers': {
+        'console': {
+              'level': 'DEBUG',
+              'filters': ['require_debug_true'],
+              'class': 'logging.StreamHandler',
+              'formatter': 'standard',
+        },
         'default': {
-            'level':'DEBUG' if DEBUG else 'INFO',
+            # 'level':'DEBUG' if DEBUG else 'INFO',
+            'level':'INFO',
             'class':'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(LOG_DIR, 'seahub.log'),
             'maxBytes': 1024*1024*10, # 10 MB
             'backupCount': 52,
             'formatter':'standard',
         },
-        'request_handler': {
-                'level':'INFO',
-                'class':'logging.handlers.RotatingFileHandler',
-                'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
-                'maxBytes': 1024*1024*10, # 10 MB
-                'backupCount': 52,
-                'formatter':'standard',
-        },
+        # 'request_handler': {
+                # 'level':'INFO',
+                # 'class':'logging.handlers.RotatingFileHandler',
+                # 'filename': os.path.join(LOG_DIR, 'seahub_django_request.log'),
+                # 'maxBytes': 1024*1024*10, # 10 MB
+                # 'backupCount': 52,
+                # 'formatter':'standard',
+        # },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -136,9 +149,14 @@ LOGGING = {
         },
         'django.request': {
             # 'handlers': ['request_handler', 'mail_admins', 'syslog-django_request'],
-            'handlers': ['request_handler', 'mail_admins'],
+            'handlers': ['default', 'mail_admins'],
             'level': 'INFO',
             'propagate': False
+        },
+        'py.warnings': {
+              'handlers': ['console', ],
+              'level': 'INFO',
+              'propagate': False
         },
         'post_office': {
             'handlers': ['post_office'],
