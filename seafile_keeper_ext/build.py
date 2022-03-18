@@ -359,7 +359,7 @@ class EnvManager(object):
         if is_background:
             kc.set('http', '__WEBDAV_ENABLED__', 'false')
         # TODO: move here entries items from expand_properties if possible
- 
+
     def set_seafile_env(self):
 
         # self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -479,6 +479,8 @@ class EnvManager(object):
 
         self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
         self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
+        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_file_ops_stat_status.sh')
+        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_file_ops_stat_status.sh')
 
         self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
@@ -757,6 +759,10 @@ def deploy_system_conf():
 
     # create keeper log dir
     Utils.must_mkdir(env_mgr.keeper_var_log_dir)
+
+    # create keeper tmp dir 
+    Utils.must_mkdir(env_mgr.keeper_tmp_dir)
+
 
     ### set chown and permissions for target dirs (system related)
     Utils.set_perms(dirs=(
