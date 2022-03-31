@@ -7,6 +7,11 @@ SEAFILE_LATEST_DIR=${SEAFILE_DIR}/seafile-server-latest
 
 RC=0
 
+PID_FILE="${SEAFILE_LATEST_DIR}/runtime/object_storage_integrity.$$.pid"
+#remove PID on EXIT
+trap "rm -f -- '$PID_FILE'" EXIT
+
+
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
@@ -32,6 +37,12 @@ function check_object_storage_integrity () {
 
 
 ###### CHECK 
+
+# check_object_storage_integrity.sh is already running!
+if [  $(find "${SEAFILE_LATEST_DIR}/runtime" -name "object_storage_integrity.*.pid" )  ]; then
+    err_and_exit "$(basename $0) is already running, please check!"
+fi
+
 if [ ! -L "${SEAFILE_LATEST_DIR}" ]; then
 	err_and_exit "Link $SEAFILE_LATEST_DIR does not exist."
 fi
@@ -41,6 +52,9 @@ RESULT=$(mount -t gpfs)
 if [[ ! "$RESULT" =~ "${__GPFS_DEVICE__} on /keeper type gpfs" ]]; then
 	err_and_exit "Cannot find mounted gpfs: $RESULT" 
 fi
+
+#create PID file
+echo $$ > "$PID_FILE"
 
 ##### START
 echo "seaf_fsck started at $(date)"
