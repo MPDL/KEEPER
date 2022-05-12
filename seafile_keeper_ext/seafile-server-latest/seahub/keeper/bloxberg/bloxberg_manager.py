@@ -180,7 +180,7 @@ def scan_certificates(directory):
                     logger.error(f'transaction_id: {transaction_id}')
                     logger.error(f'crid: {fHash}')
                 certificate.pdf = pdfName
-                certificate.md_json = fData
+                certificate.md_json = json.dumps(metadata_json)
                 certificate.status = "DONE"
                 certificate.save()
 
