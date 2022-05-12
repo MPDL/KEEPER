@@ -559,7 +559,7 @@ class Footer extends React.Component {
                   <a href="https://www.seafile.com/en/home/" target="_blank">The software behind Keeper <img
                     id="seafile-logo"
                     src="/media/custom/seafile_logo_footer.png"
-                    height="35"/>© 2021 Seafile</a>
+                    height="35"/>© 2022 Seafile</a>
                 </div>
               </div>
             </div>
