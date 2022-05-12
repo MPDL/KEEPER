@@ -909,7 +909,7 @@ def do_generate(args):
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
-        else: 
+        else:
             # copy frontend/build to ext by default
             args.frontend_build = True
             args.seafile_src_to_ext = False
