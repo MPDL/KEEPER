@@ -12,7 +12,8 @@ WEEKDAY=`date '+%u'`
 DAYOFMONTH=`date '+%d'`
 GPFS_SNAPSHOT="mmbackupSnap${TODAY}"
 CLEANUP_SNAPSHOTS=1
-SHADOW_DB_REBUILD_DAY=7
+SHADOW_DB_REBUILD_MONTH_DAY=1
+SHADOW_DB_REBUILD_WEEK_DAY=7
 DB_BACKUP_DIR=/keeper/db-backup
 TMP_DIR=/keeper/tmp
 
@@ -98,8 +99,10 @@ function do_tsm_backup () {
 
         [ $? -ne 0 ] && warn "Incremental TSM backup has failed" || echo_green "OK"
 
-        # Rebuild the shadow database on Sundays
-        if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_DAY ]; then
+        ## Rebuild the shadow database on Sundays
+        #if [ "$WEEKDAY" = $SHADOW_DB_REBUILD_WEEK_DAY ]; then
+        # Rebuild the shadow database on day of month 
+        if [ "$DAYOFMONTH" = $SHADOW_DB_REBUILD_MONTH_DAY ]; then
              mmbackup /keeper --noquote --rebuild -s $TMP_DIR -v -B 1000 -L 2 -m 8 -a 1 | tee /opt/seafile/logs/mmbackup-rebuild-${TODAY}.log
             [ $? -ne 0 ] && warn "Rebuild of shadow DB has failed" || echo_green "OK"
         fi

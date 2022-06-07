@@ -723,18 +723,24 @@ def deploy_ext():
 
     ### set chown and permissions for target dirs (ext related)
 
+    group=keep_ini.get('system', '__OS_GROUP__')
+    user=keep_ini.get('system', '__OS_USER__')
     Utils.set_perms(dirs=(
         env_mgr.ccnet_dir,
-        env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
+        # env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data'],
         env_mgr.central_config_dir,
         env_mgr.SEAF_EXT_DIR_MAPPING['scripts'],
         env_mgr.pro_data_dir,
         env_mgr.seafile_logs_dir,
         env_mgr.install_path,
         ),
-        group=keep_ini.get('system', '__OS_GROUP__'),
-        user=keep_ini.get('system', '__OS_USER__'),
+        group=group,
+        user=user
     )
+    # huge on production, chown/chmod -R much faster
+    seahub_data_dir=env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data']
+    Utils.run(f"chown -R {group}:{user} {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+    Utils.run(f"chmod -R 755 {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
 def deploy_i18n():
     """
