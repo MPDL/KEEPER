@@ -571,10 +571,8 @@ EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 
 MULTI_INSTITUTION = True
 
-EXTRA_MIDDLEWARE_CLASSES = (
+EXTRA_MIDDLEWARE = (
     'seahub.institutions.middleware.InstitutionMiddleware',
-    'shibboleth.middleware.ShibbolethRemoteUserMiddleware',
-    'seahub_extra.organizations.middleware.RedirectMiddleware',
 )
 
 EXTRA_AUTHENTICATION_BACKENDS = (
