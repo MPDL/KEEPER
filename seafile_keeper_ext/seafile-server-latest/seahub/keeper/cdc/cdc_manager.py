@@ -286,7 +286,9 @@ def generate_certificate(repo, commit):
             jars = ":".join([MODULE_PATH + '/' + e for e in CDC_GENERATOR_JARS])
             tmp_path = tempfile.gettempdir() + "/" + cdc_pdf
             args = [ "date;",
-                    "java", "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
+                    "java",
+                    "-Djava.awt.headless=true",
+                    "-cp", jars, CDC_GENERATOR_MAIN_CLASS,
                     "-i", quote_arg(cdc_id),
                     "-t", quote_arg(cdc_dict['Title']),
                     "-aa", quote_arg(cdc_dict['Author']),
