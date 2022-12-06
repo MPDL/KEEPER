@@ -34,7 +34,7 @@ class BloxbergCertificatePage extends React.Component {
   render() {
 
     let PDFViewerClassName = this.state.modalIsOpen ? "file-view-content-full flex-1 pdf-file-view col-md-8 offset-md-2" : "file-view-content flex-1 pdf-file-view col-md-6 offset-md-1"
-    let transactionLink = "https://blockexplorer.bloxberg.org/tx/" + transactionId + "/internal_transactions"
+    let transactionLink = "__BLOXBERG_EXPLORER__/tx/" + transactionId
     return(
        <div className="h-100 d-flex flex-column">
           <div className="top-header d-flex justify-content-between">
