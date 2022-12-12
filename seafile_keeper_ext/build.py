@@ -744,7 +744,7 @@ def deploy_ext():
 
 def deploy_i18n():
     """
-    Deploy i18n 
+    Deploy i18n
     """
 
     Utils.info('Deploy i18n...')
@@ -898,12 +898,15 @@ def do_restore(args):
         Utils.info('smth. else')
 
 def do_generate(args):
+    keep_ini = env_mgr.keeper_config
+    user=keep_ini.get('system', '__OS_USER__')
+
     if args.msgen:
         Utils.info('Generate English translation catalog...')
         po_file = 'django.po'
         en_django_po_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
         backup(os.path.join(en_django_po_dir, po_file), mv=False)
-        Utils.run("msgen {} > {}".format(po_file + BACKUP_POSTFIX, po_file), cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
+        Utils.run(f"msgen {po_file + BACKUP_POSTFIX} > {po_file}", cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
         Utils.info('Generate i18n...')
         Utils.run("make locale-keeper statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
@@ -914,20 +917,20 @@ def do_generate(args):
         cmd = "yui-compressor -v seahub.css -o seahub.min.css"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
         if RC != 0:
-            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+            Utils.error(f"Cannot run {cmd}, RC={RC}")
     elif args.frontend:
         Utils.info('Generate frontend...')
-        cmd = "npm install && npm run build"
+        cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} npm run build"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
-            Utils.error("Cannot run {}, RC={}".format(cmd, RC))
+            Utils.error(f"Cannot run {cmd}, RC={RC}")
         else:
             # copy frontend/build to ext by default
             args.frontend_build = True
             args.seafile_src_to_ext = False
             do_upgrade(args)
             # deploy assets
-            Utils.run("make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+            Utils.run(f"sudo -u {user} make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
 def do_run(args):
     if args.frontend_dev:
