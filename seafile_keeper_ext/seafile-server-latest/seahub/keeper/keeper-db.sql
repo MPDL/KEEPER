@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.6.6deb5
+-- version 4.6.6deb5ubuntu0.5
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 29, 2020 at 08:47 AM
--- Server version: 10.4.12-MariaDB-1:10.4.12+maria~bionic-log
--- PHP Version: 7.2.24-0ubuntu0.18.04.3
+-- Generation Time: Dec 16, 2022 at 12:01 AM
+-- Server version: 10.4.17-MariaDB-1:10.4.17+maria~bionic-log
+-- PHP Version: 7.2.24-0ubuntu0.18.04.15
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -35,8 +35,16 @@ CREATE TABLE IF NOT EXISTS `bloxberg_certificate` (
   `created` datetime NOT NULL,
   `owner` varchar(255) NOT NULL,
   `checksum` varchar(64) NOT NULL,
+  `md` longtext NOT NULL,
+  `md_json` longtext NOT NULL,
+  `pdf` longtext DEFAULT NULL,
+  `content_type` longtext NOT NULL,
+  `content_name` longtext NOT NULL,
+  `status` varchar(30) NOT NULL,
+  `error_msg` longtext DEFAULT NULL,
   PRIMARY KEY (`obj_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=8878 DEFAULT CHARSET=utf8;
+
 
 --
 -- Table structure for table `cdc_repos`
@@ -50,9 +58,8 @@ CREATE TABLE IF NOT EXISTS `cdc_repos` (
   `modified` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`repo_id`),
   KEY `cdc_id` (`cdc_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=698 DEFAULT CHARSET=utf8;
 
--- --------------------------------------------------------
 
 --
 -- Table structure for table `doi_repos`
@@ -70,6 +77,7 @@ CREATE TABLE IF NOT EXISTS `doi_repos` (
   `rm` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`doi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 --
 -- Table structure for table `keeper_archive`
@@ -95,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `keeper_archive` (
   KEY `ix_keeper_archive_repo_id` (`repo_id`),
   KEY `ix_keeper_archive_version` (`version`),
   KEY `ix_keeper_archive_owner` (`owner`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8;
 
 
 --
@@ -105,8 +113,6 @@ DELIMITER $$
 CREATE TRIGGER `update_catalog_archive_status` AFTER UPDATE ON `keeper_archive` FOR EACH ROW UPDATE keeper_catalog SET is_archived=1 WHERE repo_id=NEW.repo_id AND is_archived=0 AND NEW.status='DONE'
 $$
 DELIMITER ;
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `keeper_archive_owner_quota`
@@ -120,10 +126,8 @@ CREATE TABLE IF NOT EXISTS `keeper_archive_owner_quota` (
   PRIMARY KEY (`qid`,`owner`),
   UNIQUE KEY `unq_keeper_archive_quota_owner_repo_id` (`repo_id`,`owner`),
   KEY `ix_keeper_archive_owner_quota_repo_id` (`repo_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `keeper_catalog`
@@ -134,14 +138,14 @@ CREATE TABLE IF NOT EXISTS `keeper_catalog` (
   `repo_name` varchar(255) NOT NULL,
   `catalog_id` int(11) NOT NULL AUTO_INCREMENT,
   `owner` varchar(255) NOT NULL,
-  `md` text NOT NULL,
+  `md` longtext NOT NULL,
   `created` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `modified` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `rm` timestamp NULL DEFAULT NULL,
   `is_archived` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`catalog_id`),
   UNIQUE KEY `repo_id` (`repo_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=34696 DEFAULT CHARSET=utf8;
 
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
