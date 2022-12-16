@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `keeper_archive` (
 -- Triggers `keeper_archive`
 --
 DELIMITER $$
-CREATE TRIGGER `update_catalog_archive_status` AFTER UPDATE ON `keeper_archive` FOR EACH ROW UPDATE keeper_catalog SET is_archived=1 WHERE repo_id=NEW.repo_id AND is_archived=0 AND NEW.status='DONE'
+CREATE TRIGGER IF NOT EXISTS `update_catalog_archive_status` AFTER UPDATE ON `keeper_archive` FOR EACH ROW UPDATE keeper_catalog SET is_archived=1 WHERE repo_id=NEW.repo_id AND is_archived=0 AND NEW.status='DONE'
 $$
 DELIMITER ;
 
