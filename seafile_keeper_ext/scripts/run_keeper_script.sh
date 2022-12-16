@@ -33,7 +33,7 @@ export PYTHONIOENCODING=utf-8
 
 #echo $PYTHONPATH
 
-python $*  
+python3 $*  
 
 
 
