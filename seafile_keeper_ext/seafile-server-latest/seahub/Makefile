@@ -24,7 +24,8 @@ locale-keeper:
 
 statici18n:
 	@echo "--> Generate JS locale files in static/scripts/i18n"
-	python manage.py compilejsi18n
+	# python3 manage.py compilejsi18n
+	$(RUN_KEEPER) manage.py compilejsi18n
 
 collectstatic:
 	@echo "--> Collect django static files to media/assets"
