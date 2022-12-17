@@ -562,9 +562,11 @@ EMAIL_HOST = '__EMAIL_HOST__'        # smpt server
 EMAIL_PORT = '__EMAIL_PORT__'
 DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
 SERVER_EMAIL = '__SERVER_EMAIL__'
-#settings only for BACKGROUND & SINGLE, removed APPs by build.py
-EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
-EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
+# define var only if prop available
+if '__EMAIL_HOST_USER__'[1:] != '_EMAIL_HOST_USER__':
+    EMAIL_HOST_USER = '__EMAIL_HOST_USER__'    # username and domain
+if '__EMAIL_HOST_PASSWORD__'[1:] != '_EMAIL_HOST_PASSWORD__':
+    EMAIL_HOST_PASSWORD = '__EMAIL_HOST_PASSWORD__'    # password
 
 ##########################################################################
 #### Multiple Organization/Institution User Management, see http://manual.seafile.com/deploy_pro/multi_institutions.html
