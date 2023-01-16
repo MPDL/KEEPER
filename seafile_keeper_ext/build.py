@@ -594,7 +594,7 @@ def backup(path, mv=True):
 
 
 
-def deploy_file(path, expand=False, dest_dir=None, skip_backup=False):
+def deploy_file(path, expand=False, dest_dir=None, skip_backup=True):
 
     Utils.check_file(path)
 
@@ -642,6 +642,7 @@ def deploy_file(path, expand=False, dest_dir=None, skip_backup=False):
             content = expand_properties(fin.read(), path)
             fout.write(content)
     else:
+        import stat
         shutil.copyfile(path, dest_path)
     Utils.info(Utils.highlight("%s has been deployed into %s%s" % (path, dest_path, " (expanded)" if expand else "")))
 
@@ -680,19 +681,38 @@ def deploy_ext():
 
     keep_ini = env_mgr.keeper_config
 
+    
+
+
     ### deploy dirs
     for path in ('scripts', 'seahub-data', 'conf'):
         deploy_dir(path, expand=True)
 
+    # deploy seafile-server-latest w/o expantion
+    deploy_dir('seafile-server-latest')
+
+    # redeploy selected files with expantion in seafile-server-latest
+    deploy_file('seafile-server-latest/seafile.sh', expand=True)
+    for path in (
+      'Makefile', 
+      'seahub/settings.py', 
+      'frontend/config/webpack.config.js',
+      'frontend/src/bloxberg-certificate.js',
+      'media/js/pdf/viewer.js',
+      'keeper/cdc/generate_cdc.sh',
+      'keeper/cdc/cdc_manager.py',
+      'keeper/tests/run_tests.sh',
+      'keeper/tests/test_archiving.py',
+      'keeper/catalog/templates/catalog.html' ): 
+      deploy_file('seafile-server-latest/seahub/' + path, expand=True)
+
+
     ### create ext-deploymnet related symlinks
     do_links((
-        #(env_mgr.django_admin_link, env_mgr.django_admin_path),
         (env_mgr.custom_link, env_mgr.custom_dir),
         (env_mgr.avatars_link, env_mgr.avatars_dir),
     ))
 
-    ### deploy seafile-serverl-latest
-    deploy_dir('seafile-server-latest', expand=True)
 
     ### dist keeper
     Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
@@ -703,18 +723,6 @@ def deploy_ext():
         (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
     ))
 
-    # create nagios checks links
-
-    do_links((
-        (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
-        (env_mgr.keeper_nagios_check_keeper_elasticsearch_link, env_mgr.keeper_nagios_check_keeper_elasticsearch_path),
-        (env_mgr.keeper_nagios_check_gpfs_health_link, env_mgr.keeper_nagios_check_gpfs_health_path),
-        (env_mgr.keeper_nagios_check_tmp_link, env_mgr.keeper_nagios_check_tmp_path),
-        (env_mgr.keeper_nagios_check_logfiles_link, env_mgr.keeper_nagios_check_logfiles_path)
-    ))
-
-    # create seafile log dir
-    Utils.must_mkdir(env_mgr.seafile_logs_dir)
 
     ### set chown and permissions for target dirs (ext related)
 
@@ -732,7 +740,7 @@ def deploy_ext():
         group=group,
         user=user
     )
-    # huge on production, chown/chmod -R much faster
+    # seahub-date is huge on production, chown/chmod -R much faster
     seahub_data_dir=env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data']
     Utils.run(f"chown -R {group}:{user} {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
     Utils.run(f"chmod -R 755 {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
@@ -826,6 +834,20 @@ def deploy_system_conf():
         (env_mgr.keeper_service_link, env_mgr.keeper_service_path),
         (env_mgr.keeper_service_systemd_multi_user_target_wants_link, env_mgr.keeper_service_systemd_multi_user_target_wants_path),
     ))
+
+    # create nagios checks links
+
+    do_links((
+        (env_mgr.keeper_nagios_check_keeper_viruses_link, env_mgr.keeper_nagios_check_keeper_viruses_path),
+        (env_mgr.keeper_nagios_check_keeper_elasticsearch_link, env_mgr.keeper_nagios_check_keeper_elasticsearch_path),
+        (env_mgr.keeper_nagios_check_gpfs_health_link, env_mgr.keeper_nagios_check_gpfs_health_path),
+        (env_mgr.keeper_nagios_check_tmp_link, env_mgr.keeper_nagios_check_tmp_path),
+        (env_mgr.keeper_nagios_check_logfiles_link, env_mgr.keeper_nagios_check_logfiles_path)
+    ))
+
+    # create seafile log dir
+    Utils.must_mkdir(env_mgr.seafile_logs_dir)
+
 
 
 def run_services():
