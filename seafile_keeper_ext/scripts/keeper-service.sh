@@ -63,7 +63,9 @@ function check_run_tmp() {
     [ ! -d "/run" ] && err_and_exit "/run directory DOES NOT exists, cannot start."
     mkdir -p /run/tmp && chmod 1777 /run/tmp
     [ $? -ne 0 ] && err_and_exit "Cannot create /run/tmp."
+    chown keepalived_script:keepalived_script /var/run/keepalived.state
 }
+
 
 function check_mysql () {
     RESULT=$(systemctl status mysql.service)
@@ -94,6 +96,7 @@ function check_keepalived () {
         RESULT=$(systemctl is-active keepalived.service)
         [[ $RESULT != "active" ]] && warn "keepalived is not runnig on the node"
     fi
+    [ -e "/var/run/keepalived.state" ] && chown keepalived_script:keepalived_script /var/run/keepalived.state
 }
 
 # switch HTTP configurations between default and maintenance
@@ -182,6 +185,7 @@ case "$1" in
             fi
 
             if [ ${__NODE_TYPE__} == "APP" ]; then
+                check_keepalived
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 systemctl ${1} ${WEB_SERVER}.service
@@ -266,7 +270,7 @@ case "$1" in
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
                 check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
             fi    
-            if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
+            if [ ${__NODE_TYPE__} == "APP" ] ; then
                 check_keepalived
             fi
             check_memcached
