@@ -681,9 +681,6 @@ def deploy_ext():
 
     keep_ini = env_mgr.keeper_config
 
-    
-
-
     ### deploy dirs
     for path in ('scripts', 'seahub-data', 'conf'):
         deploy_dir(path, expand=True)
@@ -691,7 +688,7 @@ def deploy_ext():
     # deploy seafile-server-latest w/o expantion
     deploy_dir('seafile-server-latest')
 
-    # redeploy selected files with expantion in seafile-server-latest
+    # redeploy selected files with expantion (i.e. with props in them) in seafile-server-latest
     deploy_file('seafile-server-latest/seafile.sh', expand=True)
     for path in (
       'Makefile', 
@@ -706,13 +703,11 @@ def deploy_ext():
       'keeper/catalog/templates/catalog.html' ): 
       deploy_file('seafile-server-latest/seahub/' + path, expand=True)
 
-
     ### create ext-deploymnet related symlinks
     do_links((
         (env_mgr.custom_link, env_mgr.custom_dir),
         (env_mgr.avatars_link, env_mgr.avatars_dir),
     ))
-
 
     ### dist keeper
     Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
@@ -723,9 +718,7 @@ def deploy_ext():
         (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
     ))
 
-
     ### set chown and permissions for target dirs (ext related)
-
     group=keep_ini.get('system', '__OS_GROUP__')
     user=keep_ini.get('system', '__OS_USER__')
     Utils.set_perms(dirs=(
@@ -740,7 +733,8 @@ def deploy_ext():
         group=group,
         user=user
     )
-    # seahub-date is huge on production, chown/chmod -R much faster
+    
+    # seahub-data is huge on production, chown/chmod -R much faster
     seahub_data_dir=env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data']
     Utils.run(f"chown -R {group}:{user} {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
     Utils.run(f"chmod -R 755 {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
