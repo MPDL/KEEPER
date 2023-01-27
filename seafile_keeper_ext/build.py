@@ -418,6 +418,8 @@ class EnvManager(object):
             'system/10-rsyslogd-remote.conf': os.path.join('/etc', 'rsyslog.d', '10-rsyslogd-remote.conf'),
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
+            'system/postfix.main.cf': os.path.join('/etc', 'postfix', 'main.cf'),
+            'system/postfix.main.cf@background': os.path.join('/etc', 'postfix', 'main.cf'),
             'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
             'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
@@ -634,7 +636,7 @@ def deploy_file(path, expand=False, dest_dir=None, skip_backup=True):
 
     # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
     # file types to be expanded
-    white_list_ends = ('.conf', '.cfg', '.cnf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service')
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.cf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service')
     # files to be expanded
     white_list_names = ('Makefile', 'cron-keeper', 'cron-keeper-background')
     if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
@@ -795,6 +797,7 @@ def deploy_system_conf():
         deploy_file('system/memcached.conf')
         deploy_file('system/keepalived.conf', expand=True)
         deploy_file('system/memcached.service.d.local.conf', expand=True)
+        deploy_file('system/postfix.main.cf', expand=True)
         deploy_file('system/journald.conf', expand=True)
         deploy_file('system/keeper-oos-log.service', expand=True)
         os.chmod(env_mgr.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service'], 0o755)
@@ -807,6 +810,7 @@ def deploy_system_conf():
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True, skip_backup=True)
+        deploy_file('system/postfix.main.cf@background', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
         deploy_file('system/keeper.service@background', expand=True, skip_backup=True)
