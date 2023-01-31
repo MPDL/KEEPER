@@ -168,7 +168,8 @@ def scan_certificates(directory):
         if entry.path.endswith(".pdf") and entry.is_file():
             pdfPath, pdfName = os.path.split(entry.path)
             handler = open(entry.path, 'rb')
-            reader = PyPDF2.PdfFileReader(handler)
+            # reader = PyPDF2.PdfFileReader(handler)
+            reader = PyPDF2.PdfReader(handler)
             dictionary = getAttachments(reader)
             for fName, fData in dictionary.items():
                 metadata_json = json.loads(fData)
@@ -198,8 +199,10 @@ def getAttachments(reader):
           if isinstance(f, str):
               name = f
               dataIndex = fileNames.index(f) + 1
-              fDict = fileNames[dataIndex].getObject()
-              fData = fDict['/EF']['/F'].getData()
+              # fDict = fileNames[dataIndex]. getObject()
+              fDict = fileNames[dataIndex].get_object()
+              # fData = fDict['/EF']['/F'].getData()
+              fData = fDict['/EF']['/F'].get_data()
               attachments[name] = fData
 
       return attachments
