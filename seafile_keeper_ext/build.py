@@ -565,9 +565,9 @@ def expand_properties(content, path):
             # convert comma separated unicast peers to keepealived.conf valid value
             if key == '__MEMCACHED_KA_UNICAST_PEERS__' and ',' in value and path.endswith('keepalived.conf'):
                 value = '\n'.join(value.split(','))
-            if key == '__BG_ALLOWED_IPS_BLOCK__' and not is_background:
-                value = ''
-            
+            if key == '__BG_ALLOWED_IPS__':
+                value = f'    allow {value};\n    deny all;' if is_background else ''
+ 
             # expand  __PROP__ and not ${__PROP__}
             content = re.sub(r"(?<!\$\{)(" + key + r")(?<!\})", value, content)
 
