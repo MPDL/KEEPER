@@ -739,10 +739,11 @@ def deploy_ext():
         user=user
     )
     
-    # seahub-data is huge on production, chown/chmod -R much faster
     seahub_data_dir=env_mgr.SEAF_EXT_DIR_MAPPING['seahub-data']
-    Utils.run(f"chown -R {group}:{user} {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
-    Utils.run(f"chmod -R 755 {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+    # DO NOT chown on PROD if seahub-dir is link to gpfs!
+    if not os.path.islink(seahub_data_dir):
+        Utils.run(f"chown -R {group}:{user} {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+        Utils.run(f"chmod -R 755 {seahub_data_dir}", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
 def deploy_i18n():
     """
