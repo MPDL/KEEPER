@@ -63,7 +63,8 @@ function check_run_tmp() {
     [ ! -d "/run" ] && err_and_exit "/run directory DOES NOT exists, cannot start."
     mkdir -p /run/tmp && chmod 1777 /run/tmp
     [ $? -ne 0 ] && err_and_exit "Cannot create /run/tmp."
-    chown keepalived_script:keepalived_script /var/run/keepalived.state
+    KE_STATE_FILE=/var/run/keepalived.state
+    [ ! -e "$KE_STATE_FILE" ] && touch $KE_STATE_FILE && chown keepalived_script:keepalived_script $KE_STATE_FILE
 }
 
 
