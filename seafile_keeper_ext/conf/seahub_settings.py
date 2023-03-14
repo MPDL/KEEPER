@@ -625,6 +625,8 @@ ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
 ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt', 'fodt', 'odp', 'fodp', 'ods', 'fods')
 ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
 ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
+# Enable force save to let user can save file when he/she press the save button on OnlyOffice file edit page.
+ONLYOFFICE_FORCE_SAVE = True
 
 # If show contact email when search user.
 ENABLE_SHOW_CONTACT_EMAIL_WHEN_SEARCH_USER = True
