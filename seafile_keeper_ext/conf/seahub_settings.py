@@ -618,7 +618,7 @@ ALWAYS_SORT_USERS_BY_QUOTA_USAGE =  True
 # Enable Onlyoffice
 ENABLE_ONLYOFFICE = __ENABLE_ONLYOFFICE__
 # VERIFY_ONLYOFFICE_CERTIFICATE = True
-VERIFY_ONLYOFFICE_CERTIFICATE = False # FIXME: only for test w/o ssl certs!
+VERIFY_ONLYOFFICE_CERTIFICATE = False
 
 # OnlyIffice settings
 ONLYOFFICE_APIJS_URL = '__ONLYOFFICE_APIJS_URL__'
@@ -626,7 +626,7 @@ ONLYOFFICE_FILE_EXTENSION = ('doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'odt',
 ONLYOFFICE_EDIT_FILE_EXTENSION = ('docx', 'pptx', 'xlsx')
 ONLYOFFICE_JWT_SECRET = '__ONLYOFFICE_JWT_SECRET__'
 # Enable force save to let user can save file when he/she press the save button on OnlyOffice file edit page.
-ONLYOFFICE_FORCE_SAVE = True
+# ONLYOFFICE_FORCE_SAVE = True
 
 # If show contact email when search user.
 ENABLE_SHOW_CONTACT_EMAIL_WHEN_SEARCH_USER = True
