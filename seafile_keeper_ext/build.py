@@ -414,7 +414,6 @@ class EnvManager(object):
             'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
             'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
             'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
-            'system/rsyslog.conf': os.path.join('/etc', 'rsyslog.conf'),
             'system/10-rsyslogd-remote.conf': os.path.join('/etc', 'rsyslog.d', '10-rsyslogd-remote.conf'),
             'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
             'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
@@ -785,7 +784,6 @@ def deploy_system_conf():
     # deploy common confs
     deploy_file('system/nginx.conf', expand=True)
     deploy_file('system/phpmyadmin.conf', expand=True)
-    deploy_file('system/rsyslog.conf', expand=True)
     deploy_file('system/10-rsyslogd-remote.conf', expand=True)
     deploy_file('system/my.cnf', expand=True)
     deploy_file('system/nagios.keeper.cfg',expand=True)
