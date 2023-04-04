@@ -13,7 +13,7 @@ RC = 0
 
 cur = connection.cursor()
 
-cur.execute("SELECT * FROM `VirusFile` WHERE `has_handle`=0")
+cur.execute("SELECT * FROM `VirusFile` WHERE has_deleted=0 AND has_ignored=0")
 rows = cur.fetchall()
 
 
