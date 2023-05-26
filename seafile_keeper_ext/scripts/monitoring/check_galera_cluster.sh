@@ -171,7 +171,16 @@ rReady=$(echo "$rMysqlStatus" | awk '/wsrep_ready/ {print $2}') # ON
 rConnected=$(echo "$rMysqlStatus" | awk '/wsrep_connected/ {print $2}') # ON
 rLocalStateComment=$(echo "$rMysqlStatus" | awk '/wsrep_local_state_comment/ {print $2}') # Synced
 rIncommingAddresses=$(echo "$rMysqlStatus" | awk '/wsrep_incoming_addresses/ {print $2}') 
-  
+
+#VLAD: see https://galeracluster.com/library/documentation/monitoring-cluster.html
+rlqa=0.01
+rLocalRecvQueueAvg=$(echo "$rMysqlStatus" | awk '/wsrep_local_recv_queue_avg/ {print $2}') # < 0.1
+if [ $(echo "$rLocalRecvQueueAvg > $rlqa" | bc) = 1 ]; then
+    echo "WARNING: wsrep_local_recv_que_avg is > $rlqa ($rLocalRecvQueueAvg)"
+  warnAlerts=$(($warnAlerts+1))
+fi
+
+
 if [ -z "$rFlowControl" ]; then
   echo "UNKNOWN: wsrep_flow_control_paused is empty"
   unknAlerts=$(($unknAlerts+1))
@@ -208,12 +217,15 @@ if [ $rClusterSize -gt $warn ]; then
   # only display the ok message if the state check not enabled
   if [ -z "$stateFile" ]; then
     echo "OK: number of NODES = $rClusterSize (wsrep_cluster_size)"
+    echo "DEBUG: $rMysqlStatus"
   fi
 elif [ $rClusterSize  -le $crit ]; then
   echo "CRITICAL: number of NODES = $rClusterSize (wsrep_cluster_size)"
+    echo "DEBUG: $rMysqlStatus"
   critAlerts=$(($criticalAlerts+1))
 elif [ $rClusterSize -le $warn ]; then
     echo "WARNING: number of NODES = $rClusterSize (wsrep_cluster_size)"
+    echo "DEBUG: $rMysqlStatus"
     warnAlerts=$(($warnAlerts+1))
   else
    exit $ST_UK
