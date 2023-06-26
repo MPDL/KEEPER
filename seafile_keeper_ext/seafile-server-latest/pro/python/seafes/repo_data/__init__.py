@@ -24,7 +24,7 @@ class RepoData(object):
                      FROM Branch WHERE name = :name
                      AND repo_id NOT IN (SELECT repo_id from VirtualRepo)
                      limit :start, :count"""
-            ### KEEPER
+            ### KEEPER 
             #res = [(r['repo_id'], r['commit_id']) for r in session.execute(text(cmd),
             res = [(r[0], r[1]) for r in session.execute(text(cmd),
                                                      {'name': 'master',

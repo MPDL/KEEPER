@@ -56,7 +56,7 @@ from seahub.utils import render_error, is_org_context, \
     get_file_type_and_ext, gen_file_get_url, gen_file_share_link, \
     render_permission_error, is_pro_version, is_textual_file, \
     EMPTY_SHA1, HtmlDiff, gen_inner_file_get_url, \
-    user_traffic_over_limit, get_file_audit_events_by_path, \
+    get_file_audit_events_by_path, \
     generate_file_audit_event_type, FILE_AUDIT_ENABLED, \
     get_conf_text_ext, HAS_OFFICE_CONVERTER, PREVIEW_FILEEXT, \
     normalize_file_path, get_service_url, OFFICE_PREVIEW_MAX_SIZE, \
@@ -64,7 +64,7 @@ from seahub.utils import render_error, is_org_context, \
 from seahub.utils.ip import get_remote_ip
 from seahub.utils.timeutils import utc_to_local
 from seahub.utils.file_types import (IMAGE, PDF, SVG,
-        DOCUMENT, SPREADSHEET, AUDIO, MARKDOWN, TEXT, VIDEO, XMIND, CDOC)
+        DOCUMENT, SPREADSHEET, AUDIO, MARKDOWN, TEXT, VIDEO, XMIND)
 from seahub.utils.star import is_file_starred
 from seahub.utils.http import json_response, \
         BadRequestException, RequestForbbiddenException
@@ -81,8 +81,8 @@ from seahub.drafts.utils import get_file_draft, \
 
 if HAS_OFFICE_CONVERTER:
     from seahub.utils import (
-        query_office_convert_status, cluster_get_office_converted_page,
-        prepare_converted_html, get_office_converted_page, CLUSTER_MODE
+        query_office_convert_status, get_office_converted_page,
+        prepare_converted_html, 
     )
 
 import seahub.settings as settings
@@ -521,13 +521,11 @@ def view_lib_file(request, repo_id, path):
 
     if ENABLE_THIRDPARTY_EDITOR:
 
-
         filename = os.path.basename(path)
         filetype, fileext = get_file_type_and_ext(filename)
 
         action_url = THIRDPARTY_EDITOR_ACTION_URL_DICT.get(fileext, '')
         if action_url:
-
 
             user_repo_path_info = {
                 'request_user': request.user.username,
@@ -627,6 +625,7 @@ def view_lib_file(request, repo_id, path):
     except Exception as e:
         logger.error(e)
         latest_contributor, last_modified = None, 0
+
     return_dict['latest_contributor'] = latest_contributor
     return_dict['last_modified'] = last_modified
 
@@ -667,8 +666,7 @@ def view_lib_file(request, repo_id, path):
         if file_enc not in FILE_ENCODING_LIST:
             file_enc = 'auto'
 
-        error_msg, file_content, encoding = get_file_content(filetype,
-                inner_path, file_enc)
+        error_msg, file_content, encoding = get_file_content(filetype, inner_path, file_enc)
         if error_msg:
             return_dict['err'] = error_msg
             return render(request, template, return_dict)
@@ -731,6 +729,8 @@ def view_lib_file(request, repo_id, path):
     elif filetype in (VIDEO, AUDIO, PDF, SVG):
         return_dict['raw_path'] = raw_path
         send_file_access_msg(request, repo, path, 'web')
+        if filetype == VIDEO:
+            return_dict['enable_video_thumbnail'] = settings.ENABLE_VIDEO_THUMBNAIL
         return render(request, template, return_dict)
 
     elif filetype == XMIND:
@@ -742,9 +742,7 @@ def view_lib_file(request, repo_id, path):
             return_dict['xmind_image_src'] = urlquote(get_thumbnail_src(repo_id, XMIND_IMAGE_SIZE, path))
 
         return render(request, template, return_dict)
-        
-    elif filetype == CDOC:
-        return render(request, template, return_dict)    
+
     elif filetype == IMAGE:
 
         if file_size > FILE_PREVIEW_MAX_SIZE:
@@ -789,9 +787,6 @@ def view_lib_file(request, repo_id, path):
         if ENABLE_OFFICE_WEB_APP:
             action_name = None
             # first check if can view file
-            # KEEPER: view for readonly files
-            # if fileext in OFFICE_WEB_APP_FILE_EXTENSION or \
-                    # (fileext in OFFICE_WEB_APP_EDIT_FILE_EXTENSION and permission == 'r'):
             if fileext in OFFICE_WEB_APP_FILE_EXTENSION:
                 action_name = 'view'
 
@@ -802,9 +797,9 @@ def view_lib_file(request, repo_id, path):
                 action_name = 'edit'
 
             wopi_dict = get_wopi_dict(username, repo_id, path,
-                    action_name=action_name,
-                    language_code=request.LANGUAGE_CODE,
-                    can_download=parse_repo_perm(permission).can_download)
+                                      action_name=action_name,
+                                      language_code=request.LANGUAGE_CODE,
+                                      can_download=parse_repo_perm(permission).can_download)
 
             if wopi_dict:
                 send_file_access_msg(request, repo, path, 'web')
@@ -821,7 +816,8 @@ def view_lib_file(request, repo_id, path):
                 can_edit = True
 
             onlyoffice_dict = get_onlyoffice_dict(request, username, repo_id, path,
-                    can_edit=can_edit, can_download=parse_repo_perm(permission).can_download)
+                                                  can_edit=can_edit,
+                                                  can_download=parse_repo_perm(permission).can_download)
 
             if onlyoffice_dict:
                 if is_pro_version() and can_edit:
@@ -877,18 +873,29 @@ def view_lib_file(request, repo_id, path):
             return_dict['err'] = error_msg
             return render(request, template, return_dict)
 
-        error_msg = prepare_converted_html(inner_path, file_id, fileext, return_dict)
+        error_msg = prepare_converted_html(raw_path, file_id, fileext, return_dict)
         if error_msg:
             return_dict['err'] = error_msg
             return render(request, template, return_dict)
 
         send_file_access_msg(request, repo, path, 'web')
         return render(request, template, return_dict)
+    elif getattr(settings, 'ENABLE_CAD', False) and path.endswith('.dwg'):
+
+        from seahub.cad.utils import get_cad_dict
+        cad_dict = get_cad_dict(request, username, repo_id, path)
+
+        return_dict.update(cad_dict)
+
+        return render(request, 'view_file_cad.html', return_dict)
     else:
         return_dict['err'] = "File preview unsupported"
         return render(request, template, return_dict)
 
 def view_history_file_common(request, repo_id, ret_dict):
+
+    ret_dict['err'] = ''
+
     # check arguments
     repo = get_repo(repo_id)
     if not repo:
@@ -968,9 +975,9 @@ def view_history_file_common(request, repo_id, ret_dict):
             if is_textual_file(file_type=filetype):
                 handle_textual_file(request, filetype, inner_path, ret_dict)
             elif filetype == DOCUMENT:
-                handle_document(inner_path, obj_id, fileext, ret_dict)
+                handle_document(raw_path, obj_id, fileext, ret_dict)
             elif filetype == SPREADSHEET:
-                handle_spreadsheet(inner_path, obj_id, fileext, ret_dict)
+                handle_spreadsheet(raw_path, obj_id, fileext, ret_dict)
             else:
                 pass
         else:
@@ -996,6 +1003,9 @@ def view_history_file(request, repo_id):
     if not request.user_perm:
         return render_permission_error(request, _('Unable to view file'))
 
+    if ret_dict['err']:
+        return render(request, 'history_file_view_react.html', ret_dict)
+
     if 'wopi_dict' in ret_dict:
         wopi_dict = ret_dict['wopi_dict']
         return render(request, 'view_file_wopi.html', wopi_dict)
@@ -1018,6 +1028,9 @@ def view_trash_file(request, repo_id):
     view_history_file_common(request, repo_id, ret_dict)
     if not request.user_perm:
         return render_permission_error(request, _('Unable to view file'))
+
+    if ret_dict['err']:
+        return render(request, 'history_file_view_react.html', ret_dict)
 
     if 'wopi_dict' in ret_dict:
         wopi_dict = ret_dict['wopi_dict']
@@ -1045,6 +1058,9 @@ def view_snapshot_file(request, repo_id):
     view_history_file_common(request, repo_id, ret_dict)
     if not request.user_perm:
         return render_permission_error(request, _('Unable to view file'))
+
+    if ret_dict['err']:
+        return render(request, 'history_file_view_react.html', ret_dict)
 
     if 'wopi_dict' in ret_dict:
         wopi_dict = ret_dict['wopi_dict']
@@ -1087,11 +1103,6 @@ def _download_file_from_share_link(request, fileshare):
     obj_id = seafile_api.get_file_id_by_path(repo.id, real_path)
     if not obj_id:
         messages.error(request, _('Unable to download file, wrong file path'))
-        return HttpResponseRedirect(next_page)
-
-    # check whether owner's traffic over the limit
-    if user_traffic_over_limit(fileshare.username):
-        messages.error(request, _('Unable to download file, share link traffic is used up.'))
         return HttpResponseRedirect(next_page)
 
     dl_token = seafile_api.get_fileserver_access_token(repo.id,
@@ -1186,12 +1197,6 @@ def view_shared_file(request, fileshare):
         if can_download is False:
             raise Http404
 
-        # check whether owner's traffic over the limit
-        if user_traffic_over_limit(shared_by):
-            messages.error(request, _('Unable to view raw file, share link traffic is used up.'))
-            next_page = request.META.get('HTTP_REFERER', settings.SITE_ROOT)
-            return HttpResponseRedirect(next_page)
-
         # send file audit message
         send_file_access_msg(request, repo, path, 'share-link')
 
@@ -1266,9 +1271,9 @@ def view_shared_file(request, fileshare):
         if is_textual_file(file_type=filetype):
             handle_textual_file(request, filetype, inner_path, ret_dict)
         elif filetype == DOCUMENT:
-            handle_document(inner_path, obj_id, fileext, ret_dict)
+            handle_document(raw_path, obj_id, fileext, ret_dict)
         elif filetype == SPREADSHEET:
-            handle_spreadsheet(inner_path, obj_id, fileext, ret_dict)
+            handle_spreadsheet(raw_path, obj_id, fileext, ret_dict)
         elif filetype == XMIND:
             xmind_image_path = get_thumbnail_image_path(obj_id, XMIND_IMAGE_SIZE)
             if not os.path.exists(xmind_image_path) and not extract_xmind_image(repo_id, path)[0]:
@@ -1281,7 +1286,6 @@ def view_shared_file(request, fileshare):
 
     accessible_repos = get_unencry_rw_repos_by_user(request)
     save_to_link = reverse('save_shared_link') + '?t=' + token
-    traffic_over_limit = user_traffic_over_limit(shared_by)
 
     permissions = fileshare.get_permissions()
 
@@ -1310,7 +1314,7 @@ def view_shared_file(request, fileshare):
             'filetype': ret_dict['filetype'],
             'accessible_repos': accessible_repos,
             'save_to_link': save_to_link,
-            'traffic_over_limit': traffic_over_limit,
+            'traffic_over_limit': False,
             'permissions': permissions,
             'enable_watermark': ENABLE_WATERMARK,
             'file_share_link': file_share_link,
@@ -1361,6 +1365,26 @@ def view_file_via_shared_dir(request, fileshare):
     if not seafile_api.check_permission_by_path(repo_id, '/', shared_by):
         return render_error(request, _('Permission denied'))
 
+    if not request.user.is_authenticated:
+        username = ANONYMOUS_EMAIL
+    else:
+        username = request.user.username
+
+    # check file lock info
+    try:
+        is_locked, locked_by_me = check_file_lock(repo_id, real_path, username)
+    except Exception as e:
+        logger.error(e)
+        is_locked = False
+        locked_by_me = False
+
+    locked_by_online_office = if_locked_by_online_office(repo_id, real_path)
+
+    # get share link permission
+    can_download = fileshare.get_permissions()['can_download']
+    can_edit = fileshare.get_permissions()['can_edit'] and \
+            (not is_locked or locked_by_online_office)
+
     # download shared file
     if request.GET.get('dl', '') == '1':
         if fileshare.get_permissions()['can_download'] is False:
@@ -1383,12 +1407,6 @@ def view_file_via_shared_dir(request, fileshare):
     if request.GET.get('raw', '0') == '1':
         if fileshare.get_permissions()['can_download'] is False:
             raise Http404
-
-        # check whether owner's traffic over the limit
-        if user_traffic_over_limit(shared_by):
-            messages.error(request, _('Unable to view raw file, share link traffic is used up.'))
-            next_page = request.META.get('HTTP_REFERER', settings.SITE_ROOT)
-            return HttpResponseRedirect(next_page)
 
         # send file audit message
         send_file_access_msg(request, repo, real_path, 'share-link')
@@ -1424,7 +1442,8 @@ def view_file_via_shared_dir(request, fileshare):
         if ENABLE_ONLYOFFICE and fileext in ONLYOFFICE_FILE_EXTENSION:
 
             onlyoffice_dict = get_onlyoffice_dict(request, username,
-                    repo_id, real_path)
+                    repo_id, real_path,
+                    can_edit=can_edit, can_download=can_download)
 
             if onlyoffice_dict:
 
@@ -1451,9 +1470,9 @@ def view_file_via_shared_dir(request, fileshare):
         if is_textual_file(file_type=filetype):
             handle_textual_file(request, filetype, inner_path, ret_dict)
         elif filetype == DOCUMENT:
-            handle_document(inner_path, obj_id, fileext, ret_dict)
+            handle_document(raw_path, obj_id, fileext, ret_dict)
         elif filetype == SPREADSHEET:
-            handle_spreadsheet(inner_path, obj_id, fileext, ret_dict)
+            handle_spreadsheet(raw_path, obj_id, fileext, ret_dict)
         elif filetype == IMAGE:
             current_commit = get_commits(repo_id, 0, 1)[0]
             real_parent_dir = os.path.dirname(real_path)
@@ -1487,7 +1506,6 @@ def view_file_via_shared_dir(request, fileshare):
     else:
         ret_dict['err'] = err_msg
 
-    traffic_over_limit = user_traffic_over_limit(shared_by)
     permissions = fileshare.get_permissions()
 
     # generate dir navigator
@@ -1524,7 +1542,7 @@ def view_file_via_shared_dir(request, fileshare):
             'zipped': zipped,
             'img_prev': img_prev,
             'img_next': img_next,
-            'traffic_over_limit': traffic_over_limit,
+            'traffic_over_limit': False,
             'permissions': permissions,
             'enable_watermark': ENABLE_WATERMARK,
             'file_share_link': file_share_link,
@@ -1725,26 +1743,8 @@ def text_diff(request, repo_id):
         'referer': referer,
     })
 
-########## office related
-@require_POST
-@csrf_exempt
-@json_response
-# def office_convert_add_task(request):
-#     try:
-#         file_id = request.POST.get('file_id')
-#         doctype = request.POST.get('doctype')
-#         raw_path = request.POST.get('raw_path')
-#     except KeyError:
-#         return HttpResponseBadRequest('invalid params')
-#
-#     if not _check_cluster_internal_token(request, file_id):
-#         return HttpResponseForbidden()
-#
-#     if len(file_id) != 40:
-#         return HttpResponseBadRequest('invalid params')
-#
-#     return add_office_convert_task(file_id, doctype, raw_path, internal=True)
 
+########## office related
 def _check_office_convert_perm(request, repo_id, path, ret):
     token = request.GET.get('token', '')
     if not token:
@@ -1837,10 +1837,7 @@ def office_convert_get_page(request, repo_id, commit_id, path, filename):
     if filename.endswith('.pdf'):
         filename = "{0}.pdf".format(file_id)
 
-    if CLUSTER_MODE:
-        resp = cluster_get_office_converted_page(path, filename, file_id)
-    else:
-        resp = get_office_converted_page(request, filename, file_id)
+    resp = get_office_converted_page(path, filename, file_id)
 
     if filename.endswith('.page'):
         content_type = 'text/html'
@@ -1975,8 +1972,9 @@ def view_media_file_via_share_link(request):
     # Translation ‘(’ ')'
     image_file_name = image_file_name.replace('(', '\(')
     image_file_name = image_file_name.replace(')', '\)')
+    encoded_image_file_name = urllib.parse.quote(image_file_name)
 
-    p = re.compile('(%s)/lib/(%s)/file(.*?)%s\?raw=1' % (serviceURL, repo_id, image_file_name))
+    p = re.compile('(%s)/lib/(%s)/file(.*?)%s\?raw=1' % (serviceURL, repo_id, encoded_image_file_name))
     result = re.search(p, file_content)
     if not result:
         return render_error(request, 'Image does not exist')

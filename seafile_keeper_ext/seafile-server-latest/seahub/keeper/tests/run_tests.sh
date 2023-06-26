@@ -18,9 +18,8 @@ export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
 export DJANGO_SETTINGS_MODULE=seahub.settings
 
 export PYTHONPATH=${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
-export PYTHONPATH=${INSTALLPATH}/seahub-extra:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
 export PYTHONPATH="..:${PYTHONPATH}"
 

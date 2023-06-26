@@ -45,10 +45,9 @@ class KeeperArchiving(object):
         INSTALLPATH = SEAFILE_DIR  + '/seafile-server-latest'
 
         pp = [INSTALLPATH + p for p in (
-            '/seafile/lib/python3.6/site-packages',
+            '/seafile/lib/python3/site-packages',
             '/seahub/thirdpart',
             '/seahub',
-            '/seahub-extra',
             '/pro/python'
         )]
         env = {

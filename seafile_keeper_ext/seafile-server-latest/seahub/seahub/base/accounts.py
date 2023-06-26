@@ -184,8 +184,7 @@ class UserPermissions(object):
                 return False
         elif self.user.is_staff:
             return True
-        elif self._get_perm_by_roles('can_add_public_repo') and \
-                bool(config.ENABLE_USER_CREATE_ORG_REPO):
+        elif self._get_perm_by_roles('can_add_public_repo'):
             return True
         else:
             return False
@@ -203,8 +202,10 @@ class UserPermissions(object):
         return self._get_perm_by_roles('can_connect_with_desktop_clients')
 
     def can_invite_guest(self):
+        # return self._get_perm_by_roles('can_invite_guest')
         # KEEPER
-        return get_enabled_role_permissions_by_role(self.user.role)['can_invite_guest'] and user_can_invite(self.user.email)
+        return self._get_perm_by_roles('can_invite_guest') and user_can_invite(self.user.email)
+
 
     def can_export_files_via_mobile_client(self):
         return self._get_perm_by_roles('can_export_files_via_mobile_client')
@@ -247,6 +248,9 @@ class AdminPermissions(object):
     def can_manage_user(self):
         return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_user']
 
+    def can_update_user(self):
+        return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_update_user']
+
     def can_manage_group(self):
         return get_enabled_admin_role_permissions_by_role(self.user.admin_role)['can_manage_group']
 
@@ -280,7 +284,7 @@ class User(object):
             return None
 
         if not hasattr(self, '_cached_org_role'):
-            from seahub_extra.organizations.models import OrgSettings
+            from seahub.organizations.models import OrgSettings
             self._cached_org_role = OrgSettings.objects.get_role_by_org(
                 self._cached_orgs[0])
 
@@ -753,10 +757,11 @@ class RegistrationBackend(object):
         user registration.
 
         """
+        # return ('registration_complete', (), {})
         ### KEEPER
         return (
             'registration_mpg_complete' if self.mpg_user
-                else 'registration_complete',
+            else 'registration_complete',
             (), { }
         )
 

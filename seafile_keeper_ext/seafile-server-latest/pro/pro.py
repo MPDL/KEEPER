@@ -355,11 +355,9 @@ class EnvManager(object):
 
             os.path.join(self.top_dir, 'conf'), # LDAP sync has to access seahub_settings.py
             os.path.join(self.install_path, 'seahub', 'thirdpart'),
-            os.path.join(self.install_path, 'seahub-extra'),
-            os.path.join(self.install_path, 'seahub-extra', 'thirdparts'),
 
-            os.path.join(self.install_path, 'seafile/lib/python3.6/site-packages'),
-            os.path.join(self.install_path, 'seafile/lib64/python3.6/site-packages'),
+            os.path.join(self.install_path, 'seafile/lib/python3/site-packages'),
+            os.path.join(self.install_path, 'seafile/lib64/python3/site-packages'),
         ]
 
         for path in extra_python_path:
@@ -554,10 +552,6 @@ highlight = fvh
 ## If true, indexes the contents of office/pdf files while updating search index
 ## Note: If you change this option from "false" to "true", then you need to clear the search index and update the index again. See the FAQ for details.
 index_office_pdf = true
-
-[OFFICE CONVERTER]
-enabled = true
-workers = 1
 
 [SEAHUB EMAIL]
 enabled = true
@@ -762,9 +756,9 @@ def handle_ldap_sync_commands(args):
 
 def handle_virus_scan_commands(args):
     # argv = [
-        # Utils.get_python_executable(),
-        # '-m', 'seafevents.virus_scanner.run_virus_scan',
-        # '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
+    #     Utils.get_python_executable(),
+    #     '-m', 'seafevents.virus_scanner.run_virus_scan',
+    #     '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
     # ]
     # TODO check rescan:
     if args.rescan:

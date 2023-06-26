@@ -577,9 +577,6 @@ EXTRA_MIDDLEWARE = (
     'seahub.institutions.middleware.InstitutionMiddleware',
 )
 
-EXTRA_AUTHENTICATION_BACKENDS = (
-    'seahub_extra.django_cas_ng.backends.CASBackend',
-)
 
 # Settings for background node
 OFFICE_CONVERTOR_NODE = __IS_OFFICE_CONVERTOR_NODE__

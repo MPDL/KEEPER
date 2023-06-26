@@ -226,10 +226,10 @@ dd {
   color: #222;
 }
 a {
-  color: #006f7b;
+  color: #eb8205;
 }
 a:hover {
-  color: #006f7b;
+  color: #eb8205;
 }
 .vam {
   vertical-align: middle;
@@ -239,6 +239,9 @@ a:hover {
 }
 .flex-1 {
   flex: 1;
+}
+.flex-none {
+  flex: none;
 }
 .hide {
   display: none;
@@ -271,6 +274,11 @@ a:hover {
 }
 .cur-view-path .sf-heading {
   margin: 0;
+}
+
+.sf-link {
+  color: #ee8204 !important;
+  cursor: pointer;
 }
 
 .vh {
@@ -464,13 +472,16 @@ a:hover {
 }
 
 .op-icon {
+  /* color: #f19645; */
   color: #57a5b8;
 }
 
 .op-icon:focus,
 .op-icon:hover {
   padding-bottom: 0.125rem;
+  /* border-bottom: 0.125rem solid #e0873b; */
   border-bottom: 0.125rem solid #57a5b8;
+  /* color: #e0873b; */
   color: #57a5b8;
 }
 
@@ -649,9 +660,9 @@ a:hover {
 }
 
 .nav .nav-item .nav-link.active {
-  color: #006f7b;
+  color: #eb8205;
   text-decoration: none;
-  border-bottom: 0.125rem solid #006f7b;
+  border-bottom: 0.125rem solid #eb8205;
 }
 
 .nav-pills .nav-item .nav-link {
@@ -660,10 +671,12 @@ a:hover {
 }
 
 .nav-pills .nav-item .nav-link:hover {
+  /* background-color: #feefb8; */
   background-color: #d5e9ee;
 }
 
 .nav-pills .nav-item .nav-link.active {
+  /* background-color: #feac74; */
   background-color: #57a5b8;
   color: #fff;
   border: none;
@@ -709,7 +722,7 @@ a:hover {
   margin: 24px 12px;
   color: #ffffff;
   border-radius: 0.25rem;
-  background-color: #57a5b8;
+  background-color: #feac74;
 }
 
 .side-nav-link:hover {
@@ -896,7 +909,7 @@ a:hover {
   font-size: 12px;
   line-height: 1;
   padding: 1px 2px;
-  background: #57a5b8;
+  background: #feac74;
   border: 1px solid #cb8a5d;
   top: 0;
   left: 15px;
@@ -919,7 +932,7 @@ a:hover {
   background: #f5f5f7;
   padding-right: 10px;
   padding-left: 8px;
-  border-left: 2px solid #57a5b8;
+  border-left: 2px solid #feac74;
   margin: 0 -10px;
 }
 #notice-popover .avatar {
@@ -1046,7 +1059,7 @@ a.sf-popover-item:hover {
   color: #818a91;
 }
 .path-link {
-  color: #006f7b !important;
+  color: #eb8205 !important;
   text-decoration: none;
 }
 .path-link:hover {
@@ -1150,7 +1163,7 @@ table td {
   padding: 0.25rem 0.75rem;
   line-height: 2rem;
   text-align: center;
-  color: #006f7b;
+  color: #eb8205;
   cursor: pointer;
 }
 
@@ -1174,8 +1187,7 @@ a.table-sort-op {
     margin-left: 15px;
   }
 }
-a.table-sort-op:hover,
-a.table-sort-op:focus {
+a.table-sort-op:hover {
   outline: none;
   text-decoration: none;
 }
@@ -1344,4 +1356,142 @@ a.table-sort-op:focus {
   border: 1px solid #ccc;
   box-shadow: 0 0 6px #ccc;
   text-align: center;
+}
+
+#wiki-file-content {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 20%;
+  top: 49px;
+  padding: 30px 16px 20px 30px;
+  z-index: 2;
+  background: #fff;
+  overflow: auto;
+  display: flex;
+}
+
+#wiki-file-content .article {
+  width: calc(100% - 200px);
+  padding-left: 10px;
+  padding-right: 40px;
+}
+
+#wiki-file-content .article h1 {
+  margin-top: 0;
+}
+
+#wiki-file-content #wiki-page-last-modified {
+  padding: 40px 0;
+  font-size: 12px;
+  color: #666;
+}
+
+#wiki-file-content .seafile-markdown-outline {
+  position: fixed;
+  top: 79px;
+  right: 10px;
+  width: 200px;
+  overflow: auto;
+  height: 80%;
+}
+
+#wiki-file-content .seafile-markdown-outline .seafile-editor-outline {
+  padding-right: 16px;
+}
+
+@media (max-width: 767px) {
+  #wiki-file-content {
+    left: 0;
+    padding: 30px 14px 0;
+  }
+
+  #wiki-file-content .article {
+    margin: 0;
+    padding: 0 10px;
+    width: 100%;
+  }
+
+  #wiki-file-content .seafile-markdown-outline {
+    display: none;
+  }
+}
+
+.seafile-md-viewer-content .article {
+  padding: 0;
+}
+.seafile-md-viewer-content {
+  background: #fff;
+  padding: 70px 75px;
+  border: 1px solid #e6e6dd;
+  min-height: calc(100% - 60px);
+}
+.seafile-md-viewer-outline-heading2,
+.seafile-md-viewer-outline-heading3 {
+  margin-left: 0.75rem;
+  line-height: 2.5;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.seafile-md-viewer-outline-heading3 {
+  margin-left: 2rem;
+}
+.seafile-md-viewer-outline-heading2:hover,
+.seafile-md-viewer-outline-heading3:hover {
+  color: #eb8205;
+}
+.seafile-markdown-outline {
+  position: fixed;
+  padding-right: 1rem;
+  top: 97px;
+  right: 0;
+  width: 200px;
+  overflow: auto;
+  height: 80%;
+}
+.seafile-editor-outline {
+  border-left: 1px solid #ddd;
+}
+.seafile-markdown-outline .active {
+  color: #eb8205;
+  border-left: 1px solid #eb8205;
+}
+.seafile-markdown-outline .outline-h2,
+.seafile-markdown-outline .outline-h3 {
+  height: 30px;
+  margin-left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+.seafile-markdown-outline .outline-h2 {
+  padding-left: 20px;
+}
+.seafile-markdown-outline .outline-h3 {
+  padding-left: 40px;
+}
+
+#wiki-file-content .seafile-markdown-outline .outline-h2,
+#wiki-file-content .seafile-markdown-outline .outline-h3 {
+  height: 24px;
+  font-size: 12px;
+  color: #4d5156;
+}
+
+#wiki-file-content .seafile-markdown-outline .outline-h2.active,
+#wiki-file-content .seafile-markdown-outline .outline-h3.active {
+  color: #eb8205;
+}
+
+#wiki-file-content .seafile-markdown-outline .seafile-markdown-outline {
+  overflow-y: hidden;
+  margin-right: 10px;
+}
+
+#wiki-file-content .seafile-markdown-outline .seafile-markdown-outline:hover {
+  overflow-y: auto;
 }

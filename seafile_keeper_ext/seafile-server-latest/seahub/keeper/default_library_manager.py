@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 
@@ -52,8 +53,8 @@ def copy_keeper_default_library(to_repo_id):
         if kdl:
             for e in kdl['dirents']:
                 obj_name = e.obj_name
-                seafile_api.copy_file(kdl['repo_id'], '/', obj_name, to_repo_id, '/',
-                                  obj_name, SERVER_EMAIL, 0, 0)
+                seafile_api.copy_file(kdl['repo_id'], '/', json.dumps([obj_name]), to_repo_id, '/',
+                                  json.dumps([obj_name]), SERVER_EMAIL, 0, 0)
             logging.info("KEEPER_DEFAULT_LIBRARY has been successfully copied to repo: " + to_repo_id)
     except Exception as err:
         logging.error("Cannot copy KEEPER_DEFAULT_LIBRARY, err: " + str(err))

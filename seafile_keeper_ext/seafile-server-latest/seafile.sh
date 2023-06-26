@@ -20,6 +20,8 @@ default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
 central_config_dir=${TOPDIR}/conf
 seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
+pro_pylibs_dir=${INSTALLPATH}/pro/python
+seafesdir=$pro_pylibs_dir/seafes
 
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -49,19 +51,11 @@ function validate_running_user () {
     fi
 }
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
-export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
-
-function validate_ccnet_conf_dir () {
-    if [[ ! -d ${default_ccnet_conf_dir} ]]; then
-        echo "Error: there is no ccnet config directory."
-        echo "Have you run setup-seafile.sh before this?"
-        echo ""
-        exit -1;
-    fi
-}
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+if [[ -d ${INSTALLPATH}/pro ]]; then
+    export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
+    export SEAFES_DIR=$seafesdir
+fi
 
 function validate_central_conf_dir () {
     if [[ ! -d ${central_config_dir} ]]; then
@@ -124,21 +118,31 @@ function test_java {
 function start_seafile_server () {
     validate_already_running;
     validate_central_conf_dir;
-    validate_ccnet_conf_dir;
     validate_seafile_data_dir;
     validate_running_user;
-    test_config;
-    test_java;
+
+    if [[ -d ${INSTALLPATH}/pro ]]; then
+        test_config;
+        test_java;
+    fi
 
     echo "Starting seafile server, please wait ..."
 
     mkdir -p $TOPDIR/logs
-    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}"; then
-        controller_log="$default_seafile_data_dir/controller.log"
-        echo
-        echo "Failed to start seafile server. See $controller_log for more details."
-        echo
-        exit 1
+
+    if [[ -d ${INSTALLPATH}/pro ]]; then
+        if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}"; then
+            controller_log="$default_seafile_data_dir/controller.log"
+            echo
+            echo "Failed to start seafile server. See $controller_log for more details."
+            echo
+            exit 1
+        fi
+    else
+        LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} \
+                    -c "${default_ccnet_conf_dir}" \
+                    -d "${default_seafile_data_dir}" \
+                    -F "${central_config_dir}"
     fi
 
     sleep 3

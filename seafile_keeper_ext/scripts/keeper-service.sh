@@ -10,7 +10,7 @@
 # Description:       starts Seafile Server
 ### END INIT INFO
 
-#set -x
+# set -x
 
 CURR_DIR=$(dirname $(readlink -f $0))
 source "${CURR_DIR}/inject_keeper_env.sh"
@@ -36,6 +36,8 @@ default_ccnet_conf_dir=${seafile_dir}/ccnet
 
 USR_CTX="sudo -iu ${user}"
 ROOT_CTX="sudo -i"
+
+ES_IMAGE_NAME=elasticsearch:7.16.2
 
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
@@ -162,10 +164,37 @@ function check_and_exit_keeper_archiving_running () {
 }
 
 
+function get_elastic_container_id () {
+    RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -q)
+    echo $RES
+}
 
-#echo -e "\n \n About to perform $1 for seafile at `date -Iseconds` \n " >> ${seafile_init_log}
-#echo -e "\n \n About to perform $1 for seahub at `date -Iseconds` \n " >> ${seahub_init_log}
+function start_elastic_container () {
+    RES=$(get_elastic_container_id)
+    if [ -z "$RES" ]; then
+        # if not running, but already exists - start
+        RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -aq)
+        if [ -n "$RES" ]; then
+            RES=$(sudo docker start $RES)
+        # if not exists - run image
+        else
+            RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms1g -Xmx1g" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d $ES_IMAGE_NAME)
+        fi
+        if [ -z "$RES" ]; then
+            warn "Cannot start Elastic container."
+        fi
+    fi
+}
 
+function stop_elastic_container () {
+    RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -q)
+    if [ -n "$RES" ]; then
+        RES=$(sudo docker stop $RES)
+        # if [ -n "$RES" ]; then
+        #     echo "Elastic container is successfuly stopped."
+        # fi
+    fi
+}
 
 echo "Keeper ${__NODE_TYPE__} node ${__NODE_FQDN__}, cmd: $1"
 
@@ -197,6 +226,7 @@ case "$1" in
                     echo "Starting..."
                 fi
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                start_elastic_container
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
@@ -206,6 +236,7 @@ case "$1" in
                     echo "Starting..."
                 fi
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                start_elastic_container
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
             fi
@@ -224,6 +255,7 @@ case "$1" in
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                stop_elastic_container
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
                 if [ "$2" != "--force" ]; then
@@ -231,6 +263,7 @@ case "$1" in
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
+                stop_elastic_container
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             fi
             sleep 3
@@ -258,7 +291,7 @@ case "$1" in
         ;;
         status)
             RC=0
-            check_puppet
+            # check_puppet
             if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
                 check_mysql
             fi

@@ -1,4 +1,4 @@
-const paths = require('./paths');
+const paths = require("./paths");
 
 const entryFiles = {
   markdownEditor: "/index.js",
@@ -17,7 +17,7 @@ const entryFiles = {
   sharedFileViewVideo: "/shared-file-view-video.js",
   sharedFileViewPDF: "/shared-file-view-pdf.js",
   sharedFileViewSVG: "/shared-file-view-svg.js",
-  sharedFileViewAudio:  "/shared-file-view-audio.js",
+  sharedFileViewAudio: "/shared-file-view-audio.js",
   sharedFileViewDocument: "/shared-file-view-document.js",
   sharedFileViewSpreadsheet: "/shared-file-view-spreadsheet.js",
   sharedFileViewUnknown: "/shared-file-view-unknown.js",
@@ -42,11 +42,11 @@ const entryFiles = {
 
 const getEntries = (isEnvDevelopment) => {
   let entries = {};
-  Object.keys(entryFiles).forEach(key => {
+  Object.keys(entryFiles).forEach((key) => {
     let entry = [];
-    entry.push(require.resolve('./polyfills'));
+    entry.push(require.resolve("./polyfills"));
     if (isEnvDevelopment) {
-      entry.push(require.resolve('react-dev-utils/webpackHotDevClient'));
+      entry.push(require.resolve("react-dev-utils/webpackHotDevClient"));
     }
     entry.push(paths.appSrc + entryFiles[key]);
 
@@ -56,3 +56,4 @@ const getEntries = (isEnvDevelopment) => {
 };
 
 module.exports = getEntries;
+

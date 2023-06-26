@@ -504,10 +504,8 @@ class EnvManager(object):
 
             os.path.join(self.top_dir, 'conf'), # LDAP sync has to access seahub_settings.py
             os.path.join(self.install_path, 'seahub', 'thirdpart'),
-            os.path.join(self.install_path, 'seahub-extra'),
-            os.path.join(self.install_path, 'seahub-extra', 'thirdparts'),
 
-            os.path.join(self.install_path, 'seafile/lib/python3.6/site-packages'),
+            os.path.join(self.install_path, 'seafile/lib/python3/site-packages'),
         ]
 
         for path in extra_python_path:
@@ -940,7 +938,9 @@ def do_generate(args):
             Utils.error(f"Cannot run {cmd}, RC={RC}")
     elif args.frontend:
         Utils.info('Generate frontend...')
-        cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} npm run build"
+        #cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} npm run build"
+        #see https://stackoverflow.com/questions/53230823/fatal-error-ineffective-mark-compacts-near-heap-limit-allocation-failed-javas
+        cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
@@ -955,7 +955,8 @@ def do_generate(args):
 def do_run(args):
     if args.frontend_dev:
         Utils.info('Run react.js dev server...')
-        cmd = "npm run dev"
+        #FIXME: switch to OpenSSL 3.0
+        cmd = "set NODE_OPTIONS=--openssl-legacy-provider && npm run dev" 
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
@@ -984,7 +985,9 @@ def do_upgrade(args):
     elif args.frontend_build:
         Utils.info("Copy frontend/build files into ext")
         dest_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
-        shutil.rmtree(dest_dir, ignore_errors=True)
+        print(dest_dir)
+        print(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'))
+        shutil.rmtree(dest_dir)
         shutil.copytree(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'), dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
 
 

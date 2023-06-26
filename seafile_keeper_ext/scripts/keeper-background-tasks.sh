@@ -140,9 +140,7 @@ function before_start() {
 
     export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 
-    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
+    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
 

@@ -61,16 +61,6 @@ function check_python_executable() {
     fi
 }
 
-function validate_ccnet_conf_dir () {
-    if [[ ! -d ${default_ccnet_conf_dir} ]]; then
-        echo "Error: there is no ccnet config directory."
-        echo "Have you run setup-seafile.sh before this?"
-        echo ""
-        exit -1;
-    fi
-}
-
-
 function validate_seafile_data_dir () {
     if [[ ! -d ${default_seafile_data_dir} ]]; then
         echo "Error: there is no seafile server data directory."
@@ -115,13 +105,12 @@ function before_start() {
     export SEAFILE_CONF_DIR=${default_seafile_data_dir}
     export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
     export SEAFILE_RPC_PIPE_PATH=${INSTALLPATH}/runtime
-    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
     # Allow LDAP user sync to import seahub_settings.py
     export PYTHONPATH=$PYTHONPATH:${central_config_dir}
     export SEAFES_DIR=$pro_pylibs_dir/seafes
+    # TO BE CHECKED!!!
     export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Egg
 }
 
@@ -129,7 +118,7 @@ function start_seafile_background_tasks () {
     before_start;
     echo "Starting seafile background tasks ..."
     $PYTHON -m seafevents.background_tasks --config-file "${seafevents_conf}" \
-        --loglevel debug --logfile "${seafile_background_tasks_log}" -P "${pidfile}" 2>/dev/null 1>&2 &
+        --logfile "${seafile_background_tasks_log}" -P "${pidfile}" 2>/dev/null 1>&2 &
 
     # Ensure started successfully
     sleep 5
@@ -158,7 +147,6 @@ function stop_seafile_background_tasks () {
 }
 
 check_python_executable;
-validate_ccnet_conf_dir;
 validate_seafile_data_dir;
 
 case $1 in

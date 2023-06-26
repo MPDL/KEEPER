@@ -26,9 +26,9 @@ pidfile=${TOPDIR}/pids/seahub.pid
 errorlog=${TOPDIR}/logs/gunicorn_error.log
 accesslog=${TOPDIR}/logs/gunicorn_access.log
 gunicorn_exe=${INSTALLPATH}/seahub/thirdpart/bin/gunicorn
-
 pro_pylibs_dir=${INSTALLPATH}/pro/python
-
+seafesdir=$pro_pylibs_dir/seafes
+seahubdir=${INSTALLPATH}/seahub
 
 script_name=$0
 function usage () {
@@ -58,14 +58,20 @@ function check_python_executable() {
 
     if which python3 2>/dev/null 1>&2; then
         PYTHON=python3
-    elif !(python --version 2>&1 | grep "3\.[0-9]\.[0-9]") 2>/dev/null 1>&2; then
+    elif !(python --version 2>&1 | grep "3\.[0-9]\+\.[0-9]\+") 2>/dev/null 1>&2; then
         echo
         echo "The current version of python is not 3.x.x, please use Python 3.x.x ."
         echo
         exit 1
     else
+	# Python 3.8.10
         PYTHON="python"$(python --version | cut -b 8-10)
-        if !which $PYTHON 2>/dev/null 1>&2; then
+
+	if !(which $PYTHON) 2>/dev/null 1>&2; then
+            # Python 3.10.4
+            PYTHON="python"$(python --version | cut -b 8-11)
+	fi
+	if !(which $PYTHON) 2>/dev/null 1>&2; then
             echo
             echo "Can't find a python executable of $PYTHON in PATH"
             echo "Install $PYTHON before continue."
@@ -73,15 +79,6 @@ function check_python_executable() {
             echo
             exit 1
         fi
-    fi
-}
-
-function validate_ccnet_conf_dir () {
-    if [[ ! -d ${default_ccnet_conf_dir} ]]; then
-        echo "Error: there is no ccnet config directory."
-        echo "Have you run setup-seafile.sh before this?"
-        echo ""
-        exit -1;
     fi
 }
 
@@ -157,20 +154,20 @@ function before_start() {
     validate_seahub_running;
     prepare_seahub_log_dir;
 
-    if [[ -z "$LANG" ]]; then
-        echo "LANG is not set in ENV, set to en_US.UTF-8"
-        export LANG='en_US.UTF-8'
-    fi
-    if [[ -z "$LC_ALL" ]]; then
-        echo "LC_ALL is not set in ENV, set to en_US.UTF-8"
-        export LC_ALL='en_US.UTF-8'
-    fi
+    if [[ -d ${INSTALLPATH}/pro ]]; then
+        if [[ -z "$LANG" ]]; then
+            echo "LANG is not set in ENV, set to en_US.UTF-8"
+            export LANG='en_US.UTF-8'
+        fi
+        if [[ -z "$LC_ALL" ]]; then
+            echo "LC_ALL is not set in ENV, set to en_US.UTF-8"
+            export LC_ALL='en_US.UTF-8'
+        fi
 
-    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-    export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
-    export SEAFES_DIR=$pro_pylibs_dir/seafes
+        export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
+        export SEAFES_DIR=$seafesdir
+        export SEAHUB_DIR=$seahubdir
+    fi
 }
 
 function start_seahub () {
@@ -220,7 +217,6 @@ function start_seahub_fastcgi () {
 
 function prepare_env() {
     check_python_executable;
-    validate_ccnet_conf_dir;
     validate_seafile_data_dir;
 
     if [[ -z "$LANG" ]]; then
@@ -236,7 +232,9 @@ function prepare_env() {
     export SEAFILE_CONF_DIR=${default_seafile_data_dir}
     export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
     export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
-    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+
+
 }
 
 function clear_sessions () {
@@ -277,11 +275,12 @@ function run_python_env() {
     local pyexec
 
     prepare_env;
-    export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-    export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
-    export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
-    export SEAFES_DIR=$pro_pylibs_dir/seafes
+
+    if [[ -d ${INSTALLPATH}/pro ]]; then
+        export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
+        export SEAFES_DIR=$seafesdir
+        export SEAHUB_DIR=$seahubdir
+    fi
 
     if which ipython 2>/dev/null; then
         pyexec=ipython

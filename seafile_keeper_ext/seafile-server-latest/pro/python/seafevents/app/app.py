@@ -6,21 +6,17 @@ from sqlalchemy.ext.declarative import declarative_base
 from seafevents.app.config import appconfig, load_config
 from seafevents.app.mq_handler import EventsHandler
 from seafevents.events_publisher.events_publisher import events_publisher
-from seafevents.utils.config import get_office_converter_conf
-from seafevents.utils import has_office_tools, get_config
+from seafevents.utils import get_config
 from seafevents.tasks import IndexUpdater, SeahubEmailSender, LdapSyncer,\
         VirusScanner, Statistics, CountUserActivity, CountTrafficInfo, ContentScanner,\
         WorkWinxinNoticeSender, FileUpdatesSender, RepoOldFileAutoDelScanner
 
-if has_office_tools():
-    from seafevents.office_converter import OfficeConverter
-
+Base = declarative_base()
 # KEEPER
 from seafevents.keeper_archiving import KeeperArchiving
 from seafevents.keeper_archiving.config import get_keeper_archiving_conf
 
 
-Base = declarative_base()
 
 class App(object):
     def __init__(self, args, events_handler_enabled=True, background_tasks_enabled=True):
@@ -86,13 +82,8 @@ class BackgroundTasks(object):
         self._file_updates_sender = FileUpdatesSender()
         self._repo_old_file_auto_del_scanner = RepoOldFileAutoDelScanner(config_file)
 
-        self._office_converter = None
-        if has_office_tools():
-            self._office_converter = OfficeConverter(get_office_converter_conf(self._app_config))
-
         # KEEPER
         self._keeper_archiving = KeeperArchiving(get_keeper_archiving_conf(self._app_config))
-
 
     def start(self):
         logging.info('Starting background tasks.')
@@ -133,11 +124,6 @@ class BackgroundTasks(object):
             self._content_scanner.start()
         else:
             logging.info('content scan is disabled')
-
-        if self._office_converter and self._office_converter.is_enabled():
-            self._office_converter.start()
-        else:
-            logging.info('office converter is disabled')
 
         if self._repo_old_file_auto_del_scanner.is_enabled():
             self._repo_old_file_auto_del_scanner.start()

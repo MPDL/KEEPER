@@ -89,9 +89,6 @@ def RepoUpdateEventHandler(session, msg):
                         parent, users, time)
 
                 save_user_activities(session, records)
-            else:
-                save_repo_rename_activity(session, commit, repo_id, parent, org_id, users, time)
-
             # TODO check: catalog entry update
             # KEEPER
             logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
@@ -136,12 +133,11 @@ def save_user_activities(session, records):
     if len(records) == 1 and records[0]['op_type'] == 'edit':
         record = records[0]
         _timestamp = record['timestamp'] - timedelta(minutes=30)
-        q = session.query(Activity)
+        q = session.query(Activity).filter(Activity.timestamp > _timestamp)
         q = q.filter(Activity.repo_id==record['repo_id'],
                      Activity.op_type==record['op_type'],
                      Activity.op_user==record['op_user'],
-                     Activity.path==record['path'],
-                     Activity.timestamp > _timestamp)
+                     Activity.path==record['path'])
         row = q.first()
         if row:
             activity_id = row.id
@@ -339,8 +335,6 @@ def generate_filehistory_records(added_files, deleted_files, added_dirs,
     _added_files.extend(list_file_in_dir(repo_id, added_dirs, 'add'))
     for de in _added_files:
         record = copy.copy(base_record)
-        op_type = ''
-        logging.info(commit.description)
         if commit.description.startswith('Reverted') or commit.description.startswith('Recovered'):
             op_type = OP_RECOVER
         else:
@@ -456,6 +450,8 @@ def FileAuditEventHandler(session, msg):
     user_agent = elements[3]
     repo_id = elements[4]
     file_path = elements[5]
+    if not file_path.startswith('/'):
+        file_path = '/' + file_path
 
     org_id = get_org_id_by_repo_id(repo_id)
 

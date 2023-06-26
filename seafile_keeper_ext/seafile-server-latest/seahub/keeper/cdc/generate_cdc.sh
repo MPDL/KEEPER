@@ -18,11 +18,8 @@ export SEAFILE_CONF_DIR=${seafile_data_dir}
 export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
 export SEAFES_DIR=$pro_pylibs_dir/seafes
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seafile/lib64/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub/
-#export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
-#export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/
-#export PYTHONPATH=$PYTHONPATH:${INSTALLPATH}/seahub-extra/thirdparts
 
 export PYTHONIOENCODING=utf-8
 

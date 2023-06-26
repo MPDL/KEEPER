@@ -1,11 +1,12 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { gettext } from '../../utils/constants';
-import CommonToolbar from '../../components/toolbar/common-toolbar';
-import ViewModeToolbar from '../../components/toolbar/view-mode-toolbar';
-import DirOperationToolBar from '../../components/toolbar/dir-operation-toolbar';
-import MultipleDirOperationToolbar from '../../components/toolbar/multiple-dir-operation-toolbar';
-import ViewFileToolbar from '../../components/toolbar/view-file-toolbar';
+import React, { Fragment } from "react";
+import PropTypes from "prop-types";
+import { gettext } from "../../utils/constants";
+import CommonToolbar from "../../components/toolbar/common-toolbar";
+import ViewModeToolbar from "../../components/toolbar/view-mode-toolbar";
+import DirOperationToolBar from "../../components/toolbar/dir-operation-toolbar";
+import MultipleDirOperationToolbar from "../../components/toolbar/multiple-dir-operation-toolbar";
+import ViewFileToolbar from "../../components/toolbar/view-file-toolbar";
+import { Utils } from "../../utils/utils";
 
 const propTypes = {
   isViewFile: PropTypes.bool.isRequired,
@@ -13,9 +14,7 @@ const propTypes = {
   isDraft: PropTypes.bool.isRequired,
   hasDraft: PropTypes.bool.isRequired,
   fileTags: PropTypes.array.isRequired,
-  relatedFiles: PropTypes.array.isRequired,
-  onFileTagChanged: PropTypes.func.isRequired,  // for file-view-toolbar
-  onRelatedFileChange: PropTypes.func.isRequired,
+  onFileTagChanged: PropTypes.func.isRequired, // for file-view-toolbar
   // side-panel
   onSideNavMenuClick: PropTypes.func.isRequired,
   // mutiple-dir
@@ -52,19 +51,19 @@ const propTypes = {
 };
 
 class LibContentToolbar extends React.Component {
-
   render() {
-
-    //KEEPER
-    //if (!this.props.userPerm) {
-    //  return <div className="cur-view-toolbar"></div>
-    //}
+    const { userPerm } = this.props;
+    const { isCustomPermission } = Utils.getUserPermission(userPerm);
 
     if (this.props.isViewFile) {
       return (
         <Fragment>
           <div className="cur-view-toolbar">
-            <span className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle" title={gettext('Side Nav Menu')} onClick={this.props.onSideNavMenuClick}></span>
+            <span
+              className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle"
+              title={gettext("Side Nav Menu")}
+              onClick={this.props.onSideNavMenuClick}
+            ></span>
             <ViewFileToolbar
               path={this.props.path}
               repoID={this.props.repoID}
@@ -76,14 +75,22 @@ class LibContentToolbar extends React.Component {
               isDraft={this.props.isDraft}
               hasDraft={this.props.hasDraft}
               fileTags={this.props.fileTags}
-              relatedFiles={this.props.relatedFiles}
               onFileTagChanged={this.props.onFileTagChanged}
-              onRelatedFileChange={this.props.onRelatedFileChange}
               showShareBtn={this.props.showShareBtn}
             />
-            <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode}/>
+            <ViewModeToolbar
+              currentMode={this.props.currentMode}
+              switchViewMode={this.props.switchViewMode}
+              isCustomPermission={isCustomPermission}
+            />
           </div>
-          <CommonToolbar isLibView={true} repoID={this.props.repoID} repoName={this.props.repoName} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
+          <CommonToolbar
+            isLibView={true}
+            repoID={this.props.repoID}
+            repoName={this.props.repoName}
+            onSearchedClick={this.props.onSearchedClick}
+            searchPlaceholder={gettext("Search files in this library")}
+          />
         </Fragment>
       );
     }
@@ -91,8 +98,12 @@ class LibContentToolbar extends React.Component {
     return (
       <Fragment>
         <div className="cur-view-toolbar">
-          <span className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle" title={gettext('Side Nav Menu')} onClick={this.props.onSideNavMenuClick}></span>
-          {this.props.isDirentSelected ?
+          <span
+            className="sf2-icon-menu hidden-md-up d-md-none side-nav-toggle"
+            title={gettext("Side Nav Menu")}
+            onClick={this.props.onSideNavMenuClick}
+          ></span>
+          {this.props.isDirentSelected ? (
             <MultipleDirOperationToolbar
               repoID={this.props.repoID}
               path={this.props.path}
@@ -108,7 +119,6 @@ class LibContentToolbar extends React.Component {
               currentRepoInfo={this.props.currentRepoInfo}
               enableDirPrivateShare={this.props.enableDirPrivateShare}
               updateDirent={this.props.updateDirent}
-              relatedFiles={this.props.relatedFiles}
               unSelectDirent={this.props.unSelectDirent}
               onFilesTagChanged={this.props.onFilesTagChanged}
               showShareBtn={this.props.showShareBtn}
@@ -116,7 +126,8 @@ class LibContentToolbar extends React.Component {
               showDirentDetail={this.props.showDirentDetail}
               currentMode={this.props.currentMode}
               switchViewMode={this.props.switchViewMode}
-            /> :
+            />
+          ) : (
             <DirOperationToolBar
               path={this.props.path}
               repoID={this.props.repoID}
@@ -135,9 +146,15 @@ class LibContentToolbar extends React.Component {
               currentMode={this.props.currentMode}
               switchViewMode={this.props.switchViewMode}
             />
-          }
+          )}
         </div>
-        <CommonToolbar isLibView={true} repoID={this.props.repoID} repoName={this.props.repoName} onSearchedClick={this.props.onSearchedClick} searchPlaceholder={gettext('Search files in this library')}/>
+        <CommonToolbar
+          isLibView={true}
+          repoID={this.props.repoID}
+          repoName={this.props.repoName}
+          onSearchedClick={this.props.onSearchedClick}
+          searchPlaceholder={gettext("Search files in this library")}
+        />
       </Fragment>
     );
   }

@@ -50,7 +50,7 @@ from seahub.utils import IS_EMAIL_CONFIGURED, string2list, is_valid_username, \
     is_pro_version, send_html_email, \
     get_server_id, delete_virus_file, get_virus_file_by_vid, \
     get_virus_files, FILE_AUDIT_ENABLED, get_max_upload_file_size, \
-    get_site_name, seafevents_api
+    get_site_name, seafevents_api, is_org_context
 from seahub.utils.ip import get_remote_ip
 from seahub.utils.file_size import get_file_size_unit
 from seahub.utils.ldap import get_ldap_info
@@ -78,20 +78,11 @@ from seahub.settings import INIT_PASSWD, SITE_ROOT, \
     ENABLE_LIMIT_IPADDRESS, ENABLE_SHARE_LINK_REPORT_ABUSE
 
 try:
-    from seahub.settings import ENABLE_TRIAL_ACCOUNT
-except:
-    ENABLE_TRIAL_ACCOUNT = False
-if ENABLE_TRIAL_ACCOUNT:
-    from seahub_extra.trialaccount.models import TrialAccount
-try:
     from seahub.settings import MULTI_TENANCY
-    from seahub_extra.organizations.models import OrgSettings
+    from seahub.organizations.models import OrgSettings
 except ImportError:
     MULTI_TENANCY = False
-try:
-    from seahub.settings import ENABLE_SYSADMIN_EXTRA
-except ImportError:
-    ENABLE_SYSADMIN_EXTRA = False
+
 from seahub.utils.two_factor_auth import has_two_factor_auth
 from termsandconditions.models import TermsAndConditions
 try:
@@ -125,7 +116,7 @@ def sysadmin_react_fake_view(request, **kwargs):
         'multi_institution': multi_institution,
         'institutions': institutions,
         'send_email_on_adding_system_member': SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER,
-        'sysadmin_extra_enabled': ENABLE_SYSADMIN_EXTRA,
+        'sysadmin_extra_enabled': True if is_pro_version() else False,
         'enable_guest_invitation': ENABLE_GUEST_INVITATION,
         'enable_terms_and_conditions': config.ENABLE_TERMS_AND_CONDITIONS,
         'enable_file_scan': ENABLE_FILE_SCAN,
@@ -400,25 +391,6 @@ def user_remove(request, email):
 
     return HttpResponseRedirect(next_page)
 
-@login_required
-@sys_staff_required
-@require_POST
-def remove_trial(request, user_or_org):
-    """Remove trial account.
-
-    Arguments:
-    - `request`:
-    """
-    if not ENABLE_TRIAL_ACCOUNT:
-        raise Http404
-
-    referer = request.META.get('HTTP_REFERER', None)
-    next_page = reverse('sys_info') if referer is None else referer
-
-    TrialAccount.objects.filter(user_or_org=user_or_org).delete()
-
-    messages.success(request, _('Successfully remove trial for: %s') % user_or_org)
-    return HttpResponseRedirect(next_page)
 
 # @login_required
 # @sys_staff_required
@@ -733,7 +705,7 @@ def sys_org_set_member_quota(request, org_id):
                             status=400, content_type=content_type)
 
     if member_quota > 0:
-        from seahub_extra.organizations.models import OrgMemberQuota
+        from seahub.organizations.models import OrgMemberQuota
         OrgMemberQuota.objects.set_quota(org_id, member_quota)
         messages.success(request, _('Success'))
         return HttpResponse(json.dumps({'success': True}), status=200,
@@ -814,7 +786,6 @@ def batch_user_make_admin(request):
     return HttpResponse(json.dumps({'success': True,}), content_type=content_type)
 
 @login_required
-@sys_staff_required
 def batch_add_user_example(request):
     """ get example file.
     """
@@ -822,15 +793,32 @@ def batch_add_user_example(request):
     if not next_page:
         next_page = SITE_ROOT
     data_list = []
-    head = [_('Email'), _('Password'), _('Name')+ '(' + _('Optional') + ')',
-            _('Role') + '(' + _('Optional') + ')', _('Space Quota') + '(MB, ' + _('Optional') + ')']
-    for i in range(5):
-        username = "test" + str(i) +"@example.com"
-        password = "123456"
-        name = "test" + str(i)
-        role = "default"
-        quota = "1000"
-        data_list.append([username, password, name, role, quota])
+    if not is_org_context(request):
+        head = [_('Email'),
+                _('Password'),
+                _('Name') + '(' + _('Optional') + ')',
+                _('Role') + '(' + _('Optional') + ')',
+                _('Space Quota') + '(MB, ' + _('Optional') + ')',
+                'Login ID']
+        for i in range(5):
+            username = "test" + str(i) + "@example.com"
+            password = "123456"
+            name = "test" + str(i)
+            role = "default"
+            quota = "1000"
+            login_id = "login id " + str(i)
+            data_list.append([username, password, name, role, quota, login_id])
+    else:
+        head = [_('Email'),
+                _('Password'),
+                _('Name') + '(' + _('Optional') + ')',
+                _('Space Quota') + '(MB, ' + _('Optional') + ')']
+        for i in range(5):
+            username = "test" + str(i) + "@example.com"
+            password = "123456"
+            name = "test" + str(i)
+            quota = "1000"
+            data_list.append([username, password, name, quota])
 
     wb = write_xls('sample', head, data_list)
     if not wb:

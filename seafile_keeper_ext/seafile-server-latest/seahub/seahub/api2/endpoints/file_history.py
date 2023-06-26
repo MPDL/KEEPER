@@ -119,11 +119,11 @@ class FileHistoryView(APIView):
 
         #### KEEPER
         # get file history
-        limit = request.GET.get('limit', -1) 
-        try: 
-            limit = -1 if int(limit) < 1 else int(limit) 
-        except ValueError: 
-            limit = -1  
+        limit = request.GET.get('limit', -1)
+        try:
+            limit = -1 if int(limit) < 1 else int(limit)
+        except ValueError:
+            limit = -1
 
         # get file history
         # limit = request.GET.get('limit', 50)

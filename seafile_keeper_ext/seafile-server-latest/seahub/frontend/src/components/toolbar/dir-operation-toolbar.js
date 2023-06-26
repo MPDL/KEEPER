@@ -1,19 +1,23 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import { Utils } from '../../utils/utils';
-import { gettext } from '../../utils/constants';
-import ModalPortal from '../modal-portal';
-import CreateFolder from '../../components/dialog/create-folder-dialog';
-import CreateFile from '../../components/dialog/create-file-dialog';
-import ShareDialog from '../../components/dialog/share-dialog';
-import ViewModeToolbar from './view-mode-toolbar';
-import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
-import CertifyLibraryDialog from '../dialog/certify-library-dialog';
-import KeeperEditMetadataDialog from '../dialog/keeper-edit-metadata-dialog';
-import { keeperAPI } from '../../utils/seafile-api';
-import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
-
+import React, { Fragment } from "react";
+import PropTypes from "prop-types";
+import {
+  Dropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem,
+} from "reactstrap";
+import { Utils } from "../../utils/utils";
+import { gettext } from "../../utils/constants";
+import ModalPortal from "../modal-portal";
+import CreateFolder from "../../components/dialog/create-folder-dialog";
+import CreateFile from "../../components/dialog/create-file-dialog";
+import ShareDialog from "../../components/dialog/share-dialog";
+import ViewModeToolbar from "./view-mode-toolbar";
+import ArchiveLibraryDialog from "../dialog/archive-library-dialog";
+import CertifyLibraryDialog from "../dialog/certify-library-dialog";
+import KeeperEditMetadataDialog from "../dialog/keeper-edit-metadata-dialog";
+import { keeperAPI } from "../../utils/seafile-api";
+import { handleCanArchiveResponse } from "../../pages/my-libs/mylib-repo-list-item";
 
 const propTypes = {
   path: PropTypes.string.isRequired,
@@ -35,17 +39,16 @@ const propTypes = {
 };
 
 class DirOperationToolbar extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
-      fileType: '.md',
+      fileType: ".md",
       isCreateFileDialogShow: false,
       isCreateFolderDialogShow: false,
       isUploadMenuShow: false,
       isCreateMenuShow: false,
       isShareDialogShow: false,
-      operationMenuStyle: '',
+      operationMenuStyle: "",
       isMobileOpMenuOpen: false,
       isArchiveLibraryDialogShow: false,
       isEditMetadataDialogShow: false,
@@ -54,32 +57,32 @@ class DirOperationToolbar extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener('click', this.hideOperationMenu);
+    document.addEventListener("click", this.hideOperationMenu);
   }
 
   componentWillUnmount() {
-    document.removeEventListener('click', this.hideOperationMenu);
+    document.removeEventListener("click", this.hideOperationMenu);
   }
 
   toggleMobileOpMenu = () => {
-    this.setState({isMobileOpMenuOpen: !this.state.isMobileOpMenuOpen});
-  }
+    this.setState({ isMobileOpMenuOpen: !this.state.isMobileOpMenuOpen });
+  };
 
   hideOperationMenu = () => {
     this.setState({
       isUploadMenuShow: false,
       isCreateMenuShow: false,
     });
-  }
+  };
 
   toggleOperationMenu = (e) => {
     e.nativeEvent.stopImmediatePropagation();
     let targetRect = e.target.getBoundingClientRect();
     let left = targetRect.left;
-    let top  = targetRect.bottom;
-    let style = {position: 'fixed', display: 'block', left: left, top: top};
-    this.setState({operationMenuStyle: style});
-  }
+    let top = targetRect.bottom;
+    let style = { position: "fixed", display: "block", left: left, top: top };
+    this.setState({ operationMenuStyle: style });
+  };
 
   onUploadClick = (e) => {
     this.toggleOperationMenu(e);
@@ -87,17 +90,17 @@ class DirOperationToolbar extends React.Component {
       isUploadMenuShow: true,
       isCreateMenuShow: false,
     });
-  }
+  };
 
   onUploadFile = (e) => {
-    this.setState({isUploadMenuShow: false});
+    this.setState({ isUploadMenuShow: false });
     this.props.onUploadFile(e);
-  }
+  };
 
   onUploadFolder = (e) => {
-    this.setState({isUploadMenuShow: false});
+    this.setState({ isUploadMenuShow: false });
     this.props.onUploadFolder(e);
-  }
+  };
 
   onCreateClick = (e) => {
     this.toggleOperationMenu(e);
@@ -105,152 +108,319 @@ class DirOperationToolbar extends React.Component {
       isCreateMenuShow: true,
       isUploadMenuShow: false,
     });
-  }
+  };
 
   onShareClick = () => {
     this.setState({
-      isShareDialogShow: !this.state.isShareDialogShow
+      isShareDialogShow: !this.state.isShareDialogShow,
     });
-  }
+  };
 
   onCreateFolderToggle = () => {
-    this.setState({isCreateFolderDialogShow: !this.state.isCreateFolderDialogShow});
-  }
+    this.setState({
+      isCreateFolderDialogShow: !this.state.isCreateFolderDialogShow,
+    });
+  };
 
   onCreateFileToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '',
+      fileType: "",
     });
-  }
+  };
 
   onCreateMarkdownToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '.md'
+      fileType: ".md",
     });
-  }
+  };
 
   onCreateExcelToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '.xlsx'
+      fileType: ".xlsx",
     });
-  }
+  };
 
   onCreatePPTToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '.pptx'
+      fileType: ".pptx",
     });
-  }
+  };
 
   onCreateWordToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '.docx'
+      fileType: ".docx",
     });
-  }
+  };
 
   onAddFile = (filePath, isDraft) => {
-    this.setState({isCreateFileDialogShow: false});
+    this.setState({ isCreateFileDialogShow: false });
     this.props.onAddFile(filePath, isDraft);
-  }
+  };
 
   onAddFolder = (dirPath) => {
-    this.setState({isCreateFolderDialogShow: false});
+    this.setState({ isCreateFolderDialogShow: false });
     this.props.onAddFolder(dirPath);
-  }
+  };
 
   checkDuplicatedName = (newName) => {
     let direntList = this.props.direntList;
-    let isDuplicated = direntList.some(object => {
+    let isDuplicated = direntList.some((object) => {
       return object.name === newName;
     });
     return isDuplicated;
-  }
+  };
 
   // KEEPER
   onArchiveLibraryHide = () => {
-    this.setState({isArchiveLibraryDialogShow: false});
-  }
+    this.setState({ isArchiveLibraryDialogShow: false });
+  };
 
   onArchiveLibraryToggle = () => {
-    keeperAPI.canArchive(this.props.repoID).then((resp) => {
-      const d = resp.data;
-      handleCanArchiveResponse(this, resp);
-      if (d.status === 'success' || d.status === 'metadata_error')
-        this.setState({
-          isArchiveLibraryDialogShow: true,
-          quota: d.quota,
+    keeperAPI
+      .canArchive(this.props.repoID)
+      .then((resp) => {
+        const d = resp.data;
+        handleCanArchiveResponse(this, resp);
+        if (d.status === "success" || d.status === "metadata_error")
+          this.setState({
+            isArchiveLibraryDialogShow: true,
+            quota: d.quota,
+          });
+      })
+      .catch((error) => {
+        let errorMsg = Utils.getErrorMsg(error);
+        handleCanArchiveResponse(this, {
+          data: { status: "system_error", msg: errorMsg },
         });
-    }).catch((error) => {
-      let errorMsg = Utils.getErrorMsg(error);
-      handleCanArchiveResponse(this, {data: {status: 'system_error', msg: errorMsg}});
-    });
-  }
+      });
+  };
 
   onEditMetadataHide = () => {
-    this.setState({isEditMetadataDialogShow: false});
-  }
+    this.setState({ isEditMetadataDialogShow: false });
+  };
 
   onEditMetadataToggle = () => {
-    this.setState({isEditMetadataDialogShow: true});
-  }
+    this.setState({ isEditMetadataDialogShow: true });
+  };
 
   onCertifyLibraryHide = () => {
-    this.setState({isCertifyLibraryDialogShow: false});
-  }
+    this.setState({ isCertifyLibraryDialogShow: false });
+  };
 
   onCertifyLibraryToggle = () => {
-    this.setState({isCertifyLibraryDialogShow: true})
-  }
+    this.setState({ isCertifyLibraryDialogShow: true });
+  };
 
   render() {
     let { path, repoName, userPerm } = this.props;
-    
-    //Vlad: seafile bug?
-    //if (userPerm !== 'rw' && userPerm !== 'admin') {
-    //  return '';
-    //
-    //}
 
-    let itemType = path === '/' ? 'library' : 'dir';
-    let itemName = path === '/' ? repoName : Utils.getFolderName(path);
+    let itemType = path === "/" ? "library" : "dir";
+    let itemName = path == "/" ? repoName : Utils.getFolderName(path);
 
-    let isArchiveBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
-    let isEditMetadataBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
-    let isCertifyBtnShow = ! this.props.repoEncrypted && this.props.isRepoOwner;
+    const { isCustomPermission, customPermission } =
+      Utils.getUserPermission(userPerm);
+    let canUpload = true;
+    let canCreate = true;
+    if (isCustomPermission) {
+      const { permission } = customPermission;
+      canUpload = permission.upload;
+      canCreate = permission.create;
+    }
+
+    let isArchiveBtnShow = !this.props.repoEncrypted && this.props.isRepoOwner;
+    let isEditMetadataBtnShow =
+      !this.props.repoEncrypted && this.props.isRepoOwner;
+    let isCertifyBtnShow = !this.props.repoEncrypted && this.props.isRepoOwner;
 
     let content = null;
     if (Utils.isDesktop()) {
       let { showShareBtn } = this.props;
       content = (
         <Fragment>
-          {Utils.isSupportUploadFolder() ?
-            <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadClick}>{gettext('Upload')}</button> :
-            <button className="btn btn-secondary operation-item" title={gettext('Upload')} onClick={this.onUploadFile}>{gettext('Upload')}</button>}
-          <button className="btn btn-secondary operation-item" title={gettext('New')} onClick={this.onCreateClick}>{gettext('New')}</button>
-          {showShareBtn && <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
-          {isArchiveBtnShow &&
-            <button className="btn btn-secondary operation-item" title={gettext('Archive')} onClick={this.onArchiveLibraryToggle}>{gettext('Archive')}</button>
-          }
-          {isCertifyBtnShow &&
-            <button className="btn btn-secondary operation-item" title={gettext('Certify')} onClick={this.onCertifyLibraryToggle}>{gettext('Certify')}</button>
-          }
-          {isEditMetadataBtnShow &&
-            <button className="btn btn-secondary operation-item" title={gettext('Metadata')} onClick={this.onEditMetadataToggle}>{gettext('Metadata')}</button>
-          }
+          {canUpload && (
+            <Fragment>
+              {Utils.isSupportUploadFolder() ? (
+                <Fragment>
+                  <button
+                    className="btn btn-secondary operation-item"
+                    onClick={this.onUploadClick}
+                    aria-haspopup="true"
+                    aria-expanded={this.state.isUploadMenuShow}
+                    aria-controls="upload-menu"
+                  >
+                    {gettext("Upload")}
+                  </button>
+                  {this.state.isUploadMenuShow && (
+                    <div
+                      className="menu dropdown-menu"
+                      style={this.state.operationMenuStyle}
+                      role="menu"
+                      id="upload-menu"
+                    >
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={this.onUploadFile}
+                        role="menuitem"
+                      >
+                        {gettext("Upload Files")}
+                      </button>
+                      <button
+                        type="button"
+                        className="dropdown-item"
+                        onClick={this.onUploadFolder}
+                        role="menuitem"
+                      >
+                        {gettext("Upload Folder")}
+                      </button>
+                    </div>
+                  )}
+                </Fragment>
+              ) : (
+                <button
+                  className="btn btn-secondary operation-item"
+                  title={gettext("Upload")}
+                  onClick={this.onUploadFile}
+                >
+                  {gettext("Upload")}
+                </button>
+              )}
+            </Fragment>
+          )}
+          {canCreate && (
+            <Fragment>
+              <button
+                className="btn btn-secondary operation-item"
+                onClick={this.onCreateClick}
+                aria-haspopup="true"
+                aria-expanded={this.state.isUploadMenuShow}
+                aria-controls="new-menu"
+              >
+                {gettext("New")}
+              </button>
+              {this.state.isCreateMenuShow && (
+                <div
+                  className="menu dropdown-menu"
+                  style={this.state.operationMenuStyle}
+                  role="menu"
+                  id="new-menu"
+                >
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreateFolderToggle}
+                    role="menuitem"
+                  >
+                    {gettext("New Folder")}
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreateFileToggle}
+                  >
+                    {gettext("New File")}
+                  </button>
+                  <div className="dropdown-divider"></div>
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreateMarkdownToggle}
+                    role="menuitem"
+                  >
+                    {gettext("New Markdown File")}
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreateExcelToggle}
+                    role="menuitem"
+                  >
+                    {gettext("New Excel File")}
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreatePPTToggle}
+                    role="menuitem"
+                  >
+                    {gettext("New PowerPoint File")}
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={this.onCreateWordToggle}
+                    role="menuitem"
+                  >
+                    {gettext("New Word File")}
+                  </button>
+                </div>
+              )}
+            </Fragment>
+          )}
+          {showShareBtn && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext("Share")}
+              onClick={this.onShareClick}
+            >
+              {gettext("Share")}
+            </button>
+          )}
+          {/* KEEPER */}
+          {isArchiveBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext("Archive")}
+              onClick={this.onArchiveLibraryToggle}
+            >
+              {gettext("Archive")}
+            </button>
+          )}
+          {isCertifyBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext("Certify")}
+              onClick={this.onCertifyLibraryToggle}
+            >
+              {gettext("Certify")}
+            </button>
+          )}
+          {isEditMetadataBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext("Metadata")}
+              onClick={this.onEditMetadataToggle}
+            >
+              {gettext("Metadata")}
+            </button>
+          )}
         </Fragment>
       );
     } else {
       content = (
-        <Dropdown isOpen={this.state.isMobileOpMenuOpen} toggle={this.toggleMobileOpMenu}>
-          <DropdownToggle tag="span" className="sf2-icon-plus mobile-toolbar-icon" />
+        <Dropdown
+          isOpen={this.state.isMobileOpMenuOpen}
+          toggle={this.toggleMobileOpMenu}
+        >
+          <DropdownToggle
+            tag="span"
+            className="sf2-icon-plus mobile-toolbar-icon"
+          />
           <DropdownMenu>
-            <DropdownItem onClick={this.onUploadFile}>{gettext('Upload')}</DropdownItem>
-            <DropdownItem onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</DropdownItem>
-            <DropdownItem onClick={this.onCreateFileToggle}>{gettext('New File')}</DropdownItem>
+            {canUpload && (
+              <DropdownItem onClick={this.onUploadFile}>
+                {gettext("Upload")}
+              </DropdownItem>
+            )}
+            {canCreate && (
+              <Fragment>
+                <DropdownItem onClick={this.onCreateFolderToggle}>
+                  {gettext("New Folder")}
+                </DropdownItem>
+                <DropdownItem onClick={this.onCreateFileToggle}>
+                  {gettext("New File")}
+                </DropdownItem>
+              </Fragment>
+            )}
           </DropdownMenu>
         </Dropdown>
       );
@@ -258,31 +428,16 @@ class DirOperationToolbar extends React.Component {
 
     return (
       <Fragment>
-        {(userPerm === 'rw' || userPerm === 'admin') && (
-          <div className="dir-operation">
-            <div className="operation">
-              {content}
-            </div>
-            {this.state.isUploadMenuShow && (
-              <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-                <li className="dropdown-item" onClick={this.onUploadFile}>{gettext('Upload Files')}</li>
-                <li className="dropdown-item" onClick={this.onUploadFolder}>{gettext('Upload Folder')}</li>
-              </ul>
-            )}
-            {this.state.isCreateMenuShow && (
-              <ul className="menu dropdown-menu" style={this.state.operationMenuStyle}>
-                <li className="dropdown-item" onClick={this.onCreateFolderToggle}>{gettext('New Folder')}</li>
-                <li className="dropdown-item" onClick={this.onCreateFileToggle}>{gettext('New File')}</li>
-                <li className="dropdown-divider"></li>
-                <li className="dropdown-item" onClick={this.onCreateMarkdownToggle}>{gettext('New Markdown File')}</li>
-                <li className="dropdown-item" onClick={this.onCreateExcelToggle}>{gettext('New Excel File')}</li>
-                <li className="dropdown-item" onClick={this.onCreatePPTToggle}>{gettext('New PowerPoint File')}</li>
-                <li className="dropdown-item" onClick={this.onCreateWordToggle}>{gettext('New Word File')}</li>
-              </ul>
-            )}
-          </div>
+        {(userPerm === "rw" || userPerm === "admin" || isCustomPermission) && (
+          <div className="dir-operation">{content}</div>
         )}
-        {Utils.isDesktop() && <ViewModeToolbar currentMode={this.props.currentMode} switchViewMode={this.props.switchViewMode} />}
+        {Utils.isDesktop() && (
+          <ViewModeToolbar
+            currentMode={this.props.currentMode}
+            switchViewMode={this.props.switchViewMode}
+            isCustomPermission={isCustomPermission}
+          />
+        )}
         {this.state.isCreateFileDialogShow && (
           <ModalPortal>
             <CreateFile
@@ -304,7 +459,7 @@ class DirOperationToolbar extends React.Component {
             />
           </ModalPortal>
         )}
-        {this.state.isShareDialogShow &&
+        {this.state.isShareDialogShow && (
           <ModalPortal>
             <ShareDialog
               itemType={itemType}
@@ -318,7 +473,7 @@ class DirOperationToolbar extends React.Component {
               toggleDialog={this.onShareClick}
             />
           </ModalPortal>
-        }
+        )}
         {this.state.isArchiveLibraryDialogShow && (
           <ModalPortal>
             <ArchiveLibraryDialog
@@ -326,7 +481,8 @@ class DirOperationToolbar extends React.Component {
               repoName={this.props.repoName}
               quota={this.state.quota}
               hideDialog={this.onArchiveLibraryHide}
-              toggleDialog={this.onArchiveLibraryToggle}/>
+              toggleDialog={this.onArchiveLibraryToggle}
+            />
           </ModalPortal>
         )}
         {this.state.isEditMetadataDialogShow && (
@@ -335,7 +491,8 @@ class DirOperationToolbar extends React.Component {
               repoID={this.props.repoID}
               repoName={this.props.repoName}
               hideDialog={this.onEditMetadataHide}
-              toggleDialog={this.onEditMetadataToggle}/>
+              toggleDialog={this.onEditMetadataToggle}
+            />
           </ModalPortal>
         )}
         {this.state.isCertifyLibraryDialogShow && (
@@ -344,10 +501,10 @@ class DirOperationToolbar extends React.Component {
               repoID={this.props.repoID}
               repoName={this.props.repoName}
               hideDialog={this.onCertifyLibraryHide}
-              toggleDialog={this.onCertifyLibraryToggle}/>
+              toggleDialog={this.onCertifyLibraryToggle}
+            />
           </ModalPortal>
         )}
-
       </Fragment>
     );
   }

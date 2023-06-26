@@ -21,10 +21,9 @@ export SEAHUB_DIR=${INSTALLPATH}/seahub
 export SEAHUB_LOG_DIR=${SEAFILE_DIR}/logs
 export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 #Vlad: TODO: check security
 export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
-export PYTHONPATH=${INSTALLPATH}/seahub-extra:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
 
 #export PYTHON_EGG_CACHE=$SEAFILE_DIR/.cache/Python-Eggs

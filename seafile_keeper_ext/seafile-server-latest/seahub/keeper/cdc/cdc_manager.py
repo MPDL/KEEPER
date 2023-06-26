@@ -211,6 +211,7 @@ def print_OK():
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
+    logger.error("I AM HERE!")
     event = None
 
     # exit if repo encrypted

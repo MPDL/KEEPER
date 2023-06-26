@@ -2232,7 +2232,8 @@ textarea.form-control {
 .btn:focus,
 .btn.focus {
   outline: 0;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  /* box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25); */
+  box-shadow: 0 0 0 2px rgba(287, 165, 184, 0.25);
 }
 .btn.disabled,
 .btn:disabled {
@@ -2254,16 +2255,19 @@ fieldset:disabled a.btn {
 }
 .btn-primary:hover {
   color: #fff;
-  background-color: #006f7b;
-  border-color: #006f7b;
+  background-color: #57a5b8;
+  border-color: #57a5b8;
 }
 .btn-primary:focus,
 .btn-primary.focus {
-  box-shadow: 0 0 0 2px rgba(87, 165, 184, 0.5);
+  /* box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.5); */
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 50%);
 }
 .btn-primary.disabled,
 .btn-primary:disabled {
   color: #fff;
+  /* background-color: #f19645; */
+  /* border-color: #f19645;  */
   background-color: #57a5b8;
   border-color: #57a5b8;
 }
@@ -2271,13 +2275,15 @@ fieldset:disabled a.btn {
 .btn-primary:not(:disabled):not(.disabled).active,
 .show > .btn-primary.dropdown-toggle {
   color: #fff;
+  /* background-color: #ed7b16; */
+  /* border-color: #e57511; */
   background-color: #57a5b8;
   border-color: #57a5b8;
 }
 .btn-primary:not(:disabled):not(.disabled):active:focus,
 .btn-primary:not(:disabled):not(.disabled).active:focus,
 .show > .btn-primary.dropdown-toggle:focus {
-  box-shadow: 0 0 0 2px rgba(87, 165, 184, 0.5);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 50%);
 }
 
 .btn-secondary {
@@ -2512,22 +2518,27 @@ fieldset:disabled a.btn {
 }
 
 .btn-outline-primary {
+  /* color: #f19645; */
   color: #57a5b8;
   background-color: transparent;
   background-image: none;
+  /* border-color: #f19645; */
   border-color: #57a5b8;
 }
 .btn-outline-primary:hover {
   color: #fff;
+  /* background-color: #f19645; */
+  /* border-color: #f19645; */
   background-color: #57a5b8;
   border-color: #57a5b8;
 }
 .btn-outline-primary:focus,
 .btn-outline-primary.focus {
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.5);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 50%);
 }
 .btn-outline-primary.disabled,
 .btn-outline-primary:disabled {
+  /* color: #f19645; */
   color: #57a5b8;
   background-color: transparent;
 }
@@ -2535,13 +2546,15 @@ fieldset:disabled a.btn {
 .btn-outline-primary:not(:disabled):not(.disabled).active,
 .show > .btn-outline-primary.dropdown-toggle {
   color: #fff;
+  /* background-color: #f19645; */
+  /* border-color: #f19645; */
   background-color: #57a5b8;
   border-color: #57a5b8;
 }
 .btn-outline-primary:not(:disabled):not(.disabled):active:focus,
 .btn-outline-primary:not(:disabled):not(.disabled).active:focus,
 .show > .btn-outline-primary.dropdown-toggle:focus {
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.5);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 50%);
 }
 
 .btn-outline-secondary {
@@ -3532,7 +3545,7 @@ input[type="button"].btn-block {
 }
 .custom-file-input:focus ~ .custom-file-label {
   border-color: #1991eb;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
 }
 .custom-file-input:focus ~ .custom-file-label::after {
   border-color: #1991eb;
@@ -4441,7 +4454,7 @@ input[type="button"].btn-block {
 .page-link:focus {
   z-index: 2;
   outline: 0;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
 }
 .page-link:not(:disabled):not(.disabled) {
   cursor: pointer;
@@ -14785,7 +14798,7 @@ a.tag-addon:hover {
   border-color: #57a5b8;
   z-index: 2;
   color: #57a5b8;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
 }
 
 .selectgroup-pills {
@@ -14852,7 +14865,7 @@ a.tag-addon:hover {
   left: calc(1rem + 1px);
 }
 .custom-switch-input:focus ~ .custom-switch-indicator {
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
   border-color: #57a5b8;
 }
 
@@ -14885,7 +14898,7 @@ a.tag-addon:hover {
 }
 .imagecheck-input:focus ~ .imagecheck-figure {
   border-color: #57a5b8;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
 }
 .imagecheck-input:checked ~ .imagecheck-figure {
   border-color: rgba(0, 40, 100, 0.24);
@@ -14983,7 +14996,7 @@ a.tag-addon:hover {
 }
 .colorinput-input:focus ~ .colorinput-color {
   border-color: #57a5b8;
-  box-shadow: 0 0 0 2px rgba(241, 150, 69, 0.25);
+  box-shadow: 0 0 0 2px rgb(87 165 184 / 25%);
 }
 
 /*# sourceMappingURL=seafile-ui.map*/
