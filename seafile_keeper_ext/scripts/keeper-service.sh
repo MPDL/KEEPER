@@ -303,6 +303,7 @@ case "$1" in
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
                 check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
+                check_component_running "elasticsearch" "org.elasticsearch.bootstrap.Elasticsearch" "CRITICAL"
             fi    
             if [ ${__NODE_TYPE__} == "APP" ] ; then
                 check_keepalived
