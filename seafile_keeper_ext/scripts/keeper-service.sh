@@ -178,7 +178,7 @@ function start_elastic_container () {
             RES=$(sudo docker start $RES)
         # if not exists - run image
         else
-            RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms1g -Xmx1g" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d $ES_IMAGE_NAME)
+            RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms16g -Xmx16g" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d $ES_IMAGE_NAME)
         fi
         if [ -z "$RES" ]; then
             warn "Cannot start Elastic container."
