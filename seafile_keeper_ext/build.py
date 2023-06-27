@@ -940,7 +940,8 @@ def do_generate(args):
         Utils.info('Generate frontend...')
         #cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} npm run build"
         #see https://stackoverflow.com/questions/53230823/fatal-error-ineffective-mark-compacts-near-heap-limit-allocation-failed-javas
-        cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build"
+        #cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build" ### <- on dev only!
+        cmd = f"npm install --legacy-peer-deps && npm run build"
         RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
