@@ -10,6 +10,8 @@ import pwd, grp
 import getpass
 import traceback
 
+from os.path import join as _join
+
 BACKUP_POSTFIX = '_orig'
 
 ########################
@@ -985,11 +987,21 @@ def do_upgrade(args):
                             shutil.copy(src_path, dest_path)
     elif args.frontend_build:
         Utils.info("Copy frontend/build files into ext")
+        src_dir =  os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
         dest_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
-        print(dest_dir)
-        print(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'))
+        print(src_dir, '->', dest_dir)
         shutil.rmtree(dest_dir)
-        shutil.copytree(os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build'), dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
+        shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
+        
+        Utils.info("Copy assets/scripts files into ext")
+        p = ('seahub', 'media', 'assets', 'scripts')
+        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', *p )
+        src_dir =  _join(env_mgr.seafile_server_latest_target, *p)
+        print(src_dir, '(app, i18n) ->', dest_dir)
+        shutil.rmtree(os.path.join(dest_dir, 'app'), ignore_errors=True)
+        shutil.copytree(_join(src_dir, 'app'), _join(dest_dir, 'app'))
+        shutil.rmtree(_join(dest_dir, 'i18n'), ignore_errors=True)
+        shutil.copytree(_join(src_dir, 'i18n'), _join(dest_dir, 'i18n'))
 
 
 env_mgr = EnvManager()
