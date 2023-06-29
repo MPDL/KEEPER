@@ -136,7 +136,7 @@ class Utils(object):
             d = d.strip()
             if d == '':
                 continue
-            path = os.path.join(d, prog)
+            path = _join(d, prog)
             if os.path.exists(path):
                 return path
 
@@ -307,11 +307,11 @@ class Utils(object):
             os.chmod(dir, 0o755)
             for root, ds, fs in os.walk(dir):
                 for d in ds:
-                    p = os.path.join(root, d)
+                    p = _join(root, d)
                     os.chown(p, gid, uid)
                     os.chmod(p, 0o755)
                 for f in fs:
-                    p = os.path.join(root, f)
+                    p = _join(root, f)
                     os.chown(p, gid, uid)
                     if p.endswith(('py', 'sh')):
                         os.chmod(p, 0o755)
@@ -366,23 +366,23 @@ class EnvManager(object):
 
         # self.install_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.install_path = self.keeper_config.get('global', '__SEAFILE_DIR__')
-        self.install_path = os.path.join(self.install_path, 'seafile-server-latest')
+        self.install_path = _join(self.install_path, 'seafile-server-latest')
 
         self.top_dir = os.path.dirname(self.install_path)
-        self.bin_dir = os.path.join(self.install_path, 'seafile', 'bin')
-        self.central_config_dir = os.path.join(self.top_dir, 'conf')
+        self.bin_dir = _join(self.install_path, 'seafile', 'bin')
+        self.central_config_dir = _join(self.top_dir, 'conf')
 
-        self.pro_data_dir = os.path.join(self.top_dir, 'pro-data')
-        self.pro_program_dir = os.path.join(self.install_path, 'pro')
-        self.pro_pylibs_dir = os.path.join(self.pro_program_dir, 'python')
-        self.pro_misc_dir = os.path.join(self.pro_program_dir, 'misc')
+        self.pro_data_dir = _join(self.top_dir, 'pro-data')
+        self.pro_program_dir = _join(self.install_path, 'pro')
+        self.pro_pylibs_dir = _join(self.pro_program_dir, 'python')
+        self.pro_misc_dir = _join(self.pro_program_dir, 'misc')
 
-        self.seafes_dir = os.path.join(self.pro_pylibs_dir, 'seafes')
-        self.seahub_dir = os.path.join(self.install_path, 'seahub')
+        self.seafes_dir = _join(self.pro_pylibs_dir, 'seafes')
+        self.seahub_dir = _join(self.install_path, 'seahub')
 
-        self.ccnet_dir = os.path.join(self.top_dir, 'ccnet')
-        self.seafile_dir = os.path.join(self.top_dir, 'seafile-data')
-        self.central_config_dir = os.path.join(self.top_dir, 'conf')
+        self.ccnet_dir = _join(self.top_dir, 'ccnet')
+        self.seafile_dir = _join(self.top_dir, 'seafile-data')
+        self.central_config_dir = _join(self.top_dir, 'conf')
 
 
     def get_seahub_env(self):
@@ -400,99 +400,100 @@ class EnvManager(object):
 
         self.SEAF_EXT_DIR_MAPPING = {
             # dir -> dir mappings
-            'conf': os.path.join(self.top_dir, 'conf'),
+            'conf': _join(self.top_dir, 'conf'),
             'seafile-server-latest': self.install_path,
-            'seahub-data': os.path.join(self.top_dir, 'seahub-data'),
-            'scripts': os.path.join(self.top_dir, 'scripts'),
-            'http': os.path.join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
+            'seahub-data': _join(self.top_dir, 'seahub-data'),
+            'scripts': _join(self.top_dir, 'scripts'),
+            'http': _join(self.keeper_config.get('http', '__HTTP_CONF_ROOT_DIR__'), 'sites-available'),
             # file -> file mappings
-            'system/keepalived.conf': os.path.join('/etc', 'keepalived', 'keepalived.conf'),
-            'system/cron.d.keeper': os.path.join('/etc', 'cron.d', 'cron-keeper'),
-            'system/cron.d.keeper@background': os.path.join('/etc', 'cron.d', 'cron-keeper-background'),
-            'system/memcached.conf': os.path.join('/etc', 'memcached.conf'),
-            'system/memcached.service.d.local.conf': os.path.join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
-            'system/keeper.service': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
-            'system/keeper.service@background': os.path.join('/etc', 'systemd', 'system', 'keeper.service'),
-            'system/keeper-oos-log.service': os.path.join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
-            'system/keeper-env-vars.sh': os.path.join('/etc', 'profile.d', 'keeper-env-vars.sh'),
-            'system/journald.conf': os.path.join('/etc', 'systemd', 'journald.conf'),
-            'system/10-rsyslogd-remote.conf': os.path.join('/etc', 'rsyslog.d', '10-rsyslogd-remote.conf'),
-            'system/my.cnf': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/my.cnf@single': os.path.join('/etc', 'mysql', 'my.cnf'),
-            'system/postfix.main.cf': os.path.join('/etc', 'postfix', 'main.cf'),
-            'system/postfix.main.cf@background': os.path.join('/etc', 'postfix', 'main.cf'),
-            'system/nagios.keeper.cfg': os.path.join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
-            'system/nginx.conf': os.path.join('/etc', 'nginx', 'nginx.conf'),
-            'system/phpmyadmin.conf': os.path.join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
-            'system/clamd.conf': os.path.join('/etc', 'clamav', 'clamd.conf'),
-            'system/clamav-daemon.service': os.path.join('/lib', 'systemd', 'system', 'clamav-daemon.service')
+            'system/keepalived.conf': _join('/etc', 'keepalived', 'keepalived.conf'),
+            'system/cron.d.keeper': _join('/etc', 'cron.d', 'cron-keeper'),
+            'system/cron.d.keeper@background': _join('/etc', 'cron.d', 'cron-keeper-background'),
+            'system/memcached.conf': _join('/etc', 'memcached.conf'),
+            'system/memcached.service.d.local.conf': _join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
+            'system/keeper.service': _join('/etc', 'systemd', 'system', 'keeper.service'),
+            'system/keeper.service@background': _join('/etc', 'systemd', 'system', 'keeper.service'),
+            'system/keeper-oos-log.service': _join('/etc', 'systemd', 'system', 'keeper-oos-log.service'),
+            'system/keeper-env-vars.sh': _join('/etc', 'profile.d', 'keeper-env-vars.sh'),
+            'system/journald.conf': _join('/etc', 'systemd', 'journald.conf'),
+            'system/10-rsyslogd-remote.conf': _join('/etc', 'rsyslog.d', '10-rsyslogd-remote.conf'),
+            'system/my.cnf': _join('/etc', 'mysql', 'my.cnf'),
+            'system/my.cnf@single': _join('/etc', 'mysql', 'my.cnf'),
+            'system/postfix.main.cf': _join('/etc', 'postfix', 'main.cf'),
+            'system/postfix.main.cf@background': _join('/etc', 'postfix', 'main.cf'),
+            'system/nagios.keeper.cfg': _join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
+            'system/nginx.conf': _join('/etc', 'nginx', 'nginx.conf'),
+            'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+            'system/clamd.conf': _join('/etc', 'clamav', 'clamd.conf'),
+            'system/clamav-daemon.service': _join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
 
-        self.seafile_server_latest_target = os.path.join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
+        # self.seafile_server_latest_target = _join(self.top_dir, self.keeper_config.get('global', '__SEAFILE_SERVER_LATEST_DIR__'))
+        self.seafile_server_latest_target = _join(self.top_dir, 'seafile-server-latest')
 
-        self.seafile_logs_dir = os.path.join(self.top_dir, 'logs')
+        self.seafile_logs_dir = _join(self.top_dir, 'logs')
 
-        self.custom_link = os.path.join(self.install_path, 'seahub', 'media', 'custom')
-        self.custom_dir = os.path.join(self.top_dir, 'seahub-data', 'custom')
+        self.custom_link = _join(self.install_path, 'seahub', 'media', 'custom')
+        self.custom_dir = _join(self.top_dir, 'seahub-data', 'custom')
 
-        self.avatars_link = os.path.join(self.install_path, 'seahub', 'media', 'avatars')
-        self.avatars_dir = os.path.join(self.top_dir, 'seahub-data', 'avatars')
+        self.avatars_link = _join(self.install_path, 'seahub', 'media', 'avatars')
+        self.avatars_dir = _join(self.top_dir, 'seahub-data', 'avatars')
 
-        self.django_admin_link = os.path.join('/usr', 'local', 'bin', 'django-admin')
-        self.django_admin_path= os.path.join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'bin', 'django-admin')
+        self.django_admin_link = _join('/usr', 'local', 'bin', 'django-admin')
+        self.django_admin_path= _join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'bin', 'django-admin')
 
-        self.assets_app_link = os.path.join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'app')
-        self.assets_app_dir = os.path.join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'app')
+        self.assets_app_link = _join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'app')
+        self.assets_app_dir = _join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'app')
 
-        self.assets_sysadmin_app_link = os.path.join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'sysadmin-app')
-        self.assets_sysadmin_app_dir = os.path.join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'sysadmin-app')
+        self.assets_sysadmin_app_link = _join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'sysadmin-app')
+        self.assets_sysadmin_app_dir = _join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'sysadmin-app')
 
-        self.keeper_service_link = os.path.join('/usr', 'local', 'bin', 'keeper-service')
-        self.keeper_service_path= os.path.join(self.top_dir, 'scripts', 'keeper-service.sh')
+        self.keeper_service_link = _join('/usr', 'local', 'bin', 'keeper-service')
+        self.keeper_service_path= _join(self.top_dir, 'scripts', 'keeper-service.sh')
 
-        self.keeper_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper.service')
+        self.keeper_service_systemd_multi_user_target_wants_link = _join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper.service')
         self.keeper_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper.service']
 
-        self.keeper_oos_log_service_systemd_multi_user_target_wants_link = os.path.join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
+        self.keeper_oos_log_service_systemd_multi_user_target_wants_link = _join('/etc', 'systemd', 'system', 'multi-user.target.wants', 'keeper-oos-log.service')
         self.keeper_oos_log_service_systemd_multi_user_target_wants_path = self.SEAF_EXT_DIR_MAPPING['system/keeper-oos-log.service']
 
-        self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
-        self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
+        self.keeper_nagios_check_keeper_viruses_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_keeper_viruses.sh')
+        self.keeper_nagios_check_keeper_viruses_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_keeper_viruses.sh')
 
-        self.keeper_nagios_check_keeper_viruses_link = os.path.join('/usr', 'local', 'nagios', 'libexec', 'check_galera_cluster.sh')
-        self.keeper_nagios_check_keeper_viruses_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_galera_cluster.sh')
+        self.keeper_nagios_check_keeper_viruses_link = _join('/usr', 'local', 'nagios', 'libexec', 'check_galera_cluster.sh')
+        self.keeper_nagios_check_keeper_viruses_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_galera_cluster.sh')
 
-        self.keeper_nagios_check_keeper_elasticsearch_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
-        self.keeper_nagios_check_keeper_elasticsearch_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
+        self.keeper_nagios_check_keeper_elasticsearch_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
+        self.keeper_nagios_check_keeper_elasticsearch_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
 
-        self.keeper_nagios_check_gpfs_health_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
-        self.keeper_nagios_check_gpfs_health_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
 
-        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
-        self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
+        self.keeper_nagios_check_tmp_link = _join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
+        self.keeper_nagios_check_tmp_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
 
-        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
-        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
+        self.keeper_nagios_check_logfiles_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
+        self.keeper_nagios_check_logfiles_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
 
-        self.keeper_nagios_check_keeper_elasticsearch_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
-        self.keeper_nagios_check_keeper_elasticsearch_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
+        self.keeper_nagios_check_keeper_elasticsearch_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_es')
+        self.keeper_nagios_check_keeper_elasticsearch_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_es.py')
 
-        self.keeper_nagios_check_gpfs_health_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
-        self.keeper_nagios_check_gpfs_health_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_gpfs_health.sh')
+        self.keeper_nagios_check_gpfs_health_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_gpfs_health.sh')
 
-        self.keeper_nagios_check_tmp_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
-        self.keeper_nagios_check_tmp_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
+        self.keeper_nagios_check_tmp_link = _join('/usr', 'lib', 'nagios', 'plugins', 'tmp-check.sh')
+        self.keeper_nagios_check_tmp_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_tmp.sh')
 
-        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
-        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
-        self.keeper_nagios_check_logfiles_link = os.path.join('/usr', 'lib', 'nagios', 'plugins', 'check_file_ops_stat_status.sh')
-        self.keeper_nagios_check_logfiles_path = os.path.join(self.top_dir, 'scripts', 'monitoring', 'check_file_ops_stat_status.sh')
+        self.keeper_nagios_check_logfiles_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_logfiles')
+        self.keeper_nagios_check_logfiles_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_logfiles.pl')
+        self.keeper_nagios_check_logfiles_link = _join('/usr', 'lib', 'nagios', 'plugins', 'check_file_ops_stat_status.sh')
+        self.keeper_nagios_check_logfiles_path = _join(self.top_dir, 'scripts', 'monitoring', 'check_file_ops_stat_status.sh')
 
-        self.keeper_ext_dir = os.path.join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
+        self.keeper_ext_dir = _join(self.top_dir, 'KEEPER', 'seafile_keeper_ext')
 
-        self.keeper_var_log_dir = os.path.join('/var', 'log', 'keeper')
+        self.keeper_var_log_dir = _join('/var', 'log', 'keeper')
 
-        self.keeper_tmp_dir = os.path.join('/run', 'tmp')
+        self.keeper_tmp_dir = _join('/run', 'tmp')
 
 
 
@@ -504,10 +505,10 @@ class EnvManager(object):
         extra_python_path = [
             self.pro_pylibs_dir,
 
-            os.path.join(self.top_dir, 'conf'), # LDAP sync has to access seahub_settings.py
-            os.path.join(self.install_path, 'seahub', 'thirdpart'),
+            _join(self.top_dir, 'conf'), # LDAP sync has to access seahub_settings.py
+            _join(self.install_path, 'seahub', 'thirdpart'),
 
-            os.path.join(self.install_path, 'seafile/lib/python3/site-packages'),
+            _join(self.install_path, 'seafile/lib/python3/site-packages'),
         ]
 
         for path in extra_python_path:
@@ -663,7 +664,7 @@ def deploy_dir(path, expand=False):
         return
 
     for p in [p for p in os.listdir(path)]:
-        sub_path = os.path.join(path, p)
+        sub_path = _join(path, p)
         if os.path.isdir(sub_path):
             deploy_dir(sub_path, expand)
         else:
@@ -924,8 +925,8 @@ def do_generate(args):
     if args.msgen:
         Utils.info('Generate English translation catalog...')
         po_file = 'django.po'
-        en_django_po_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
-        backup(os.path.join(en_django_po_dir, po_file), mv=False)
+        en_django_po_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
+        backup(_join(en_django_po_dir, po_file), mv=False)
         Utils.run(f"msgen {po_file + BACKUP_POSTFIX} > {po_file}", cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
         Utils.info('Generate i18n...')
@@ -935,7 +936,7 @@ def do_generate(args):
     elif args.min_css:
         Utils.info('Generate seahub.min.css...')
         cmd = "yui-compressor -v seahub.css -o seahub.min.css"
-        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'media', 'css'))
+        RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'media', 'css'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
     elif args.frontend:
@@ -944,7 +945,7 @@ def do_generate(args):
         #see https://stackoverflow.com/questions/53230823/fatal-error-ineffective-mark-compacts-near-heap-limit-allocation-failed-javas
         #cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build" ### <- on dev only!
         cmd = f"npm install --legacy-peer-deps && npm run build"
-        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
         else:
@@ -960,13 +961,13 @@ def do_run(args):
         Utils.info('Run react.js dev server...')
         #FIXME: switch to OpenSSL 3.0
         cmd = "set NODE_OPTIONS=--openssl-legacy-provider && npm run dev" 
-        RC = Utils.run(cmd, cwd=os.path.join(env_mgr.seahub_dir, 'frontend'))
+        RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
     print('Upgrade...')
-    # for root, dirs, files in os.walk(os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
+    # for root, dirs, files in os.walk(_join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
         for root, dirs, files in os.walk('seafile-server-latest'):
@@ -978,8 +979,8 @@ def do_upgrade(args):
                 ):
                 for file in files:
                     if not (file.endswith(('.pyc', '.png'))):
-                        dest_path = os.path.join(root, file)
-                        src_path = os.path.join(env_mgr.top_dir, dest_path)
+                        dest_path = _join(root, file)
+                        src_path = _join(env_mgr.top_dir, dest_path)
                         if not os.path.exists(src_path):
                             Utils.info(Utils.highlight("File {} does not exist, please check".format(src_path)))
                         else:
@@ -987,8 +988,8 @@ def do_upgrade(args):
                             shutil.copy(src_path, dest_path)
     elif args.frontend_build:
         Utils.info("Copy frontend/build files into ext")
-        src_dir =  os.path.join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
-        dest_dir = os.path.join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
+        src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
+        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
         print(src_dir, '->', dest_dir)
         shutil.rmtree(dest_dir)
         shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
@@ -998,7 +999,7 @@ def do_upgrade(args):
         dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', *p )
         src_dir =  _join(env_mgr.seafile_server_latest_target, *p)
         print(src_dir, '(app, i18n) ->', dest_dir)
-        shutil.rmtree(os.path.join(dest_dir, 'app'), ignore_errors=True)
+        shutil.rmtree(_join(dest_dir, 'app'), ignore_errors=True)
         shutil.copytree(_join(src_dir, 'app'), _join(dest_dir, 'app'))
         shutil.rmtree(_join(dest_dir, 'i18n'), ignore_errors=True)
         shutil.copytree(_join(src_dir, 'i18n'), _join(dest_dir, 'i18n'))
@@ -1010,7 +1011,7 @@ def main():
     try:
         import argparse
     except ImportError:
-        sys.path.insert(0, glob.glob(os.path.join(env_mgr.pro_pylibs_dir, 'argparse*.egg'))[0])
+        sys.path.insert(0, glob.glob(_join(env_mgr.pro_pylibs_dir, 'argparse*.egg'))[0])
         import argparse
 
     env_mgr.read_keeper_conf()
