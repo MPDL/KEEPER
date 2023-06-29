@@ -1,7 +1,10 @@
 PROJECT=seahub
 
-RUN_KEEPER=__SEAFILE_DIR__/scripts/run_keeper_script.sh
-DJANGO_ADMIN=__SEAFILE_DIR__/__SEAFILE_SERVER_LATEST_DIR__/seahub/thirdpart/bin/django-admin 
+SEAFILE_DIR=/opt/seafile
+SEAFILE_SERVER_LATEST=$(SEAFILE_DIR)/seafile-server-latest
+
+RUN_KEEPER=$(SEAFILE_DIR)/scripts/run_keeper_script.sh
+DJANGO_ADMIN=$(SEAFILE_SERVER_LATEST)/seahub/thirdpart/bin/django-admin
 
 develop: setup-git
 
