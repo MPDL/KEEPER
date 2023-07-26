@@ -650,7 +650,6 @@ def deploy_file(path, expand=False, dest_dir=None, skip_backup=True):
             content = expand_properties(fin.read(), path)
             fout.write(content)
     else:
-        import stat
         shutil.copyfile(path, dest_path)
     Utils.info(Utils.highlight("%s has been deployed into %s%s" % (path, dest_path, " (expanded)" if expand else "")))
 
