@@ -5,7 +5,7 @@
 {% block sub_title %}bloxberg certificate - {% endblock %}
 
 {% block extra_style %}
-<link rel="resource" type="application/l10n" href="{{ MEDIA_URL }}js/pdf/locale/locale.properties" />
+<link rel="resource" type="application/l10n" href="{{ MEDIA_URL }}js/pdf/web/locale/locale.properties" />
 {% render_bundle 'historyTrashFileView' 'css' %}
 {% render_bundle 'bloxbergCertificate' 'css' %}
 {% endblock %}
@@ -32,14 +32,14 @@ window.bloxbergCertificate = {
 <script type="text/javascript">
   var keeper_pdf = true
   var sf_file_url = '{{ pdf_url|escapejs }}';
-  var sf_pdfworkerjs_url = '{{MEDIA_URL}}js/pdf/pdf.worker.min.js';
-  var sf_pdf_images_path = '{{MEDIA_URL}}js/pdf/images/';
-  var sf_pdf_cmaps_path = '{{MEDIA_URL}}js/pdf/cmaps/';
+  var sf_pdfworkerjs_url = '{{MEDIA_URL}}js/pdf/build/pdf.worker.js';
+  var sf_pdf_images_path = '{{MEDIA_URL}}js/pdf/web/images/';
+  var sf_pdf_cmaps_path = '{{MEDIA_URL}}js/pdf/web/cmaps/';
   var metadata_url = '{{ metadata_url|escapejs }}'
   var pdf_url = '{{ pdf_url|escapejs }}'
 </script>
-<script type="text/javascript" src="{{MEDIA_URL}}js/pdf/pdf.min.js"></script>
-<script type="text/javascript" src="{{MEDIA_URL}}js/pdf/viewer.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}js/pdf/build/pdf.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}js/pdf/web/viewer.js"></script>
 <script src="https://unpkg.com/@bloxberg-org/blockcerts-verifier@1.1.5/dist/main.js"></script>
 
 {% endblock %}
