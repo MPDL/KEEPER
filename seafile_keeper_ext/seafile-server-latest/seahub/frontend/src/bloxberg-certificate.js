@@ -123,9 +123,9 @@ class BloxbergCertificatePage extends React.Component {
             </div>
           </div>
         )}
-        {/* <div className={ PDFViewerClassName } onClick={this.toggleModal}> */}
-        {/*   <PDFViewer /> */}
-        {/* </div> */}
+        <div className={ PDFViewerClassName } onClick={this.toggleModal}>
+          <PDFViewer />
+        </div>
       </div>
     );
   }

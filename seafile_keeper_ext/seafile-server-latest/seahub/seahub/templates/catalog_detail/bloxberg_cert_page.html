@@ -1,4 +1,4 @@
-{% extends "base_for_react.html" %}
+{% extends 'base_for_react.html' %}
 {% load seahub_tags i18n %}
 {% load render_bundle from webpack_loader %}
 
@@ -30,13 +30,11 @@ window.bloxbergCertificate = {
 </script>
 {% render_bundle 'bloxbergCertificate' 'js' %}
 <script type="text/javascript">
-  var keeper_pdf = true
-  var sf_file_url = '{{ pdf_url|escapejs }}';
-  var sf_pdfworkerjs_url = '{{MEDIA_URL}}js/pdf/build/pdf.worker.js';
-  var sf_pdf_images_path = '{{MEDIA_URL}}js/pdf/web/images/';
-  var sf_pdf_cmaps_path = '{{MEDIA_URL}}js/pdf/web/cmaps/';
-  var metadata_url = '{{ metadata_url|escapejs }}'
-  var pdf_url = '{{ pdf_url|escapejs }}'
+  var keeper_pdf = true;
+  var metadata_url = '{{ metadata_url|escapejs }}';
+  var pdf_url = '{{ pdf_url|escapejs }}';
+  var SEAFILE_FILE_URL = pdf_url;
+  var SEAFILE_PDFJS_DIR = '{{MEDIA_URL}}js/pdf';
 </script>
 <script type="text/javascript" src="{{MEDIA_URL}}js/pdf/build/pdf.js"></script>
 <script type="text/javascript" src="{{MEDIA_URL}}js/pdf/web/viewer.js"></script>
