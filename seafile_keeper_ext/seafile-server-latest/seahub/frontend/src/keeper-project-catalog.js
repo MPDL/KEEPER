@@ -681,7 +681,7 @@ class Footer extends React.Component {
                       src="/media/custom/seafile_logo_footer.png"
                       height="35"
                     />
-                    © 2022 Seafile
+                    © 2023 Seafile
                   </a>
                 </div>
               </div>
