@@ -702,7 +702,6 @@ def deploy_ext():
       'seahub/settings.py', 
       'frontend/config/webpack.config.js',
       'frontend/src/bloxberg-certificate.js',
-      'media/js/pdf/viewer.js',
       'keeper/cdc/generate_cdc.sh',
       'keeper/cdc/cdc_manager.py',
       'keeper/tests/run_tests.sh',
