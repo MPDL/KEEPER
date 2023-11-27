@@ -650,7 +650,7 @@ class Footer extends React.Component {
               <div className="col-md-3">
                 <h4>Check terms</h4>
                 <a
-                  href="https://keeper.mpdl.mpg.de/f/f62758e53c/"
+                  href="https://keeper.mpdl.mpg.de/f/2206ad0c0a8346cb8f9e/"
                   target="_blank"
                 >
                   Terms of Services

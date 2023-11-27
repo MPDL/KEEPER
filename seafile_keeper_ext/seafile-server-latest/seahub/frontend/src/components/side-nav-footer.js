@@ -81,7 +81,7 @@ class SideNavFooter extends React.Component {
                 </a>
                 <br />
                 <a
-                  href="https://keeper.mpdl.mpg.de/f/f62758e53c/"
+                  href="https://keeper.mpdl.mpg.de/f/2206ad0c0a8346cb8f9e/"
                   target="_blank"
                 >
                   Terms of Service
