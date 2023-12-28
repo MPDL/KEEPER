@@ -37,8 +37,6 @@ default_ccnet_conf_dir=${seafile_dir}/ccnet
 USR_CTX="sudo -iu ${user}"
 ROOT_CTX="sudo -i"
 
-ES_IMAGE_NAME=elasticsearch:7.16.2
-
 function check_gpfs() {
     [[ $(ls /keeper) =~ "Stale file handle" ]] && err_and_exit "Stale file handle"
     [ ! -d "/keeper" ] &&  err_and_exit "Cannot access /keeper"
@@ -165,7 +163,7 @@ function check_and_exit_keeper_archiving_running () {
 
 
 function get_elastic_container_id () {
-    RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -q)
+    RES=$(sudo docker ps -f ancestor=${__ES_IMAGE_NAME__} -q)
     echo $RES
 }
 
@@ -173,12 +171,12 @@ function start_elastic_container () {
     RES=$(get_elastic_container_id)
     if [ -z "$RES" ]; then
         # if not running, but already exists - start
-        RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -aq)
+        RES=$(sudo docker ps -f ancestor=${__ES_IMAGE_NAME__} -aq)
         if [ -n "$RES" ]; then
             RES=$(sudo docker start $RES)
         # if not exists - run image
         else
-            RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=-Xms16g -Xmx16g" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d $ES_IMAGE_NAME)
+            RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=${__ES_JAVA_OPTS__}" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d ${__ES_IMAGE_NAME__})
         fi
         if [ -z "$RES" ]; then
             warn "Cannot start Elastic container."
@@ -187,7 +185,7 @@ function start_elastic_container () {
 }
 
 function stop_elastic_container () {
-    RES=$(sudo docker ps -f ancestor=$ES_IMAGE_NAME -q)
+    RES=$(sudo docker ps -f ancestor=${__ES_IMAGE_NAME__} -q)
     if [ -n "$RES" ]; then
         RES=$(sudo docker stop $RES)
         # if [ -n "$RES" ]; then
