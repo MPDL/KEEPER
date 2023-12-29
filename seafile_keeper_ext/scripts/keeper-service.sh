@@ -176,6 +176,10 @@ function start_elastic_container () {
             RES=$(sudo docker start $RES)
         # if not exists - run image
         else
+	    RES=$(sudo mkdir -p /opt/seafile-elasticsearch/data  && chmod -R 777 /opt/seafile-elasticsearch/data/)
+            if [ -z "$RES" ]; then
+                warn "Cannot create Elastic data directory."
+            fi
             RES=$(sudo docker run -d --name es -p 9200:9200 -e "discovery.type=single-node" -e "bootstrap.memory_lock=true" -e "ES_JAVA_OPTS=${__ES_JAVA_OPTS__}" -e "xpack.security.enabled=false" --restart=always -v /opt/seafile-elasticsearch/data:/usr/share/elasticsearch/data -d ${__ES_IMAGE_NAME__})
         fi
         if [ -z "$RES" ]; then
