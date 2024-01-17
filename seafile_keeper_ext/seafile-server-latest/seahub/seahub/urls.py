@@ -2,10 +2,12 @@
 from django.conf.urls import url, include
 from django.views.generic import TemplateView
 
+from seahub.auth.views import multi_adfs_sso
 from seahub.views import *
 from seahub.views.sysadmin import *
 from seahub.views.ajax import *
 from seahub.views.sso import *
+from seahub.views.sso_to_thirdpart import sso_to_thirdpart
 
 from seahub.views.file import view_history_file, view_trash_file,\
     view_snapshot_file, view_shared_file, view_file_via_shared_dir,\
@@ -40,11 +42,14 @@ from seahub.api2.endpoints.search_group import SearchGroup
 from seahub.api2.endpoints.share_links import ShareLinks, ShareLink, \
         ShareLinkOnlineOfficeLock, ShareLinkDirents, ShareLinkSaveFileToRepo, \
         ShareLinkUpload, ShareLinkUploadDone, ShareLinkSaveItemsToRepo, \
-        ShareLinkRepoTags, ShareLinkRepoTagsTaggedFiles
+        ShareLinkRepoTags, ShareLinkRepoTagsTaggedFiles, \
+        ShareLinksCleanInvalid
+from seahub.api2.endpoints.multi_share_links import MultiShareLinks, \
+        MultiShareLinksBatch
 from seahub.api2.endpoints.shared_folders import SharedFolders
 from seahub.api2.endpoints.shared_repos import SharedRepos, SharedRepo
 from seahub.api2.endpoints.upload_links import UploadLinks, UploadLink, \
-        UploadLinkUpload
+        UploadLinkUpload, UploadLinksCleanInvalid
 from seahub.api2.endpoints.repos_batch import ReposBatchView, \
         ReposBatchCopyDirView, ReposBatchCreateDirView, \
         ReposBatchCopyItemView, ReposBatchMoveItemView, \
@@ -57,7 +62,7 @@ from seahub.api2.endpoints.file_history import FileHistoryView, NewFileHistoryVi
 from seahub.api2.endpoints.dir import DirView, DirDetailView
 from seahub.api2.endpoints.file_tag import FileTagView
 from seahub.api2.endpoints.file_tag import FileTagsView
-from seahub.api2.endpoints.repo_trash import RepoTrash
+from seahub.api2.endpoints.repo_trash import RepoTrash, RepoTrashRevertDirents
 from seahub.api2.endpoints.repo_commit import RepoCommitView
 from seahub.api2.endpoints.repo_commit_dir import RepoCommitDirView
 from seahub.api2.endpoints.repo_commit_revert import RepoCommitRevertView
@@ -94,6 +99,7 @@ from seahub.api2.endpoints.tag_filter_file import TaggedFilesView
 from seahub.api2.endpoints.related_files import RelatedFilesView, RelatedFileView
 from seahub.api2.endpoints.webdav_secret import WebdavSecretView
 from seahub.api2.endpoints.starred_items import StarredItems
+from seahub.api2.endpoints.monitored_repos import MonitoredRepos, MonitoredRepo
 from seahub.api2.endpoints.markdown_lint import MarkdownLintView
 from seahub.api2.endpoints.public_repos_search import PublishedRepoSearchView
 from seahub.api2.endpoints.recent_added_files import RecentAddedFilesView
@@ -200,12 +206,15 @@ urlpatterns = [
     url(r'^accounts/', include('seahub.base.registration_urls')),
 
     url(r'^sso/$', sso, name='sso'),
+    url(r'^multi_adfs_sso/$', multi_adfs_sso, name='multi_adfs_sso'),
     url(r'^jwt-sso/$', jwt_sso, name='jwt_sso'),
     url(r'^shib-login/', shib_login, name="shib_login"),
     url(r'^oauth/', include('seahub.oauth.urls')),
     url(r'^thirdparty-editor/', include('seahub.thirdparty_editor.urls')),
     url(r'^ocm-via-webdav/', include('seahub.ocm_via_webdav.urls')),
     url(r'^cad/', include('seahub.cad.urls')),
+
+    url(r'^sso-to-thirdpart/$', sso_to_thirdpart, name='sso-to-thirdpart'),
 
     url(r'^$', react_fake_view, name='libraries'),
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
@@ -345,6 +354,9 @@ urlpatterns = [
 
     ## user::shared-download-links
     url(r'^api/v2.1/share-links/$', ShareLinks.as_view(), name='api-v2.1-share-links'),
+    url(r'^api/v2.1/multi-share-links/$', MultiShareLinks.as_view(), name='api-v2.1-multi-share-links'),
+    url(r'^api/v2.1/multi-share-links/batch/$', MultiShareLinksBatch.as_view(), name='api-v2.1-multi-share-links-batch'),
+    url(r'^api/v2.1/share-links/clean-invalid/$', ShareLinksCleanInvalid.as_view(), name='api-v2.1-share-links-clean-invalid'),
     url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/$', ShareLink.as_view(), name='api-v2.1-share-link'),
     url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/save-file-to-repo/$', ShareLinkSaveFileToRepo.as_view(), name='api-v2.1-share-link-save-file-to-repo'),
     url(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/save-items-to-repo/$', ShareLinkSaveItemsToRepo.as_view(), name='api-v2.1-share-link-save-items-to-repo'),
@@ -359,6 +371,7 @@ urlpatterns = [
 
     ## user::shared-upload-links
     url(r'^api/v2.1/upload-links/$', UploadLinks.as_view(), name='api-v2.1-upload-links'),
+    url(r'^api/v2.1/upload-links/clean-invalid/$', UploadLinksCleanInvalid.as_view(), name='api-v2.1-upload-links-clean-invalid'),
     url(r'^api/v2.1/upload-links/(?P<token>[a-f0-9]+)/$', UploadLink.as_view(), name='api-v2.1-upload-link'),
     url(r'^api/v2.1/upload-links/(?P<token>[a-f0-9]+)/upload/$', UploadLinkUpload.as_view(), name='api-v2.1-upload-link-upload'),
 
@@ -395,6 +408,7 @@ urlpatterns = [
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/commits/(?P<commit_id>[0-9a-f]{40})/revert/$', RepoCommitRevertView.as_view(), name='api-v2.1-repo-commit-revert'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/dir/detail/$', DirDetailView.as_view(), name='api-v2.1-dir-detail-view'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/trash/$', RepoTrash.as_view(), name='api-v2.1-repo-trash'),
+    url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/trash/revert-dirents/$', RepoTrashRevertDirents.as_view(), name='api-v2.1-repo-trash-revert-dirents'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/history/$', RepoHistory.as_view(), name='api-v2.1-repo-history'),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/set-password/$', RepoSetPassword.as_view(), name="api-v2.1-repo-set-password"),
     url(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/send-new-password/$', RepoSendNewPassword.as_view(), name="api-v2.1-repo-send-new-password"),
@@ -471,6 +485,10 @@ urlpatterns = [
 
     ## user::starred-item
     url(r'^api/v2.1/starred-items/$', StarredItems.as_view(), name='api-v2.1-starred-items'),
+
+    ## user::monitored-repos
+    url(r'^api/v2.1/monitored-repos/$', MonitoredRepos.as_view(), name='api-v2.1-monitored-repos'),
+    url(r'^api/v2.1/monitored-repos/(?P<repo_id>[-0-9a-f]{36})/$', MonitoredRepo.as_view(), name='api-v2.1-monitored-repo'),
 
     ## user::wiki
     url(r'^api/v2.1/wikis/$', WikisView.as_view(), name='api-v2.1-wikis'),
@@ -658,7 +676,7 @@ urlpatterns = [
     url(r'^api/v2.1/admin/invitations/(?P<token>[a-f0-9]{32})/$', AdminInvitation.as_view(), name='api-v2.1-admin-invitation'),
 
     url(r'^avatar/', include('seahub.avatar.urls')),
-    url(r'^notification/', include('seahub.notifications.urls')),
+    url(r'^notice/', include('seahub.notifications.urls')),
     url(r'^contacts/', include('seahub.contacts.urls')),
     url(r'^group/', include('seahub.group.urls')),
     url(r'^options/', include('seahub.options.urls')),
@@ -749,6 +767,8 @@ urlpatterns = [
     url(r'^sys/groups/(?P<group_id>\d+)/members/$', sysadmin_react_fake_view, name="sys_group_members"),
     url(r'^sys/departments/$', sysadmin_react_fake_view, name="sys_departments"),
     url(r'^sys/departments/(?P<group_id>\d+)/$', sysadmin_react_fake_view, name="sys_department"),
+    url(r'^sys/departments/(?P<group_id>\d+)/members/$', sysadmin_react_fake_view, name="sys_department_members"),
+    url(r'^sys/departments/(?P<group_id>\d+)/libraries/$', sysadmin_react_fake_view, name="sys_department_libraries"),
     url(r'^sys/users/$', sysadmin_react_fake_view, name="sys_users"),
     url(r'^sys/search-users/$', sysadmin_react_fake_view, name="sys_search_users"),
     url(r'^sys/users/admins/$', sysadmin_react_fake_view, name="sys_users_admin"),
@@ -881,13 +901,29 @@ if HAS_OFFICE_CONVERTER:
         url(r'^office-convert/status/$', office_convert_query_status, name='office_convert_query_status'),
     ]
 
-if getattr(settings, 'ENABLE_ADFS_LOGIN', False):
-    from seahub.adfs_auth.views import assertion_consumer_service, \
-        auth_complete
+if getattr(settings, 'ENABLE_MULTI_ADFS', False):
+    from seahub.adfs_auth.views import *
     urlpatterns += [
+        url(r'^org/custom/[a-z_0-9-]+/$', multi_adfs_login, name="multi_adfs_login"),
+        url(r'^org/custom/[a-z_0-9-]+/saml2/login/$', login, name='org_saml2_login'),
+        url(r'^org/custom/[a-z_0-9-]+/saml2/acs/$', assertion_consumer_service, name='org_saml2_acs'),
+        url(r'^org/custom/[a-z_0-9-]+/saml2/metadata/$', metadata, name='org_saml2_metadata'),
+        url(r'^org/custom/[a-z_0-9-]+/saml2/', include(('djangosaml2.urls', 'djangosaml2'), namespace='org')),
+    ]
+
+if getattr(settings, 'ENABLE_ADFS_LOGIN', False):
+    from seahub.adfs_auth.views import *
+    urlpatterns += [
+        url(r'^saml2/login/$', login, name='saml2_login'),
         url(r'^saml2/acs/$', assertion_consumer_service, name='saml2_acs'),
-        url(r'^saml2/complete/$', auth_complete, name='saml2_complete'),
+        url(r'^saml2/metadata/$', metadata, name='saml2_metadata'),
         url(r'^saml2/', include('djangosaml2.urls')),
+    ]
+
+if getattr(settings, 'ENABLE_MULTI_ADFS', False) or getattr(settings, 'ENABLE_ADFS_LOGIN', False):
+    from seahub.adfs_auth.views import auth_complete
+    urlpatterns += [
+        url(r'^saml2/complete/$', auth_complete, name='saml2_complete'),
     ]
 
 if getattr(settings, 'ENABLE_ONLYOFFICE', False):
@@ -912,4 +948,9 @@ if getattr(settings, 'ENABLE_CAS', False):
         url(r'^accounts/cas-login/$', cas_login, name='cas_ng_login'),
         url(r'^accounts/cas-logout/$', cas_logout, name='cas_ng_logout'),
         url(r'^accounts/cas-callback/$', cas_callback, name='cas_ng_proxy_callback'),
+    ]
+
+if getattr(settings, 'ENABLE_SEADOC', False):
+    urlpatterns += [
+        url(r'^api/v2.1/seadoc/', include('seahub.seadoc.urls')),
     ]

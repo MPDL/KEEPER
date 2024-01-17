@@ -56,4 +56,3 @@ const getEntries = (isEnvDevelopment) => {
 };
 
 module.exports = getEntries;
-

@@ -78,42 +78,51 @@ class MylibRepoMenu extends React.Component {
       repo.encrypted &&
       enableResetEncryptedRepoPassword &&
       isEmailConfigured;
+    let operations = ["Rename", "Transfer"];
     // KEEPER
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let showArchiveLibraryMenuItem = !repo.encrypted;
     let showCertifyLibraryMenuItem = !repo.encrypted;
     let showEditMetadatayMenuItem = !repo.encrypted;
-    let operations = ["Rename", "Transfer"];
     if (folderPermEnabled) {
       operations.push("Folder Permission");
     }
     operations.push("Share Links Admin", "Divider");
+
     if (repo.encrypted) {
       operations.push("Change Password");
     }
     if (showResetPasswordMenuItem) {
       operations.push("Reset Password");
     }
+
+    if (isPro) {
+      const monitorOp = repo.monitored
+        ? "Unwatch File Changes"
+        : "Watch File Changes";
+      operations.push(monitorOp);
+    }
+
     operations.push("History Setting", "API Token");
     if (this.props.isPC && enableRepoSnapshotLabel) {
       operations.push("Label Current State");
     }
     if (enableRepoAutoDel) {
       operations.push("Old Files Auto Delete");
-    }
-    //KEEPER
-    operations.push("Divider");
-    if (showAssignDoiMenuItem) {
-      operations.push("Assign DOI to current state");
-    }
-    if (showArchiveLibraryMenuItem) {
-      operations.push("Archive Library");
-    }
-    if (showCertifyLibraryMenuItem) {
-      operations.push("Certify Library");
-    }
-    if (showEditMetadatayMenuItem) {
-      operations.push("Edit Metadata");
+      //KEEPER
+      operations.push("Divider");
+      if (showAssignDoiMenuItem) {
+        operations.push("Assign DOI to current state");
+      }
+      if (showArchiveLibraryMenuItem) {
+        operations.push("Archive Library");
+      }
+      if (showCertifyLibraryMenuItem) {
+        operations.push("Certify Library");
+      }
+      if (showEditMetadatayMenuItem) {
+        operations.push("Edit Metadata");
+      }
     }
     return operations;
   };
@@ -147,6 +156,12 @@ class MylibRepoMenu extends React.Component {
         break;
       case "Reset Password":
         translateResult = gettext("Reset Password");
+        break;
+      case "Watch File Changes":
+        translateResult = gettext("Watch File Changes");
+        break;
+      case "Unwatch File Changes":
+        translateResult = gettext("Unwatch File Changes");
         break;
       case "Folder Permission":
         translateResult = gettext("Folder Permission");

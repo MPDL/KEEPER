@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% / %total%",
     "(If left blank, owner will be admin)": "(\u5982\u679c\u70ba\u7a7a\uff0c\u64c1\u6709\u8005\u5c07\u70ba\u7ba1\u7406\u54e1)",
     "(current notification)": "\uff08\u7576\u524d\u901a\u77e5\uff09",
     "(current version)": "(\u7576\u524d\u7248\u672c)",
@@ -92,7 +91,6 @@
     "Clear files in trash and history\uff1a": "\u6e05\u7a7a\u56de\u6536\u7ad9\u548c\u6b77\u53f2\u4fe1\u606f\u4e2d\u7684\u6a94\u6848",
     "Clients": "\u5ba2\u6237\u7aef",
     "Close": "\u95dc\u9589",
-    "Close (Esc)": "\u95dc\u9589 (Esc)",
     "Comment": "\u8a55\u8ad6",
     "Comments": "\u8a55\u8ad6",
     "Community Edition": "\u793e\u5340\u7248",
@@ -273,7 +271,6 @@
     "New password is too short": "\u65b0\u5bc6\u78bc\u592a\u77ed",
     "New passwords don't match": "\u5169\u6b21\u8f38\u5165\u7684\u65b0\u5bc6\u78bc\u4e0d\u4e00\u81f4",
     "Next": "\u4e0b\u4e00\u9801",
-    "Next (Right arrow key)": "\u4e0b\u4e00\u5f35 (\u53f3\u65b9\u5411\u9375)",
     "No comment yet.": "\u9084\u6c92\u6709\u8a55\u8ad6",
     "No connected devices": "\u6c92\u6709\u9023\u4e0a\u7684\u5ba2\u6236\u7aef",
     "No groups": "\u6c92\u6709\u7fa4\u7d44",
@@ -291,7 +288,6 @@
     "Old Password": "\u820a\u5bc6\u78bc",
     "On": "\u958b\u555f",
     "Only keep a period of history:": "\u50c5\u4fdd\u7559\u4e00\u6bb5\u6642\u9593\u7684\u6b77\u53f2:",
-    "Open in New Tab": "\u5728\u65b0\u6a19\u7c64\u9801\u6253\u958b",
     "Open parent folder": "\u958b\u555f\u7236\u76ee\u9304",
     "Open via Client": "\u5ba2\u6236\u7aef\u6253\u958b",
     "Operation": "\u64cd\u4f5c",
@@ -323,7 +319,6 @@
     "Please enter the password again": "\u8acb\u518d\u6b21\u8f38\u5165\u5bc6\u78bc",
     "Please input at least an email.": "\u8acb\u8f38\u5165\u81f3\u5c11\u4e00\u500b\u90f5\u7bb1\u3002",
     "Previous": "\u524d\u4e00\u9801",
-    "Previous (Left arrow key)": "\u4e0a\u4e00\u5f35 (\u5de6\u65b9\u5411\u9375)",
     "Professional Edition": "\u4f01\u696d\u7248",
     "Profile": "\u8a2d\u5b9a",
     "Profile Setting": "\u500b\u4eba\u8cc7\u8a0a\u8a2d\u5b9a",

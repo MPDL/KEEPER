@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% af %total%",
     "(current notification)": "(n\u00faverandi athugasemd)",
     "(current version)": "(n\u00faverandi \u00fatg\u00e1fa)",
     "1 month ago": "fyrir einum m\u00e1nu\u00f0i",
@@ -72,7 +71,6 @@
     "Clear files in trash and history\uff1a": "Ey\u00f0a skr\u00e1m \u00ed rusli og s\u00f6gu :",
     "Clients": "Tengingar",
     "Close": "Loka",
-    "Close (Esc)": "Loka (Esc)",
     "Community Edition": "Samf\u00e9lag\u00fatg\u00e1fan",
     "Confirm Password": "Sta\u00f0festu lykilor\u00f0i\u00f0",
     "Contact Email:": "Netfang Tengili\u00f0s:",
@@ -212,7 +210,6 @@
     "New password is too short": "N\u00fdja lykilor\u00f0i\u00f0 er of stutt",
     "New passwords don't match": "N\u00fdju lykilor\u00f0in stemma ekki",
     "Next": "N\u00e6sta",
-    "Next (Right arrow key)": "N\u00e6sta (h\u00e6gri \u00f6rvalykill)",
     "No result": "Engin ni\u00f0ursta\u00f0a",
     "None": "Ekkert",
     "Notification Detail": "Athugasemdir \u00cdtarefni",
@@ -220,7 +217,6 @@
     "Number of groups": "Fj\u00f6ldi h\u00f3pa",
     "Old Password": "Gamla Lykilor\u00f0i\u00f0",
     "Only keep a period of history:": "Skr\u00e1 s\u00f6gu \u00ed \u00e1kve\u00f0inn t\u00edma",
-    "Open in New Tab": "Opna \u00ed n\u00fdjum flipa",
     "Open via Client": "Opna me\u00f0 Bi\u00f0lara",
     "Operation": "A\u00f0ger\u00f0",
     "Operation succeeded.": "A\u00f0ger\u00f0 t\u00f3kst.",
@@ -249,7 +245,6 @@
     "Please enter the password again": "Vinsamlegast sl\u00e1\u00f0u inn lykilor\u00f0i\u00f0 aftur",
     "Please input at least an email.": "Vindamlegast settu inn amk eitt netfang.",
     "Previous": "Fyrri",
-    "Previous (Left arrow key)": "Fyrri (vinstri \u00f6rvalykill)",
     "Professional Edition": "S\u00e9r\u00fatg\u00e1fa",
     "Profile": "Pers\u00f3nuuppl\u00fdsingar",
     "Profile Setting": "Stillingar Pers\u00f3nuuppl\u00fdsinga",

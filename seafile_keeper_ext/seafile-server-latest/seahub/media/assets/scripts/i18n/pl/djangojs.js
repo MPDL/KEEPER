@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% z %total%",
     "(If left blank, owner will be admin)": "(Je\u015bli puste, w\u0142a\u015bcicielem b\u0119dzie admin)",
     "(current notification)": "(obecne powiadomienie)",
     "(current version)": "(obecna wersja)",
@@ -96,7 +95,6 @@
     "Clear files in trash and history\uff1a": "Wyczy\u015b\u0107 pliki w koszu i histori\u0119 :",
     "Clients": "Klienci",
     "Close": "Zamknij",
-    "Close (Esc)": "Zamknij (Esc)",
     "Comment": "Komentarz",
     "Comments": "Komentarze",
     "Community Edition": "Wersja Spo\u0142eczno\u015bciowa",
@@ -298,7 +296,6 @@
     "New password is too short": "Nowe has\u0142o jest za kr\u00f3tkie",
     "New passwords don't match": "Has\u0142a nie s\u0105 identyczne",
     "Next": "Nast\u0119pny",
-    "Next (Right arrow key)": "Nast\u0119pny (strza\u0142ka w prawo)",
     "No comment yet.": "Brak komentarzy.",
     "No connected devices": "Brak pod\u0142\u0105czonych urz\u0105dze\u0144",
     "No groups": "Brak grup",
@@ -319,7 +316,6 @@
     "On": "W\u0142\u0105czone",
     "Online Preview": "Podgl\u0105d online",
     "Only keep a period of history:": "Przechowuj histori\u0119 z ostatnich:",
-    "Open in New Tab": "Otw\u00f3rz w nowej karcie",
     "Open parent folder": "Otw\u00f3rz folder nadrz\u0119dny",
     "Open via Client": "Otw\u00f3rz w kliencie",
     "Operation": "Operacja",
@@ -353,7 +349,6 @@
     "Please enter the password again": "Prosz\u0119 ponownie poda\u0107 has\u0142o",
     "Please input at least an email.": "Prosz\u0119 poda\u0107 przynajmniej e-mail.",
     "Previous": "Poprzedni",
-    "Previous (Left arrow key)": "Poprzedni (strza\u0142ka w lewo)",
     "Professional Edition": "Wersja Profesjonalna",
     "Profile": "Profil",
     "Profile Setting": "Ustawienia profilu",

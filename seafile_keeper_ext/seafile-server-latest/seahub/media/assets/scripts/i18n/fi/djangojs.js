@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% kokonaism\u00e4\u00e4r\u00e4st\u00e4 %total%",
     "(If left blank, owner will be admin)": "(jos j\u00e4tetty tyhj\u00e4ksi, omistaja on admin)",
     "(current notification)": "(nykyinen ilmoitus)",
     "(current version)": "(nykyinen versio",
@@ -102,7 +101,6 @@
     "Clear files in trash and history\uff1a": "Poista historia ja tiedostot roskakorista :",
     "Clients": "Asiakasohjelmat",
     "Close": "Sulje",
-    "Close (Esc)": "Sulje (Esc)",
     "Comment": "Kommentti",
     "Comments": "Kommentit",
     "Community Edition": "Community versio",
@@ -309,7 +307,6 @@
     "New password is too short": "Uusi salasana on liian lyhyt",
     "New passwords don't match": "Uudet salasanat eiv\u00e4t t\u00e4sm\u00e4\u00e4",
     "Next": "Seuraava",
-    "Next (Right arrow key)": "Seuraava (Oikea nuolin\u00e4pp\u00e4in)",
     "No comment yet.": "Ei kommentteja viel\u00e4.",
     "No connected devices": "Ei yhdistettyj\u00e4 laitteita",
     "No departments": "Ei osastoja",
@@ -333,7 +330,6 @@
     "Online Preview": "Online esikatselu",
     "Only Show": "N\u00e4yt\u00e4 vain",
     "Only keep a period of history:": "Pid\u00e4 historia ainoastaan tietyn ajan:",
-    "Open in New Tab": "Avaa uudessa v\u00e4lilehdess\u00e4",
     "Open parent folder": "Avaa is\u00e4nt\u00e4kansio",
     "Open via Client": "Avaa asiakasohjelmassa",
     "Operation": "Toimenpide",
@@ -368,7 +364,6 @@
     "Preview and download": "Esikatsele ja lataa",
     "Preview only": "Esikatselu ainoastaan",
     "Previous": "J\u00e4lkimm\u00e4inen",
-    "Previous (Left arrow key)": "Edellinen (Vasen nuolin\u00e4pp\u00e4in)",
     "Professional Edition": "Professional Edition",
     "Profile": "Profiili",
     "Profile Setting": "Profiilin asetus",

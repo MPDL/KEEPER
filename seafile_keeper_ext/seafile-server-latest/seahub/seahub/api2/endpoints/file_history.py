@@ -48,7 +48,9 @@ def get_file_history_info(commit, avatar_size):
 
     info = {}
 
-    creator_name = commit.creator_name
+    creator_name = getattr(commit, 'creator_name', '')
+    if creator_name is None:
+        creator_name = ''
     url, is_default, date_uploaded = api_avatar_url(creator_name, avatar_size)
 
     info['creator_avatar_url'] = url
@@ -124,14 +126,13 @@ class FileHistoryView(APIView):
             limit = -1 if int(limit) < 1 else int(limit)
         except ValueError:
             limit = -1
-
         # get file history
         # limit = request.GET.get('limit', 50)
         # try:
-            # limit = 50 if int(limit) < 1 else int(limit)
+        #     limit = 50 if int(limit) < 1 else int(limit)
         # except ValueError:
-            # limit = 50
-
+        #     limit = 50
+        
         try:
             file_revisions, next_start_commit = get_file_revisions_within_limit(
                     repo_id, path, commit_id, limit)

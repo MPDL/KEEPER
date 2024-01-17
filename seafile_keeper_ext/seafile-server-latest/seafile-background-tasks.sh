@@ -54,7 +54,7 @@ function check_python_executable() {
             echo
             echo "Can't find a python executable of $PYTHON in PATH"
             echo "Install $PYTHON before continue."
-            echo "Or if you installed it in a non-standard PATH, set the PYTHON enviroment varirable to it"
+            echo "Or if you installed it in a non-standard PATH, set the PYTHON enviroment variable to it"
             echo
             exit 1
         fi
@@ -110,8 +110,6 @@ function before_start() {
     # Allow LDAP user sync to import seahub_settings.py
     export PYTHONPATH=$PYTHONPATH:${central_config_dir}
     export SEAFES_DIR=$pro_pylibs_dir/seafes
-    # TO BE CHECKED!!!
-    export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Egg
 }
 
 function start_seafile_background_tasks () {
@@ -138,7 +136,6 @@ function stop_seafile_background_tasks () {
         if ps "${pid}" 2>/dev/null 1>&2 ; then
             kill -KILL "${pid}"
         fi
-        pkill -f "soffice.*--invisible --nocrashreport"
         rm -f "${pidfile}"
         return 0
     else

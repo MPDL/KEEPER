@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% van %total%",
     "(current notification)": "(huidige melding)",
     "(current version)": "(huidige versie)",
     "1 Year": "1 jaar",
@@ -95,7 +94,6 @@
     "Clear files in trash and history\uff1a": "Schoon bestanden in prullenbak en geschiedenis:",
     "Clients": "Clients",
     "Close": "Sluiten",
-    "Close (Esc)": "Sluiten (Esc)",
     "Column": "Kolom",
     "Comment": "Opmerking",
     "Comments": "Opmerkingen",
@@ -310,7 +308,6 @@
     "New password is too short": "Nieuwe wachtwoord is te kort",
     "New passwords don't match": "Nieuwe wachtwoorden komen niet overeen",
     "Next": "Volgende",
-    "Next (Right arrow key)": "Volgende (rechter pijltjestoets)",
     "No comment yet.": "Nog geen opmerkingen.",
     "No connected devices": "Geen apparaten verbonden",
     "No departments": "Geen afdelingen",
@@ -329,7 +326,6 @@
     "Old Password": "Oude wachtwoord",
     "On": "Aan",
     "Only keep a period of history:": "Bewaar alleen geschiedenis over been bepaalde periode:",
-    "Open in New Tab": "Open in nieuw tabblad",
     "Open via Client": "Openen via programma",
     "Operation": "Acties",
     "Operation succeeded.": "Handeling gelukt.",
@@ -370,7 +366,6 @@
     "Preview and download": "Voorbeeld en download",
     "Preview only": "Alleen voorbeeld",
     "Previous": "Vorige",
-    "Previous (Left arrow key)": "Vorige (linker pijltjestoets)",
     "Private": "Priv\u00e9",
     "Professional Edition": "Professionele editie",
     "Profile": "Profiel",
@@ -557,8 +552,6 @@
     "ZIP": "ZIP",
     "Zoom In": "Inzoomen",
     "Zoom Out": "Uitzoomen",
-    "Zoom in": "Inzoomen",
-    "Zoom out": "Uitzoomen",
     "all": "alle",
     "all members": "alle leden",
     "allow new registrations": "nieuwe registraties toestaan",

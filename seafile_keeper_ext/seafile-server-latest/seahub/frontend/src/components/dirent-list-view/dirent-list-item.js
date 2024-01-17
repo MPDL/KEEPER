@@ -27,7 +27,6 @@ import LibSubFolderPermissionDialog from "../dialog/lib-sub-folder-permission-di
 
 import "../../css/dirent-list-item.css";
 import toaster from "../toast";
-
 // KEEPER
 import ReactTooltip from "react-tooltip";
 import { keeperAPI } from "../../utils/seafile-api";
@@ -70,21 +69,6 @@ const propTypes = {
 class DirentListItem extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      isOperationShow: false,
-      highlight: false,
-      isZipDialogOpen: false,
-      isMoveDialogShow: false,
-      isCopyDialogShow: false,
-      isShareDialogShow: false,
-      isMutipleOperation: false,
-      isShowTagTooltip: false,
-      isDragTipShow: false,
-      isDropTipshow: false,
-      isEditFileTagShow: false,
-      isPermissionDialogOpen: false,
-      isOpMenuOpen: false, // for mobile
-    };
 
     const { dirent } = this.props;
     const { isCustomPermission, customPermission } = Utils.getUserPermission(
@@ -99,6 +83,23 @@ class DirentListItem extends React.Component {
       this.canPreview = preview || modify;
       this.canDrag = modify;
     }
+
+    this.state = {
+      isOperationShow: false,
+      highlight: false,
+      isZipDialogOpen: false,
+      isMoveDialogShow: false,
+      isCopyDialogShow: false,
+      isShareDialogShow: false,
+      isMutipleOperation: false,
+      canDrag: this.canDrag,
+      isShowTagTooltip: false,
+      isDragTipShow: false,
+      isDropTipshow: false,
+      isEditFileTagShow: false,
+      isPermissionDialogOpen: false,
+      isOpMenuOpen: false, // for mobile
+    };
   }
 
   componentWillReceiveProps(nextProps) {
@@ -137,7 +138,7 @@ class DirentListItem extends React.Component {
         isOperationShow: true,
       });
     }
-    if (this.canDrag) {
+    if (this.state.canDrag) {
       this.setState({ isDragTipShow: true });
     }
   };
@@ -149,7 +150,7 @@ class DirentListItem extends React.Component {
         isOperationShow: true,
       });
     }
-    if (this.canDrag) {
+    if (this.state.canDrag) {
       this.setState({ isDragTipShow: true });
     }
   };
@@ -244,7 +245,6 @@ class DirentListItem extends React.Component {
     e.nativeEvent.stopImmediatePropagation(); //for document event
     this.props.onItemDelete(this.props.dirent);
   };
-
   // KEEPER
   onItemCertify = (e) => {
     e.nativeEvent.stopImmediatePropagation();
@@ -362,6 +362,7 @@ class DirentListItem extends React.Component {
     this.setState({
       isOperationShow: false,
       isRenameing: true,
+      canDrag: false,
     });
   };
 
@@ -371,7 +372,10 @@ class DirentListItem extends React.Component {
   };
 
   onRenameCancel = () => {
-    this.setState({ isRenameing: false });
+    this.setState({
+      isRenameing: false,
+      canDrag: this.canDrag, // set it back to the initial value
+    });
     this.unfreezeItem();
   };
 
@@ -531,7 +535,7 @@ class DirentListItem extends React.Component {
   };
 
   onItemDragStart = (e) => {
-    if (Utils.isIEBrower() || !this.canDrag) {
+    if (Utils.isIEBrower() || !this.state.canDrag) {
       return false;
     }
     e.dataTransfer.effectAllowed = "move";
@@ -573,7 +577,7 @@ class DirentListItem extends React.Component {
   };
 
   onItemDragEnter = (e) => {
-    if (Utils.isIEBrower() || !this.canDrag) {
+    if (Utils.isIEBrower() || !this.state.canDrag) {
       return false;
     }
     if (this.props.dirent.type === "dir") {
@@ -583,7 +587,7 @@ class DirentListItem extends React.Component {
   };
 
   onItemDragOver = (e) => {
-    if (Utils.isIEBrower() || !this.canDrag) {
+    if (Utils.isIEBrower() || !this.state.canDrag) {
       return false;
     }
     if (e.dataTransfer.dropEffect === "copy") {
@@ -594,7 +598,7 @@ class DirentListItem extends React.Component {
   };
 
   onItemDragLeave = (e) => {
-    if (Utils.isIEBrower() || !this.canDrag) {
+    if (Utils.isIEBrower() || !this.state.canDrag) {
       return false;
     }
 
@@ -605,7 +609,7 @@ class DirentListItem extends React.Component {
   };
 
   onItemDragDrop = (e) => {
-    if (Utils.isIEBrower() || !this.canDrag) {
+    if (Utils.isIEBrower() || !this.state.canDrag) {
       return false;
     }
     this.setState({ isDropTipshow: false });
@@ -786,30 +790,6 @@ class DirentListItem extends React.Component {
                     onClick={this.onItemDelete}
                   ></a>
                 )}
-                {/* KEEPER bxb button */}
-                {this.props.isRepoOwner &&
-                  dirent.permission === "rw" &&
-                  dirent.type === "file" && (
-                    <a className="op-icon" data-tip data-for="bloxberg">
-                      <img
-                        className="small-icon"
-                        src={bergImage}
-                        onClick={this.onItemCertify}
-                      />
-                      <ReactTooltip
-                        className="hover-keep"
-                        id="bloxberg"
-                        delayHide={1000}
-                        effect="solid"
-                      >
-                        <span className="tooltip-bold">
-                          {gettext(
-                            "Certify your file via the bloxberg blockchain."
-                          )}
-                        </span>
-                      </ReactTooltip>
-                    </a>
-                  )}
                 <ItemDropdownMenu
                   item={this.props.dirent}
                   toggleClass={"sf2-icon-caret-down"}
@@ -868,10 +848,11 @@ class DirentListItem extends React.Component {
     );
 
     const isDesktop = Utils.isDesktop();
+    const { canDrag } = this.state;
     const desktopItem = (
       <tr
         className={trClass}
-        draggable={this.canDrag}
+        draggable={canDrag}
         onFocus={this.onMouseEnter}
         onMouseEnter={this.onMouseEnter}
         onMouseOver={this.onMouseOver}

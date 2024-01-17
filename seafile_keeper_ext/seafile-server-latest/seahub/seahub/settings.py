@@ -231,6 +231,7 @@ INSTALLED_APPS = [
     'constance.backends.database',
     'termsandconditions',
     'webpack_loader',
+    'djangosaml2',
 
     'seahub.api2',
     'seahub.avatar',
@@ -297,6 +298,8 @@ ENABLE_CAS = False
 
 ENABLE_ADFS_LOGIN = False
 
+ENABLE_MULTI_ADFS = False
+
 ENABLE_OAUTH = False
 ENABLE_WATERMARK = False
 
@@ -358,6 +361,9 @@ REPO_PASSWORD_MIN_LENGTH = 8
 
 # token length for the share link
 SHARE_LINK_TOKEN_LENGTH = 20
+
+# the maximum number of external share links in a sdoc file
+SHARE_LINK_MAX_NUMBER = 200
 
 # if limit only authenticated user can view preview share link
 SHARE_LINK_LOGIN_REQUIRED = False
@@ -728,6 +734,11 @@ WEBDAV_SECRET_STRENGTH_LEVEL = 1
 
 ENABLE_USER_SET_CONTACT_EMAIL = False
 
+# SSO to thirdparty website
+ENABLE_SSO_TO_THIRDPART_WEBSITE = False
+THIRDPART_WEBSITE_SECRET_KEY = ''
+THIRDPART_WEBSITE_URL = ''
+
 #####################
 # Global AddressBook #
 #####################
@@ -769,6 +780,15 @@ SEAFILE_COLLAB_SERVER = ''
 ##########################
 
 DTABLE_WEB_SERVER = ''
+
+##########################
+# Settings for seadoc    #
+##########################
+
+ENABLE_SEADOC = False
+SEADOC_PRIVATE_KEY = ''
+SEADOC_SERVER_URL = 'http://127.0.0.1:7070'
+
 
 ############################
 # Settings for Seahub Priv #
@@ -950,8 +970,10 @@ if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
 if ENABLE_CAS:
     AUTHENTICATION_BACKENDS += ('seahub.django_cas_ng.backends.CASBackend',)
 
-if ENABLE_ADFS_LOGIN:
+if ENABLE_ADFS_LOGIN or ENABLE_MULTI_ADFS:
+    MIDDLEWARE.append('djangosaml2.middleware.SamlSessionMiddleware')
     AUTHENTICATION_BACKENDS += ('seahub.adfs_auth.backends.Saml2Backend',)
+    SAML_CONFIG_LOADER = 'seahub.adfs_auth.utils.config_settings_loader'
 
 #####################
 # Custom Nav Items  #
@@ -964,4 +986,4 @@ if ENABLE_ADFS_LOGIN:
 #      },
 # ]
 
-SEAFILE_VERSION = "9.0.16"
+SEAFILE_VERSION = "10.0.11"

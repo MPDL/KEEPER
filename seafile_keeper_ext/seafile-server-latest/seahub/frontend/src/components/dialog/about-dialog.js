@@ -3,12 +3,15 @@ import PropTypes from "prop-types";
 import { Modal, ModalBody } from "reactstrap";
 import {
   gettext,
+  lang,
   mediaUrl,
   logoPath,
   logoWidth,
   logoHeight,
   siteTitle,
   seafileVersion,
+  additionalAboutDialogLinks,
+  aboutDialogCustomHtml,
 } from "../../utils/constants";
 
 const propTypes = {
@@ -40,7 +43,7 @@ class AboutDialog extends React.Component {
             <p>
               {gettext("Server Version: ")}
               {seafileVersion}
-              <br />© 2023 {gettext("KEEPER")}
+              <br />© 2024 {gettext("KEEPER")}
             </p>
           </div>
         </ModalBody>

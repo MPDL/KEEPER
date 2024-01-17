@@ -1,9 +1,10 @@
-import React, { Fragment } from "react";
-import { gettext, siteRoot } from "../utils/constants";
-import ModalPortal from "./modal-portal";
-import AboutDialog from "./dialog/about-dialog";
+import React, { Fragment } from 'react';
+import { gettext, siteRoot, enableTC, sideNavFooterCustomHtml, additionalAppBottomLinks } from '../utils/constants';
+import ModalPortal from './modal-portal';
+import AboutDialog from './dialog/about-dialog';
 
 class SideNavFooter extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -22,8 +23,8 @@ class SideNavFooter extends React.Component {
 
   render() {
     const elementBodyStyle = {
-      maxHeight: this.state.collapsed ? "0" : "30rem",
-      borderBottomWidth: this.state.collapsed ? "0" : "1px",
+      maxHeight: this.state.collapsed ? '0' : '30rem',
+      borderBottomWidth: this.state.collapsed ? '0' : '1px',
     };
     return (
       <Fragment>
@@ -40,24 +41,24 @@ class SideNavFooter extends React.Component {
             />
             &nbsp;
             <a
-              href={siteRoot + "project-catalog/"}
+              href={siteRoot + 'project-catalog/'}
               target="_blank"
               className="item"
             >
-              {gettext("Project Catalog")}
+              {gettext('Project Catalog')}
             </a>
             <a
               href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper"
               target="_blank"
               className="item"
             >
-              {gettext("Help / Knowledge Base")}
+              {gettext('Help / Knowledge Base')}
             </a>
             <a
               className="item cursor-pointer last-item"
               onClick={this.onAboutDialogToggle}
             >
-              {gettext("About")}
+              {gettext('About')}
             </a>
           </div>
 

@@ -19,6 +19,7 @@ const MSG_TYPE_FILE_COMMENT = "file_comment";
 const MSG_TYPE_DRAFT_COMMENT = "draft_comment";
 const MSG_TYPE_DRAFT_REVIEWER = "draft_reviewer";
 const MSG_TYPE_GUEST_INVITATION_ACCEPTED = "guest_invitation_accepted";
+const MSG_TYPE_REPO_MONITOR = "repo_monitor";
 
 class NoticeItem extends React.Component {
   generatorNoticeInfo() {
@@ -212,7 +213,7 @@ class NoticeItem extends React.Component {
         notice = Utils.HTMLescape(notice);
         notice = notice.replace(
           "{uploaded_link}",
-          `<strong>Deleted Library</strong>`
+          "<strong>Deleted Library</strong>"
         );
       }
       return { avatar_url, notice };
@@ -282,9 +283,168 @@ class NoticeItem extends React.Component {
       return { avatar_url, notice };
     }
 
+    if (noticeType === MSG_TYPE_REPO_MONITOR) {
+      const {
+        op_user_avatar_url: avatar_url,
+        op_user_email,
+        op_user_name,
+        op_type,
+        repo_id,
+        repo_name,
+        obj_type,
+        obj_path_list,
+        old_obj_path_list,
+      } = detail;
+
+      const userProfileURL = `${siteRoot}profile/${encodeURIComponent(
+        op_user_email
+      )}`;
+      const userLink = `<a href=${userProfileURL} target="_blank">${Utils.HTMLescape(
+        op_user_name
+      )}</a>`;
+
+      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(
+        repo_name
+      )}/`;
+      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(
+        repo_name
+      )}</a>`;
+
+      let notice = "";
+      if (obj_type == "file") {
+        const fileName = Utils.getFileName(obj_path_list[0]);
+        const fileURL = `${siteRoot}lib/${repo_id}/file${Utils.encodePath(
+          obj_path_list[0]
+        )}`;
+        const fileLink = `<a href=${fileURL} target="_blank">${Utils.HTMLescape(
+          fileName
+        )}</a>`;
+        switch (op_type) {
+          case "create":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} created file {fileName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} created file {fileName} and {fileCount} other file(s) in library {libraryName}."
+                  );
+            break;
+          case "delete":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} deleted file {fileName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} deleted file {fileName} and {fileCount} other file(s) in library {libraryName}."
+                  );
+            notice = notice.replace("{fileName}", fileName);
+            break;
+          case "recover":
+            notice = gettext(
+              "{user} restored file {fileName} in library {libraryName}."
+            );
+            break;
+          case "rename":
+            notice = gettext(
+              "{user} renamed file {oldFileName} {fileName} in library {libraryName}."
+            );
+            notice = notice.replace(
+              "{oldFileName}",
+              Utils.getFileName(old_obj_path_list[0])
+            );
+            break;
+          case "move":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} moved file {fileName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} moved file {fileName} and {fileCount} other file(s) in library {libraryName}."
+                  );
+            break;
+          case "edit":
+            notice = gettext(
+              "{user} updated file {fileName} in library {libraryName}."
+            );
+            break;
+          // no default
+        }
+        notice = notice.replace("{fileName}", fileLink);
+        notice = notice.replace("{fileCount}", obj_path_list.length - 1);
+      } else {
+        // dir
+        const folderName = Utils.getFolderName(obj_path_list[0]);
+        const folderURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(
+          repo_name
+        )}${Utils.encodePath(obj_path_list[0])}`;
+        const folderLink = `<a href=${folderURL} target="_blank">${Utils.HTMLescape(
+          folderName
+        )}</a>`;
+        switch (detail.op_type) {
+          case "create":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} created folder {folderName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} created folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
+                  );
+            break;
+          case "delete":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} deleted folder {folderName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} deleted folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
+                  );
+            notice = notice.replace("{folderName}", folderName);
+            break;
+          case "recover":
+            notice = gettext(
+              "{user} restored folder {folderName} in library {libraryName}."
+            );
+            break;
+          case "rename":
+            notice = gettext(
+              "{user} renamed folder {oldFolderName} {folderName} in library {libraryName}."
+            );
+            notice = notice.replace(
+              "{oldFolderName}",
+              Utils.getFolderName(old_obj_path_list[0])
+            );
+            break;
+          case "move":
+            notice =
+              obj_path_list.length == 1
+                ? gettext(
+                    "{user} moved folder {folderName} in library {libraryName}."
+                  )
+                : gettext(
+                    "{user} moved folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
+                  );
+            break;
+          // no default
+        }
+        notice = notice.replace("{folderName}", folderLink);
+        notice = notice.replace("{folderCount}", obj_path_list.length - 1);
+      }
+
+      notice = notice.replace("{user}", userLink);
+      notice = notice.replace("{libraryName}", repoLink);
+
+      return { avatar_url, notice };
+    }
+
     // if (noticeType === MSG_TYPE_GUEST_INVITATION_ACCEPTED) {
 
     // }
+
     // KEEPER
     const MSG_KEEPER_CDC = "keeper_cdc_msg";
     const BLOXBERG_MSG = "bloxberg_msg";

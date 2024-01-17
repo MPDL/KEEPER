@@ -47,6 +47,7 @@
   font-family: "seafile-font2";
   speak: none;
   font-weight: normal;
+  font-style: normal;
   font-variant: normal;
   text-transform: none;
   -webkit-font-smoothing: antialiased;
@@ -225,10 +226,13 @@ dd {
   margin-bottom: 0.8em;
   color: #222;
 }
-a {
-  color: #eb8205;
+input::placeholder,
+textarea::placeholder {
+  color: #999;
 }
+a,
 a:hover {
+  /* color: #ec8000; */
   color: #eb8205;
 }
 .vam {
@@ -260,6 +264,7 @@ a:hover {
   text-overflow: ellipsis;
 }
 .op-target {
+  /* color: #ec8000; */
   color: #ee8204;
   word-wrap: break-word;
 }
@@ -340,6 +345,7 @@ a:hover {
 }
 
 .link-dropdown-item:hover {
+  /* color: #fff; */
   color: #16181b;
   text-decoration: none;
 }
@@ -472,16 +478,16 @@ a:hover {
 }
 
 .op-icon {
-  /* color: #f19645; */
+  /* color: #ff9800; */
   color: #57a5b8;
 }
 
 .op-icon:focus,
 .op-icon:hover {
+  /* color: #d98100; */
+  /* text-decoration: none; */
   padding-bottom: 0.125rem;
-  /* border-bottom: 0.125rem solid #e0873b; */
   border-bottom: 0.125rem solid #57a5b8;
-  /* color: #e0873b; */
   color: #57a5b8;
 }
 
@@ -519,8 +525,13 @@ a:hover {
 
 #my-info {
   display: inline-block;
+  /* color: #bdbdbd; */
   color: #d6d6d6;
   cursor: pointer;
+}
+
+#my-info:hover {
+  color: #9e9e9e;
 }
 
 #account .avatar {
@@ -671,12 +682,12 @@ a:hover {
 }
 
 .nav-pills .nav-item .nav-link:hover {
-  /* background-color: #feefb8; */
+  /* background-color: #f5f5f5; */
   background-color: #d5e9ee;
 }
 
 .nav-pills .nav-item .nav-link.active {
-  /* background-color: #feac74; */
+  /* background-color: #ff9800; */
   background-color: #57a5b8;
   color: #fff;
   border: none;
@@ -722,10 +733,12 @@ a:hover {
   margin: 24px 12px;
   color: #ffffff;
   border-radius: 0.25rem;
+  /* background-color: #ff9800; */
   background-color: #feac74;
 }
 
 .side-nav-link:hover {
+  /* background-color: #d98100; */
   background-color: #f3985a;
   cursor: pointer;
 }
@@ -777,10 +790,15 @@ a:hover {
 
 .side-nav-con .nav .nav-item,
 .side-nav-con .nav .nav-item .nav-link {
-  display: block;
   padding-left: 0;
   margin-right: 0;
+  width: 100%;
 }
+
+.side-nav-con .nav .nav-item .nav-link {
+  height: 36px;
+}
+
 .side-nav-con .active .sharp,
 .side-nav-con .active .nav-text {
   font-weight: bold;
@@ -813,44 +831,35 @@ a:hover {
 }
 
 .side-nav-con .toggle-icon {
-  margin-right: 0.25rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #999;
+  margin-left: auto;
 }
 
-.side-nav-con .draft-info {
-  position: relative;
-  line-height: 1.5rem;
-}
-
-.side-nav-con .draft-info .badge {
-  position: relative;
-  float: right;
-  margin-top: 0.2rem;
-  background-color: #ededee;
+#draft-num {
+  font-size: 75%;
   color: #5b5f65;
+  background-color: #ededee;
   display: flex;
   align-items: center;
-  border-radius: 50%;
   justify-content: center;
+  border-radius: 50%;
   min-width: 1.3rem;
   min-height: 1.3rem;
-  padding: 0 0.3rem;
+  padding: 0 2px;
+  margin-left: auto;
 }
 
 .side-nav-con .sub-nav {
-  display: block;
   overflow: hidden;
+  width: 100%;
 }
 
-.side-nav-con .sub-nav .nav-link {
+.side-nav-con .sub-nav .nav-item .nav-link {
   padding: 0;
   display: block;
   font-size: 0.875rem;
   line-height: 1.5rem;
+  height: auto;
 }
 
 .side-panel-slide {
@@ -866,17 +875,9 @@ a:hover {
   position: relative;
   width: 32px;
 }
-#notifications .no-deco {
+#notice-icon {
   position: relative;
   display: block;
-  width: 100%;
-  height: 100%;
-}
-#notifications .sf2-icon-bell {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 @media (max-width: 390px) {
   #notifications {
@@ -902,17 +903,21 @@ a:hover {
   font-size: 24px;
   line-height: 1;
   color: #999;
+  vertical-align: middle;
 }
 #notifications .num {
   position: absolute;
+  top: -3px;
+  left: 12px;
+  padding: 0 2px;
+  min-width: 16px;
+  height: 16px;
   color: #fff;
-  font-size: 12px;
-  line-height: 1;
-  padding: 1px 2px;
-  background: #feac74;
-  border: 1px solid #cb8a5d;
-  top: 0;
-  left: 15px;
+  font-size: 9px;
+  line-height: 16px;
+  text-align: center;
+  background: #fc6440;
+  border-radius: 100%;
 }
 #notice-popover {
   top: 38px;
@@ -963,7 +968,7 @@ a:hover {
 #notice-popover .sf-popover-close {
   position: absolute;
   right: 10px;
-  top: 5px;
+  top: 17px;
 }
 
 #notice-popover .sf-popover-hd {
@@ -1193,6 +1198,9 @@ a.table-sort-op:hover {
 }
 
 /* dropdown-menu style */
+.dropdown {
+  vertical-align: middle;
+}
 .dropdown-menu {
   min-width: 8rem;
 }

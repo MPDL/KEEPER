@@ -1,11 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Link } from "@reach/router";
+import { Link } from "@gatsbyjs/reach-router";
 import { Badge } from "reactstrap";
 import {
   gettext,
   siteRoot,
-  canPublishRepo,
   canAddRepo,
   canGenerateShareLink,
   canGenerateUploadLink,
@@ -14,10 +13,11 @@ import {
   enableOCM,
   enableOCMViaWebdav,
 } from "../utils/constants";
-import { seafileAPI, keeperAPI } from "../utils/seafile-api";
 import { Utils } from "../utils/utils";
 import toaster from "./toast";
 import Group from "../models/group";
+//KEEPER
+import { seafileAPI, keeperAPI } from "../utils/seafile-api";
 import LibraryDetails from "../models/library-details";
 
 import { canViewOrg, isDocs, isPro, customNavItems } from "../utils/constants";
@@ -324,18 +324,18 @@ class MainSideNav extends React.Component {
                 title={gettext("Shared with groups")}
                 onClick={this.grpsExtend}
               >
+                <span className="sf2-icon-group" aria-hidden="true"></span>
+                <span className="nav-text">
+                  {gettext("Shared with groups")}
+                </span>
                 <span
-                  className={`toggle-icon float-right fas ${
+                  className={`toggle-icon fas ${
                     this.state.groupsExtended
                       ? "fa-caret-down"
                       : "fa-caret-left"
                   }`}
                   aria-hidden="true"
                 ></span>
-                <span className="sf2-icon-group" aria-hidden="true"></span>
-                <span className="nav-text">
-                  {gettext("Shared with groups")}
-                </span>
               </a>
               {this.renderSharedGroups()}
             </li>
@@ -431,26 +431,21 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
             )}
-            {canPublishRepo && (
-              <li className="nav-item">
-                <Link
-                  className={`nav-link ellipsis ${this.getActiveClass(
-                    "published"
-                  )}`}
-                  to={siteRoot + "published/"}
-                  title={gettext("Published Libraries")}
-                  onClick={(e) => this.tabItemClick(e, "published")}
-                >
-                  <span
-                    className="sf2-icon-wiki-view"
-                    aria-hidden="true"
-                  ></span>
-                  <span className="nav-text">
-                    {gettext("Published Libraries")}
-                  </span>
-                </Link>
-              </li>
-            )}
+            <li className="nav-item">
+              <Link
+                className={`nav-link ellipsis ${this.getActiveClass(
+                  "published"
+                )}`}
+                to={siteRoot + "published/"}
+                title={gettext("Published Libraries")}
+                onClick={(e) => this.tabItemClick(e, "published")}
+              >
+                <span className="sf2-icon-wiki-view" aria-hidden="true"></span>
+                <span className="nav-text">
+                  {gettext("Published Libraries")}
+                </span>
+              </Link>
+            </li>
             {isDocs && (
               <li
                 className="nav-item"
@@ -464,16 +459,10 @@ class MainSideNav extends React.Component {
                   title={gettext("Drafts")}
                 >
                   <span className="sf2-icon-edit" aria-hidden="true"></span>
-                  <span className="draft-info nav-text">
-                    {gettext("Drafts")}
-                    {this.props.draftCounts === 0 ? (
-                      ""
-                    ) : (
-                      <Badge color="info" pill>
-                        {this.props.draftCounts}
-                      </Badge>
-                    )}
-                  </span>
+                  <span className="nav-text">{gettext("Drafts")}</span>
+                  {this.props.draftCounts > 0 && (
+                    <span id="draft-num">{this.props.draftCounts}</span>
+                  )}
                 </Link>
               </li>
             )}
@@ -511,16 +500,16 @@ class MainSideNav extends React.Component {
                 title={gettext("Share Admin")}
                 onClick={this.shExtend}
               >
+                <span className="sf2-icon-wrench" aria-hidden="true"></span>
+                <span className="nav-text">{gettext("Share Admin")}</span>
                 <span
-                  className={`toggle-icon float-right fas ${
+                  className={`toggle-icon fas ${
                     this.state.sharedExtended
                       ? "fa-caret-down"
                       : "fa-caret-left"
                   }`}
                   aria-hidden="true"
                 ></span>
-                <span className="sf2-icon-wrench" aria-hidden="true"></span>
-                <span className="nav-text">{gettext("Share Admin")}</span>
               </a>
               {this.renderSharedAdmin()}
             </li>

@@ -117,10 +117,10 @@ def token_view(request, token):
                     continue
 
                 repo_owner = seafile_api.get_repo_owner(repo_id)
-                share_dir_to_user(repo, path, repo_owner,
+                share_dir_to_user(repo, path, repo_owner, 
                     inviter, accepter, permission, None)
 
-                send_perm_audit_msg('modify-repo-perm',
+                send_perm_audit_msg('modify-repo-perm', 
                     inviter, accepter, repo_id, path, permission)
 
             # delete

@@ -176,7 +176,6 @@
     "Notifications": "Th\u00f4ng b\u00e1o",
     "Number of groups": "S\u1ed0 l\u01b0\u1ee3ng nh\u00f3m",
     "Old Password": "M\u1eadt kh\u1ea9u c\u0169",
-    "Open in New Tab": "M\u1edf \u1edf Tab m\u1edbi",
     "Operation succeeded.": "Thao t\u00e1c th\u00e0nh c\u00f4ng",
     "Operations": "T\u00ednh n\u0103ng",
     "Organization": "T\u1ed5 ch\u1ee9c",

@@ -14,30 +14,12 @@ from sqlalchemy.ext.automap import automap_base
 
 logger = logging.getLogger(__name__)
 
-## base class of model classes in events.models and stats.models
+# base class of model classes in events.models and stats.models
 Base = declarative_base()
 SeafBase = automap_base()
 
-def create_mysql_session(host, port, username, passwd, dbname):
-    db_url = "mysql+pymysql://%s:%s@%s:%s/%s?charset=utf8" % (username, quote_plus(passwd), host, port, dbname)
-    # Add pool recycle, or mysql connection will be closed by mysqld if idle
-    # for too long.
-    kwargs = dict(pool_recycle=300, echo=False, echo_pool=False)
 
-    engine = create_engine(db_url, **kwargs)
-
-    if not has_event_listener(Pool, 'checkout', ping_connection):
-        # We use has_event_listener to double check in case we call create_engine
-        # multipe times in the same process.
-        add_event_listener(Pool, 'checkout', ping_connection)
-
-    Session = sessionmaker(bind=engine)
-    return Session
-
-def create_engine_from_conf(config_file, db = 'seafevent'):
-    config = configparser.ConfigParser()
-    config.read(config_file)
-
+def create_engine_from_conf(config, db='seafevent'):
     need_connection_pool_fix = True
 
     db_sec = 'DATABASE'
@@ -53,7 +35,7 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
     if backend == 'sqlite' or backend == 'sqlite3':
         path = config.get(db_sec, 'path')
         if not os.path.isabs(path):
-            path = os.path.join(os.path.dirname(config_file), path)
+            path = os.path.join(os.path.abspath('.'), path)
         db_url = "sqlite:///%s" % path
         logger.info('[seafevents] database: sqlite3, path: %s', path)
         need_connection_pool_fix = False
@@ -106,37 +88,43 @@ def create_engine_from_conf(config_file, db = 'seafevent'):
 
     return engine
 
-def init_db_session_class(config_file, db = 'seafevent'):
+
+def init_db_session_class(config, db='seafevent'):
     """Configure Session class for mysql according to the config file."""
     try:
-        engine = create_engine_from_conf(config_file, db)
+        engine = create_engine_from_conf(config, db)
     except (configparser.NoOptionError, configparser.NoSectionError) as e:
         logger.error(e)
-        raise RuntimeError("invalid config file %s", config_file)
-
-    if db == 'seafile':
-        # reflect the tables
-        SeafBase.prepare(engine, reflect=True)
+        raise RuntimeError("create db engine error: %s" % e)
 
     Session = sessionmaker(bind=engine)
     return Session
 
 
-def create_db_tables():
+def create_db_tables(config):
     # create seafevents tables if not exists.
-    config_file = os.environ.get('EVENTS_CONFIG_FILE')
-
     try:
-        engine = create_engine_from_conf(config_file)
-    except (configparser.NoOptionError, configparser.NoSectionError) as e:
+        engine = create_engine_from_conf(config)
+    except Exception as e:
         logger.error(e)
-        raise RuntimeError("invalid config file %s", config_file)
+        raise RuntimeError("create db engine error: %s" % e)
 
     try:
         Base.metadata.create_all(engine)
     except Exception as e:
         logger.error("Failed to create database tables: %s" % e)
         raise RuntimeError("Failed to create database tables")
+
+
+def prepare_db_tables(seafile_config):
+    # reflect the seafile_db tables
+    try:
+        engine = create_engine_from_conf(seafile_config, db='seafile')
+    except Exception as e:
+        logger.error(e)
+        raise RuntimeError("create db engine error: %s" % e)
+
+    SeafBase.prepare(engine, reflect=True)
 
 
 # This is used to fix the problem of "MySQL has gone away" that happens when
@@ -166,11 +154,10 @@ class GroupIdLDAPUuidPair(Base):
     group_id = Column(Integer, unique=True, nullable=False)
     group_uuid = Column(String(36), default=uuid.uuid4, unique=True, nullable=False)
 
-
     def __init__(self, record):
         self.group_id = record['group_id']
         self.group_uuid = record['group_uuid']
 
     def __str__(self):
         return 'GroupIdLDAPUuidPair<id: %s, group_id: %s, group_uuid: %s>' % \
-            (self.id, self.group_id, self.group_uuid)
+               (self.id, self.group_id, self.group_uuid)

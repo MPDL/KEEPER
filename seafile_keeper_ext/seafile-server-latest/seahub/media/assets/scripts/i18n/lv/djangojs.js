@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% no %total%",
     "(current notification)": "(pa\u0161reiz\u0113jais pazi\u0146ojums)",
     "(current version)": "(pa\u0161reiz\u0113j\u0101 versija)",
     "1 Year": "1 gads",
@@ -83,7 +82,6 @@
     "Clear files in trash and history\uff1a": "T\u012br\u012bt datnes atkritn\u0113 un v\u0113stur\u0113: ",
     "Clients": "Klienti",
     "Close": "Aizv\u0113rt",
-    "Close (Esc)": "Aizv\u0113rt (Esc)",
     "Comment": "Koment\u0101rs",
     "Comments": "Koment\u0101ri",
     "Community Edition": "Community Edition",
@@ -243,7 +241,6 @@
     "New password is too short": "Jaun\u0101 parole par \u012bsu",
     "New passwords don't match": "Jaun\u0101 parole nesakr\u012bt",
     "Next": "N\u0101kamais",
-    "Next (Right arrow key)": "N\u0101kamais (bulti\u0146a pa labi)",
     "No comment yet.": "Nav koment\u0101ru.",
     "No connected devices": "Nav savienotas ier\u012bces",
     "No groups": "Nav grupas",
@@ -259,7 +256,6 @@
     "Old Password": "Vec\u0101 parole",
     "On": "Iesl\u0113gt",
     "Only keep a period of history:": "Glab\u0101t v\u0113sturi par periodu:",
-    "Open in New Tab": "Atv\u0113rt jaun\u0101 ciln\u0113",
     "Open via Client": "Atv\u0113rt ar klientu",
     "Operation": "Darb\u012bbas",
     "Operation succeeded.": "Darb\u012bba veiksm\u012bga",
@@ -289,7 +285,6 @@
     "Please enter the password again": "L\u016bdzu ievad\u012bt paroli v\u0113lreiz",
     "Please input at least an email.": "L\u016bdzu, ievadiet vismaz e-pastu.",
     "Previous": "Iepriek\u0161\u0113jais",
-    "Previous (Left arrow key)": "Iepriek\u0161\u0113jais (bulti\u0146a pa kreisi)",
     "Professional Edition": "Profesion\u0101lais izdevums",
     "Profile": "Profils",
     "Profile Setting": "Profila iestat\u012bjumi",

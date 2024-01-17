@@ -77,15 +77,36 @@ msgid ""
 msgstr ""
 "Project-Id-Version: seahub\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-30 10:28+0800\n"
+"POT-Creation-Date: 2023-04-08 18:07+0800\n"
 "PO-Revision-Date: 2013-10-25 07:03+0000\n"
 "Last-Translator: Ralf Dyllick <rdb@datamate.org>, 2021-2022\n"
-"Language-Team: German (http://www.transifex.com/haiwen/seahub/language/de/)\n"
+"Language-Team: German (http://app.transifex.com/haiwen/seahub/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: seahub/adfs_auth/utils.py:46 seahub/dingtalk/views.py:50
+#: seahub/dingtalk/views.py:74 seahub/dingtalk/views.py:83
+#: seahub/dingtalk/views.py:105 seahub/dingtalk/views.py:120
+#: seahub/dingtalk/views.py:161 seahub/dingtalk/views.py:186
+#: seahub/dingtalk/views.py:195 seahub/dingtalk/views.py:217
+#: seahub/dingtalk/views.py:253 seahub/dingtalk/views.py:293
+#: seahub/dingtalk/views.py:340 seahub/dingtalk/views.py:356
+#: seahub/dingtalk/views.py:425 seahub/dingtalk/views.py:472
+#: seahub/oauth/views.py:86 seahub/oauth/views.py:109
+#: seahub/oauth/views.py:155 seahub/oauth/views.py:183
+#: seahub/oauth/views.py:194 seahub/templates/remote_user/error.html:8
+#: seahub/weixin/views.py:36 seahub/weixin/views.py:55
+#: seahub/weixin/views.py:60 seahub/weixin/views.py:79
+#: seahub/weixin/views.py:95 seahub/work_weixin/views.py:68
+#: seahub/work_weixin/views.py:73 seahub/work_weixin/views.py:83
+#: seahub/work_weixin/views.py:87 seahub/work_weixin/views.py:106
+#: seahub/work_weixin/views.py:177 seahub/work_weixin/views.py:182
+#: seahub/work_weixin/views.py:192 seahub/work_weixin/views.py:196
+msgid "Error, please contact administrator."
+msgstr "Fehler, bitte kontaktieren Sie die Administration."
 
 #: seahub/api2/endpoints/admin/account.py:186 seahub/api2/endpoints/user.py:81
 #: seahub/api2/views.py:357
@@ -102,7 +123,7 @@ msgid "Login id can't be empty"
 msgstr "Der Benutzernamen ist erforderlich."
 
 #: seahub/api2/endpoints/admin/account.py:209
-#: seahub/api2/endpoints/admin/users.py:1063
+#: seahub/api2/endpoints/admin/users.py:1074
 #, python-format
 msgid "Login id %s already exists."
 msgstr "Der Benutzername %s ist schon vergeben."
@@ -116,6 +137,10 @@ msgid "Space quota can't be empty"
 msgstr "Die Speicherquota ist erforderlich."
 
 #: seahub/api2/endpoints/admin/account.py:238
+#: seahub/api2/endpoints/admin/users.py:1130
+#: seahub/api2/endpoints/admin/users.py:1134
+#: seahub/api2/endpoints/admin/users.py:1147
+#: seahub/api2/endpoints/admin/users.py:1151
 msgid "Must be an integer that is greater than or equal to 0."
 msgstr "Ganze Zahl größer oder gleich 0 erforderlich."
 
@@ -133,7 +158,7 @@ msgstr "Die Speicherquota ist zu hoch: Die maximale Quota ist %d MB."
 #: seahub/api2/endpoints/admin/address_book/groups.py:82
 #: seahub/api2/endpoints/admin/groups.py:129
 #: seahub/api2/endpoints/admin/groups.py:268
-#: seahub/api2/endpoints/groups.py:216 seahub/api2/endpoints/groups.py:289
+#: seahub/api2/endpoints/groups.py:226 seahub/api2/endpoints/groups.py:299
 #: seahub/api2/views.py:4598 seahub/group/forms.py:36
 msgid ""
 "Name can only contain letters, numbers, spaces, hyphen, dot, single quote, "
@@ -143,7 +168,7 @@ msgstr "Der Name darf nur Buchstaben, Zahlen, Leerschläge, Bindestriche, Unters
 #: seahub/api2/endpoints/admin/address_book/groups.py:87
 #: seahub/api2/endpoints/admin/groups.py:136
 #: seahub/api2/endpoints/admin/groups.py:272
-#: seahub/api2/endpoints/groups.py:221 seahub/api2/endpoints/groups.py:294
+#: seahub/api2/endpoints/groups.py:231 seahub/api2/endpoints/groups.py:304
 msgid "There is already a group with that name."
 msgstr "Eine Gruppe mit diesem Namen gibt es bereits."
 
@@ -163,7 +188,7 @@ msgid "My Library"
 msgstr "Meine Bibliothek"
 
 #: seahub/api2/endpoints/admin/groups.py:216
-#: seahub/api2/endpoints/groups.py:320
+#: seahub/api2/endpoints/groups.py:330
 #, python-format
 msgid "User %s is already group owner."
 msgstr "Der Benutzer %s ist bereits Eigentümer der Gruppe."
@@ -196,7 +221,7 @@ msgstr "Bibliotheken können nicht auf ihre Eigentümer übertragen werden."
 
 #: seahub/api2/endpoints/admin/share_links.py:225
 #: seahub/api2/endpoints/repo_share_links.py:140
-#: seahub/api2/endpoints/share_links.py:631
+#: seahub/api2/endpoints/share_links.py:642
 msgid "There is an associated published library."
 msgstr "Es gibt eine veröffentlichte Bibliothek hierzu."
 
@@ -350,88 +375,88 @@ msgstr "Benutzter Speicherplatz"
 msgid "Space Quota"
 msgstr "Speicherplatz"
 
-#: seahub/api2/endpoints/admin/users.py:472
-#: seahub/api2/endpoints/admin/users.py:499
+#: seahub/api2/endpoints/admin/users.py:480
+#: seahub/api2/endpoints/admin/users.py:507
 #: seahub/organizations/api/admin/users.py:148
 msgid "There are more than 500 users, and sort is not offered."
 msgstr "Es gibt über 500 Benutzer, eine Sortierung ist nicht möglich."
 
-#: seahub/api2/endpoints/admin/users.py:573
-#: seahub/api2/endpoints/admin/users.py:1035 seahub/base/accounts.py:784
+#: seahub/api2/endpoints/admin/users.py:581
+#: seahub/api2/endpoints/admin/users.py:1046 seahub/base/accounts.py:784
 #: seahub/forms.py:30
 msgid "The number of users exceeds the limit."
 msgstr "Die maximale Benutzeranzahl wurde überschritten."
 
-#: seahub/api2/endpoints/admin/users.py:667
+#: seahub/api2/endpoints/admin/users.py:675
 #, python-format
 msgid "Successfully added user %(user)s."
 msgstr "%(user)s wurde hinzugefügt."
 
-#: seahub/api2/endpoints/admin/users.py:671
+#: seahub/api2/endpoints/admin/users.py:679
 #: seahub/api2/endpoints/admin/users_batch.py:385 seahub/views/sysadmin.py:567
 #, python-format
 msgid "You are invited to join %s"
 msgstr "Sie wurden eingeladen %s beizutreten"
 
-#: seahub/api2/endpoints/admin/users.py:677
+#: seahub/api2/endpoints/admin/users.py:685
 #, python-format
 msgid "Successfully added user %(user)s. An email notification has been sent."
 msgstr "%(user)s wurde hinzugefügt und per E-Mail benachrichtigt."
 
-#: seahub/api2/endpoints/admin/users.py:680
+#: seahub/api2/endpoints/admin/users.py:688
 #, python-format
 msgid ""
 "Successfully added user %(user)s. But email notification can not be sent, "
 "because Email service is not properly configured."
 msgstr "Der Benutzer %(user)s wurde hinzugefügt, aber es konnte keine E-Mail gesendet werden, da der E-Mail-Dienst nicht korrekt konfiguriert ist."
 
-#: seahub/api2/endpoints/admin/users.py:1135
+#: seahub/api2/endpoints/admin/users.py:1191
 #: seahub/institutions/templates/institutions/useradmin.html:122
 msgid "Edit succeeded"
 msgstr "Die Bearbeitung wurde gespeichert."
 
-#: seahub/api2/endpoints/admin/users.py:1138 seahub/views/sysadmin.py:470
+#: seahub/api2/endpoints/admin/users.py:1194 seahub/views/sysadmin.py:470
 #, python-format
 msgid "Your account on %s is activated"
 msgstr "Ihr Benutzerkonto auf %s wurde aktiviert"
 
-#: seahub/api2/endpoints/admin/users.py:1143
+#: seahub/api2/endpoints/admin/users.py:1199
 #: seahub/institutions/templates/institutions/useradmin.html:118
 msgid "Edit succeeded, an email has been sent."
 msgstr "Die Bearbeitung wurde gespeichert und eine E-Mail wurde verschickt."
 
-#: seahub/api2/endpoints/admin/users.py:1146
+#: seahub/api2/endpoints/admin/users.py:1202
 #: seahub/institutions/templates/institutions/useradmin.html:120
 msgid ""
 "Edit succeeded, but failed to send email, please check your email "
 "configuration."
 msgstr "Die Bearbeitung wurde gespeichert, aber es konnte keine E-Mail gesendet werden. Überprüfen Sie die Konfiguration Ihres E-Mail-Dienstes."
 
-#: seahub/api2/endpoints/admin/users.py:1224 seahub/views/sysadmin.py:511
+#: seahub/api2/endpoints/admin/users.py:1283 seahub/views/sysadmin.py:511
 #, python-format
 msgid "Password has been reset on %s"
 msgstr "Das Passwort wurde auf %s zurückgesetzt"
 
-#: seahub/api2/endpoints/admin/users.py:1226 seahub/views/sysadmin.py:536
+#: seahub/api2/endpoints/admin/users.py:1285 seahub/views/sysadmin.py:536
 #, python-format
 msgid ""
 "Successfully reset password to %(passwd)s, an email has been sent to "
 "%(user)s."
 msgstr "Das Passwort auf %(passwd)s gesetzt und eine E-Mail wurde an den Benutzer %(user)s gesendet."
 
-#: seahub/api2/endpoints/admin/users.py:1230 seahub/views/sysadmin.py:541
+#: seahub/api2/endpoints/admin/users.py:1289 seahub/views/sysadmin.py:541
 #, python-format
 msgid ""
 "Successfully reset password to %(passwd)s, but failed to send email to "
 "%(user)s, please check your email configuration."
 msgstr "Das Passwort wurde auf %(passwd)s gesetzt, aber es konnte keine E-Mail an den Benutzer %(user)s gesendet werden. Überprüfen Sie die Konfiguration Ihres E-Mail-Dienstes."
 
-#: seahub/api2/endpoints/admin/users.py:1233 seahub/views/sysadmin.py:545
+#: seahub/api2/endpoints/admin/users.py:1292 seahub/views/sysadmin.py:545
 #, python-format
 msgid "Successfully reset password to %(passwd)s for user %(user)s."
 msgstr "Das Passwort des Benutzers %(user)s wurde auf %(passwd)s zurückgesetzt."
 
-#: seahub/api2/endpoints/admin/users.py:1236 seahub/views/sysadmin.py:548
+#: seahub/api2/endpoints/admin/users.py:1295 seahub/views/sysadmin.py:548
 #, python-format
 msgid ""
 "Successfully reset password to %(passwd)s for user %(user)s. But email "
@@ -457,15 +482,16 @@ msgstr "Die Virusdatei wurde nicht gefunden."
 #: seahub/api2/endpoints/repo_share_invitations.py:201
 #: seahub/api2/endpoints/send_upload_link_email.py:107
 #: seahub/api2/endpoints/wiki_pages.py:135 seahub/api2/views.py:3853
-#: seahub/notifications/models.py:462 seahub/notifications/models.py:503
-#: seahub/notifications/models.py:554 seahub/notifications/models.py:610
-#: seahub/notifications/models.py:640 seahub/notifications/models.py:662
-#: seahub/notifications/models.py:688 seahub/notifications/models.py:705
-#: seahub/notifications/models.py:722 seahub/notifications/models.py:751
-#: seahub/search/views.py:200 seahub/utils/__init__.py:166
-#: seahub/utils/__init__.py:1181 seahub/views/__init__.py:918
-#: seahub/views/ajax.py:401 seahub/views/ajax.py:405 seahub/wiki/views.py:208
-#: seahub/wiki/views.py:215 seahub/wiki/views.py:224
+#: seahub/notifications/models.py:466 seahub/notifications/models.py:507
+#: seahub/notifications/models.py:558 seahub/notifications/models.py:614
+#: seahub/notifications/models.py:644 seahub/notifications/models.py:666
+#: seahub/notifications/models.py:692 seahub/notifications/models.py:709
+#: seahub/notifications/models.py:726 seahub/notifications/models.py:755
+#: seahub/search/views.py:200 seahub/share/views.py:326
+#: seahub/utils/__init__.py:166 seahub/utils/__init__.py:1240
+#: seahub/views/__init__.py:918 seahub/views/ajax.py:401
+#: seahub/views/ajax.py:405 seahub/wiki/views.py:208 seahub/wiki/views.py:215
+#: seahub/wiki/views.py:224
 msgid "Internal Server Error"
 msgstr "Interner Serverfehler"
 
@@ -514,7 +540,7 @@ msgstr "Benutzername ungültig"
 #: seahub/api2/endpoints/dir_shared_items.py:339
 #: seahub/api2/endpoints/draft_reviewer.py:79
 #: seahub/api2/endpoints/group_owned_libraries.py:946
-#: seahub/oauth/views.py:197
+#: seahub/oauth/views.py:199
 #, python-format
 msgid "User %s not found."
 msgstr "Der Benutzer %s wurde nicht gefunden."
@@ -524,7 +550,7 @@ msgstr "Der Benutzer %s wurde nicht gefunden."
 #: seahub/api2/endpoints/file_tag.py:203 seahub/api2/endpoints/file_tag.py:216
 #: seahub/api2/endpoints/wikis.py:112 seahub/api2/endpoints/wikis.py:201
 #: seahub/drafts/views.py:31 seahub/profile/forms.py:24
-#: seahub/profile/views.py:225 seahub/search/views.py:174
+#: seahub/profile/views.py:227 seahub/search/views.py:174
 #: seahub/thumbnail/views.py:51 seahub/thumbnail/views.py:166
 #: seahub/views/__init__.py:742 seahub/views/ajax.py:83
 #: seahub/views/ajax.py:113 seahub/views/ajax.py:119
@@ -535,7 +561,7 @@ msgstr "Zugriff verweigert."
 msgid "File is not locked."
 msgstr "Datei ist nicht gesperrt."
 
-#: seahub/api2/endpoints/file.py:654 seahub/api2/endpoints/share_links.py:713
+#: seahub/api2/endpoints/file.py:654 seahub/api2/endpoints/share_links.py:724
 msgid "You can not refresh this file's lock."
 msgstr "Sie können die Sperrung der Datei nicht erneuern."
 
@@ -575,7 +601,7 @@ msgid "User %s is an organization user."
 msgstr "%s gehört einer Organisation an."
 
 #: seahub/api2/endpoints/group_members.py:414 seahub/group/error_msg.py:17
-#: seahub/group/error_msg.py:23 seahub/views/file.py:464
+#: seahub/group/error_msg.py:23 seahub/views/file.py:465
 msgid "Group does not exist"
 msgstr "Die Gruppe ist nicht vorhanden"
 
@@ -619,11 +645,82 @@ msgstr "Der Benutzer %s ist bereits vorhanden."
 #: seahub/api2/endpoints/repo_share_invitations.py:215
 #: seahub/api2/endpoints/send_share_link_email.py:34
 #: seahub/api2/endpoints/send_upload_link_email.py:33 seahub/auth/forms.py:122
-#: seahub/share/views.py:136 seahub/share/views.py:266
+#: seahub/share/views.py:138 seahub/share/views.py:349
 msgid ""
 "Failed to send email, email service is not properly configured, please "
 "contact administrator."
 msgstr "Die E-Mail konnte nicht verschickt werden. Der E-Mail-Dienst ist nicht korrekt konfiguriert. Bitte kontaktieren Sie die Administration."
+
+#: seahub/api2/endpoints/multi_share_links.py:55
+#: seahub/api2/endpoints/multi_share_links.py:258
+#: seahub/api2/endpoints/share_links.py:284
+#: seahub/api2/endpoints/upload_links.py:170 seahub/api2/views.py:4006
+#: seahub/api2/views.py:4126
+msgid "Password is required."
+msgstr "Passwort erforderlich."
+
+#: seahub/api2/endpoints/multi_share_links.py:60
+#: seahub/api2/endpoints/share_links.py:290
+#: seahub/api2/endpoints/upload_links.py:176
+#: seahub/api2/endpoints/webdav_secret.py:60
+msgid "Password is too short."
+msgstr "Passwort ist zu kurz."
+
+#: seahub/api2/endpoints/multi_share_links.py:64
+#: seahub/api2/endpoints/share_links.py:294
+#: seahub/api2/endpoints/upload_links.py:180
+#: seahub/api2/endpoints/webdav_secret.py:64
+msgid "Password is too weak."
+msgstr "Das Passwort ist zu schwach."
+
+#: seahub/api2/endpoints/multi_share_links.py:68
+#: seahub/api2/endpoints/share_links.py:298
+#: seahub/api2/endpoints/upload_links.py:184
+#: seahub/api2/endpoints/webdav_secret.py:52
+msgid ""
+"Password can only contain number, upper letter, lower letter and other "
+"symbols."
+msgstr "Das Passwort darf nur Zahlen, Buchstaben und andere Symbole enthalten."
+
+#: seahub/api2/endpoints/multi_share_links.py:91
+#: seahub/api2/endpoints/multi_share_links.py:281
+#: seahub/api2/endpoints/share_links.py:321
+#: seahub/api2/endpoints/share_links.py:566
+#: seahub/api2/endpoints/upload_links.py:207
+#: seahub/api2/endpoints/upload_links.py:341 seahub/api2/views.py:3420
+#, python-format
+msgid "Expire days should be greater or equal to %s"
+msgstr "Der Freigabe-Link sollte mindestens %s Tage verfügbar sein"
+
+#: seahub/api2/endpoints/multi_share_links.py:96
+#: seahub/api2/endpoints/multi_share_links.py:287
+#: seahub/api2/endpoints/share_links.py:327
+#: seahub/api2/endpoints/share_links.py:572
+#: seahub/api2/endpoints/upload_links.py:213
+#: seahub/api2/endpoints/upload_links.py:347 seahub/api2/views.py:3426
+#, python-format
+msgid "Expire days should be less than or equal to %s"
+msgstr "Der Freigabe-Link sollte höchstens %s Tage verfügbar sein"
+
+#: seahub/api2/endpoints/multi_share_links.py:116
+#: seahub/api2/endpoints/multi_share_links.py:309
+#: seahub/api2/endpoints/share_links.py:349
+#: seahub/api2/endpoints/share_links.py:596
+#: seahub/api2/endpoints/upload_links.py:235
+#: seahub/api2/endpoints/upload_links.py:371
+#, python-format
+msgid "Expiration time should be later than %s."
+msgstr "Die Ablaufzeit sollte nach %s liegen."
+
+#: seahub/api2/endpoints/multi_share_links.py:125
+#: seahub/api2/endpoints/multi_share_links.py:318
+#: seahub/api2/endpoints/share_links.py:358
+#: seahub/api2/endpoints/share_links.py:605
+#: seahub/api2/endpoints/upload_links.py:244
+#: seahub/api2/endpoints/upload_links.py:380
+#, python-format
+msgid "Expiration time should be earlier than %s."
+msgstr "Die Ablaufzeit sollte vor %s liegen."
 
 #: seahub/api2/endpoints/query_copy_move_progress.py:47
 #: seahub/templates/remote_user/create_unknown_user_false.html:4
@@ -682,23 +779,23 @@ msgid "Can't delete folder %s, please check its permission."
 msgstr "Der Ordner %s kann nicht gelöscht werden. Überprüfen Sie die Berechtigungen."
 
 #: seahub/api2/endpoints/send_share_link_email.py:102
-#: seahub/share/views.py:185
+#: seahub/share/views.py:187
 msgid "file"
 msgstr "Datei"
 
 #: seahub/api2/endpoints/send_share_link_email.py:103
-#: seahub/share/views.py:186
+#: seahub/share/views.py:188
 #, python-format
 msgid "A file is shared to you on %s"
 msgstr "Es wurde eine Datei freigegeben unter %s"
 
 #: seahub/api2/endpoints/send_share_link_email.py:105
-#: seahub/share/views.py:192
+#: seahub/share/views.py:194
 msgid "directory"
 msgstr "Ordner"
 
 #: seahub/api2/endpoints/send_share_link_email.py:106
-#: seahub/share/views.py:193
+#: seahub/share/views.py:195
 #, python-format
 msgid "A directory is shared to you on %s"
 msgstr "Ein Ordner wurde für Sie freigegeben auf %s"
@@ -708,70 +805,13 @@ msgid "email invalid."
 msgstr "Die E-Mail-Adresse ist ungültig."
 
 #: seahub/api2/endpoints/send_upload_link_email.py:97
-#: seahub/share/views.py:307
+#: seahub/share/views.py:390
 #, python-format
 msgid "An upload link is shared to you on %s"
 msgstr "Für Sie wurde ein Upload-Link auf %s freigegeben."
 
-#: seahub/api2/endpoints/share_links.py:273
-#: seahub/api2/endpoints/upload_links.py:163 seahub/api2/views.py:4006
-#: seahub/api2/views.py:4126
-msgid "Password is required."
-msgstr "Passwort erforderlich."
-
-#: seahub/api2/endpoints/share_links.py:279
-#: seahub/api2/endpoints/upload_links.py:169
-#: seahub/api2/endpoints/webdav_secret.py:57
-msgid "Password is too short."
-msgstr "Passwort ist zu kurz."
-
-#: seahub/api2/endpoints/share_links.py:283
-#: seahub/api2/endpoints/upload_links.py:173
-#: seahub/api2/endpoints/webdav_secret.py:61
-msgid "Password is too weak."
-msgstr "Das Passwort ist zu schwach."
-
-#: seahub/api2/endpoints/share_links.py:287
-#: seahub/api2/endpoints/upload_links.py:177
-msgid ""
-"Password can only contain number, upper letter, lower letter and other "
-"symbols."
-msgstr "Das Passwort darf nur Zahlen, Buchstaben und andere Symbole enthalten."
-
-#: seahub/api2/endpoints/share_links.py:310
-#: seahub/api2/endpoints/share_links.py:555
-#: seahub/api2/endpoints/upload_links.py:200
-#: seahub/api2/endpoints/upload_links.py:334 seahub/api2/views.py:3420
-#, python-format
-msgid "Expire days should be greater or equal to %s"
-msgstr "Der Freigabe-Link sollte mindestens %s Tage verfügbar sein"
-
-#: seahub/api2/endpoints/share_links.py:316
-#: seahub/api2/endpoints/share_links.py:561
-#: seahub/api2/endpoints/upload_links.py:206
-#: seahub/api2/endpoints/upload_links.py:340 seahub/api2/views.py:3426
-#, python-format
-msgid "Expire days should be less than or equal to %s"
-msgstr "Der Freigabe-Link sollte höchstens %s Tage verfügbar sein"
-
-#: seahub/api2/endpoints/share_links.py:338
-#: seahub/api2/endpoints/share_links.py:585
-#: seahub/api2/endpoints/upload_links.py:228
-#: seahub/api2/endpoints/upload_links.py:364
-#, python-format
-msgid "Expiration time should be later than %s."
-msgstr "Die Ablaufzeit sollte nach %s liegen."
-
-#: seahub/api2/endpoints/share_links.py:347
-#: seahub/api2/endpoints/share_links.py:594
-#: seahub/api2/endpoints/upload_links.py:237
-#: seahub/api2/endpoints/upload_links.py:373
-#, python-format
-msgid "Expiration time should be earlier than %s."
-msgstr "Die Ablaufzeit sollte vor %s liegen."
-
-#: seahub/api2/endpoints/share_links.py:416
-#: seahub/api2/endpoints/share_links.py:425
+#: seahub/api2/endpoints/share_links.py:427
+#: seahub/api2/endpoints/share_links.py:436
 #, python-format
 msgid "Share link %s already exists."
 msgstr "Freigabe-Link %s ist bereits vorhanden."
@@ -785,14 +825,16 @@ msgstr "E-Mail-Adresse %s ist schon als Kontakt vergeben."
 msgid "telephone is too long (maximum is 100 characters)."
 msgstr "Telefonnummer ist zu lang (maximal 100 Zeichen)."
 
-#: seahub/api2/endpoints/user_avatar.py:49 seahub/utils/error_msg.py:8
+#: seahub/api2/endpoints/user_avatar.py:49
+#: seahub/organizations/api/admin/logo.py:56 seahub/utils/error_msg.py:8
 #, python-format
 msgid ""
 "%(ext)s is an invalid file extension. Authorized extensions are : "
 "%(valid_exts_list)s"
 msgstr "%(ext)s ist eine ungültige Dateiendung. Erlaubte Dateiendungen sind: %(valid_exts_list)s"
 
-#: seahub/api2/endpoints/user_avatar.py:53 seahub/utils/error_msg.py:13
+#: seahub/api2/endpoints/user_avatar.py:53
+#: seahub/organizations/api/admin/logo.py:64 seahub/utils/error_msg.py:13
 #, python-format
 msgid ""
 "Your file is too big (%(size)s), the maximum allowed size is "
@@ -806,7 +848,7 @@ msgid ""
 "%(nb_max_avatars)d."
 msgstr "Sie haben bereits %(nb_avatars)d Avatare. Maximal sind %(nb_max_avatars)d erlaubt."
 
-#: seahub/api2/endpoints/webdav_secret.py:53
+#: seahub/api2/endpoints/webdav_secret.py:56
 msgid "Length of WebDav password should be less than 30."
 msgstr "Die Länge des WebDAV-Passworts sollte kürzer als 30 Zeichen sein."
 
@@ -839,7 +881,7 @@ msgstr "E-Mail-Adresse oder Benutzername"
 #: seahub/base/accounts.py:772
 #: seahub/invitations/templates/invitations/token_view.html:13
 #: seahub/organizations/templates/organizations/org_register.html:36
-#: seahub/templates/decrypt_repo_form.html:10
+#: seahub/share/views.py:320 seahub/templates/decrypt_repo_form.html:10
 #: seahub/templates/registration/login.html:38
 #: seahub/templates/registration/password_set_form.html:21
 #: seahub/templates/registration/registration_form.html:24
@@ -1467,25 +1509,8 @@ msgstr "%s ist bearbeitet."
 msgid "Successfully Deleted %s"
 msgstr "%s ist gelöscht."
 
-#: seahub/dingtalk/views.py:39 seahub/dingtalk/views.py:59
-#: seahub/dingtalk/views.py:64 seahub/dingtalk/views.py:86
-#: seahub/dingtalk/views.py:101 seahub/dingtalk/views.py:142
-#: seahub/dingtalk/views.py:163 seahub/dingtalk/views.py:168
-#: seahub/dingtalk/views.py:190 seahub/dingtalk/views.py:227
-#: seahub/oauth/views.py:85 seahub/oauth/views.py:108
-#: seahub/oauth/views.py:153 seahub/oauth/views.py:181
-#: seahub/oauth/views.py:192 seahub/templates/remote_user/error.html:8
-#: seahub/weixin/views.py:36 seahub/weixin/views.py:55
-#: seahub/weixin/views.py:60 seahub/weixin/views.py:79
-#: seahub/weixin/views.py:95 seahub/work_weixin/views.py:68
-#: seahub/work_weixin/views.py:73 seahub/work_weixin/views.py:83
-#: seahub/work_weixin/views.py:87 seahub/work_weixin/views.py:106
-#: seahub/work_weixin/views.py:177 seahub/work_weixin/views.py:182
-#: seahub/work_weixin/views.py:192 seahub/work_weixin/views.py:196
-msgid "Error, please contact administrator."
-msgstr "Fehler, bitte kontaktieren Sie die Administration."
-
-#: seahub/dingtalk/views.py:104 seahub/weixin/views.py:98
+#: seahub/dingtalk/views.py:123 seahub/dingtalk/views.py:359
+#: seahub/weixin/views.py:98
 #, python-format
 msgid "User %s not found or inactive."
 msgstr "%s wurde nicht als Benutzer gefunden oder inaktiv."
@@ -1515,9 +1540,9 @@ msgstr "Die Beschreibung ist zu lang. Die Maximallänge ist 100 Zeichen."
 msgid "Name %s is not valid"
 msgstr "Der Name %s ist ungültig."
 
-#: seahub/forms.py:97 seahub/views/ajax.py:308 seahub/views/ajax.py:312
-#: seahub/views/ajax.py:316 seahub/views/ajax.py:327 seahub/views/ajax.py:447
-#: seahub/views/file.py:1867
+#: seahub/forms.py:97 seahub/share/views.py:296 seahub/views/ajax.py:308
+#: seahub/views/ajax.py:312 seahub/views/ajax.py:316 seahub/views/ajax.py:327
+#: seahub/views/ajax.py:447 seahub/views/file.py:1875
 msgid "Argument missing"
 msgstr "Das Argument fehlt."
 
@@ -1639,10 +1664,10 @@ msgstr "Viel Erfolg und gute Zusammenarbeit!"
 msgid "The %(site_name)s team"
 msgstr "Ihr Service-Team %(site_name)s"
 
-#: seahub/group/views.py:105 seahub/share/views.py:231
+#: seahub/group/views.py:105 seahub/share/views.py:233
 #: seahub/views/__init__.py:569 seahub/views/ajax.py:381
-#: seahub/views/ajax.py:427 seahub/views/file.py:1150
-#: seahub/views/file.py:1366 seahub/views/file.py:1876
+#: seahub/views/ajax.py:427 seahub/views/file.py:1158
+#: seahub/views/file.py:1374 seahub/views/file.py:1884
 #: seahub/views/repo.py:123 seahub/views/repo.py:180 seahub/views/repo.py:238
 #: seahub/views/repo.py:291 seahub/views/repo.py:401
 msgid "Permission denied"
@@ -1785,8 +1810,8 @@ msgstr "Drive Client"
 
 #: seahub/help/templates/help/base.html:72
 #: seahub/help/templates/help/using_drive_client.html:6
-msgid "Using KEEPER drive client"
-msgstr "Verwendung des KEEPER Drive Clients"
+msgid "Using Seafile drive client"
+msgstr "Verwendung des Seafile Drive Clients"
 
 #: seahub/help/templates/help/base.html:73
 msgid "Using drive client 2.0 on Windows"
@@ -1810,7 +1835,7 @@ msgstr "Sobald Sie und die anderen Mitglieder Ihrer Gruppe eine Bibliothek auf I
 #: seahub/help/templates/help/conflicts.html:9
 msgid ""
 "Sometimes you and your friends may edit the same file at the same time. Your"
-" changes may conflict with each other's. In this case, KEEPER would keep "
+" changes may conflict with each other's. In this case, Seafile would keep "
 "the first version synced to the cloud unchanged, while rename the other "
 "version to a \"conflict file\". A conflict file's name ends with it's "
 "author's email address, plus the current time, e.g. test.txt (SFConflict "
@@ -1820,7 +1845,7 @@ msgstr "Manchmal bearbeiten Sie und andere Mitglieder Ihrer Gruppe gleichzeitig 
 #: seahub/help/templates/help/deleting_a_library.html:6
 msgid ""
 "You can delete a library owned by you. A deleted library can be restored by "
-"you or KEEPER server's administrator."
+"you or Seafile server's administrator."
 msgstr ""
 
 #: seahub/help/templates/help/deleting_a_library.html:7
@@ -2021,30 +2046,30 @@ msgid ""
 msgstr ""
 
 #: seahub/help/templates/help/desktop_proxy.html:6
-msgid "Using proxy in KEEPER client"
-msgstr "Einen Proxy im KEEPER-Programm nutzen"
+msgid "Using proxy in Seafile client"
+msgstr "Einen Proxy im Seafile-Programm nutzen"
 
 #: seahub/help/templates/help/desktop_proxy.html:8
 msgid ""
-"KEEPER client supports 3 types of proxy servers: HTTP proxy, SOCKS5 proxy "
+"Seafile client supports 3 types of proxy servers: HTTP proxy, SOCKS5 proxy "
 "and system proxy settings."
-msgstr "Das KEEPER-Programm unterstützt drei Arten von Proxy-Servern: HTTP, SOCKS5 und die Nutzung der Einstellungen des Systemproxy-Servers."
+msgstr "Das Seafile-Programm unterstützt drei Arten von Proxy-Servern: HTTP, SOCKS5 und die Nutzung der Einstellungen des Systemproxy-Servers."
 
 #: seahub/help/templates/help/desktop_proxy.html:10
 msgid ""
 "HTTP proxy and SOCKS5 proxy requires you to enter the proxy server's address"
-" and port. If you use system proxy settings, KEEPER client reads proxy "
+" and port. If you use system proxy settings, Seafile client reads proxy "
 "settings from the operating system. The operating system has some mechanisms"
 " to auto-detect proxy server information. So you don't have to manually "
 "enter proxy server address."
-msgstr "HTTP proxy und SOCKS5 proxy erfordern Adresse und Port des betreffenden Proxy-Servers. Wenn Sie Systemeinstellungen auswählen, übernimmt das KEEPER-Programm die Einstellungen Ihres Betriebssystems. Das Betriebssystem kann Informationen zum Proxy-Servers möglicherweise automatisch feststellen, so dass Sie den Proxy-Server nicht manuell eintragen müssen. "
+msgstr "HTTP proxy und SOCKS5 proxy erfordern Adresse und Port des betreffenden Proxy-Servers. Wenn Sie Systemeinstellungen auswählen, übernimmt das Seafile-Programm die Einstellungen Ihres Betriebssystems. Das Betriebssystem kann Informationen zum Proxy-Servers möglicherweise automatisch feststellen, so dass Sie den Proxy-Server nicht manuell eintragen müssen. "
 
 #: seahub/help/templates/help/desktop_proxy.html:12
 msgid ""
-"To change proxy settings, click the KEEPER icon in the system notification "
+"To change proxy settings, click the Seafile icon in the system notification "
 "area. Choose \"Settings\" in the menu. In the pop-up settings dialog, you "
 "can change proxy settings in the \"Network\" tab."
-msgstr "Um die Proxy-Einstellungen zu ändern, klicken Sie auf das KEEPER-Icon in der Statusleiste Ihres Systems. Wählen Sie „Einstellungen“ in dem Menü, und dann den Tab „Netzwerk“."
+msgstr "Um die Proxy-Einstellungen zu ändern, klicken Sie auf das Seafile-Icon in der Statusleiste Ihres Systems. Wählen Sie „Einstellungen“ in dem Menü, und dann den Tab „Netzwerk“."
 
 #: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:6
 msgid "SeaDrive 2.0 for Windows 10"
@@ -2064,8 +2089,8 @@ msgstr ""
 
 #: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:11
 msgid ""
-"You can download SeaDrive 2.0 from official KEEPER website. After "
-"installation and logging into your KEEPER account, SeaDrive will start "
+"You can download SeaDrive 2.0 from official Seafile website. After "
+"installation and logging into your Seafile account, SeaDrive will start "
 "downloading library and file lists from the server (just as in SeaDrive "
 "1.0.x). It may take some time, depending on the number of files available in"
 " your seafile account. The download is progressive, so in the mean time you "
@@ -2225,13 +2250,47 @@ msgid ""
 "cache size is only limited by the available disk space on your computer."
 msgstr ""
 
+#: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:50
+msgid "How to remove left-over SeaDrive shortcuts in Windows Explorer?"
+msgstr ""
+
+#: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:51
+msgid ""
+"The \"SeaDrive\" shortcut in Windows Explorer won't disappear after you exit"
+" SeaDrive program or switch KEEPER accounts in SeaDrive. This is an "
+"intended behavior. You don't need to remove them if you still need to access"
+" the account later."
+msgstr ""
+
+#: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:52
+msgid ""
+"In some corner cases, the \"SeaDrvie\" shortcut will be left-over in Windows"
+" Explorer and you want to remove it."
+msgstr ""
+
+#: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:53
+msgid ""
+"You can usually remove those shortcuts by uninstalling SeaDrive program and "
+"choose \"Remove account information\" in the prompt dialog."
+msgstr ""
+
+#: seahub/help/templates/help/drive_client_2.0_for_windows_10.html:54
+msgid ""
+"If uninstallation doesn't remove the shortcuts successfully, you can remove "
+"the SeaDrive shortcut in Windows Explorer by editing the registry. Open the "
+"path "
+"\"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Desktop\\NameSpace\\\""
+" in registry editor. Remove the sub-keys correspond to the shortcut you want"
+" to remove."
+msgstr ""
+
 #: seahub/help/templates/help/encrypted_libraries.html:6
 msgid "How to Use Encrypted Libraries"
 msgstr "Wie Sie verschlüsselte Bibliotheken benutzen"
 
 #: seahub/help/templates/help/encrypted_libraries.html:8
 msgid ""
-"KEEPER provides client-side end-to-end data encryption. You can create "
+"Seafile provides client-side end-to-end data encryption. You can create "
 "encrypted libraries to use this feature. File contents in encrypted "
 "libraries are encrypted on client side. The encryption password is not "
 "stored on the server. So even the server administrator can't access your "
@@ -2245,9 +2304,9 @@ msgstr "Wenn Sie eine verschlüsselte Bibliothek erstellen:"
 #: seahub/help/templates/help/encrypted_libraries.html:12
 msgid ""
 "If you create an encrypted library in the web app, the password is sent to "
-"the server. The server use this password to create the library. But it "
+"the server. The server uses this password to create the library. But it "
 "doesn't store the plain text password."
-msgstr "Wenn Sie eine verschlüsselte Bibliothek in der Weboberfläche erstellen, wird das Passwort an den Server gesendet. Der Server verwendet dieses Passwort zum Erstellen der Bibliothek. Das Passwort wird nicht im Klartext gespeichert."
+msgstr ""
 
 #: seahub/help/templates/help/encrypted_libraries.html:13
 #, python-format
@@ -2271,15 +2330,21 @@ msgstr "Wenn Sie die Weboberfläche verwenden, müssen Sie dem Server das Passwo
 #: seahub/help/templates/help/encrypted_libraries.html:20
 msgid ""
 "If you use desktop client to sync the library, the password is not sent to "
-"the server. The client decrypt and encrypt file contents locally. The plain "
-"text password is not stored on the client disk too."
-msgstr "Wenn Sie den Desktop-Client verwenden, um die Bibliothek zu synchronisieren, wird das Passwort nicht an den Server gesendet. Der Client entschlüsselt und verschlüsselt Dateiinhalte lokal. Das Klartext-Passwort wird auch nicht auf der Festplatte des Clients gespeichert."
+"the server. The client decrypts and encrypts file contents locally. The "
+"plain text password is not stored on the client disk either."
+msgstr ""
 
-#: seahub/help/templates/help/encrypted_libraries.html:24
+#: seahub/help/templates/help/encrypted_libraries.html:21
 msgid ""
-"Note that encrypted library only encrypt the contents of the files, but not "
-"the folder and file names."
-msgstr "Beachten Sie, dass verschlüsselte Bibliotheken lediglich den Inhalt der Dateien verschlüsseln, aber nicht die Namen der Ordner und Dateien."
+"iOS client supports client side encryption since version 2.1.6. Android "
+"client supports it since version 2.1.0."
+msgstr ""
+
+#: seahub/help/templates/help/encrypted_libraries.html:25
+msgid ""
+"Note that encrypted library only encrypts the contents of the files, but not"
+" the folder and file names."
+msgstr ""
 
 #: seahub/help/templates/help/file_locking.html:5
 msgid "File locking"
@@ -2288,9 +2353,9 @@ msgstr ""
 #: seahub/help/templates/help/file_locking.html:6
 msgid ""
 "When more than one person collaborate on a file, it's likely that more than "
-"one person modify the file at about the same time. KEEPER handles this "
+"one person modify the file at about the same time. Seafile handles this "
 "situation nicely with conflict files. But it's often more convenient to lock"
-" the file when one person wants to exclusively modify the file. KEEPER "
+" the file when one person wants to exclusively modify the file. Seafile "
 "Professional Edition supports file locking."
 msgstr ""
 
@@ -2331,7 +2396,7 @@ msgstr ""
 #: seahub/help/templates/help/file_locking.html:15
 msgid ""
 "To lock a file, just right click on a synced file and choose \"lock this "
-"file\" in the \"KEEPER\" menu."
+"file\" in the \"Seafile\" menu."
 msgstr ""
 
 #: seahub/help/templates/help/file_locking.html:17
@@ -2360,8 +2425,8 @@ msgstr ""
 #: seahub/help/templates/help/file_locking.html:23
 msgid ""
 "After a library is synced to the desktop, when you open a Microsoft Office "
-"file inside the library, KEEPER automatically locks the file. When you "
-"close the file, KEEPER automatically unlocks the file. The locking state is"
+"file inside the library, Seafile automatically locks the file. When you "
+"close the file, Seafile automatically unlocks the file. The locking state is"
 " propagated to other computers syncing this library. It prevents concurrent "
 "editing the same Office file and is convenient for collaboration."
 msgstr ""
@@ -2398,7 +2463,7 @@ msgstr ""
 
 #: seahub/help/templates/help/finding_older_version_files.html:7
 msgid ""
-"KEEPER tracks the modification history of all files. Whenever a file is "
+"Seafile tracks the modification history of all files. Whenever a file is "
 "modified, a new version is created, while the old version is still kept for "
 "a configurable period. When you want to access an older version of a file, "
 "the file history feature becomes very handy."
@@ -2410,7 +2475,7 @@ msgstr ""
 
 #: seahub/help/templates/help/finding_older_version_files.html:10
 msgid ""
-"In KEEPER Web App, navigate into the folder containing the file. Move the "
+"In Seafile Web App, navigate into the folder containing the file. Move the "
 "cursor onto the row of that file. An operation menu will appear. You can "
 "click the \"History\" button in that menu."
 msgstr ""
@@ -2519,7 +2584,7 @@ msgstr ""
 
 #: seahub/help/templates/help/folder_permission.html:24
 msgid ""
-"If a \"read only\" folder is synced to PC with the KEEPER desktop App, "
+"If a \"read only\" folder is synced to PC with the Seafile desktop App, "
 "changes under a \"read only\" folder won't be uploaded to the cloud."
 msgstr ""
 
@@ -2568,8 +2633,8 @@ msgstr ""
 #: seahub/help/templates/help/full_text_file_search.html:6
 msgid ""
 "If you're using a Pro Edition Server, you can search file and folder names, "
-"as well as the content of certain files, in the KEEPER web app. Currently "
-"KEEPER can search the contents of the following types of files:"
+"as well as the content of certain files, in the Seafile web app. Currently "
+"Seafile can search the contents of the following types of files:"
 msgstr ""
 
 #: seahub/help/templates/help/full_text_file_search.html:8
@@ -2614,7 +2679,7 @@ msgstr "Textdateien: .txt, .log"
 
 #: seahub/help/templates/help/full_text_file_search.html:17
 msgid ""
-"Note that your KEEPER system administrator may not have enabled the full-"
+"Note that your Seafile system administrator may not have enabled the full-"
 "text search feature. In that case, you can only search file and folder "
 "names."
 msgstr ""
@@ -2622,11 +2687,11 @@ msgstr ""
 #: seahub/help/templates/help/groups_managing.html:6
 msgid ""
 "Creating a group is a convenient way to share files to many people. In "
-"KEEPER, you can create and manage a group easily."
+"Seafile, you can create and manage a group easily."
 msgstr ""
 
 #: seahub/help/templates/help/groups_managing.html:7
-msgid "Here is how groups work in KEEPER:"
+msgid "Here is how groups work in Seafile:"
 msgstr ""
 
 #: seahub/help/templates/help/groups_managing.html:9
@@ -2676,7 +2741,7 @@ msgstr "Dateien/Ordner vom Synchronisieren ausschließen"
 msgid ""
 "Sometimes you don't want to sync some files or folders inside a library. To "
 "achieve this, create a seafile-ignore.txt file in the root folder of a "
-"library. This special file specifies the files and folders that KEEPER "
+"library. This special file specifies the files and folders that Seafile "
 "should not sync. Each line in a ignore.txt file specifies a pattern. The "
 "following pattern format are supported."
 msgstr "Manchmal wollen Sie einige Dateien oder Ordner nicht in die Bibliothek synchronisieren. Um dies zu erreichen, erstellen Sie eine seafile-ignore.txt Datei im Stamm-Ordner der Bibliothek. Diese spezielle Datei enthält die Dateien und Ordner, die KEEPER nicht synchronisieren soll. Jede Zeile in einer ignore.txt-Datei definiert ein Muster. Die folgenden Muster-Formate werden unterstützt.\n "
@@ -2691,7 +2756,7 @@ msgstr "Eine Zeile, die mit # beginnt, dient als Kommentar."
 
 #: seahub/help/templates/help/ignore.html:12
 msgid ""
-"KEEPER supports wildcards in the pattern. For example, \"foo/*\" matches "
+"Seafile supports wildcards in the pattern. For example, \"foo/*\" matches "
 "\"foo/1\" and \"foo/hello\". \"foo/?\" matches \"foo/1\" but not "
 "\"foo/hello\". Note that the wildcard character * recursively matches all "
 "the paths under a folder. For instance, \"foo/*.html\" matches "
@@ -2749,21 +2814,21 @@ msgid ""
 msgstr "seafile-ignore.txt wirkt sich nur auf Dateien aus, die noch nicht synchronisiert wurden. Falls eine Datei bereits synchronisiert wurde, bevor Sie sie in die Ausschlussliste aufgenommen haben, werden die bis dahin synchronisierten Versionen nicht entfernt."
 
 #: seahub/help/templates/help/install_sync.html:6
-msgid "Installing KEEPER client program"
+msgid "Installing Seafile client program"
 msgstr ""
 
 #: seahub/help/templates/help/install_sync.html:8
 msgid ""
-"After downloading KEEPER client program, you have 3 steps left to get it up"
+"After downloading Seafile client program, you have 3 steps left to get it up"
 " and running."
-msgstr "Nach dem Herunterladen des lokalen Clients wird KEEPER in 3 Schritten konfiguriert."
+msgstr "Nach dem Herunterladen des lokalen Clients wird Seafile in 3 Schritten konfiguriert."
 
 #: seahub/help/templates/help/install_sync.html:10
-msgid "1. Select a disk partition to store local KEEPER data"
+msgid "1. Select a disk partition to store local Seafile data"
 msgstr "1. Wählen Sie einen Ordner auf Ihrer Festplatte, wo die lokalen KEEPER-Dateien gespeichert werden sollen"
 
 #: seahub/help/templates/help/install_sync.html:11
-msgid "Selecting a folder to store KEEPER data"
+msgid "Selecting a folder to store Seafile data"
 msgstr "Einen Ordner zum Speichern der KEEPER-Daten auswählen"
 
 #: seahub/help/templates/help/install_sync.html:13
@@ -2771,7 +2836,7 @@ msgid "2. Add an account"
 msgstr "2. Benutzerkonto eintragen"
 
 #: seahub/help/templates/help/install_sync.html:14
-msgid "Add an account on your private KEEPER server or our public server."
+msgid "Add an account on your private Seafile server or our public server."
 msgstr "Tragen Sie Ihr Benutzerkonto auf Ihrem eigenen KEEPER-Server oder auf unserem öffentlichen Server ein."
 
 #: seahub/help/templates/help/install_sync.html:18
@@ -2786,7 +2851,7 @@ msgstr "Im Kontextmenü auf „Bibliothek synchronisieren“ klicken, um sie mit
 msgid ""
 "Then you add some files into the library. They will be automatically synced "
 "with cloud platform."
-msgstr "Sie können nun lokal Dateien zu der Bibliothek hinzufügen. Die Dateien werden dann automatisch mit dem KEEPER-Server synchronisiert."
+msgstr "Sie können nun lokal Dateien zu der Bibliothek hinzufügen. Die Dateien werden dann automatisch mit dem Seafile-Server synchronisiert."
 
 #: seahub/help/templates/help/install_sync.html:26
 msgid "4. (Optional) Create a library"
@@ -2803,20 +2868,20 @@ msgstr "5. Dateien im KEEPER-Dateibrowser durchsehen"
 #: seahub/help/templates/help/install_sync.html:35
 msgid ""
 "In some occasions, you want to modify files on the cloud directly without "
-"syncing them. KEEPER client comes with a \"cloud file browser\" to meet "
+"syncing them. Seafile client comes with a \"cloud file browser\" to meet "
 "this need. Click an unsynced library will open the cloud file browser."
-msgstr "KEEPER hat einen eigenen Dateibrowser, mit dem Sie die Dateien einer Bibliothek öffnen und bearbeiten können, ohne sie erst synchronisieren zu müssen oder einen Internetbrowser zu verwenden. Bei einem Doppelklick auf eine nicht synchronisierte Bibliothek öffnet KEEPER automatisch den eigenen Dateibrowser."
+msgstr "Seafile hat einen eigenen Dateibrowser, mit dem Sie die Dateien einer Bibliothek öffnen und bearbeiten können, ohne sie erst synchronisieren zu müssen oder einen Internetbrowser zu verwenden. Bei einem Doppelklick auf eine nicht synchronisierte Bibliothek öffnet Seafile automatisch den eigenen Dateibrowser."
 
 #: seahub/help/templates/help/introduction.html:8
 msgid ""
-"KEEPER is an enterprise file hosting platform with high reliability and "
+"Seafile is an enterprise file hosting platform with high reliability and "
 "performance."
 msgstr ""
 
 #: seahub/help/templates/help/introduction.html:9
 #, python-format
 msgid ""
-"KEEPER contains a web interface for you to manage and share files. It has "
+"Seafile contains a web interface for you to manage and share files. It has "
 "two kinds of desktop clients, <a "
 "href=\"%(SITE_ROOT)shelp/install_sync/\">the file syncing client</a> and <a "
 "href=\"%(SITE_ROOT)shelp/using_drive_client\">the drive client</a>. It also "
@@ -2826,7 +2891,7 @@ msgstr ""
 #: seahub/help/templates/help/introduction.html:10
 msgid ""
 "You can download the clients in <a "
-"href=\"https://www.seafile.com/en/download/\" target=\"_blank\">KEEPER web "
+"href=\"https://www.seafile.com/en/download/\" target=\"_blank\">Seafile web "
 "site</a>."
 msgstr ""
 
@@ -2839,9 +2904,9 @@ msgstr ""
 
 #: seahub/help/templates/help/libraries_managing.html:6
 msgid ""
-"KEEPER uses \"libraries\" to organize your files. A library is a top level "
+"Seafile uses \"libraries\" to organize your files. A library is a top level "
 "container for a set of files and folders. You can create a library for each "
-"project you work on, or each document type you want to save in KEEPER. A "
+"project you work on, or each document type you want to save in Seafile. A "
 "library works mostly like a top level folder. But it also has some special "
 "properties:"
 msgstr ""
@@ -2860,7 +2925,7 @@ msgstr ""
 
 #: seahub/help/templates/help/libraries_managing.html:11
 msgid ""
-"When you log into KEEPER's web app for the first time, KEEPER "
+"When you log into Seafile's web app for the first time, Seafile "
 "automatically creates a default library named \"My Library\" for you. You "
 "can also create more libraries. Here is what it looks like when you've "
 "created a few libraries."
@@ -2882,8 +2947,8 @@ msgstr ""
 
 #: seahub/help/templates/help/library_history_and_snapshots.html:7
 msgid ""
-"KEEPER tracks modification history for the entire library. Whenever a file "
-"operation applies to a library (file update, file deletion etc.), KEEPER "
+"Seafile tracks modification history for the entire library. Whenever a file "
+"operation applies to a library (file update, file deletion etc.), Seafile "
 "creates a \"snapshot\" of the previous state of the library. The snapshot "
 "contains the complete file and folder structure of the library."
 msgstr ""
@@ -2904,7 +2969,7 @@ msgstr ""
 
 #: seahub/help/templates/help/library_history_and_snapshots.html:11
 msgid ""
-"In KEEPER Web App, navigate into the root folder of a library. Click the "
+"In Seafile Web App, navigate into the root folder of a library. Click the "
 "\"History\" icon in the library navigation top bar. All the change record of"
 " the library will be displayed in a list."
 msgstr ""
@@ -2933,7 +2998,7 @@ msgstr ""
 #: seahub/help/templates/help/manage_library_as_wiki.html:6
 msgid ""
 "Capturing and storing little structured data in an easy-to-use fashion – "
-"that is what KEEPER’s wikis are for. Wiki pages are written in Markdown "
+"that is what Seafile’s wikis are for. Wiki pages are written in Markdown "
 "(MD), a simple markup language, to ensure cross platform compatibility. MD "
 "files store textual, tabular as well as graphical information; You can also "
 "add links to other documents in a Markdown file."
@@ -2941,9 +3006,9 @@ msgstr ""
 
 #: seahub/help/templates/help/manage_library_as_wiki.html:7
 msgid ""
-"You can manage a standard library in KEEPER like a Wiki, with the \"Column "
-"View\" introduced in 7.0 version. Since KEEPER implements wikis as standard"
-" KEEPER libraries, they can be synced and shared with other users just like"
+"You can manage a standard library in Seafile like a Wiki, with the \"Column "
+"View\" introduced in 7.0 version. Since Seafile implements wikis as standard"
+" Seafile libraries, they can be synced and shared with other users just like"
 " any ordinary library."
 msgstr ""
 
@@ -2954,7 +3019,7 @@ msgstr "Spaltenansicht"
 #: seahub/help/templates/help/manage_library_as_wiki.html:9
 msgid ""
 "Wikis usually have a side bar containing a tree-like folder structure, to "
-"enable quick-and-easy browsing of Wiki pages. KEEPER's Column View allows "
+"enable quick-and-easy browsing of Wiki pages. Seafile's Column View allows "
 "you to manage the files in a library in the same way as a Wiki space. Users "
 "can browse in it and move files and folders just by dragging and dropping. "
 "File actions such as renaming, moving, and opening via client are available "
@@ -2967,9 +3032,9 @@ msgstr ""
 
 #: seahub/help/templates/help/manage_library_as_wiki.html:13
 msgid ""
-"Wiki pages in KEEPER are saved as ordinary documents in Markdown format. To"
+"Wiki pages in Seafile are saved as ordinary documents in Markdown format. To"
 " create a new Wiki page in a library, just create a new Markdown document. "
-"MD files can be edited straight from KEEPER’s web interface with the online"
+"MD files can be edited straight from Seafile’s web interface with the online"
 " MD editor. The web-based editor offers a smooth user experience and rich "
 "formatting options for text, images, and tables. Images can be imported into"
 " MD files from libraries and local storage as well as by hyperlinks. Basic "
@@ -2989,8 +3054,8 @@ msgstr ""
 #: seahub/help/templates/help/manage_library_as_wiki.html:17
 msgid ""
 "You can open a hidden side bar on the right side of the Markdown editor. "
-"Table of contents, file information, formatting suggestions, and "
-"collaborative commenting are provided in this side bar."
+"Table of contents, file information, and collaborative commenting are "
+"provided in this side bar."
 msgstr ""
 
 #: seahub/help/templates/help/manage_library_as_wiki.html:19
@@ -2999,7 +3064,7 @@ msgstr ""
 
 #: seahub/help/templates/help/manage_library_as_wiki.html:20
 msgid ""
-"File tagging is an important feature for knowledge management. KEEPER "
+"File tagging is an important feature for knowledge management. Seafile "
 "allows users to define tags for each library and apply tags to files. Tags "
 "can be managed from the side bar of the Markdown editor, or from the file "
 "browser interface."
@@ -3011,19 +3076,13 @@ msgid ""
 "current library."
 msgstr ""
 
-#: seahub/help/templates/help/manage_library_as_wiki.html:25
-msgid ""
-"You can also add related files to a Markdown document from the \"File "
-"Information\" tab in the side bar."
-msgstr ""
-
 #: seahub/help/templates/help/read-only_syncing.html:6
 #, python-format
 msgid ""
-"For ready-only libraries or folders, KEEPER will show a forbidden icon "
+"For ready-only libraries or folders, Seafile will show a forbidden icon "
 "(<img src=\"%(MEDIA_URL)simg/help/read_only.png\" alt=\"\" width=\"24\" />) "
 "to indicate they are read-only. However, users can still modify the synced "
-"local copies. When a local copy is modified, KEEPER will ignore the "
+"local copies. When a local copy is modified, Seafile will ignore the "
 "modified one. When the copy at the server is also modified, the client will "
 "popup a notification, saying that the local modified copy conflicts with the"
 " copy at the server side. To prevent data loss, the local copy is renamed to"
@@ -3033,7 +3092,7 @@ msgstr ""
 #: seahub/help/templates/help/read-only_syncing.html:7
 msgid ""
 "If you want the be-shared users not be able to modify local copies, you can "
-"consider using the KEEPER Drive client."
+"consider using the Seafile Drive client."
 msgstr ""
 
 #: seahub/help/templates/help/restoring_deleted_files.html:6
@@ -3042,7 +3101,7 @@ msgstr ""
 
 #: seahub/help/templates/help/restoring_deleted_files.html:7
 msgid ""
-"Each library in KEEPER tracks your file deletion operations automatically. "
+"Each library in Seafile tracks your file deletion operations automatically. "
 "Sometimes you find files are deleted mistakenly. You can find back your "
 "deleted files in the trash bin of each library."
 msgstr ""
@@ -3053,7 +3112,7 @@ msgstr ""
 
 #: seahub/help/templates/help/restoring_deleted_files.html:10
 msgid ""
-"In KEEPER Web App, navigate into the parent folder containing the deleted "
+"In Seafile Web App, navigate into the parent folder containing the deleted "
 "file or folder."
 msgstr ""
 
@@ -3088,7 +3147,7 @@ msgstr ""
 
 #: seahub/help/templates/help/selective_sync.html:8
 msgid ""
-"You may have some very large libraries on the KEEPER server. And you're "
+"You may have some very large libraries on the Seafile server. And you're "
 "currently only interested in a sub-folder inside one library. Then you can "
 "selectively sync a sub-folder in a library, instead of syncing the entire "
 "library."
@@ -3106,7 +3165,7 @@ msgstr "Um einen einzelnen Ordner zu synchronisieren, öffnen Sie den KEEPER-Dat
 msgid ""
 "After syncing the sub-folder, you can see its syncing status in the \"Synced"
 " Libraries\" group in the client's main window."
-msgstr "Sobald der Ordner synchronisiert ist, sehen Sie seinen Status im Hauptfenster des KEEPER-Programms im Bereich \"Synchronisierte Bibliotheken\". "
+msgstr "Sobald der Ordner synchronisiert ist, sehen Sie seinen Status im Hauptfenster des Seafile-Programms im Bereich \"Synchronisierte Bibliotheken\". "
 
 #: seahub/help/templates/help/setting_library_history.html:6
 msgid "Setting library history retention period"
@@ -3145,7 +3204,7 @@ msgstr ""
 
 #: seahub/help/templates/help/setting_library_history.html:15
 msgid ""
-"In KEEPER Web App, click the \"Mine\" tab in the navigation panel (as in "
+"In Seafile Web App, click the \"Mine\" tab in the navigation panel (as in "
 "the below screenshot). All libraries owned by you will be listed."
 msgstr ""
 
@@ -3161,7 +3220,7 @@ msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:6
 msgid ""
-"In KEEPER there are a few ways to share files and folders with others:"
+"In Seafile there are a few ways to share files and folders with others:"
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:8
@@ -3202,7 +3261,7 @@ msgstr ""
 #: seahub/help/templates/help/sharing_files_and_folders.html:18
 msgid ""
 "Share links are public links to files or folders. They can be accessed by "
-"anyone, including those who don't have a KEEPER account. You can also use "
+"anyone, including those who don't have a Seafile account. You can also use "
 "password and expiration time to protect your links."
 msgstr ""
 
@@ -3234,7 +3293,7 @@ msgid ""
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:25
-msgid "To create a share link in KEEPER web app:"
+msgid "To create a share link in Seafile web app:"
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:27
@@ -3264,15 +3323,15 @@ msgstr ""
 #: seahub/help/templates/help/sharing_files_and_folders.html:33
 msgid ""
 "If the library is synced, double click the library in the main window of "
-"KEEPER client. The local folder of that library will be opened. Right click"
+"Seafile client. The local folder of that library will be opened. Right click"
 " on the file or folder that you want to create a link to. In the pop-up "
-"menu, choose \"KEEPER\" then \"Create share link\"."
+"menu, choose \"Seafile\" then \"Create share link\"."
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:34
 msgid ""
 "If the library is not synced, double click the library in the main window of"
-" KEEPER client. The cloud file browser window will be opened, and you can "
+" Seafile client. The cloud file browser window will be opened, and you can "
 "create a link to a file or folder in it."
 msgstr ""
 
@@ -3288,7 +3347,7 @@ msgid ""
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:38
-msgid "To create an upload link in KEEPER web app:"
+msgid "To create an upload link in Seafile web app:"
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:40
@@ -3310,9 +3369,9 @@ msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:45
 msgid ""
-"You can share a library or folder to other registered KEEPER users. The "
+"You can share a library or folder to other registered Seafile users. The "
 "shared library or folder can be accessed by others with the web app and "
-"KEEPER clients."
+"Seafile clients."
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:46
@@ -3381,14 +3440,14 @@ msgstr ""
 #: seahub/help/templates/help/sharing_files_and_folders.html:65
 msgid ""
 "After you share a library or folder to a user, the user can see it by "
-"clicking the \"Shared with me\" tab on the left panel in KEEPER web app. If"
+"clicking the \"Shared with me\" tab on the left panel in Seafile web app. If"
 " you share it to a group, the group members can only see it by navigating "
 "into the group."
 msgstr ""
 
 #: seahub/help/templates/help/sharing_files_and_folders.html:66
 msgid ""
-"To share a library to the entire organization: In KEEPER web app, click the"
+"To share a library to the entire organization: In Seafile web app, click the"
 " \"Shared with all\" tab on the left panel. Then click the \"Add Library\" "
 "button. In the drop-down menu, you can choose to share an existing library "
 "or create a new library and share it."
@@ -3409,13 +3468,13 @@ msgstr ""
 
 #: seahub/help/templates/help/sync_interval.html:8
 msgid ""
-"Usually KEEPER client automatically detects changes on local folder and "
+"Usually Seafile client automatically detects changes on local folder and "
 "upload the changes to server. However, if the local folder is in a Windows "
-"network share drive, KEEPER client cannot detect changes reliably. In this "
-"case, you can ask KEEPER client to periodically checks for changes in the "
+"network share drive, Seafile client cannot detect changes reliably. In this "
+"case, you can ask Seafile client to periodically checks for changes in the "
 "local folder. You can set the interval of this periodic sync. The interval "
 "is set in the unit of seconds."
-msgstr "In der Regel erkennt der KEEPER-Client automatisch Änderungen am lokalen Ordner und wird die Änderungen auf den Server hochladen. Wenn jedoch der lokale Ordner ein Windows Netzwerk freigegebenes Laufwerk ist, kann der KEEPER Client Änderungen nicht zuverlässig erkennen. In diesem Fall können Sie den KEEPER-Client bitten in regelmäßigen Abständen auf Änderungen im lokalen Ordner zu prüfen. Sie können das Intervall der periodische Synchronisierung festlegen. Das Intervall wird in der Einheit Sekunden festgelegt."
+msgstr "In der Regel erkennt der Seafile-Client automatisch Änderungen am lokalen Ordner und wird die Änderungen auf den Server hochladen. Wenn jedoch der lokale Ordner ein Windows Netzwerk freigegebenes Laufwerk ist, kann der Seafile Client Änderungen nicht zuverlässig erkennen. In diesem Fall können Sie den Seafile-Client bitten in regelmäßigen Abständen auf Änderungen im lokalen Ordner zu prüfen. Sie können das Intervall der periodische Synchronisierung festlegen. Das Intervall wird in der Einheit Sekunden festgelegt."
 
 #: seahub/help/templates/help/syncing_existing_folders.html:6
 msgid "Syncing with an existing folder"
@@ -3424,7 +3483,7 @@ msgstr ""
 #: seahub/help/templates/help/syncing_existing_folders.html:8
 #, python-format
 msgid ""
-"Sometimes you already have a library on the KEEPER server (shared by "
+"Sometimes you already have a library on the Seafile server (shared by "
 "others, or uploaded from another computer). You can sync this library with "
 "an existing folder on your computer. The local folder must have the same "
 "name as the library. The files in the local folder will be merged with the "
@@ -3437,8 +3496,8 @@ msgstr "Manchmal haben Sie bereits eine Bibliothek auf dem KEEPER Server (von an
 #: seahub/help/templates/help/syncing_existing_folders.html:10
 msgid ""
 "To sync a library with an existing folder, right click on the library in "
-"KEEPER client's main window and click \"Sync this library\"."
-msgstr "Um eine Bibliothek mit einem bestehenden Ordner zu synchronisieren, wählen Sie die Bibliothek mit einem Rechts-Klick im Hauptfenster des KEEPER-Programms aus und klicken Sie dann auf „Herunterladen und synchronisieren“."
+"Seafile client's main window and click \"Sync this library\"."
+msgstr "Um eine Bibliothek mit einem bestehenden Ordner zu synchronisieren, wählen Sie die Bibliothek mit einem Rechts-Klick im Hauptfenster des Seafile-Programms aus und klicken Sie dann auf „Herunterladen und synchronisieren“."
 
 #: seahub/help/templates/help/syncing_existing_folders.html:14
 msgid "In the pop-up dialog, click the \"Sync with an existing folder\" link."
@@ -3469,7 +3528,7 @@ msgid ""
 "these cases, it's usually helpful to \"resync\" the library. Resync means "
 "unsync and then immediately sync the library with the same folder. You can "
 "find this action in the pop-up menu of the client's main window."
-msgstr "Manchmal gibt es interne Probleme, die das Synchronisieren über das KEEPER-Programm behindern. In diesen Fällen hilft es oft, die Bibliothek neu zu synchronisieren. Damit ist gemeint, das Synchronisieren kurz zu trennen und dann gleich wieder mit demselben Ordner zu starten. Diese Aktion finden Sie im Kontextmenü (Rechtsklick auf die betreffende Bibliothek im Hauptfenster) unter \"Neu synchronisieren\"."
+msgstr "Manchmal gibt es interne Probleme, die das Synchronisieren über das Seafile-Programm behindern. In diesen Fällen hilft es oft, die Bibliothek neu zu synchronisieren. Damit ist gemeint, das Synchronisieren kurz zu trennen und dann gleich wieder mit demselben Ordner zu starten. Diese Aktion finden Sie im Kontextmenü (Rechtsklick auf die betreffende Bibliothek im Hauptfenster) unter \"Neu synchronisieren\"."
 
 #: seahub/help/templates/help/using_drive_client.html:7
 msgid ""
@@ -3485,7 +3544,7 @@ msgid ""
 msgstr ""
 
 #: seahub/help/templates/help/using_drive_client.html:9
-msgid "Then you'll be asked to log into your KEEPER server."
+msgid "Then you'll be asked to log into your Seafile server."
 msgstr ""
 
 #: seahub/help/templates/help/using_drive_client.html:12
@@ -3500,7 +3559,7 @@ msgstr ""
 msgid ""
 "The virtual drive folder will be opened. You'll find it works just like an "
 "ordinary hard drive on your computer. The top level folders in the virtual "
-"drive are libraries on the KEEPER server. File contents will be downloaded "
+"drive are libraries on the Seafile server. File contents will be downloaded "
 "when you open a file. Recently opened file will be cached in your local "
 "disk. All cached files will be marked with a green tick."
 msgstr ""
@@ -3621,9 +3680,9 @@ msgstr ""
 
 #: seahub/help/templates/help/using_drive_client.html:81
 msgid ""
-"The root folder of the virtual drive contains only library folders. KEEPER "
+"The root folder of the virtual drive contains only library folders. Seafile "
 "can only sync files inside libraries. Files in the root folder cannot be "
-"uploaded to KEEPER server. So it doesn't make sense to support creating "
+"uploaded to Seafile server. So it doesn't make sense to support creating "
 "files in root folder. Since the top level folders in the virtual drive "
 "represents libraries, we don't want users to delete their libraries by "
 "mistake. So the Drive client doesn't support deleting top level folders."
@@ -3631,7 +3690,7 @@ msgstr ""
 
 #: seahub/help/templates/help/viewing_files_within_web_app.html:6
 msgid ""
-"Some types of files can be directly opened and viewed within the KEEPER Web"
+"Some types of files can be directly opened and viewed within the Seafile Web"
 " App. Currently they are:"
 msgstr ""
 
@@ -3857,14 +3916,14 @@ msgstr "Vergeben Sie ein Passwort"
 msgid "It is required."
 msgstr "Erforderlich"
 
-#: seahub/notifications/management/commands/notify_admins_on_virus.py:65
-#: seahub/notifications/management/commands/notify_admins_on_virus.py:74
-#: seahub/notifications/management/commands/notify_admins_on_virus.py:92
+#: seahub/notifications/management/commands/notify_admins_on_virus.py:67
+#: seahub/notifications/management/commands/notify_admins_on_virus.py:82
+#: seahub/notifications/management/commands/notify_admins_on_virus.py:103
 #, python-format
 msgid "Virus detected on %s"
 msgstr "Virus auf %s gefunden"
 
-#: seahub/notifications/management/commands/send_dingtalk_notifications.py:167
+#: seahub/notifications/management/commands/send_dingtalk_notifications.py:177
 #: seahub/notifications/templates/notifications/notice_email.html:9
 #, python-format
 msgid ""
@@ -3956,21 +4015,21 @@ msgstr "Neue Mitteilungen auf %s"
 msgid "You've got %(num)s new notices on %(site_name)s:\n"
 msgstr "Auf %(site_name)s gibt es %(num)s neue Mitteilungen für Sie:\n"
 
-#: seahub/notifications/models.py:480
+#: seahub/notifications/models.py:484
 #, python-format
 msgid ""
 "A file named <a href='%(file_link)s'>%(file_name)s</a> is uploaded to <a "
 "href='%(link)s'>%(name)s</a>"
 msgstr "Die Datei <a href='%(file_link)s'>%(file_name)s</a> wurde in <a href='%(link)s'>%(name)s</a> hochgeladen."
 
-#: seahub/notifications/models.py:487
+#: seahub/notifications/models.py:491
 #, python-format
 msgid ""
 "A file named <strong>%(file_name)s</strong> is uploaded to <strong>Deleted "
 "Library</strong>"
 msgstr "Eine Datei mit dem Namen <strong>%(file_name)s</strong> wurde in die Bibliothek <strong>Deleted Library</strong> hochgeladen."
 
-#: seahub/notifications/models.py:621
+#: seahub/notifications/models.py:625
 #, python-format
 msgid ""
 "User <a href='%(user_profile)s'>%(username)s</a> has asked to join group <a "
@@ -3978,35 +4037,35 @@ msgid ""
 "%(join_request_msg)s"
 msgstr "Der Benutzer <a href='%(user_profile)s'>%(username)s</a> hat die Gruppenmitgliedschaft für die Gruppe <a href='%(href)s'>%(group_name)s</a> angefragt, Bestätigungsnachricht: %(join_request_msg)s"
 
-#: seahub/notifications/models.py:650
+#: seahub/notifications/models.py:654
 #, python-format
 msgid ""
 "User <a href='%(user_profile)s'>%(group_staff)s</a> has added you to group "
 "<a href='%(href)s'>%(group_name)s</a>"
 msgstr "<a href='%(user_profile)s'>%(group_staff)s</a> hat Sie zu der Gruppe <a href='%(href)s'>%(group_name)s</a> hinzugefügt"
 
-#: seahub/notifications/models.py:676
+#: seahub/notifications/models.py:680
 #, python-format
 msgid ""
 "File <a href='%(file_url)s'>%(file_name)s</a> has a new comment from user "
 "%(author)s"
 msgstr "%(author)s hat die Datei <a href='%(file_url)s'>%(file_name)s</a> kommentiert."
 
-#: seahub/notifications/models.py:693
+#: seahub/notifications/models.py:697
 #, python-format
 msgid ""
 "<a href='%(file_url)s'>Draft #%(draft_id)s</a> has a new comment from user "
 "%(author)s"
 msgstr "<a href='%(file_url)s'>Entwurf #%(draft_id)s</a> wurde von %(author)s kommentiert"
 
-#: seahub/notifications/models.py:710
+#: seahub/notifications/models.py:714
 #, python-format
 msgid ""
 "%(from_user)s has sent you a request for <a href='%(file_url)s'>draft "
 "#%(draft_id)s</a>"
 msgstr "%(from_user)s bittet Sie um <a href='%(file_url)s'>Entwurf #%(draft_id)s</a>"
 
-#: seahub/notifications/models.py:733
+#: seahub/notifications/models.py:737
 #: seahub/notifications/templates/notifications/notice_email.html:63
 #, python-format
 msgid ""
@@ -4014,7 +4073,7 @@ msgid ""
 "href=\"%(url_base)s%(inv_url)s\">invitation</a> at %(time)s."
 msgstr "Gast %(user)s hat die <a href=\"%(url_base)s%(inv_url)s\">Einladung</a> um %(time)s angenommen."
 
-#: seahub/notifications/models.py:757
+#: seahub/notifications/models.py:761
 #, python-format
 msgid ""
 "%(user)s has transfered a library named <a "
@@ -4131,13 +4190,13 @@ msgstr "%(user)s hat die Bibliothek <a href=\"%(url_base)s%(lib_url)s\">%(lib_na
 #: seahub/notifications/templates/notifications/notify_virus.html:13
 #, python-format
 msgid ""
-"Virus detected in file <a href=\"%(url_base)s%(file_url)s\" "
-"target=\"_blank\">%(file_name)s</a> during regular scanning."
-msgstr "Virus gefunden in Datei <a href=\"%(url_base)s%(file_url)s\" target=\"_blank\">%(file_name)s</a> beim Routinescan."
+"Virus detected in library %(repo_name)s during regular scanning: "
+"%(file_path)s."
+msgstr ""
 
 #: seahub/notifications/templates/notifications/notify_virus.html:20
-msgid "Virus is detected on regular scanning. Please check the report at:"
-msgstr "Beim Routinescan wurde ein Virus gefunden. Bitte überprüfen Sie den Bericht auf:"
+msgid "Virus is detected on regular scanning:"
+msgstr ""
 
 #: seahub/notifications/templates/notifications/user_notification_list_react.html:5
 msgid "Notifications"
@@ -4169,7 +4228,21 @@ msgid ""
 "browsers. We advise you to use the latest version of Chrome or Firefox."
 msgstr "Hinweis: Das Entschlüsseln der Dateien im Browser ist die sicherste Möglichkeit, wird allerdings nicht von allen Browsern unterstützt. Wir empfehlen Ihnen, die neuesten Versionen von Chrome und Firefox zu verwenden."
 
-#: seahub/organizations/forms.py:40 seahub/share/views.py:447
+#: seahub/organizations/api/admin/info.py:102
+#: seahub/organizations/api/admin/logo.py:33
+#: seahub/organizations/api/admin/logo.py:42 seahub/work_weixin/views.py:37
+#: seahub/work_weixin/views.py:62 seahub/work_weixin/views.py:151
+#: seahub/work_weixin/views.py:171 seahub/work_weixin/views.py:231
+msgid "Feature is not enabled."
+msgstr "Die Funktion ist nicht aktiviert."
+
+#: seahub/organizations/api/admin/saml_config.py:179
+msgid ""
+"org_url_prefix should be 6 to 20 characters, and can only contain "
+"alphanumeric characters and hyphens."
+msgstr ""
+
+#: seahub/organizations/forms.py:40 seahub/share/views.py:530
 msgid "Email address is not valid"
 msgstr "Die E-Mail-Adresse ist ungültig"
 
@@ -4230,7 +4303,7 @@ msgstr "Nächste Seite"
 msgid "Per page: "
 msgstr "Einträge pro Seite: "
 
-#: seahub/organizations/views.py:265 seahub/thumbnail/views.py:154
+#: seahub/organizations/views.py:273 seahub/thumbnail/views.py:154
 msgid "Invalid token."
 msgstr "Ungültiges Token."
 
@@ -4238,18 +4311,18 @@ msgstr "Ungültiges Token."
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: seahub/profile/templates/profile/set_profile_react.html:19
+#: seahub/profile/templates/profile/set_profile_react.html:20
 msgctxt "true name"
 msgid "Name:"
 msgstr "Name: "
 
-#: seahub/profile/templates/profile/set_profile_react.html:24
+#: seahub/profile/templates/profile/set_profile_react.html:25
 #: seahub/templates/registration/password_set_form.html:4
 #: seahub/templates/registration/password_set_form.html:12
 msgid "Set Password"
 msgstr "Passwort vergeben"
 
-#: seahub/profile/templates/profile/set_profile_react.html:24
+#: seahub/profile/templates/profile/set_profile_react.html:25
 msgid "Update"
 msgstr "Aktualisieren"
 
@@ -4261,23 +4334,23 @@ msgstr "Profil ist bearbeitet."
 msgid "Failed to edit profile"
 msgstr "Bearbeiten des Profils ist fehlgeschlagen"
 
-#: seahub/profile/views.py:210
+#: seahub/profile/views.py:212
 msgid "Has not accepted invitation yet"
 msgstr "Hat die Einladung noch nicht angenommen"
 
-#: seahub/profile/views.py:235
+#: seahub/profile/views.py:237
 msgid "Demo account can not be deleted."
 msgstr "Demo Benutzerkonto kann nicht gelöscht werden."
 
-#: seahub/profile/views.py:262
+#: seahub/profile/views.py:264
 msgid "Failed to set default library."
 msgstr "Standard-Bibliothek konnte nicht festlegt werden."
 
-#: seahub/profile/views.py:266
+#: seahub/profile/views.py:268
 msgid "Can not set encrypted library as default library."
 msgstr "Eine verschlüsselte Bibliothek kann nicht als Standard-Bibliothek verwendet werden."
 
-#: seahub/profile/views.py:271
+#: seahub/profile/views.py:273
 #, python-format
 msgid "Successfully set \"%s\" as your default library."
 msgstr "„%s“ wurde als Ihre Standard-Bibliothek eingestellt. "
@@ -4383,45 +4456,81 @@ msgstr "Bestätigungs-Code"
 msgid "A verification code has been sent to the email."
 msgstr "Ein Bestätigungs-Code ist an die angegebene E-Mail-Adresse verschickt worden."
 
-#: seahub/share/views.py:206 seahub/share/views.py:320
+#: seahub/share/views.py:208 seahub/share/views.py:403
 msgid "Internal server error, or please check the email(s) you entered"
 msgstr "Interner Serverfehler. Überprüfen Sie bitte auch die E-Mail-Adresse/n, die Sie eingegeben haben."
 
-#: seahub/share/views.py:227
+#: seahub/share/views.py:229
 msgid "Please choose a directory."
 msgstr "Bitte wählen Sie einen Ordner aus."
 
-#: seahub/share/views.py:251
+#: seahub/share/views.py:253
 msgid "Successfully saved."
 msgstr "Erfolgreich gespeichert."
 
-#: seahub/share/views.py:339 seahub/thumbnail/views.py:39
+#: seahub/share/views.py:283
+msgid "Preview and download"
+msgstr "Vorschau und Herunterladen"
+
+#: seahub/share/views.py:284
+msgid "Preview only"
+msgstr "Nur Vorschau erlaubt"
+
+#: seahub/share/views.py:285
+msgid "Download and upload"
+msgstr "Download und Upload"
+
+#: seahub/share/views.py:286
+msgid "Edit on cloud and download"
+msgstr "Bearbeiten online und Herunterladen"
+
+#: seahub/share/views.py:287
+msgid "Edit on cloud only"
+msgstr "Bearbeiten nur online"
+
+#: seahub/share/views.py:319
+msgid "Share Link"
+msgstr "Link freigeben"
+
+#: seahub/share/views.py:319 seahub/views/sysadmin.py:668
+msgid "Creator"
+msgstr "Eigentümer"
+
+#: seahub/share/views.py:320 seahub/sysadmin_extra/views.py:208
+msgid "Permission"
+msgstr "Rechte"
+
+#: seahub/share/views.py:320
+msgid "Expiration"
+msgstr "Ablaufdatum"
+
+#: seahub/share/views.py:422 seahub/thumbnail/views.py:39
 #: seahub/thumbnail/views.py:161 seahub/views/ajax.py:140
 #: seahub/views/ajax.py:418
 msgid "Library does not exist."
 msgstr "Die Bibliothek ist nicht vorhanden."
 
-#: seahub/share/views.py:343 seahub/views/ajax.py:386
+#: seahub/share/views.py:426 seahub/views/ajax.py:386
 msgid "Directory does not exist."
 msgstr "Der Ordner ist nicht vorhanden."
 
-#: seahub/share/views.py:391
+#: seahub/share/views.py:474
 msgid "Only the owner of the library has permission to share it."
 msgstr "Die Bibliothek kann nur von der Eigentümerin oder dem Eigentümer freigegeben werden."
 
-#: seahub/share/views.py:429
+#: seahub/share/views.py:512
 msgid "Please check the email(s) you entered"
 msgstr "Bitte überprüfen Sie die E-Mail-Adresse/n, die Sie eingegeben haben."
 
-#: seahub/share/views.py:456
+#: seahub/share/views.py:539
 msgid "Share link is not found"
 msgstr "Freigabe-Link nicht gefunden"
 
-#: seahub/share/views.py:464
+#: seahub/share/views.py:547
 msgid "Verification code for visiting share links"
 msgstr "Bestätigungs-Code für den Aufruf von Freigabe-Links"
 
-#: seahub/share/views.py:475
+#: seahub/share/views.py:558
 msgid "Failed to send a verification code, please try again later."
 msgstr "Der Bestätigungs-Code konnte nicht verschickt werden, bitte versuchen Sie es später noch einmal."
 
@@ -4460,10 +4569,6 @@ msgstr "Von"
 #: seahub/sysadmin_extra/views.py:208
 msgid "To"
 msgstr "Für"
-
-#: seahub/sysadmin_extra/views.py:208
-msgid "Permission"
-msgstr "Rechte"
 
 #: seahub/sysadmin_extra/views.py:209
 msgid "Folder Path"
@@ -5250,7 +5355,7 @@ msgstr "Die Bildvorschau konnte nicht erstellt werden."
 
 #: seahub/two_factor/forms.py:39 seahub/two_factor/forms.py:63
 #: seahub/two_factor/forms.py:167 seahub/two_factor/forms.py:173
-#: seahub/two_factor/forms.py:294
+#: seahub/two_factor/forms.py:297
 msgid "Token"
 msgstr "Token"
 
@@ -5367,7 +5472,7 @@ msgstr "Konnte Bibliotheksänderungen nicht anzeigen"
 
 #: seahub/views/__init__.py:560 seahub/views/__init__.py:603
 #: seahub/views/__init__.py:737 seahub/views/__init__.py:882
-#: seahub/views/ajax.py:376 seahub/views/file.py:1862
+#: seahub/views/ajax.py:376 seahub/views/file.py:1870
 msgid "Library does not exist"
 msgstr "Die Bibliothek ist nicht vorhanden"
 
@@ -5413,9 +5518,9 @@ msgstr "Falsche Bibliotheks-ID"
 msgid "Bad upload link token."
 msgstr "Falsches Token im Upload-Link."
 
-#: seahub/views/ajax.py:338 seahub/views/file.py:458 seahub/views/file.py:489
-#: seahub/views/file.py:1145 seahub/views/file.py:1361
-#: seahub/views/file.py:1871
+#: seahub/views/ajax.py:338 seahub/views/file.py:459 seahub/views/file.py:490
+#: seahub/views/file.py:1153 seahub/views/file.py:1369
+#: seahub/views/file.py:1879
 msgid "File does not exist"
 msgstr "Die Datei ist nicht vorhanden"
 
@@ -5427,69 +5532,69 @@ msgstr "Falsche Bibliotheks-ID im Upload-Link."
 msgid "No conflict in the merge."
 msgstr "Kein Konflikt bei der Zusammenführung."
 
-#: seahub/views/file.py:192
+#: seahub/views/file.py:193
 msgid "HTTPError: failed to open file online"
 msgstr "HTTP-Fehler: Datei konnte online nicht geöffnet werden"
 
-#: seahub/views/file.py:196
+#: seahub/views/file.py:197
 msgid "URLError: failed to open file online"
 msgstr "URL-Fehler: Datei konnte online nicht geöffnet werden"
 
-#: seahub/views/file.py:203
+#: seahub/views/file.py:204
 msgid "The encoding you chose is not proper."
 msgstr "Der gewählte Zeichensatz ist ungültig."
 
-#: seahub/views/file.py:220 seahub/views/file.py:223
+#: seahub/views/file.py:221 seahub/views/file.py:224
 msgid "Unknown file encoding"
 msgstr "Unbekannte Datenkodierung"
 
-#: seahub/views/file.py:343 seahub/views/file.py:378 seahub/views/file.py:659
-#: seahub/views/file.py:749 seahub/views/file.py:871
+#: seahub/views/file.py:344 seahub/views/file.py:379 seahub/views/file.py:667
+#: seahub/views/file.py:757 seahub/views/file.py:879
 #, python-format
 msgid "File size surpasses %s, can not be opened online."
 msgstr "Dateien können nur bis zu einer Größe von %s in der Web-Vorschau angezeigt werden."
 
-#: seahub/views/file.py:350 seahub/views/file.py:784
+#: seahub/views/file.py:351 seahub/views/file.py:792
 msgid "The library is encrypted, can not open file online."
 msgstr "Die Bibliothek ist verschlüsselt und kann nicht online geöffnet werden."
 
-#: seahub/views/file.py:445 seahub/views/file.py:467 seahub/views/file.py:472
-#: seahub/views/file.py:513 seahub/views/file.py:739 seahub/views/file.py:1004
-#: seahub/views/file.py:1030 seahub/views/file.py:1060
-#: seahub/views/file.py:1191 seahub/views/file.py:1280
-#: seahub/views/file.py:1402 seahub/views/file.py:1502
+#: seahub/views/file.py:446 seahub/views/file.py:468 seahub/views/file.py:473
+#: seahub/views/file.py:514 seahub/views/file.py:747 seahub/views/file.py:1012
+#: seahub/views/file.py:1038 seahub/views/file.py:1068
+#: seahub/views/file.py:1199 seahub/views/file.py:1288
+#: seahub/views/file.py:1410 seahub/views/file.py:1510
 msgid "Unable to view file"
 msgstr "Die Datei kann nicht angezeigt werden"
 
-#: seahub/views/file.py:808 seahub/views/file.py:952 seahub/views/file.py:1241
-#: seahub/views/file.py:1440
+#: seahub/views/file.py:816 seahub/views/file.py:960 seahub/views/file.py:1249
+#: seahub/views/file.py:1448
 msgid "Error when prepare Office Online file preview page."
 msgstr "Fehler beim Vorbereiten der Office Online Dateivorschau."
 
-#: seahub/views/file.py:840 seahub/views/file.py:964 seahub/views/file.py:1260
-#: seahub/views/file.py:1456
+#: seahub/views/file.py:848 seahub/views/file.py:972 seahub/views/file.py:1268
+#: seahub/views/file.py:1464
 msgid "Error when prepare OnlyOffice file preview page."
 msgstr "Fehler beim Vorbereiten der Office Online Dateivorschau."
 
-#: seahub/views/file.py:1096
+#: seahub/views/file.py:1104
 msgid "Unable to download file, invalid file path"
 msgstr "Kann die Datei nicht herunterladen, ungültiger Pfad"
 
-#: seahub/views/file.py:1105
+#: seahub/views/file.py:1113
 msgid "Unable to download file, wrong file path"
 msgstr "Kann die Datei nicht herunterladen, falscher Pfad"
 
-#: seahub/views/file.py:1112
+#: seahub/views/file.py:1120
 msgid "Unable to download file."
 msgstr "Datei kann nicht heruntergeladen werden."
 
-#: seahub/views/file.py:1296 seahub/views/file.py:1521
+#: seahub/views/file.py:1304 seahub/views/file.py:1529
 #: seahub/views/repo.py:347
 #, python-format
 msgid "Share link for %s."
 msgstr "Link für %s freigeben."
 
-#: seahub/views/file.py:1639 seahub/views/file.py:1644
+#: seahub/views/file.py:1647 seahub/views/file.py:1652
 msgid "Unable to download file"
 msgstr "Die Datei kann nicht heruntergeladen werden"
 
@@ -5543,10 +5648,6 @@ msgid ""
 "Email service is not properly configured."
 msgstr "Der Benutzer %s wurde hinzugefügt, aber es konnte keine Benachrichtigung gesendet werden, da der E-Mail-Dienst nicht korrekt konfiguriert ist."
 
-#: seahub/views/sysadmin.py:668
-msgid "Creator"
-msgstr "Eigentümer"
-
 #: seahub/views/sysadmin.py:697
 msgid "Input should be a number"
 msgstr "Die Eingabe sollte eine Zahl sein"
@@ -5578,9 +5679,3 @@ msgstr "Optional"
 #: seahub/wiki/views.py:158
 msgid "Unable to view Wiki"
 msgstr "Das Wiki kann nicht angezeigt werden"
-
-#: seahub/work_weixin/views.py:37 seahub/work_weixin/views.py:62
-#: seahub/work_weixin/views.py:151 seahub/work_weixin/views.py:171
-#: seahub/work_weixin/views.py:231
-msgid "Feature is not enabled."
-msgstr "Die Funktion ist nicht aktiviert."

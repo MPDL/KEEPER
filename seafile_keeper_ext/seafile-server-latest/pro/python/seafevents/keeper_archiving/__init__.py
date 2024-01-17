@@ -20,6 +20,7 @@ class KeeperArchiving(object):
 
     def __init__(self, conf):
 
+        self._enabled = False
         self._enabled = conf['enabled']
 
         if self._enabled:
@@ -42,6 +43,10 @@ class KeeperArchiving(object):
 
 
     def start(self):
+        if not self.is_enabled():
+            logger.warning('keeper archiving is disabled')
+            return
+
         INSTALLPATH = SEAFILE_DIR  + '/seafile-server-latest'
 
         pp = [INSTALLPATH + p for p in (

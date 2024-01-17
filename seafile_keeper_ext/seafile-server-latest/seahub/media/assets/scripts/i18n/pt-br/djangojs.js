@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% do %total%",
     "(If left blank, owner will be admin)": "(se deixado em branco, o propriet\u00e1rio ser\u00e1 o administrador)",
     "(current notification)": "(notifica\u00e7\u00e3o atual)",
     "(current version)": "(vers\u00e3o atual)",
@@ -88,7 +87,6 @@
     "Clear files in trash and history\uff1a": "Limpar lixeira e historico :",
     "Clients": "Clientes",
     "Close": "Fechar",
-    "Close (Esc)": "Fechar(Esc)",
     "Comment": "Coment\u00e1rio",
     "Comments": "Coment\u00e1rios",
     "Community Edition": "Edi\u00e7\u00e3o da Cominudade",
@@ -264,7 +262,6 @@
     "New password is too short": "A nova senha \u00e9 muito curta",
     "New passwords don't match": "A nova senha e sua confirma\u00e7\u00e3o n\u00e3o s\u00e3o iguais",
     "Next": "Pr\u00f3ximo",
-    "Next (Right arrow key)": "Proximo (Seta para a direita)",
     "No comment yet.": "Nenhum coment\u00e1rio ainda.",
     "No connected devices": "Nenhum dispositivo conectado",
     "No groups": "Nenhum grupo",
@@ -282,7 +279,6 @@
     "Old Password": "Antiga senha",
     "On": "Ligado",
     "Only keep a period of history:": "Mantenha apenas o per\u00edodo do hist\u00f3rico:",
-    "Open in New Tab": "Abrir Nova Aba",
     "Open via Client": "Abrir atrav\u00e9s do cliente Desktop",
     "Operation": "Opera\u00e7\u00e3o",
     "Operation succeeded.": "Opera\u00e7\u00e3o bem sucedida.",
@@ -314,7 +310,6 @@
     "Please enter the password again": "Por favor insira a senha novamente",
     "Please input at least an email.": "Por favor, insira pelo menos um e-mail.",
     "Previous": "Anterior",
-    "Previous (Left arrow key)": "Voltar (Seta para a esquerda)",
     "Professional Edition": "Edi\u00e7\u00e3o Profissional",
     "Profile": "Perfil",
     "Profile Setting": "Configurar perfil",

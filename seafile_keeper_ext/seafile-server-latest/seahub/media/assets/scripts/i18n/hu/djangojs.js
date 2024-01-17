@@ -21,7 +21,6 @@
   django.catalog = django.catalog || {};
   
   const newcatalog = {
-    "%curr% of %total%": "%curr% / %total%",
     "(If left blank, owner will be admin)": "(Ha \u00fcresen marad akkor a tulajdonos lesz az admin)",
     "(current notification)": "(aktu\u00e1lis \u00e9rtes\u00edt\u00e9s)",
     "(current version)": "(aktu\u00e1lis verzi\u00f3)",
@@ -111,7 +110,6 @@
     "Clear files in trash and history\uff1a": "F\u00e1jlok t\u00f6rl\u00e9se a kuk\u00e1b\u00f3l \u00e9s az el\u0151zm\u00e9nyekb\u0151l :",
     "Clients": "Kliensek",
     "Close": "Bez\u00e1r\u00e1s",
-    "Close (Esc)": "Bez\u00e1r (Esc)",
     "Column": "Oszlop",
     "Comment": "Megjegyz\u00e9s",
     "Comments": "Megjegyz\u00e9sek",
@@ -369,7 +367,6 @@
     "New password is too short": "Az \u00faj jelsz\u00f3 r\u00f6vid",
     "New passwords don't match": "Az \u00faj jelszavak nem egyeznek",
     "Next": "K\u00f6vetkez\u0151",
-    "Next (Right arrow key)": "K\u00f6vetkez\u0151 (Jobbra ny\u00edl)",
     "No comment yet.": "Nincs m\u00e9g megjegyz\u00e9s",
     "No connected devices": "Nincsenek csatlakozott eszk\u00f6z\u00f6k",
     "No departments": "Nincsenek oszt\u00e1lyok",
@@ -395,7 +392,6 @@
     "Online view is not applicable to this file format": "Az online el\u0151n\u00e9zet nem lehets\u00e9ges enn\u00e9l a f\u00e1jlform\u00e1tumn\u00e1l",
     "Only Show": "Csak megjelen\u00edt\u00e9s",
     "Only keep a period of history:": "Csak egy id\u0151szak megtart\u00e1sa:",
-    "Open in New Tab": "Megnyit\u00e1s \u00faj f\u00fcl\u00f6n",
     "Open parent folder": "Sz\u00fcl\u0151k\u00f6nyvt\u00e1r megnyit\u00e1sa",
     "Open via Client": "Megnyit\u00e1s kliensben",
     "Operation": "M\u0171velet",
@@ -437,7 +433,6 @@
     "Preview and download": "El\u0151n\u00e9zet \u00e9s let\u00f6lt\u00e9s",
     "Preview only": "Csak el\u0151n\u00e9zet",
     "Previous": "El\u0151z\u0151",
-    "Previous (Left arrow key)": "El\u0151z\u0151 (Balra ny\u00edl)",
     "Private": "Priv\u00e1t",
     "Professional Edition": "Professzion\u00e1lis verzi\u00f3",
     "Profile": "Profil",
@@ -680,8 +675,6 @@
     "ZIP": "ZIP",
     "Zoom In": "Nagy\u00edt\u00e1s",
     "Zoom Out": "Kicsiny\u00edt\u00e9s",
-    "Zoom in": "Nagy\u00edt\u00e1s",
-    "Zoom out": "Kicsiny\u00edt\u00e9s",
     "activate after registration": "Aktiv\u00e1l\u00e1s regisztr\u00e1ci\u00f3 ut\u00e1n",
     "all": "\u00f6sszes",
     "all members": "minden tag",

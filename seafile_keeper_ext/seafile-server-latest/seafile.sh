@@ -108,13 +108,6 @@ function validate_already_running () {
     check_component_running "seafevents" "seafevents.main --config-file ${central_config_dir}"
 }
 
-function test_java {
-    if ! which java 2>/dev/null 1>&2; then
-        echo "java is not found on your machine. Please install it first."
-        exit 1;
-    fi
-}
-
 function start_seafile_server () {
     validate_already_running;
     validate_central_conf_dir;
@@ -123,7 +116,6 @@ function start_seafile_server () {
 
     if [[ -d ${INSTALLPATH}/pro ]]; then
         test_config;
-        test_java;
     fi
 
     echo "Starting seafile server, please wait ..."
@@ -153,6 +145,13 @@ function start_seafile_server () {
         exit 1;
     fi
 
+    # notification-sever
+    ENABLE_NOTIFICATION_SERVER=`awk -F '=' '/\[notification\]/{a=1}a==1&&$1~/^enabled/{print $2;exit}' ${central_config_dir}/seafile.conf`
+    if [ $ENABLE_NOTIFICATION_SERVER ] && [ $ENABLE_NOTIFICATION_SERVER = "true" ]; then
+        notification-server -c ${central_config_dir} -l ${TOPDIR}/logs/notification-server.log &
+        ${INSTALLPATH}/seafile-monitor.sh &>> ${TOPDIR}/logs/seafile-monitor.log &
+    fi
+
     echo "Seafile server started"
     echo
 }
@@ -165,6 +164,8 @@ function kill_all () {
     pkill -f "archiving_server.py"
     pkill -f "soffice.*--invisible --nocrashreport"
     pkill -f  "wsgidav.server.server_cli"
+    pkill -f  "notification-server -c ${central_config_dir}"
+    pkill -f  "seafile-monitor.sh"
 }
 
 function stop_seafile_server () {
