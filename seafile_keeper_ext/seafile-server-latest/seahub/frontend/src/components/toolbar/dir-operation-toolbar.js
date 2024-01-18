@@ -48,7 +48,7 @@ class DirOperationToolbar extends React.Component {
       isCreateMenuShow: false,
       isShareDialogShow: false,
       operationMenuStyle: '',
-      isMobileOpMenuOpen: false
+      isMobileOpMenuOpen: false,
       // KEEPER
       isArchiveLibraryDialogShow: false,
       isEditMetadataDialogShow: false,
@@ -274,6 +274,34 @@ class DirOperationToolbar extends React.Component {
           </Fragment>
           }
           {showShareBtn && <button className="btn btn-secondary operation-item" title={gettext('Share')} onClick={this.onShareClick}>{gettext('Share')}</button>}
+          {/* KEEPER */}
+          {isArchiveBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext('Archive')}
+              onClick={this.onArchiveLibraryToggle}
+            >
+              {gettext('Archive')}
+            </button>
+          )}
+          {isCertifyBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext('Certify')}
+              onClick={this.onCertifyLibraryToggle}
+            >
+              {gettext('Certify')}
+            </button>
+          )}
+          {isEditMetadataBtnShow && (
+            <button
+              className="btn btn-secondary operation-item"
+              title={gettext('Metadata')}
+              onClick={this.onEditMetadataToggle}
+            >
+              {gettext('Metadata')}
+            </button>
+          )}  
         </Fragment>
       );
     } else {
@@ -339,7 +367,7 @@ class DirOperationToolbar extends React.Component {
             />
           </ModalPortal>
         }
-        // KEEPER
+        {/* KEEPER */}
         {this.state.isArchiveLibraryDialogShow && (
           <ModalPortal>
             <ArchiveLibraryDialog

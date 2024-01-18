@@ -630,7 +630,7 @@ class MylibRepoListItem extends React.Component {
           </ModalPortal>
         )}
 
-        /* KEEPER */  
+        {/* KEEPER */}
         {this.state.isAssignDoiDialogShow && (
           <ModalPortal>
             <AssignDoiDialog

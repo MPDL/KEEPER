@@ -1168,7 +1168,8 @@ class TaskManager(object):
 task_manager = TaskManager()
 
 # cli usage block
-from seafevents.utils import get_config
+# from seafevents.utils import get_config
+from seafevents.app.config import get_config
 from .config import get_keeper_archiving_conf
 from .db_oper import DBOper
 

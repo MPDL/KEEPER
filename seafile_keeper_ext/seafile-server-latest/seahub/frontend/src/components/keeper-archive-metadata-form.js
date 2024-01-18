@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
 import Select from 'react-select';
-import AsyncCreatableSelect from 'react-select/lib/AsyncCreatable';
+import AsyncCreatableSelect from 'react-select/async-creatable';
 import {Utils} from '../utils/utils';
 import {gettext,} from '../utils/constants';
 import {keeperAPI} from '../utils/seafile-api';
