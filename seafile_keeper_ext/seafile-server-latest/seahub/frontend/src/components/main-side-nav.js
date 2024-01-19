@@ -386,19 +386,33 @@ class MainSideNav extends React.Component {
                 title={gettext("Library Details")}
                 onClick={this.libdtExtend}
               >
+                {/* <span */}
+                {/*   className={`toggle-icon float-right fas ${ */}
+                {/*     this.state.libraryDetailsExtended */}
+                {/*       ? "fa-caret-down" */}
+                {/*       : "fa-caret-left" */}
+                {/*   }`} */}
+                {/*   aria-hidden="true" */}
+                {/* ></span> */}
+                <span className="sf2-icon-group" aria-hidden="true"></span>
+                <span className="nav-text">
+                  {gettext("Library Details")}
+                </span>
                 <span
-                  className={`toggle-icon float-right fas ${
+                  className={`toggle-icon fas ${
                     this.state.libraryDetailsExtended
                       ? "fa-caret-down"
                       : "fa-caret-left"
                   }`}
                   aria-hidden="true"
                 ></span>
-                <span className="sf2-icon-list-view" aria-hidden="true"></span>
-                <span className="nav-text">{gettext("Library Details")}</span>
+                {/* <span className="sf2-icon-list-view" aria-hidden="true"></span> */}
+                {/* <span className="nav-text">{gettext("Library Details")}</span> */}
               </a>
               {this.renderLibraryDetails()}
             </li>
+
+
           </ul>
 
           <h3 className="sf-heading">{gettext("Tools")}</h3>
@@ -431,21 +445,22 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
             )}
-            <li className="nav-item">
-              <Link
-                className={`nav-link ellipsis ${this.getActiveClass(
-                  "published"
-                )}`}
-                to={siteRoot + "published/"}
-                title={gettext("Published Libraries")}
-                onClick={(e) => this.tabItemClick(e, "published")}
-              >
-                <span className="sf2-icon-wiki-view" aria-hidden="true"></span>
-                <span className="nav-text">
-                  {gettext("Published Libraries")}
-                </span>
-              </Link>
-            </li>
+            {/* KEEPER */}
+            {/* <li className="nav-item"> */}
+            {/*   <Link */}
+            {/*     className={`nav-link ellipsis ${this.getActiveClass( */}
+            {/*       "published" */}
+            {/*     )}`} */}
+            {/*     to={siteRoot + "published/"} */}
+            {/*     title={gettext("Published Libraries")} */}
+            {/*     onClick={(e) => this.tabItemClick(e, "published")} */}
+            {/*   > */}
+            {/*     <span className="sf2-icon-wiki-view" aria-hidden="true"></span> */}
+            {/*     <span className="nav-text"> */}
+            {/*       {gettext("Published Libraries")} */}
+            {/*     </span> */}
+            {/*   </Link> */}
+            {/* </li> */}
             {isDocs && (
               <li
                 className="nav-item"

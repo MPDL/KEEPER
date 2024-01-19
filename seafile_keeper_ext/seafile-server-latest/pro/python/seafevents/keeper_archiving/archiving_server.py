@@ -6,10 +6,14 @@ import argparse
 import logging
 import json
 from urllib import parse
-from django.utils import timezone
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 from seafevents.keeper_archiving.task_manager import task_manager
+
+from django.conf import settings
+from django.utils import timezone
+
+settings.configure()
 
 logger = logging.getLogger(__name__)
 

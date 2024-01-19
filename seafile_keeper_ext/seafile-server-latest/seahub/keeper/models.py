@@ -446,7 +446,21 @@ class CDC(models.Model):
 
 ###### signal handlers
 from django.dispatch import receiver
+# KEEPER
+from seahub.signals import repo_created
 from seahub.signals import repo_deleted
+from keeper.default_library_manager import copy_keeper_default_library
+
+@receiver(repo_created)
+def add_default_docs_to_created_repo(sender, **kwargs):
+    repo_id = kwargs['repo_id']
+    repo_name = kwargs['repo_name']
+    try:
+        logging.info(f"REPO CREATE EVENT repo_name: {repo_name}, repo_id: {repo_id}")
+        copy_keeper_default_library(repo_id)
+
+    except Exception:
+        logging.error(traceback.format_exc())
 
 
 @receiver(repo_deleted)

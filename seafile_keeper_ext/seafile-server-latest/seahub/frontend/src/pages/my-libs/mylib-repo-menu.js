@@ -109,20 +109,20 @@ class MylibRepoMenu extends React.Component {
     }
     if (enableRepoAutoDel) {
       operations.push("Old Files Auto Delete");
-      //KEEPER
-      operations.push("Divider");
-      if (showAssignDoiMenuItem) {
-        operations.push("Assign DOI to current state");
-      }
-      if (showArchiveLibraryMenuItem) {
-        operations.push("Archive Library");
-      }
-      if (showCertifyLibraryMenuItem) {
-        operations.push("Certify Library");
-      }
-      if (showEditMetadatayMenuItem) {
-        operations.push("Edit Metadata");
-      }
+    }  
+    //KEEPER
+    operations.push("Divider");
+    if (showAssignDoiMenuItem) {
+      operations.push("Assign DOI to current state");
+    }
+    if (showArchiveLibraryMenuItem) {
+      operations.push("Archive Library");
+    }
+    if (showCertifyLibraryMenuItem) {
+      operations.push("Certify Library");
+    }
+    if (showEditMetadatayMenuItem) {
+      operations.push("Edit Metadata");
     }
     return operations;
   };

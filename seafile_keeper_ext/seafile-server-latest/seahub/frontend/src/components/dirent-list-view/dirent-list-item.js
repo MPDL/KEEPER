@@ -701,7 +701,14 @@ class DirentListItem extends React.Component {
       dirent.permission,
       dirent
     );
-
+                // {this.props.isRepoOwner &&
+                //   dirent.permission === "rw" &&
+    //   dirent.type === "file" && (
+    //   isRepoOwner
+    console.log(this.props.isRepoOwner);    
+    console.log(dirent.permission);    
+    console.log(dirent.type);    
+ 
     return (
       <Fragment>
         {selectedDirentList.length > 1 ? (
@@ -790,6 +797,31 @@ class DirentListItem extends React.Component {
                     onClick={this.onItemDelete}
                   ></a>
                 )}
+                {/* KEEPER bxb button */}                                                                                                         
+                {this.props.isRepoOwner &&
+                  dirent.permission === "rw" &&
+                  dirent.type === "file" && (
+                    <a className="op-icon" data-tip data-for="bloxberg">
+                      <img
+                        className="small-icon"
+                        src={bergImage}
+                        onClick={this.onItemCertify}
+                      />
+                      <ReactTooltip
+                        className="hover-keep"
+                        id="bloxberg"
+                        delayHide={1000}
+                        effect="solid"
+                      >
+                        <span className="tooltip-bold">
+                          {gettext(
+                            "Certify your file via the bloxberg blockchain."
+                          )}
+                        </span>
+                      </ReactTooltip>
+                    </a>
+                )}
+                                    
                 <ItemDropdownMenu
                   item={this.props.dirent}
                   toggleClass={"sf2-icon-caret-down"}
