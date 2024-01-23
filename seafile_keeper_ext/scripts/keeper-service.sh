@@ -301,8 +301,10 @@ case "$1" in
             check_seahub_running "CRITICAL"
             #check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
+            check_component_running "fileserver" "fileserver.*fileserver.pid" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
+                check_component_running "notification-server" "notification-server" "CRITICAL"
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
                 check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
                 check_component_running "elasticsearch" "org.elasticsearch.bootstrap.Elasticsearch" "CRITICAL"
