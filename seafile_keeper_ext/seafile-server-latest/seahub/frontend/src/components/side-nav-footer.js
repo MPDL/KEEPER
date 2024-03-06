@@ -119,7 +119,7 @@ class SideNavFooter extends React.Component {
                   <img
                     className="logo"
                     id="MPDL-logo"
-                    src="/media/custom/mpdl.png"
+                    src="/media/custom/logo-mpdl-twocolor-dark-var2-box_keeper.svg"
                   />
                 </a>
                 <br />
