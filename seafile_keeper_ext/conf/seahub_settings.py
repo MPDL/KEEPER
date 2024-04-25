@@ -71,6 +71,9 @@ LOGGING = {
         # 'syslog-seahub': {
             # 'format': '__NODE_FQDN__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         # },
+        'keeper_debug': {
+            'format': '%(asctime)s: %(message)s'
+        },
     },
     'filters': {
         'require_debug_false': {
@@ -139,6 +142,14 @@ LOGGING = {
             # 'facility': '__SYSLOG_FACILITY__',
             # 'formatter': 'syslog-seahub'
         # },
+        'keeper_debug': {
+            # 'level':'DEBUG' if DEBUG else 'INFO',
+            'level':'DEBUG',
+            'class':'logging.FileHandler',
+            'filename': '/tmp/keeper_debug2.log',
+            'mode': 'a',
+            'formatter':'keeper_debug',
+        },
     },
     'loggers': {
         '': {
@@ -166,6 +177,11 @@ LOGGING = {
         'onlyoffice': {
             'handlers': ['onlyoffice_handler', ],
             'level': 'INFO',
+            'propagate': False
+        },
+        'keeper_debug': {
+            'handlers': ['keeper_debug'],
+            'level': 'DEBUG',
             'propagate': False
         },
     }
