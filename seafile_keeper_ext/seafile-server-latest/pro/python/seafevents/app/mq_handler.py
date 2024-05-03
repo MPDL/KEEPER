@@ -1,6 +1,9 @@
 import time
 import logging
-from threading import Thread
+from threading import Thread, excepthook
+import threading
+import traceback
+import sys
 
 from seaserv import seafile_api
 
@@ -19,6 +22,13 @@ __all__ = [
     'EventsHandler',
     'init_message_handlers'
 ]
+
+# KEEPER: add exception hook on any Thread
+def handle_thread_exception(args):
+    exc_msg = traceback.format_exc()
+    k_log.debug("Exception in thread %s: %s, %s, error: %s", args.thread.name, args.exc_type, args.exc_value, exc_msg)
+
+threading.excepthook = handle_thread_exception
 
 
 class MessageHandler(object):
@@ -95,6 +105,7 @@ class EventsHandler(object):
         self._db_session_class = init_db_session_class(config)
         self._redis_connection = RedisClient(config).connection
         self._past_ts_dict =  {}
+        self._counter = 0
 
     def handle_event(self, channel):
         config = self._config
@@ -114,6 +125,11 @@ class EventsHandler(object):
                     k_log.debug('Failed to get event in channel %s: %s', channel, e)
                     time.sleep(3)
                     continue
+                if channel == 'seaf_server.event':
+                    k_log.debug('Counter: %s', self._counter)
+                    # if self._counter == 3:
+                    #     sys.exit(1)
+                    # self._counter += 1
                 if msg:
                     try:
                         message_handler.handle_message(config, session, redis_connection, channel, msg)
@@ -126,6 +142,9 @@ class EventsHandler(object):
                             redis_connection.close()
                 else:
                     time.sleep(0.5)
+                    
+        except SystemExit as sa:
+            raise Exception("Catched SystemExit exception", sa)
         finally:
             k_log.debug('Leaving channel %s thread...', channel)
 
@@ -134,5 +153,5 @@ class EventsHandler(object):
         logger.info('Subscribe to channels: %s', channels)
         for channel in channels:
             self._past_ts_dict[channel] = datetime.now()
-            event_handler = Thread(target=self.handle_event, args=(channel, ))
+            event_handler = Thread(target=self.handle_event, name=channel, args=(channel, ))
             event_handler.start()
