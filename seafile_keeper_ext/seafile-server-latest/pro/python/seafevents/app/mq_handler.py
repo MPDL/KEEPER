@@ -131,6 +131,8 @@ class EventsHandler(object):
                     #     sys.exit(1)
                     # self._counter += 1
                 if msg:
+                    if channel == 'seaf_server.event':
+                        k_log.debug(msg)
                     try:
                         message_handler.handle_message(config, session, redis_connection, channel, msg)
                     except Exception as e:
