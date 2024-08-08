@@ -87,7 +87,7 @@ function cleanup_old_snapshots () {
 
 function do_tsm_backup () {
 
-    if [ "${__SKIP_TSM_BACKUP__}" != "True" ]; then
+    if [ "${__SKIP_TSM_BACKUP__,,}" = "false" ]; then
         echo "Start TSM  backup..."
         LOGLEVEL="-L 2"
         export MMBACKUP_PROGRESS_CONTENT=0x07
