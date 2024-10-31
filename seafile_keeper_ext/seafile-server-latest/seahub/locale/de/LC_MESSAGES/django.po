@@ -1281,7 +1281,7 @@ msgstr "Der Bibliotheksname oder -beschreibung wurde geändert."
 #: seahub/base/templatetags/seahub_tags.py:163
 #: seahub/base/templatetags/seahub_tags.py:234
 msgid "Auto merge by seafile system"
-msgstr "Automatisch von Seafile zusammengeführt"
+msgstr "Automatisch von KEEPER zusammengeführt"
 
 #: seahub/base/templatetags/seahub_tags.py:165
 #: seahub/base/templatetags/seahub_tags.py:236
@@ -2655,7 +2655,7 @@ msgstr "Abmelden"
 #: seahub/templates/registration/logged_out.html:8
 #: seahub/templates/registration/logout.html:8
 msgid "Thanks for your participation! "
-msgstr "Danke, dass Sie Seafile verwendet haben! "
+msgstr "Danke, dass Sie KEEPER verwendet haben! "
 
 #: seahub/templates/registration/logged_out.html:8
 #: seahub/templates/registration/logout.html:8

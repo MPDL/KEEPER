@@ -925,7 +925,7 @@ def do_generate(args):
     if args.msgen:
         Utils.info('Generate English translation catalog...')
         en_django_po_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'locale', 'en', 'LC_MESSAGES')
-        for po_file in ('django.po'):
+        for po_file in ['django.po']:
             backup(_join(en_django_po_dir, po_file), mv=False)
             Utils.run(f"msgen {po_file + BACKUP_POSTFIX} > {po_file}", cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
     elif args.i18n:
