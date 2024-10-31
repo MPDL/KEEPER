@@ -53,4 +53,4 @@ cleanpyc:
 	find . -name \*.pyc -exec rm -f {} \;
 	@echo ""
 
-.PHONY: develop setup-git dist dist-keeper locale statici18n collectstatic compressstatic clean
+.PHONY: develop setup-git dist dist-keeper locale-keeper locale statici18n collectstatic compressstatic clean
