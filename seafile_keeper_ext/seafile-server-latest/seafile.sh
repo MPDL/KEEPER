@@ -22,6 +22,7 @@ central_config_dir=${TOPDIR}/conf
 seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
 pro_pylibs_dir=${INSTALLPATH}/pro/python
 seafesdir=$pro_pylibs_dir/seafes
+IS_PRO_SEAFEVENTS=`awk '/is_pro/{getline;print $2;exit}' ${pro_pylibs_dir}/seafevents/seafevents_api.py`
 
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
@@ -114,7 +115,7 @@ function start_seafile_server () {
     validate_seafile_data_dir;
     validate_running_user;
 
-    if [[ -d ${INSTALLPATH}/pro ]]; then
+    if [[ $IS_PRO_SEAFEVENTS = "True" ]]; then
         test_config;
     fi
 
@@ -122,7 +123,7 @@ function start_seafile_server () {
 
     mkdir -p $TOPDIR/logs
 
-    if [[ -d ${INSTALLPATH}/pro ]]; then
+    if [[ $IS_PRO_SEAFEVENTS = "True" ]]; then
         if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}"; then
             controller_log="$default_seafile_data_dir/controller.log"
             echo
@@ -145,12 +146,8 @@ function start_seafile_server () {
         exit 1;
     fi
 
-    # notification-sever
-    ENABLE_NOTIFICATION_SERVER=`awk -F '=' '/\[notification\]/{a=1}a==1&&$1~/^enabled/{print $2;exit}' ${central_config_dir}/seafile.conf`
-    if [ $ENABLE_NOTIFICATION_SERVER ] && [ $ENABLE_NOTIFICATION_SERVER = "true" ]; then
-        notification-server -c ${central_config_dir} -l ${TOPDIR}/logs/notification-server.log &
-        ${INSTALLPATH}/seafile-monitor.sh &>> ${TOPDIR}/logs/seafile-monitor.log &
-    fi
+    # seafevents, notification-sever
+    ${INSTALLPATH}/seafile-monitor.sh &>> ${TOPDIR}/logs/seafile-monitor.log &
 
     echo "Seafile server started"
     echo

@@ -59,7 +59,6 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
-USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = False
@@ -84,13 +83,15 @@ STATIC_ROOT = '%s/assets/' % MEDIA_ROOT
 STATIC_URL = '/media/assets/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
+STATICFILES_DIRS = [
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     '%s/static' % PROJECT_ROOT,
-    '%s/frontend/build' % PROJECT_ROOT,
-)
+]
+# %s/frontend/build perhaps not exists
+if os.path.isdir('%s/frontend/build' % PROJECT_ROOT):
+    STATICFILES_DIRS.append('%s/frontend/build' % PROJECT_ROOT)
 
 WEBPACK_LOADER = {
     'DEFAULT': {
@@ -99,7 +100,12 @@ WEBPACK_LOADER = {
     }
 }
 
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+# STORAGES = {
+#     "staticfiles": {
+#         "BACKEND": 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage',
+#     },
+# }
 
 # StaticI18N config
 STATICI18N_ROOT = '%s/static/scripts' % PROJECT_ROOT
@@ -211,6 +217,7 @@ LANGUAGES = [
 LOCALE_PATHS = [
     os.path.join(PROJECT_ROOT, 'locale'),
     os.path.join(PROJECT_ROOT, 'seahub/trusted_ip/locale'),
+    os.path.join(PROJECT_ROOT, 'seahub/help/locale'),
 ]
 
 INSTALLED_APPS = [
@@ -272,6 +279,8 @@ INSTALLED_APPS = [
     'seahub.organizations',
     'seahub.krb5_auth',
     'seahub.django_cas_ng',
+    'seahub.seadoc',
+    'seahub.subscription',
     'keeper',
 ]
 
@@ -300,10 +309,13 @@ ENABLE_ADFS_LOGIN = False
 
 ENABLE_MULTI_ADFS = False
 
+DISABLE_ADFS_USER_PWD_LOGIN = False
+
 ENABLE_OAUTH = False
 ENABLE_WATERMARK = False
 
 ENABLE_SHOW_CONTACT_EMAIL_WHEN_SEARCH_USER = False
+ENABLE_SHOW_LOGIN_ID_WHEN_SEARCH_USER = False
 
 # enable work weixin
 ENABLE_WORK_WEIXIN = False
@@ -314,6 +326,23 @@ ENABLE_WEIXIN = False
 # enable dingtalk
 ENABLE_DINGTALK = False
 
+# enable ldap
+ENABLE_LDAP = False
+LDAP_USER_FIRST_NAME_ATTR = ''
+LDAP_USER_LAST_NAME_ATTR = ''
+LDAP_USER_NAME_REVERSE = False
+LDAP_FILTER = ''
+LDAP_CONTACT_EMAIL_ATTR = ''
+LDAP_USER_ROLE_ATTR = ''
+ACTIVATE_USER_WHEN_IMPORT = True
+
+SSO_LDAP_USE_SAME_UID = False
+
+# enable ldap sasl auth
+ENABLE_SASL = False
+SASL_MECHANISM = ''
+SASL_AUTHC_ID_ATTR = ''
+
 # allow user to clean library trash
 ENABLE_USER_CLEAN_TRASH = True
 
@@ -323,6 +352,9 @@ LOGIN_ERROR_DETAILS = False
 LOGOUT_REDIRECT_URL = None
 
 ACCOUNT_ACTIVATION_DAYS = 7
+
+REQUEST_RATE_LIMIT_NUMBER = 3
+REQUEST_RATE_LIMIT_PERIOD = 60  # seconds
 
 # allow seafile admin view user's repo
 ENABLE_SYS_ADMIN_VIEW_REPO = False
@@ -362,7 +394,7 @@ REPO_PASSWORD_MIN_LENGTH = 8
 # token length for the share link
 SHARE_LINK_TOKEN_LENGTH = 20
 
-# the maximum number of external share links in a sdoc file
+# max link number for creating share links in batch
 SHARE_LINK_MAX_NUMBER = 200
 
 # if limit only authenticated user can view preview share link
@@ -433,6 +465,9 @@ FORCE_PASSWORD_CHANGE = True
 # Enable a user to change password in 'settings' page.
 ENABLE_CHANGE_PASSWORD = True
 
+# Enable a sso user to change password in 'settings' page.
+ENABLE_SSO_USER_CHANGE_PASSWORD = True
+
 # Enable a user to get auth token in 'settings' page.
 ENABLE_GET_AUTH_TOKEN_BY_SESSION = False
 
@@ -455,11 +490,13 @@ ENABLE_SHARE_TO_DEPARTMENT = True
 # interval for request unread notifications
 UNREAD_NOTIFICATIONS_REQUEST_INTERVAL = 3 * 60 # seconds
 
-# Enable file comments
-ENABLE_FILE_COMMENT = True
-
 # Enable seafile docs
 ENABLE_SEAFILE_DOCS = False
+
+# enable integration seatbale
+ENABLE_SEATABLE_INTEGRATION = False
+
+ENABLE_CONVERT_TO_TEAM_ACCOUNT = False
 
 # File preview
 FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
@@ -500,13 +537,6 @@ CACHES = {
             'MAX_ENTRIES': 1000000
         }
     },
-
-    # Compatible with existing `COMPRESS_CACHE_BACKEND` setting after
-    # upgrading to django-compressor v2.2.
-    # ref: https://manual.seafile.com/deploy_pro/deploy_in_a_cluster.html
-    'django.core.cache.backends.locmem.LocMemCache': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    },
 }
 
 # rest_framwork
@@ -518,6 +548,7 @@ REST_FRAMEWORK = {
         'ping': '3000/minute',
         'anon': '60/minute',
         'user': '3000/minute',
+        'share_link_zip_task': '10/minute'
     },
     # https://github.com/tomchristie/django-rest-framework/issues/2891
     'UNICODE_JSON': False,
@@ -604,6 +635,8 @@ SHOW_LOGOUT_ICON = False
 # privacy policy link and service link
 PRIVACY_POLICY_LINK = ''
 TERMS_OF_SERVICE_LINK = ''
+
+FILE_CONVERTER_SERVER_URL = 'http://127.0.0.1:8888'
 
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
@@ -695,6 +728,8 @@ SESSION_COOKIE_AGE = 24 * 60 * 60
 # Days of remembered login info (deafult: 7 days)
 LOGIN_REMEMBER_DAYS = 7
 
+SEAFILE_VERSION = '6.3.3'
+
 CAPTCHA_IMAGE_SIZE = (90, 42)
 
 ###################
@@ -731,11 +766,16 @@ WEBDAV_SECRET_MIN_LENGTH = 1
 WEBDAV_SECRET_STRENGTH_LEVEL = 1
 
 ENABLE_USER_SET_CONTACT_EMAIL = False
+ENABLE_USER_SET_NAME = True
 
 # SSO to thirdparty website
 ENABLE_SSO_TO_THIRDPART_WEBSITE = False
 THIRDPART_WEBSITE_SECRET_KEY = ''
 THIRDPART_WEBSITE_URL = ''
+
+# client sso
+CLIENT_SSO_VIA_LOCAL_BROWSER = False
+CLIENT_SSO_TOKEN_EXPIRATION = 5 * 60
 
 #####################
 # Global AddressBook #
@@ -792,9 +832,6 @@ SEADOC_SERVER_URL = 'http://127.0.0.1:7070'
 # Settings for Seahub Priv #
 ############################
 
-# Replace from email to current user instead of email sender.
-REPLACE_FROM_EMAIL = False
-
 # Add ``Reply-to`` header, see RFC #822.
 ADD_REPLY_TO_HEADER = False
 
@@ -814,6 +851,10 @@ ENABLE_REPO_SNAPSHOT_LABEL = False
 
 #  Repo wiki mode
 ENABLE_REPO_WIKI_MODE = True
+
+SEAFILE_AI_SECRET_KEY = ''
+SEAFILE_AI_SERVER_URL = ''
+ENABLE_SEAFILE_AI = False
 
 ############################
 # HU berlin additional #
@@ -844,6 +885,13 @@ if os.environ.get('SEAFILE_DOCS', None):
     LOGO_PATH = 'img/seafile-docs-logo.png'
     LOGO_WIDTH = ''
     ENABLE_WIKI = True
+
+#######################
+# extended properties #
+#######################
+SEATABLE_EX_PROPS_BASE_API_TOKEN = ''
+EX_PROPS_TABLE = ''
+EX_EDITABLE_COLUMNS = []
 
 d = os.path.dirname
 EVENTS_CONFIG_FILE = os.environ.get(
@@ -953,6 +1001,9 @@ CONSTANCE_CONFIG = {
 
     'ENABLE_TERMS_AND_CONDITIONS': (ENABLE_TERMS_AND_CONDITIONS, ''),
     'ENABLE_USER_CLEAN_TRASH': (ENABLE_USER_CLEAN_TRASH, ''),
+
+    'CLIENT_SSO_VIA_LOCAL_BROWSER': (CLIENT_SSO_VIA_LOCAL_BROWSER, ''),
+    'CLIENT_SSO_TOKEN_EXPIRATION': (CLIENT_SSO_TOKEN_EXPIRATION, ''),
 }
 
 # if Seafile admin enable remote user authentication in conf/seahub_settings.py
@@ -973,6 +1024,9 @@ if ENABLE_ADFS_LOGIN or ENABLE_MULTI_ADFS:
     AUTHENTICATION_BACKENDS += ('seahub.adfs_auth.backends.Saml2Backend',)
     SAML_CONFIG_LOADER = 'seahub.adfs_auth.utils.config_settings_loader'
 
+if ENABLE_LDAP:
+    AUTHENTICATION_BACKENDS += ('seahub.base.accounts.CustomLDAPBackend',)
+
 #####################
 # Custom Nav Items  #
 #####################
@@ -984,4 +1038,8 @@ if ENABLE_ADFS_LOGIN or ENABLE_MULTI_ADFS:
 #      },
 # ]
 
-SEAFILE_VERSION = "10.0.11"
+# settings.py
+
+
+
+SEAFILE_VERSION = "11.0.15"

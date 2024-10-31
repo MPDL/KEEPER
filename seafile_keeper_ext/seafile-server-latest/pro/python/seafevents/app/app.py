@@ -1,11 +1,8 @@
 from seafevents.app.mq_handler import EventsHandler, init_message_handlers
 from seafevents.tasks import IndexUpdater, SeahubEmailSender, LdapSyncer,\
         VirusScanner, Statistics, CountUserActivity, CountTrafficInfo, ContentScanner,\
-        WorkWinxinNoticeSender, FileUpdatesSender, RepoOldFileAutoDelScanner
-
-# KEEPER
-from seafevents.keeper_archiving import KeeperArchiving
-from seafevents.keeper_archiving.config import get_keeper_archiving_conf
+        WorkWinxinNoticeSender, FileUpdatesSender, RepoOldFileAutoDelScanner,\
+        DeletedFilesCountCleaner
 
 
 class App(object):
@@ -31,6 +28,7 @@ class App(object):
             self._work_weixin_notice_sender = WorkWinxinNoticeSender(config)
             self._file_updates_sender = FileUpdatesSender()
             self._repo_old_file_auto_del_scanner = RepoOldFileAutoDelScanner(config)
+            self._deleted_files_count_cleaner = DeletedFilesCountCleaner(config)
 
             # KEEPER
             self._keeper_archiving = KeeperArchiving(get_keeper_archiving_conf(config))
@@ -51,7 +49,7 @@ class App(object):
             self._statistics.start()
             self._content_scanner.start()
             self._repo_old_file_auto_del_scanner.start()
+            self._deleted_files_count_cleaner.start()
 
             # KEEPER
             self._keeper_archiving.start()
-

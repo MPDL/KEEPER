@@ -11,7 +11,7 @@ from datetime import timedelta
 from os.path import splitext
 
 from django.core.cache import cache
-from sqlalchemy.sql import text
+from sqlalchemy import select, text
 import pymysql
 
 from seaserv import get_org_id_by_repo_id, seafile_api, get_commit
@@ -22,10 +22,16 @@ from seafevents.events.db import save_file_audit_event, save_file_update_event, 
 from seafevents.app.config import TIME_ZONE
 from seafevents.utils import get_opt_from_conf_or_env
 from .change_file_path import ChangeFilePathHandler
+from .change_extended_props import ChangeExtendedPropsHandler
 from .models import Activity
+from seafevents.batch_delete_files_notice.utils import get_deleted_files_count, save_deleted_files_msg
+from seafevents.batch_delete_files_notice.db import get_deleted_files_total_count, save_deleted_files_count
+
 # KEEPER
 from keeper.cdc.cdc_manager import generate_certificate_by_commit
 from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
+
+recent_added_events = {'recent_added_events': []}
 
 
 def RepoUpdateEventHandler(config, session, msg):
@@ -52,16 +58,25 @@ def RepoUpdateEventHandler(config, session, msg):
             added_files, deleted_files, added_dirs, deleted_dirs, modified_files,\
                 renamed_files, moved_files, renamed_dirs, moved_dirs = differ.diff()
 
-            if renamed_files or renamed_dirs or moved_files or moved_dirs:
+            if renamed_files or renamed_dirs or moved_files or moved_dirs or deleted_files or deleted_dirs:
                 changer = ChangeFilePathHandler(session)
+                ex_props_changer = ChangeExtendedPropsHandler()
                 for r_file in renamed_files:
                     changer.update_db_records(repo_id, r_file.path, r_file.new_path, 0)
+                    ex_props_changer.change_file_ex_props(repo_id, r_file.path, r_file.new_path)
                 for r_dir in renamed_dirs:
                     changer.update_db_records(repo_id, r_dir.path, r_dir.new_path, 1)
+                    ex_props_changer.change_dir_ex_props(repo_id, r_dir.path, r_dir.new_path)
                 for m_file in moved_files:
                     changer.update_db_records(repo_id, m_file.path, m_file.new_path, 0)
+                    ex_props_changer.change_file_ex_props(repo_id, m_file.path, m_file.new_path)
                 for m_dir in moved_dirs:
                     changer.update_db_records(repo_id, m_dir.path, m_dir.new_path, 1)
+                    ex_props_changer.change_dir_ex_props(repo_id, m_dir.path, m_dir.new_path)
+                for d_file in deleted_files:
+                    ex_props_changer.delete_file_ex_props(repo_id, d_file.path)
+                for d_dir in deleted_dirs:
+                    ex_props_changer.delete_dir_ex_props(repo_id, d_dir.path)
 
             users = []
             org_id = get_org_id_by_repo_id(repo_id)
@@ -97,6 +112,7 @@ def RepoUpdateEventHandler(config, session, msg):
                         parent, users, time)
 
                 save_user_activities(session, records)
+
             # TODO check: catalog entry update
             # KEEPER
             logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
@@ -121,6 +137,56 @@ def RepoUpdateEventHandler(config, session, msg):
                 enable_collab_server = config.getboolean('COLLAB_SERVER', 'enabled')
             if enable_collab_server:
                 send_message_to_collab_server(config, repo_id)
+
+            # deleted files notices
+            once_threshold = 0
+            total_threshold = 0
+            if config.has_option('DELETE FILES NOTICE', 'once_threshold'):
+                once_threshold = config.getint('DELETE FILES NOTICE', 'once_threshold')
+            if config.has_option('DELETE FILES NOTICE', 'total_threshold'):
+                total_threshold = config.getint('DELETE FILES NOTICE', 'total_threshold')
+
+            # cross repo move event will generate added and deleted events,
+            # so record the latest 10 added events in memory to filter cross repo move events
+            if (added_files or added_dirs) and not commit.description.startswith('Reverted') \
+                    and (once_threshold > 0 and total_threshold > 0):
+                added_obj_set = set()
+                for added_file in added_files:
+                    added_obj_set.add(added_file.obj_id)
+                for added_dir in added_dirs:
+                    added_obj_set.add(added_dir.obj_id)
+
+                if len(recent_added_events['recent_added_events']) < 10:
+                    recent_added_events['recent_added_events'].append(added_obj_set)
+                else:
+                    recent_added_events['recent_added_events'].pop(0)
+                    recent_added_events['recent_added_events'].append(added_obj_set)
+
+            if (deleted_files or deleted_dirs) and (once_threshold > 0 and total_threshold > 0):
+                deleted_obj_set = set()
+                for deleted_file in deleted_files:
+                    deleted_obj_set.add(deleted_file.obj_id)
+                for deleted_dir in deleted_dirs:
+                    deleted_obj_set.add(deleted_dir.obj_id)
+
+                if deleted_obj_set in recent_added_events['recent_added_events']:
+                    try:
+                        recent_added_events['recent_added_events'].remove(deleted_obj_set)
+                    except ValueError:
+                        pass
+                else:
+                    timestamp = datetime.datetime.fromtimestamp(msg['ctime'])
+                    deleted_time = datetime.datetime.fromtimestamp(msg['ctime']).strftime('%Y-%m-%d 00:00:00')
+                    files_count = get_deleted_files_count(repo_id, commit.version, deleted_files, deleted_dirs)
+                    if files_count > 0:
+                        save_deleted_files_count(session, repo_id, files_count, deleted_time)
+
+                    if files_count > once_threshold:
+                        save_deleted_files_msg(session, owner, repo_id, timestamp)
+
+                    total_count = get_deleted_files_total_count(session, repo_id, deleted_time)
+                    if total_count > total_threshold:
+                        save_deleted_files_msg(session, owner, repo_id, timestamp)
 
 
 def send_message_to_collab_server(config, repo_id):
@@ -492,12 +558,12 @@ def save_user_activities(session, records):
     if len(records) == 1 and records[0]['op_type'] == 'edit':
         record = records[0]
         _timestamp = record['timestamp'] - timedelta(minutes=30)
-        q = session.query(Activity).filter(Activity.timestamp > _timestamp)
-        q = q.filter(Activity.repo_id==record['repo_id'],
-                     Activity.op_type==record['op_type'],
-                     Activity.op_user==record['op_user'],
-                     Activity.path==record['path'])
-        row = q.first()
+        stmt = select(Activity).where(Activity.timestamp > _timestamp,
+                                      Activity.repo_id == record['repo_id'],
+                                      Activity.op_type == record['op_type'],
+                                      Activity.op_user == record['op_user'],
+                                      Activity.path == record['path']).limit(1)
+        row = session.scalars(stmt).first()
         if row:
             activity_id = row.id
             update_user_activity_timestamp(session, activity_id, record)
@@ -630,16 +696,20 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
         record['old_path'] = de.path
         records.append(record)
 
+    filtered_records = []
     for record in records:
         if os.path.dirname(record['path']).startswith('/images/auto-upload'):
-            records.remove(record)
+            continue
         if os.path.dirname(record['path']).startswith('/images/sdoc'):
-            records.remove(record)
+            continue
+        if os.path.dirname(record['path']).startswith('/_Internal'):
+            continue
         if 'old_path' in record:
             record['old_path'] = record['old_path'].rstrip('/')
         record['path'] = record['path'].rstrip('/') if record['path'] != '/' else '/'
+        filtered_records.append(record)
 
-    return records
+    return filtered_records
 
 def list_file_in_dir(repo_id, dirents, op_type):
     _dirents = copy.copy(dirents)
@@ -766,7 +836,7 @@ def save_file_histories(config, session, records):
 def should_record(config, record):
     """ return True if record['path'] is a specified office file
     """
-    suffix = 'md,txt,doc,docx,xls,xlsx,ppt,pptx'
+    suffix = 'md,txt,doc,docx,xls,xlsx,ppt,pptx,sdoc'
     fh_suffix_list = get_opt_from_conf_or_env(config, 'FILE HISTORY', 'suffix', default=suffix.strip(','))
     filename, suffix = splitext(record['path'])
     if suffix[1:] in fh_suffix_list:

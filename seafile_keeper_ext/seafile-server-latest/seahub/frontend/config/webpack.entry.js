@@ -2,12 +2,14 @@ const paths = require("./paths");
 
 const entryFiles = {
   markdownEditor: "/index.js",
+  plainMarkdownEditor: "/pages/plain-markdown-editor/index.js",
   TCAccept: "/tc-accept.js",
   TCView: "/tc-view.js",
-  userNotifications: "/user-notifications.js",
   wiki: "/wiki.js",
   fileHistory: "/file-history.js",
   fileHistoryOld: "/file-history-old.js",
+  sdocFileHistory: "/pages/sdoc/sdoc-file-history/index.js",
+  sdocPublishedRevision: "/pages/sdoc/sdoc-published-revision/index.js",
   app: "/app.js",
   draft: "/draft.js",
   sharedDirView: "/shared-dir-view.js",
@@ -20,10 +22,12 @@ const entryFiles = {
   sharedFileViewAudio: "/shared-file-view-audio.js",
   sharedFileViewDocument: "/shared-file-view-document.js",
   sharedFileViewSpreadsheet: "/shared-file-view-spreadsheet.js",
+  sharedFileViewSdoc: "/shared-file-view-sdoc.js",
   sharedFileViewUnknown: "/shared-file-view-unknown.js",
   historyTrashFileView: "/history-trash-file-view.js",
   fileView: "/file-view.js",
   viewFileText: "/view-file-text.js",
+  viewFileSdoc: "/view-file-sdoc.js",
   viewFileDocument: "/view-file-document.js",
   viewFileSpreadsheet: "/view-file-spreadsheet.js",
   settings: "/settings.js",
@@ -34,6 +38,9 @@ const entryFiles = {
   sysAdmin: "/pages/sys-admin",
   search: "/pages/search",
   uploadLink: "/pages/upload-link",
+  subscription: "/subscription.js",
+  institutionAdmin: "/pages/institution-admin/index.js",
+  // KEEPER
   keeperProjectCatalog: "/keeper-project-catalog.js",
   bloxbergCertificate: "/bloxberg-certificate.js",
   bloxbergRepoSnapshot: "/bloxberg-repo-snapshot.js",
@@ -44,7 +51,6 @@ const getEntries = (isEnvDevelopment) => {
   let entries = {};
   Object.keys(entryFiles).forEach((key) => {
     let entry = [];
-    entry.push(require.resolve("./polyfills"));
     if (isEnvDevelopment) {
       entry.push(require.resolve("react-dev-utils/webpackHotDevClient"));
     }

@@ -55,6 +55,7 @@
     "Copy": "C\u00f2pia",
     "Count": "Compte",
     "Create": "Crea",
+    "Create At": "Creat el",
     "Created library": "S'ha creat la llibreria ",
     "Creator": "Autor",
     "Current Library": "Llibreria actual",
@@ -75,7 +76,6 @@
     "Deleted files": "Fitxers eliminats",
     "Description": "Descripci\u00f3",
     "Description is required": "La descripci\u00f3 \u00e9s obligat\u00f2ria",
-    "Detail": "Detalls",
     "Details": "Detalls",
     "Directory": "Directori",
     "Document convertion failed.": "S'ha produ\u00eft un error al convertir el document.",
@@ -121,7 +121,7 @@
     "Modified files": "Fitxers modificats",
     "Modifier": "Modifica",
     "More": "M\u00e9s",
-    "More Operations": "M\u00e9s operacions",
+    "More operations": "M\u00e9s operacions",
     "Move": "Mou",
     "My Groups": "Els meus grups",
     "Name": "Nom",
@@ -134,6 +134,7 @@
     "New directories": "Directoris nous",
     "New files": "Fitxers nous",
     "Next": "Seg\u00fcent",
+    "No": "No",
     "No result": "Cap resultat",
     "None": "Cap",
     "Notification Detail": "Detalls de la notificaci\u00f3",
@@ -173,7 +174,6 @@
     "Saving...": "Guardant...",
     "Seafile": "Seafile",
     "Search": "Cerca",
-    "Search Files": "Cerca fitxers",
     "Search files in this library": "Cerca fitxers a la llibreria",
     "Send": "Envia",
     "Send to:": "Envia a:",
@@ -196,7 +196,6 @@
     "Submit": "Envia",
     "Successfully copied %(name)s and %(amount)s other items.": "S'ha copiat %(name)s i %(amount)s m\u00e9s.",
     "Successfully copied %(name)s.": "S'ha copiat %(name)s.",
-    "Successfully deleted %s": "S'ha eliminat %s",
     "Successfully moved %(name)s and %(amount)s other items.": "S'ha mogut %(name)s i %(amount)s m\u00e9s.",
     "Successfully moved %(name)s.": "S'ha mogut %(name)s.",
     "Successfully reset password to %(passwd)s for user %(user)s.": "S'ha reinicialitzat la contrasenya a %(passwd)s per l'usuari %(user)s.",
@@ -230,6 +229,7 @@
     "View Snapshot": "Visualitza la captura",
     "Visits": "Visites",
     "Wrong password": "La contrasenya no \u00e9s correcte",
+    "Yes": "S\u00ed",
     "ZIP": "ZIP",
     "all": "tot",
     "all members": "Tots el membres",
@@ -296,7 +296,7 @@
     /* formatting library */
 
     django.formats = {
-    "DATETIME_FORMAT": "j \\d\\e F \\d\\e Y \\a \\l\\e\\s G:i",
+    "DATETIME_FORMAT": "j E \\d\\e Y \\a \\l\\e\\s G:i",
     "DATETIME_INPUT_FORMATS": [
       "%d/%m/%Y %H:%M:%S",
       "%d/%m/%Y %H:%M:%S.%f",
@@ -309,7 +309,7 @@
       "%Y-%m-%d %H:%M",
       "%Y-%m-%d"
     ],
-    "DATE_FORMAT": "j \\d\\e F \\d\\e Y",
+    "DATE_FORMAT": "j E \\d\\e Y",
     "DATE_INPUT_FORMATS": [
       "%d/%m/%Y",
       "%d/%m/%y",
@@ -317,7 +317,7 @@
     ],
     "DECIMAL_SEPARATOR": ",",
     "FIRST_DAY_OF_WEEK": 1,
-    "MONTH_DAY_FORMAT": "j \\d\\e F",
+    "MONTH_DAY_FORMAT": "j E",
     "NUMBER_GROUPING": 3,
     "SHORT_DATETIME_FORMAT": "d/m/Y G:i",
     "SHORT_DATE_FORMAT": "d/m/Y",

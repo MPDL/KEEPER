@@ -10,10 +10,10 @@ from django.core.management.base import BaseCommand
 from django.urls import reverse
 from django.utils.html import escape
 from django.utils import translation
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from seaserv import seafile_api, ccnet_api
-from seahub.notifications.models import UserNotification
+from seahub.notifications.models import UserNotification, MSG_TYPE_FILE_COMMENT
 from seahub.utils import send_html_email, get_site_scheme_and_netloc
 from seahub.avatar.templatetags.avatar_tags import avatar
 from seahub.avatar.util import get_default_avatar_url
@@ -25,6 +25,10 @@ from seahub.constants import HASH_URLS
 from seahub.utils import get_site_name
 from seahub.options.models import UserOptions, KEY_COLLABORATE_EMAIL_INTERVAL, \
     KEY_COLLABORATE_LAST_EMAILED_TIME, DEFAULT_COLLABORATE_EMAIL_INTERVAL
+from seahub.seadoc.models import SeadocNotification
+from seahub.tags.models import FileUUIDMap
+from seahub.notifications.utils import gen_sdoc_smart_link
+from seahub.utils.auth import VIRTUAL_ID_EMAIL_DOMAIN
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -149,6 +153,32 @@ class Command(BaseCommand):
         notice.avatar_src = self.get_default_avatar_src()
         return notice
 
+    def format_folder_uploaded_msg(self, notice):
+        d = json.loads(notice.detail)
+
+        folder_name = d['folder_name']
+        repo_id = d['repo_id']
+        repo = seafile_api.get_repo(repo_id)
+
+        uploaded_to = d['uploaded_to']
+        if uploaded_to != '/':
+            uploaded_to = d['uploaded_to'].rstrip('/')
+            folder_path = uploaded_to + '/' + folder_name
+            parent_dir_link = reverse('lib_view', args=[repo_id, repo.name, uploaded_to.strip('/')])
+            parent_dir_name = os.path.basename(uploaded_to)
+        else:
+            folder_path = '/' + folder_name
+            parent_dir_link = reverse('lib_view', args=[repo_id, repo.name, ''])
+            parent_dir_name = repo.name
+
+        folder_link = reverse('lib_view', args=[repo_id, repo.name, folder_path.strip('/')])
+        notice.folder_link = folder_link
+        notice.folder_name = folder_name
+        notice.parent_dir_link = parent_dir_link
+        notice.parent_dir_name = parent_dir_name
+        notice.avatar_src = self.get_default_avatar_src()
+        return notice
+
     def format_group_join_request(self, notice):
         d = json.loads(notice.detail)
         username = d['username']
@@ -206,6 +236,17 @@ class Command(BaseCommand):
         notice.inv_accept_at = inv.accept_time.strftime("%Y-%m-%d %H:%M:%S")
         return notice
 
+    def format_deleted_files_msg(self, notice):
+        d = json.loads(notice.detail)
+        repo_id = d['repo_id']
+        repo = seafile_api.get_repo(repo_id)
+        repo_url = reverse('lib_view', args=[repo.id, repo.name, ''])
+
+        notice.repo_url = repo_url
+        notice.repo_name = repo.name
+        notice.avatar_src = self.get_avatar_src(notice.to_user)
+        return notice
+
     def format_repo_monitor_msg(self, notice):
 
         d = json.loads(notice.detail)
@@ -243,6 +284,27 @@ class Command(BaseCommand):
 
         return notice
 
+    def format_saml_sso_error_msg(self, notice):
+        d = json.loads(notice.detail)
+        notice.error_msg = d['error_msg']
+        return notice
+
+    def format_sdoc_msg(self, sdoc_queryset, sdoc_notice):
+        sdoc_obj = sdoc_queryset.filter(uuid=sdoc_notice.doc_uuid).first()
+        if not sdoc_obj:
+            return None
+        notice = UserNotification()
+        notice.msg_type = MSG_TYPE_FILE_COMMENT
+        notice.to_user = sdoc_notice.username
+        notice.timestamp = sdoc_notice.created_at
+        notice.file_url = gen_sdoc_smart_link(sdoc_notice.doc_uuid, with_service_url=False)
+        notice.file_name = str(sdoc_obj.filename)[:-5]
+        detail = json.loads(sdoc_notice.detail)
+        author = email2nickname(detail.get('author'))
+        notice.author = author
+        notice.avatar_src = self.get_avatar_src(author)
+        return notice
+
     def get_user_language(self, username):
         return Profile.objects.get_user_language(username)
 
@@ -256,13 +318,26 @@ class Command(BaseCommand):
 
         all_unseen_notices = UserNotification.objects.get_all_notifications(
             seen=False, time_since=last_longest_interval_time).order_by('-timestamp')
+        all_unseen_sdoc_notices = SeadocNotification.objects.filter(
+            seen=False, created_at__gt=last_longest_interval_time).order_by('-created_at')
+        sdoc_queryset = FileUUIDMap.objects.filter(uuid__in=[item.doc_uuid for item in all_unseen_sdoc_notices])
 
         results = {}
         for notice in all_unseen_notices:
             if notice.to_user not in results:
-                results[notice.to_user] = {'notices': [notice], 'interval': DEFAULT_COLLABORATE_EMAIL_INTERVAL}
+                results[notice.to_user] = {'notices': [notice],
+                                           'sdoc_notices': [],
+                                           'interval': DEFAULT_COLLABORATE_EMAIL_INTERVAL}
             else:
                 results[notice.to_user]['notices'].append(notice)
+
+        for sdoc_notice in all_unseen_sdoc_notices:
+            if sdoc_notice.username not in results:
+                results[sdoc_notice.username] = {'notices': [],
+                                                 'sdoc_notices': [sdoc_notice],
+                                                 'interval': DEFAULT_COLLABORATE_EMAIL_INTERVAL}
+            else:
+                results[sdoc_notice.username]['sdoc_notices'].append(sdoc_notice)
 
         user_options = UserOptions.objects.filter(
             email__in=results.keys(), option_key=KEY_COLLABORATE_EMAIL_INTERVAL)
@@ -278,7 +353,9 @@ class Command(BaseCommand):
             else:
                 results[email]['interval'] = interval
 
-        return [(key, value['interval'], value['notices']) for key, value in results.items()]
+        return [(key, value['interval'],
+                 value['notices'], value['sdoc_notices'],
+                 sdoc_queryset) for key, value in results.items()]
 
     def do_action(self):
 
@@ -288,7 +365,7 @@ class Command(BaseCommand):
 
         # check if to_user active
         user_active_dict = {}
-        for (to_user, interval_val, notices) in user_interval_notices:
+        for (to_user, interval_val, notices, sdoc_notices, sdoc_queryset) in user_interval_notices:
 
             if to_user in user_active_dict:
                 continue
@@ -303,9 +380,13 @@ class Command(BaseCommand):
 
         # save current language
         cur_language = translation.get_language()
-        for (to_user, interval_val, notices) in user_interval_notices:
+        for (to_user, interval_val, notices, sdoc_notices, sdoc_queryset) in user_interval_notices:
 
             if not user_active_dict[to_user]:
+                continue
+
+            contact_email = Profile.objects.get_contact_email_by_user(to_user)
+            if not contact_email or VIRTUAL_ID_EMAIL_DOMAIN in contact_email:
                 continue
 
             # get last_emailed_time if any, defaults to today 00:00:00.0
@@ -319,7 +400,8 @@ class Command(BaseCommand):
                     continue
 
             user_notices = list(filter(lambda notice: notice.timestamp > last_emailed_time, notices))
-            if not user_notices:
+            user_sdoc_notices = list(filter(lambda sdoc_notice: sdoc_notice.created_at > last_emailed_time, sdoc_notices))
+            if not user_notices and not user_sdoc_notices:
                 continue
 
             # get and active user language
@@ -360,6 +442,9 @@ class Command(BaseCommand):
                 elif notice.is_file_uploaded_msg():
                     notice = self.format_file_uploaded_msg(notice)
 
+                elif notice.is_folder_uploaded_msg():
+                    notice = self.format_folder_uploaded_msg(notice)
+
                 elif notice.is_group_join_request():
                     notice = self.format_group_join_request(notice)
 
@@ -372,11 +457,18 @@ class Command(BaseCommand):
                 elif notice.is_guest_invitation_accepted_msg():
                     notice = self.format_guest_invitation_accepted_msg(notice)
 
+                elif notice.is_deleted_files_msg():
+                    notice = self.format_deleted_files_msg(notice)
+
                 elif notice.is_repo_monitor_msg():
                     notice = self.format_repo_monitor_msg(notice)
 
+                elif notice.is_saml_sso_error_msg():
+                    notice = self.format_saml_sso_error_msg(notice)
+
+
                 # KEEPER
-                if notice.msg_type in ("keeper_cdc_msg", "bloxberg_msg", "doi_suc_msg"):
+                if notice.msg_type in ('keeper_cdc_msg', 'bloxberg_msg', 'doi_suc_msg'):
                     num_keeper_notices += 1
                     continue
 
@@ -385,11 +477,18 @@ class Command(BaseCommand):
 
                 notices.append(notice)
 
+            for sdoc_notice in user_sdoc_notices:
+                if sdoc_notice.username != to_user:
+                    continue
+                notice = self.format_sdoc_msg(sdoc_queryset, sdoc_notice)
+                if notice is None:
+                    continue
+                notices.append(notice)
+
             if not notices:
                 continue
 
             user_name = email2nickname(to_user)
-            contact_email = Profile.objects.get_contact_email_by_user(to_user)
             c = {
                 'to_user': contact_email,
                 'notice_count': len(notices),

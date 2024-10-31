@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import { Utils } from '../../utils/utils';
-import { gettext } from '../../utils/constants';
+import { enableSeadoc, gettext } from '../../utils/constants';
 import ModalPortal from '../modal-portal';
 import CreateFolder from '../../components/dialog/create-folder-dialog';
 import CreateFile from '../../components/dialog/create-file-dialog';
@@ -66,14 +66,14 @@ class DirOperationToolbar extends React.Component {
 
   toggleMobileOpMenu = () => {
     this.setState({isMobileOpMenuOpen: !this.state.isMobileOpMenuOpen});
-  }
+  };
 
   hideOperationMenu = () => {
     this.setState({
       isUploadMenuShow: false,
       isCreateMenuShow: false,
     });
-  }
+  };
 
   toggleOperationMenu = (e) => {
     e.nativeEvent.stopImmediatePropagation();
@@ -82,7 +82,7 @@ class DirOperationToolbar extends React.Component {
     let top  = targetRect.bottom;
     let style = {position: 'fixed', display: 'block', left: left, top: top};
     this.setState({operationMenuStyle: style});
-  }
+  };
 
   onUploadClick = (e) => {
     this.toggleOperationMenu(e);
@@ -90,17 +90,17 @@ class DirOperationToolbar extends React.Component {
       isUploadMenuShow: !this.state.isUploadMenuShow,
       isCreateMenuShow: false,
     });
-  }
+  };
 
   onUploadFile = (e) => {
     this.setState({isUploadMenuShow: false});
     this.props.onUploadFile(e);
-  }
+  };
 
   onUploadFolder = (e) => {
     this.setState({isUploadMenuShow: false});
     this.props.onUploadFolder(e);
-  }
+  };
 
   onCreateClick = (e) => {
     this.toggleOperationMenu(e);
@@ -108,62 +108,64 @@ class DirOperationToolbar extends React.Component {
       isCreateMenuShow: !this.state.isCreateMenuShow,
       isUploadMenuShow: false,
     });
-  }
+  };
 
   onShareClick = () => {
     this.setState({
       isShareDialogShow: !this.state.isShareDialogShow
     });
-  }
+  };
 
   onCreateFolderToggle = () => {
     this.setState({isCreateFolderDialogShow: !this.state.isCreateFolderDialogShow});
-  }
+  };
 
   onCreateFileToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
-      fileType: '',
+      fileType: ''
     });
-  }
+  };
 
   onCreateMarkdownToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
       fileType: '.md'
     });
-  }
+  };
 
   onCreateExcelToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
       fileType: '.xlsx'
     });
-  }
+  };
 
   onCreatePPTToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
       fileType: '.pptx'
     });
-  }
+  };
 
   onCreateWordToggle = () => {
     this.setState({
       isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
       fileType: '.docx'
     });
-  }
+  };
 
-  onAddFile = (filePath, isDraft) => {
-    this.setState({isCreateFileDialogShow: false});
-    this.props.onAddFile(filePath, isDraft);
-  }
+  onCreateSeaDocToggle = () => {
+    this.setState({
+      isCreateFileDialogShow: !this.state.isCreateFileDialogShow,
+      fileType: '.sdoc'
+    });
+  };
 
   onAddFolder = (dirPath) => {
     this.setState({isCreateFolderDialogShow: false});
     this.props.onAddFolder(dirPath);
-  }
+  };
 
   checkDuplicatedName = (newName) => {
     let direntList = this.props.direntList;
@@ -238,7 +240,7 @@ class DirOperationToolbar extends React.Component {
 
     let content = null;
     if (Utils.isDesktop()) {
-      let { showShareBtn } = this.props;
+      const { showShareBtn, repoEncrypted } = this.props;
       content = (
         <Fragment>
           {canUpload && (
@@ -269,6 +271,7 @@ class DirOperationToolbar extends React.Component {
                 <button className="dropdown-item" onClick={this.onCreateExcelToggle} role="menuitem">{gettext('New Excel File')}</button>
                 <button className="dropdown-item" onClick={this.onCreatePPTToggle} role="menuitem">{gettext('New PowerPoint File')}</button>
                 <button className="dropdown-item" onClick={this.onCreateWordToggle} role="menuitem">{gettext('New Word File')}</button>
+                {enableSeadoc && !repoEncrypted && <button className="dropdown-item" onClick={this.onCreateSeaDocToggle} role="menuitem">{gettext('New SeaDoc File')} (beta)</button>}
               </div>
             )}
           </Fragment>
@@ -325,7 +328,7 @@ class DirOperationToolbar extends React.Component {
 
     return (
       <Fragment>
-        {(userPerm === 'rw' || userPerm === 'admin' || isCustomPermission) && (
+        {(userPerm === 'rw' || userPerm === 'admin' || userPerm === 'cloud-edit' || isCustomPermission) && (
           <div className="dir-operation">
             {content}
           </div>
@@ -336,9 +339,9 @@ class DirOperationToolbar extends React.Component {
             <CreateFile
               parentPath={this.props.path}
               fileType={this.state.fileType}
-              onAddFile={this.onAddFile}
+              onAddFile={this.props.onAddFile}
               checkDuplicatedName={this.checkDuplicatedName}
-              addFileCancel={this.onCreateFileToggle}
+              toggleDialog={this.onCreateFileToggle}
             />
           </ModalPortal>
         )}

@@ -23,6 +23,19 @@
 .tag-list-title {
   overflow: hidden;
 }
+
+.dirent-sdoc-draft-identifier {
+  display: inline-block;
+  font-size: 14px;
+  color: #888;
+  background: #eee;
+  padding: 0 8px;
+  height: 20px;
+  line-height: 20px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
 /* KEEPER */
 .small-icon {
   height: 15px;
@@ -72,3 +85,4 @@
   font-weight: bold;
   font-size: 12px;
 }
+

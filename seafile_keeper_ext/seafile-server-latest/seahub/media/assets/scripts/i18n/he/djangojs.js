@@ -7,7 +7,7 @@
 
   
   django.pluralidx = function(n) {
-    const v = (n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;
+    const v = (n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: 2;
     if (typeof v === 'boolean') {
       return v ? 1 : 0;
     } else {
@@ -81,7 +81,7 @@
     "Members": "\u05d7\u05d1\u05e8\u05d9\u05dd",
     "Message": "\u05d4\u05d5\u05d3\u05e2\u05d4",
     "Modified": "\u05d4\u05e9\u05ea\u05e0\u05d4",
-    "More Operations": "\u05e2\u05d5\u05d3 \u05e4\u05e2\u05d5\u05dc\u05d5\u05ea",
+    "More operations": "\u05e2\u05d5\u05d3 \u05e4\u05e2\u05d5\u05dc\u05d5\u05ea",
     "My Groups": "\u05d4\u05e7\u05d1\u05d5\u05e6\u05d5\u05ea \u05e9\u05dc\u05d9",
     "Name": "\u05e9\u05dd",
     "Name(optional)": "\u05e9\u05dd(\u05dc\u05d0 \u05d7\u05d5\u05d1\u05d4)",
@@ -90,6 +90,7 @@
     "New Library": "\u05e1\u05e4\u05e8\u05d9\u05d9\u05d4 \u05d7\u05d3\u05e9\u05d4",
     "New files": "\u05e7\u05d1\u05e6\u05d9\u05dd \u05d7\u05d3\u05e9\u05d9\u05dd",
     "Next": "\u05d4\u05d1\u05d0",
+    "No": "\u05dc\u05d0",
     "No result": "\u05d0\u05d9\u05df \u05ea\u05d5\u05e6\u05d0\u05d4",
     "Operation succeeded.": "\u05d4\u05e4\u05e2\u05d5\u05dc\u05d4 \u05d4\u05e6\u05dc\u05d9\u05d7\u05d4.",
     "Operations": "\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea",
@@ -115,7 +116,6 @@
     "Saving...": "\u05e9\u05d5\u05de\u05e8...",
     "Seafile": "Seafile",
     "Search": "\u05d7\u05d9\u05e4\u05d5\u05e9",
-    "Search Files": "\u05d7\u05d9\u05e4\u05d5\u05e9 \u05e7\u05d1\u05e6\u05d9\u05dd",
     "Search files in this library": "\u05d7\u05d9\u05e4\u05d5\u05e9 \u05e7\u05d1\u05e6\u05d9\u05dd \u05d1\u05e1\u05e4\u05e8\u05d9\u05d9\u05d4 \u05d6\u05d5",
     "Send": "\u05e9\u05d5\u05dc\u05d7...",
     "Send to:": "\u05dc\u05e9\u05dc\u05d5\u05d7 \u05dc:",
@@ -127,7 +127,6 @@
     "Shared by: ": "\u05e9\u05d5\u05ea\u05e3 \u05e2\"\u05d9:",
     "Size": "\u05d2\u05d5\u05d3\u05dc",
     "Submit": "\u05e9\u05dc\u05d7",
-    "Successfully deleted %s": "\u05e0\u05de\u05d7\u05e7 \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4 %s",
     "Sync": "\u05dc\u05e1\u05e0\u05db\u05e8\u05df",
     "System": "\u05de\u05e2\u05e8\u05db\u05ea",
     "System Admin": "\u05de\u05e0\u05d4\u05dc \u05de\u05e2\u05e8\u05db\u05ea",
@@ -149,6 +148,7 @@
     "View": "\u05d4\u05e6\u05d2",
     "Visits": "\u05d1\u05d9\u05e7\u05d5\u05e8\u05d9\u05dd",
     "Wrong password": "\u05e1\u05d9\u05e1\u05de\u05d0 \u05dc\u05d0 \u05e0\u05db\u05d5\u05e0\u05d4",
+    "Yes": "\u05db\u05df",
     "all members": "\u05db\u05dc \u05d4\u05d7\u05d1\u05e8\u05d9\u05dd",
     "name": "\u05e9\u05dd",
     "shared by:": "\u05e9\u05d5\u05ea\u05e3 \u05e2\"\u05d9:"

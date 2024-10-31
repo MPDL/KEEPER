@@ -510,6 +510,16 @@ class ProfessionalConfigurator(object):
         template = '''\
 %(db_config_text)s
 
+[SEAHUB EMAIL]
+enabled = true
+
+## interval of sending Seahub email. Can be s(seconds), m(minutes), h(hours), d(days)
+interval = 30m
+
+# Enable statistics
+[STATISTICS]
+enabled=true
+
 [AUDIT]
 enabled = true
 
@@ -523,15 +533,10 @@ highlight = fvh
 ## Note: If you change this option from "false" to "true", then you need to clear the search index and update the index again. See the FAQ for details.
 index_office_pdf = true
 
-[SEAHUB EMAIL]
+# Enable file history
+[FILE HISTORY]
 enabled = true
-
-## interval of sending Seahub email. Can be s(seconds), m(minutes), h(hours), d(days)
-interval = 30m
-
-# Enable statistics
-[STATISTICS]
-enabled=true
+suffix = md,txt,doc,docx,xls,xlsx,ppt,pptx,sdoc
 '''
         db_config_text = self.db_config.generate_config_text()
         if not os.path.exists(env_mgr.pro_data_dir):

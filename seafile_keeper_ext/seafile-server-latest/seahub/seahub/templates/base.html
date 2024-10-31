@@ -11,10 +11,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 {% endblock %}
 <meta http-equiv="x-ua-compatible" content="ie=edge" />
-<link rel="icon" href="{{ MEDIA_URL }}{% if filetype == 'dtable' %}{{ dtable_favicon_path }}{% else %}{{ favicon_path }}{% endif %}" type="image/x-icon">
+<link rel="icon" href="{{ MEDIA_URL }}{{ favicon_path }}" type="image/x-icon">
 <link rel="apple-touch-icon" href="{{ MEDIA_URL }}{{ apple_touch_icon_path }}">
 {% block extra_base_style %}
-<link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.min.css" %}"/>
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}/css/seafile-ui.css" />
 {% endblock %}
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/seahub.css?t=1398068110" />
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/sf_font3/iconfont.css" />
@@ -22,7 +22,6 @@
 {% if branding_css != '' %}<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}{{ branding_css }}" />{% endif %} 
 {% if enable_branding_css %}<link rel="stylesheet" type="text/css" href="{% url 'custom_css' %}" />{% endif %}
 </head>
-
 <body>
     <div id="wrapper" class="{{ LANGUAGE_CODE }} d-flex fd-col h100">
         {% block info_bar_message %}
@@ -38,7 +37,8 @@
             <a href="{{ SITE_ROOT }}" id="logo">
                 <img src="{{ MEDIA_URL }}{{ logo_path }}" title="{{ site_title }}" alt="logo" width="{{logo_width}}" height="{{logo_height}}" />
             </a>
-            <span class="sf2-icon-menu side-nav-toggle hidden-md-up hide" title="{% trans "Side Nav Menu" %}" id="js-toggle-side-nav" aria-label="{% trans "Side Nav Menu" %}"></span>
+            {% block side-panel-menu %}
+            {% endblock side-panel-menu %}
 
             {% block header_right %}
             {% if not request.user.is_authenticated %}
@@ -80,12 +80,9 @@
             {% endfor %}
         </ul>
         {% endif %}
-
-        <div id="confirm-popup" class="hide">
-            <div id="confirm-con"></div>
-            <button id="confirm-yes">{% trans "Yes" %}</button>
-            <button class="simplemodal-close">{% trans "No" %}</button>
-        </div>
+        
+        {% block extra-hidden-dom %}
+        {% endblock %}
 </div><!-- wrapper -->
 <script type="text/javascript">
 var SEAFILE_GLOBAL = {
@@ -100,7 +97,6 @@ var app = {
 }
 </script>
 <script type="text/javascript" src="{% static "scripts/lib/jquery.min.js" %}" id="jquery"></script>{# 'id="jquery"' is for pdf file view with pdf2html #}
-<script type="text/javascript" src="{% static "scripts/lib/jquery.simplemodal.js" %}"></script>
 <script type="text/javascript" src="{{ MEDIA_URL }}js/jq.min.js"></script>
 <script type="text/javascript" src="{{ MEDIA_URL }}js/base.js?t=1536127546642"></script>
 <script type="text/javascript">
@@ -193,26 +189,6 @@ $('#info-bar .close').on('click', function() {
     });
 })();
 {% endif %}
-
-if ($('.side-nav').length) {
-    $('#logo').addClass('hidden-sm-down');
-    $('#js-toggle-side-nav').removeClass('hide');
-}
-$('#js-toggle-side-nav').on('click', function() {
-    $('.side-nav').addClass('side-nav-shown');
-    $('').modal({
-        overlayClose: true,
-        onClose: function() {
-            $('.side-nav').removeClass('side-nav-shown');
-            $.modal.close();
-        }});
-    $('#simplemodal-container').css({'display':'none'});
-    return false;
-});
-$('.js-close-side-nav').on('click', function() {
-    $('.side-nav').removeClass('side-nav-shown');
-    return false;
-});
 </script>
 {% block extra_script %}{% endblock %}
 <!-- Start of mpdl Zendesk Widget script -->

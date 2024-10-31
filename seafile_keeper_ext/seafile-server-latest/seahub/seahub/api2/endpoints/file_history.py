@@ -132,7 +132,7 @@ class FileHistoryView(APIView):
         #     limit = 50 if int(limit) < 1 else int(limit)
         # except ValueError:
         #     limit = 50
-        
+
         try:
             file_revisions, next_start_commit = get_file_revisions_within_limit(
                     repo_id, path, commit_id, limit)

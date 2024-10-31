@@ -878,6 +878,8 @@ def do_deploy(args):
         ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
+        Utils.error('TODO: remove seahub/media/.DS_Store!!!')
+
         # global "yes" for all questions
         if args.yes:
             Utils.all = True
@@ -1006,6 +1008,7 @@ def do_upgrade(args):
 env_mgr = EnvManager()
 
 def main():
+
     try:
         import argparse
     except ImportError:
