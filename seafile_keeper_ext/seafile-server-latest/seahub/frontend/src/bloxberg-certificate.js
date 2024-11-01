@@ -11,7 +11,8 @@ import {
 } from "./utils/constants";
 import PDFViewer from "./components/pdf-viewer";
 import ExpandText from "./components/expand-text";
-import ShowMore from "react-show-more";
+// import ShowMore from "react-show-more";
+import ReadMoreArea from "@foxeian/react-read-more";
 
 import "./css/bloxberg-certificate.css";
 import "./css/pdf-file-view.css";
@@ -73,14 +74,21 @@ class BloxbergCertificatePage extends React.Component {
                     text={repoName}
                   />
                 </h1>
-                <ShowMore
-                  lines={3}
-                  more="Show more"
-                  less="Show less"
-                  anchorClass=""
+                {/* <ShowMore */}
+                {/*   lines={3} */}
+                {/*   more="Show more" */}
+                {/*   less="Show less" */}
+                {/*   anchorClass="" */}
+                {/* > */}
+                {/*   {repoDesc} */}
+                {/* </ShowMore> */}
+                <ReadMoreArea
+                  letttersLimit={500}
+                  expandLabel="Read more"
+                  collapseLabel="Read less"
                 >
                   {repoDesc}
-                </ShowMore>
+                </ReadMoreArea>
                 <div className="table_row">
                   <b>{gettext("Author(s)")}: </b>
                   {authors}
@@ -123,7 +131,7 @@ class BloxbergCertificatePage extends React.Component {
             </div>
           </div>
         )}
-        <div className={ PDFViewerClassName } onClick={this.toggleModal}>
+        <div className={PDFViewerClassName} onClick={this.toggleModal}>
           <PDFViewer />
         </div>
       </div>
