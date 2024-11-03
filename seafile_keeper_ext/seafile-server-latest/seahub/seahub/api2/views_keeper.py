@@ -29,7 +29,7 @@ from keeper.models import CDC, DoiRepo, Catalog, BCertificate
 from django.http import JsonResponse, HttpResponse, Http404, StreamingHttpResponse
 from django.shortcuts import render
 
-from django.utils.translation import ugettext as _, activate, get_language
+from django.utils.translation import gettext as _, activate, get_language
 from django.urls import reverse
 
 from urllib.parse import quote_plus
