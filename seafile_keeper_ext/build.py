@@ -878,7 +878,7 @@ def do_deploy(args):
         ## Deploy whole keeper stuff
         Utils.info('do deploy --all')
 
-        Utils.error('TODO: remove seahub/media/.DS_Store!!!')
+        Utils.info('TODO: remove seahub/media/.DS_Store!!!')
 
         # global "yes" for all questions
         if args.yes:
@@ -949,12 +949,12 @@ def do_generate(args):
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
         else:
-            # copy frontend/build to ext by default
+            # put built frontend assets into media assets
+            Utils.run(f"sudo -u {user} make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+            # put assets into ~ext
             args.frontend_build = True
             args.seafile_src_to_ext = False
             do_upgrade(args)
-            # deploy assets
-            Utils.run(f"sudo -u {user} make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
 def do_run(args):
     if args.frontend_dev:
@@ -966,7 +966,7 @@ def do_run(args):
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
-    print('Upgrade...')
+    print('Upgrade keeper_ext...')
     # for root, dirs, files in os.walk(_join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
         Utils.info("Copy seafile src files to ext")
@@ -987,23 +987,29 @@ def do_upgrade(args):
                             Utils.info("Copy from {} to {}".format(src_path, dest_path))
                             shutil.copy(src_path, dest_path)
     elif args.frontend_build:
-        Utils.info("Copy frontend/build files into ext")
-        src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
-        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
+        #~latest/seahub/media/assets/frontend/static -> ~ext/seafile-server-latest/seahub/media/assets/frontend/static
+        Utils.info("Copy frontend collected static files into ~ext")
+        src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub',  'media', 'assets', 'frontend', 'static')
+        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'media', 'assets', 'frontend', 'static')
         print(src_dir, '->', dest_dir)
         shutil.rmtree(dest_dir)
         shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
-        
-        Utils.info("Copy assets/scripts files into ext")
-        p = ('seahub', 'media', 'assets', 'scripts')
-        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', *p )
-        src_dir =  _join(env_mgr.seafile_server_latest_target, *p)
-        print(src_dir, '(app, i18n) ->', dest_dir)
-        shutil.rmtree(_join(dest_dir, 'app'), ignore_errors=True)
-        shutil.copytree(_join(src_dir, 'app'), _join(dest_dir, 'app'))
-        shutil.rmtree(_join(dest_dir, 'i18n'), ignore_errors=True)
-        shutil.copytree(_join(src_dir, 'i18n'), _join(dest_dir, 'i18n'))
 
+        # Utils.info("Copy frontend/build files into ext")
+        # src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
+        # dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
+        # print(src_dir, '->', dest_dir)
+        # shutil.rmtree(dest_dir)
+        # shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
+
+
+        # Utils.info("Copy assets/scripts files into ext")
+        # p = [ 'seahub', 'media', 'assets', 'scripts' ]
+        # dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', *p )
+        # src_dir =  _join(env_mgr.seafile_server_latest_target, *p)
+        # print(src_dir, '(app, i18n) ->', dest_dir)
+        # shutil.rmtree(_join(dest_dir, 'app'), ignore_errors=True)
+        # shutil.copytree(_join(src_dir, 'app'), _join(dest_dir, 'app'))
 
 env_mgr = EnvManager()
 
