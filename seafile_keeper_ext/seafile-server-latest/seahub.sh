@@ -136,11 +136,10 @@ function warning_if_seafile_not_running () {
 
 function prepare_seahub_log_dir() {
     logdir=${TOPDIR}/logs
-        if ! mkdir -p "${logdir}"; then
+    if ! mkdir -p "${logdir}"; then
 
-            echo "ERROR: failed to create logs dir \"${logdir}\""
-            exit 1
-        fi
+        echo "ERROR: failed to create logs dir \"${logdir}\""
+        exit 1
     fi
     export SEAHUB_LOG_DIR=${logdir}
 }
@@ -173,9 +172,10 @@ function start_seahub () {
 
     export DJANGO_SETTINGS_MODULE=seahub.settings
     ### if seahub cannot start, use this command:
-    #$PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload --check-config
+    # $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload --check-config
     ### for runtime debugging: https://docs.gunicorn.org/en/stable/settings.html#errorlog
-    #$PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --error-logfile /tmp/gunicorn.err.log --log-level 'debug' --preload
+    # $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --error-logfile /tmp/gunicorn.err.log --log-level 'debug' --preload
+    
     $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload
 
     # Ensure seahub is started successfully
