@@ -1,6 +1,6 @@
 from django import template
 from django.utils.html import escape
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 import json
 
 register = template.Library()
@@ -13,7 +13,7 @@ def get_value_from_json(value, key):
     json_dict = json.loads(value)
     result = ''
     if key in json_dict:
-        result = force_text(escape(json_dict[key]))
+        result = force_str(escape(json_dict[key]))
     return result
 
 @register.simple_tag
