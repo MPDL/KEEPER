@@ -113,14 +113,14 @@ def RepoUpdateEventHandler(config, session, msg):
 
                 save_user_activities(session, records)
 
-            # TODO check: catalog entry update
-            # KEEPER
-            logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
-            logging.info("Trying to create/update keeper catalog entry for repo_id: %s..." % repo_id)
-            if bool(generate_catalog_entry_by_repo_id(repo_id)):
-                logging.info("Success!")
-            else:
-                logging.error("Something went wrong...")
+                # TODO check: catalog entry update
+                # KEEPER
+                logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
+                logging.info("Trying to create/update keeper catalog entry for repo_id: %s..." % repo_id)
+                if bool(generate_catalog_entry_by_repo_id(repo_id)):
+                    logging.info("Success!")
+                else:
+                    logging.error("Something went wrong...")
 
 
                 # save repo monitor recodes
