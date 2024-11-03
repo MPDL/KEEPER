@@ -573,7 +573,7 @@ DESKTOP_CUSTOM_BRAND = 'KEEPER'
 ##########################################################################
 #### Email settings
 
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = __EMAIL_USE_TLS__
 EMAIL_HOST = '__EMAIL_HOST__'        # smpt server
 EMAIL_PORT = '__EMAIL_PORT__'
 DEFAULT_FROM_EMAIL = '__DEFAULT_FROM_EMAIL__'
