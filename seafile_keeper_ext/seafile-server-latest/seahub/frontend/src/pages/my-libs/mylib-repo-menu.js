@@ -116,6 +116,7 @@ class MylibRepoMenu extends React.Component {
 
   getAdvancedOperations = () => {
     // KEEPER
+    let repo = this.props.repo;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
     let showArchiveLibraryMenuItem = !repo.encrypted;
     let showCertifyLibraryMenuItem = !repo.encrypted;
