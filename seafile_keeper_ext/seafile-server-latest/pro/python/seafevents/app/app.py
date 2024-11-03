@@ -4,6 +4,9 @@ from seafevents.tasks import IndexUpdater, SeahubEmailSender, LdapSyncer,\
         WorkWinxinNoticeSender, FileUpdatesSender, RepoOldFileAutoDelScanner,\
         DeletedFilesCountCleaner
 
+# KEEPER                                                                                                                              
+from seafevents.keeper_archiving import KeeperArchiving
+from seafevents.keeper_archiving.config import get_keeper_archiving_conf
 
 class App(object):
     def __init__(self, config, ccnet_config, seafile_config,
