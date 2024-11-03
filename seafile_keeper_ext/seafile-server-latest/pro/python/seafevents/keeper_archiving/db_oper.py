@@ -5,14 +5,15 @@ from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy import create_engine, desc
 from sqlalchemy.sql import text
 from .models import KeeperArchive, KeeperArchiveOwnerQuota, KeeperBase, MAX_UNICODE_TEXT_LEN
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, quote as urlquote
 from sqlalchemy.orm import sessionmaker
 from seafevents.db import ping_connection
 from sqlalchemy.event import contains as has_event_listener, listen as add_event_listener
 from sqlalchemy.pool import Pool
 
 from seahub_settings import CACHES, DATABASES
-from django.utils.http import urlquote
+### replaced with urllib.parse quote
+# from django.utils.http import urlquote
 from django.utils import timezone
 
 from keeper.common import truncate_str
