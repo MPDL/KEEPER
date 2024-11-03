@@ -19,7 +19,7 @@ from seahub.base.templatetags.seahub_tags import email2nickname
 from seahub.utils import send_html_email, get_site_name
 from seahub.settings import ARCHIVE_METADATA_TARGET
 from keeper.common import parse_markdown_doi
-from django.utils.translation import ugettext as _, activate
+from django.utils.translation import gettext as _, activate
 from lds_merkle_proof_2019.merkle_proof_2019 import MerkleProof2019
 from seahub.settings import BLOXBERG_SERVER, BLOXBERG_CERTS_STORAGE, BLOXBERG_PUBLIC_KEY, BLOXBERG_API_KEY
 from django.db import connection

@@ -11,7 +11,7 @@ from keeper.utils import validate_year, validate_author, validate_institute, val
 from keeper.cdc.cdc_manager import has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
 from seahub.utils import send_html_email, get_site_name
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from seafevents.keeper_archiving.db_oper import MSG_TYPE_KEEPER_ARCHIVING_MSG
 
 # Get an instance of a logger
