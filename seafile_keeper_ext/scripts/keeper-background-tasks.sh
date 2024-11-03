@@ -8,6 +8,8 @@ INSTALLPATH="__SEAFILE_DIR__/seafile-server-latest"
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
+seafile_rpc_pipe_path=${INSTALLPATH}/runtime
+
 
 logdir=${TOPDIR}/logs
 pro_pylibs_dir=${INSTALLPATH}/pro/python
@@ -137,6 +139,8 @@ function before_start() {
     export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
 
     export SEAFES_DIR=$pro_pylibs_dir/seafes
+
+    export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
 
     export PYTHON_EGG_CACHE=$TOPDIR/.cache/Python-Eggs
 
