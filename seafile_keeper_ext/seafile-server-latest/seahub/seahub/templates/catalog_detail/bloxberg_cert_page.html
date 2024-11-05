@@ -5,6 +5,8 @@
 {% block sub_title %}bloxberg certificate - {% endblock %}
 
 {% block extra_style %}
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}js/pdf/web/viewer.css" />
+<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}js/pdf/web/custom.css" />
 <link rel="resource" type="application/l10n" href="{{ MEDIA_URL }}js/pdf/web/locale/locale.properties" />
 {% render_bundle 'historyTrashFileView' 'css' %}
 {% render_bundle 'bloxbergCertificate' 'css' %}
