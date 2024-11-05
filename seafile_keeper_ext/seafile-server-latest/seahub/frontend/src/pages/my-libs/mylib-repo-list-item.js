@@ -89,7 +89,7 @@ class MylibRepoListItem extends React.Component {
       isRepoShareAdminDialogOpen: false,
       isRepoDeleted: false,
       isOldFilesAutoDelDialogOpen: false,
-      // KEEPER  
+      // KEEPER
       isAssignDoiDialogShow: false,
       isArchiveLibraryDialogShow: false,
       isCertifyLibraryDialogShow: false,
@@ -468,7 +468,7 @@ class MylibRepoListItem extends React.Component {
     );
   };
 
-  // KEEPER 
+  // KEEPER
   onAssignDoiToggle = () => {
     this.setState({ isAssignDoiDialogShow: !this.state.isAssignDoiDialogShow });
   };

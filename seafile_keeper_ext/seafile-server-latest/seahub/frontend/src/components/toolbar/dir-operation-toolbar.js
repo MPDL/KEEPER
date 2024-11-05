@@ -173,7 +173,7 @@ class DirOperationToolbar extends React.Component {
       return object.name === newName;
     });
     return isDuplicated;
-  }
+  };
 
   // KEEPER
   onArchiveLibraryHide = () => {
@@ -195,7 +195,7 @@ class DirOperationToolbar extends React.Component {
       .catch((error) => {
         let errorMsg = Utils.getErrorMsg(error);
         handleCanArchiveResponse(this, {
-          data: { status: "system_error", msg: errorMsg },
+          data: { status: 'system_error', msg: errorMsg },
         });
       });
   };
@@ -304,7 +304,7 @@ class DirOperationToolbar extends React.Component {
             >
               {gettext('Metadata')}
             </button>
-          )}  
+          )}
         </Fragment>
       );
     } else {

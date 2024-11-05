@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+// import { createRoot } from 'react-dom/client';
+import PropTypes from 'prop-types';
 import {
   gettext,
   siteRoot,
@@ -10,7 +12,6 @@ import {
   siteTitle,
 } from './utils/constants';
 import ExpandText from './components/expand-text';
-// import ShowMore from 'react-show-more';
 import ReadMoreArea from '@foxeian/react-read-more';
 
 import './css/bloxberg-certificate.css';
@@ -26,9 +27,16 @@ const {
   owner_contact_email,
 } = window.libraryDetails.pageOptions;
 
+const propTypes = {
+  type : PropTypes.string.isRequired,
+  data: PropTypes.object.isRequired,
+  theadData: PropTypes.object.isRequired,
+};
+
+
 class LibraryDetailsPage extends React.Component {
   constructor(props) {
-    console.log(bloxberg_certs);
+    // console.log(bloxberg_certs);
     super(props);
     this.archiveTheadData = [
       { width: '20%', text: gettext('Version') },
@@ -48,9 +56,9 @@ class LibraryDetailsPage extends React.Component {
     ];
 
     this.state = {
-      showArchives: JSON.parse(archive_repos).length > 0 ? true : false,
-      showDoi: JSON.parse(doi_repos).length > 0 ? true : false,
-      showCerts: JSON.parse(bloxberg_certs).length > 0 ? true : false,
+      showArchives: JSON.parse(archive_repos).length > 0,
+      showDoi: JSON.parse(doi_repos).length > 0,
+      showCerts: JSON.parse(bloxberg_certs).length > 0,
     };
   }
 
@@ -79,14 +87,6 @@ class LibraryDetailsPage extends React.Component {
                   text={repoName}
                 />
               </h1>
-              {/* <ShowMore */}
-              {/*     lines={3} */}
-              {/*     more='Show more' */}
-              {/*     less='Show less' */}
-              {/*     anchorClass='' */}
-              {/* > */}
-              {/*     {repoDesc} */}
-              {/* </ShowMore> */}
               <ReadMoreArea
                 lettersLimit={500}
                 expandLabel="Read more"
@@ -248,5 +248,10 @@ class Content extends React.Component {
   }
 }
 
+LibraryDetailsPage.propTypes = propTypes;
+
 ReactDOM.render(<LibraryDetailsPage />, document.getElementById('wrapper'));
 
+// const container = document.getElementById('root');
+// const root = createRoot(container);
+// root.render(<LibraryDetailsPage />);

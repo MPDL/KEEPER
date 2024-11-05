@@ -16,25 +16,25 @@ import '../css/keeper-archive-metadata-form.css';
 
 let mpgInstituteOptions = [];
 
-const defaultResourceType = "Library";
-const resourceTypes = ["Library", "Project"];
+const defaultResourceType = 'Library';
+const resourceTypes = ['Library', 'Project'];
 
-const defaultAuthors = [{firstName: "", lastName: "", affs: [""]}];
-const defaultDirectors = [{firstName: "", lastName: ""}];
-const defaultPublisher = gettext("MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.");
+const defaultAuthors = [{firstName: '', lastName: '', affs: ['']}];
+const defaultDirectors = [{firstName: '', lastName: ''}];
+const defaultPublisher = gettext('MPDL Keeper Service, Max-Planck-Gesellschaft zur Förderung der Wissenschaften e. V.');
 
 const defaultMd = {
-  title: "",
+  title: '',
   authors: defaultAuthors,
   publisher: defaultPublisher,
-  description: "",
-  year: "",
-  institute: "",
-  department: "",
+  description: '',
+  year: '',
+  institute: '',
+  department: '',
   directors: defaultDirectors,
   resourceType: defaultResourceType,
-  license: "",
-  errors: "",
+  license: '',
+  errors: '',
 };
 
 const defaultValidMd = {
@@ -51,6 +51,7 @@ const defaultValidMd = {
 
 const infoAreaPropTypes = {
   id: PropTypes.string.isRequired,
+  helpText: PropTypes.string.isRequired,
 };
 
 class InfoArea extends React.Component {
@@ -78,14 +79,14 @@ class InfoArea extends React.Component {
     return (
       <Fragment>
         <div className="input-tip pt-0">
-          {this.props.id != "license" &&
-          <span style={{color: "red", fontWeight: "900"}}>*&nbsp;&nbsp;</span>
+          {this.props.id != 'license' &&
+          <span style={{color: 'red', fontWeight: '900'}}>*&nbsp;&nbsp;</span>
           }
-          <i className="fas fa-question-circle" id={this.props.id + "-help"}/>
+          <i className="fas fa-question-circle" id={this.props.id + '-help'}/>
           <Tooltip
             toggle={this.toggleHelp}
             delay={{show: 0, hide: 0}}
-            target={this.props.id + "-help"}
+            target={this.props.id + '-help'}
             placement="right"
             isOpen={this.state.helpTooltipOpen}
           >
@@ -102,6 +103,11 @@ InfoArea.propTypes = infoAreaPropTypes;
 
 const keeperArchiveMetadataFormPropTypes = {
   repoID: PropTypes.string.isRequired,
+  header: PropTypes.string.isRequired,
+  onButton1: PropTypes.func.isRequired,
+  onButton2: PropTypes.func.isRequired,
+  button1Label: PropTypes.string.isRequired,
+  button2Label: PropTypes.string.isRequired,
 };
 
 class KeeperArchiveMetadataForm extends React.Component {
@@ -125,19 +131,19 @@ class KeeperArchiveMetadataForm extends React.Component {
         let newState = this.state;
         if ('data' in res) {
           Object.keys(defaultMd).map((k) => {
-            newState[k] = k in res.data ? res.data[k] : "";
+            newState[k] = k in res.data ? res.data[k] : '';
           });
-          if (!("authors" in newState && newState.authors.length > 0)) {
+          if (!('authors' in newState && newState.authors.length > 0)) {
             newState.authors = defaultAuthors;
           }
-          if (!("directors" in newState && newState.directors.length > 0)) {
+          if (!('directors' in newState && newState.directors.length > 0)) {
             newState.directors = defaultDirectors;
           }
-          if (!("publisher" in newState && newState.publisher && newState.publisher.trim())) {
+          if (!('publisher' in newState && newState.publisher && newState.publisher.trim())) {
             newState.publisher = defaultPublisher;
           }
           if (
-            !("resourceType" in newState && newState.resourceType && newState.resourceType.trim())
+            !('resourceType' in newState && newState.resourceType && newState.resourceType.trim())
           ) {
             newState.resourceType = defaultResourceType;
           }
@@ -165,23 +171,23 @@ class KeeperArchiveMetadataForm extends React.Component {
     if (!key || !value)
       return false;
     let isValid = true;
-    if (key == "title" || key == "description" || key == "publisher" || key == "department" || key == "institute") {
-      isValid = value.trim() != "";
-    } else if (key == "year") {
-      const reg = new RegExp("^\\d{4}$");
+    if (key == 'title' || key == 'description' || key == 'publisher' || key == 'department' || key == 'institute') {
+      isValid = value.trim() != '';
+    } else if (key == 'year') {
+      const reg = new RegExp('^\\d{4}$');
       //const parsed = parseInt(value, 10);
       //isValid = !isNaN(parsed) && parsed > 0;
       isValid = reg.test(value);
-    } else if (key == "author" || key == "director") {
+    } else if (key == 'author' || key == 'director') {
       isValid = [Boolean(value.firstName && value.firstName.trim()), Boolean(value.lastName && value.lastName.trim())];
     }
     return isValid;
-  }
+  };
 
   isFormValid = (validMd) => {
     let isValid = true;
     outer: for (let key in validMd) {
-      if (key == "authors" || key == "directors") {
+      if (key == 'authors' || key == 'directors') {
         for (let a of validMd[key])
           if (!a[0] || !a[1]) {
             isValid = false;
@@ -189,11 +195,11 @@ class KeeperArchiveMetadataForm extends React.Component {
           }
       } else if (!validMd[key]) {
         isValid = false;
-        break outer;
+        break;
       }
     }
     return isValid;
-  }
+  };
 
   setButtons = () => {
     const isValid = this.isFormValid(this.state.validMd);
@@ -201,11 +207,11 @@ class KeeperArchiveMetadataForm extends React.Component {
       isButton1Disabled: this.state.isSaved && isValid,
       isButton2Disabled: !this.state.isSaved || !isValid,
     });
-  }
+  };
 
   getValidMd = (md) => {
     Object.keys(defaultValidMd).map(k => {
-      if (k == "authors" || k == "directors") {
+      if (k == 'authors' || k == 'directors') {
         for (let idx in md[k]) {
           this.state.validMd[k][idx] = this.isFieldValid(k.slice(0, -1), md[k][idx]);
         }
@@ -214,7 +220,7 @@ class KeeperArchiveMetadataForm extends React.Component {
       }
     });
     return this.state.validMd;
-  }
+  };
 
   onButton1 = e => {
     e.preventDefault();
@@ -224,7 +230,7 @@ class KeeperArchiveMetadataForm extends React.Component {
         res.isSaved = true;
         this.setState(res, () => this.setButtons());
         toaster.success(
-          gettext("Success.") + (this.state.isButton2Disabled ? "" : " " + gettext("Now you can archive.")),
+          gettext('Success.') + (this.state.isButton2Disabled ? '' : ' ' + gettext('Now you can archive.')),
           {duration: 3}
         );
       })
@@ -258,7 +264,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   setAuthorInputFields(values) {
     for (let idx in values) {
-      this.state.validMd.authors[idx] = this.isFieldValid("author", values[idx]);
+      this.state.validMd.authors[idx] = this.isFieldValid('author', values[idx]);
     }
     this.setState({
       authors: values,
@@ -273,7 +279,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorAddFields = idx => {
     const values = [...this.state.authors];
-    values.splice(idx + 1, 0, {firstName: "", lastName: "", affs: [""]});
+    values.splice(idx + 1, 0, {firstName: '', lastName: '', affs: ['']});
     this.setAuthorInputFields(values);
   };
 
@@ -285,7 +291,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorInputChange = (idx, e) => {
     const values = [...this.state.authors];
-    if (e.target.name === "firstName") {
+    if (e.target.name === 'firstName') {
       values[idx].firstName = e.target.value;
     } else {
       values[idx].lastName = e.target.value;
@@ -301,7 +307,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleAuthorAffAddFields = (idx, aidx) => {
     const values = [...this.state.authors];
-    values[idx].affs.splice(aidx + 1, 0, "");
+    values[idx].affs.splice(aidx + 1, 0, '');
     this.setAuthorInputFields(values);
   };
 
@@ -313,7 +319,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   setDirectorInputFields(values) {
     for (let idx in values) {
-      this.state.validMd.directors[idx] = this.isFieldValid("director", values[idx]);
+      this.state.validMd.directors[idx] = this.isFieldValid('director', values[idx]);
     }
     this.setState({
       directors: values,
@@ -326,7 +332,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleDirectorAddFields = idx => {
     const values = [...this.state.directors];
-    values.splice(idx + 1, 0, {firstName: "", lastName: ""});
+    values.splice(idx + 1, 0, {firstName: '', lastName: ''});
     this.setDirectorInputFields(values);
   };
 
@@ -338,7 +344,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   handleDirectorInputChange = (idx, e) => {
     const values = [...this.state.directors];
-    if (e.target.name === "firstName") {
+    if (e.target.name === 'firstName') {
       values[idx].firstName = e.target.value;
     } else {
       values[idx].lastName = e.target.value;
@@ -370,11 +376,11 @@ class KeeperArchiveMetadataForm extends React.Component {
   handleInstituteChange = option => {
     let insName =
       option == null
-        ? ""
-        : !("value" in option) || option.value.trim() === ""
-          ? ""
+        ? ''
+        : !('value' in option) || option.value.trim() === ''
+          ? ''
           : option.value;
-    this.state.validMd.institute = this.isFieldValid("institute", insName);
+    this.state.validMd.institute = this.isFieldValid('institute', insName);
     this.setState({
       institute: insName,
       validMd: this.state.validMd,
@@ -386,19 +392,19 @@ class KeeperArchiveMetadataForm extends React.Component {
 
   validationProps = key => {
     return (this.state.validMd[key] ? {valid: true} : {invalid: true});
-  }
+  };
 
   validationInSelects = key => {
-    return (this.state.validMd[key] ? "is-valid" : "is-invalid");
-  }
+    return (this.state.validMd[key] ? 'is-valid' : 'is-invalid');
+  };
 
   validationInAuthors = (idx, nidx) => {
     return (this.state.validMd.authors[idx][nidx] ? {valid: true} : {invalid: true});
-  }
+  };
 
   validationInDirectors = (idx, nidx) => {
     return (this.state.validMd.directors[idx][nidx] ? {valid: true} : {invalid: true});
-  }
+  };
 
   render() {
 
@@ -418,7 +424,7 @@ class KeeperArchiveMetadataForm extends React.Component {
               <div className="h-100 d-flex flex-column">
                 <div className="flex-auto d-flex o-hidden">
                   <div className="main-panel d-flex flex-column">
-                    <div className="content position-relative" style={{paddingBottom: "0rem"}}>
+                    <div className="content position-relative" style={{paddingBottom: '0rem'}}>
 
                       {/*Title*/}
                       <FormGroup row className="md-item">
@@ -427,24 +433,24 @@ class KeeperArchiveMetadataForm extends React.Component {
                             id="lbl-title"
                             sm={1}
                           >
-                            {gettext("Title")}:
+                            {gettext('Title')}:
                           </Label>
                           <Row>
                             <Col sm={11}>
                               <Input
                                 type="textarea"
                                 className="form-control"
-                                placeholder={gettext("Title of your research project") + "..."}
+                                placeholder={gettext('Title of your research project') + '...'}
                                 value={this.state.title}
                                 onChange={(e) => {
-                                  this.handleInputChange(e, "title");
+                                  this.handleInputChange(e, 'title');
                                 }}
-                                {...this.validationProps("title")}
+                                {...this.validationProps('title')}
                               />
                             </Col>
                             <Col sm={1}>
                               <InfoArea id="title"
-                                helpText={gettext("Please enter the title of your research project.")}
+                                helpText={gettext('Please enter the title of your research project.')}
                               />
                             </Col>
                           </Row>
@@ -461,10 +467,10 @@ class KeeperArchiveMetadataForm extends React.Component {
                               className="pt-3"
                               for="lbl-authors"
                             >
-                              {gettext("Author") +
+                              {gettext('Author') +
                               (this.state.authors.length > 1
-                                ? " #" + (index + 1)
-                                : "")}
+                                ? ' #' + (index + 1)
+                                : '')}
                               :
                             </Label>
                             <Col sm={4} className="form-group md-item">
@@ -518,7 +524,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                               <InfoArea
                                 id="author"
                                 className="info-area-names"
-                                helpText={gettext("Please enter the authors and affiliation of your research project.")}
+                                helpText={gettext('Please enter the authors and affiliation of your research project.')}
                               />
                             </span>
                             }
@@ -535,7 +541,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                                     {gettext('Affiliation') +
                                     (inputField.affs.length > 1
                                       ? ' #' + (aidx + 1)
-                                      : "")}
+                                      : '')}
                                     :
                                   </label>
                                   <input
@@ -597,20 +603,20 @@ class KeeperArchiveMetadataForm extends React.Component {
                               <Input
                                 id="publisher"
                                 type="textarea"
-                                style={{height: "4em"}}
-                                placeholder={gettext("Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource") + "..."}
+                                style={{height: '4em'}}
+                                placeholder={gettext('Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource') + '...'}
                                 className="form-control"
                                 value={this.state.publisher}
                                 onChange={(e) => {
-                                  this.handleInputChange(e, "publisher");
+                                  this.handleInputChange(e, 'publisher');
                                 }}
-                                {...this.validationProps("publisher")}
+                                {...this.validationProps('publisher')}
                               />
                             </Col>
                             <Col sm={1}>
                               <InfoArea
                                 id="publisher"
-                                helpText={gettext("Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource") + "."}
+                                helpText={gettext('Please enter the name of entity that holds, archives, publishes prints, distributes, releases, issues, or produces the resource') + '.'}
                               />
                             </Col>
                           </Row>
@@ -625,27 +631,27 @@ class KeeperArchiveMetadataForm extends React.Component {
                             sm={1}
                             htmlFor="description"
                           >
-                            {gettext("Description")}:
+                            {gettext('Description')}:
                           </Label>
                           <Row>
                             <Col sm={11}>
                               <Input
                                 id="description"
                                 type="textarea"
-                                style={{height: "6em"}}
-                                placeholder={gettext("Please enter the description of your research project") + "..."}
+                                style={{height: '6em'}}
+                                placeholder={gettext('Please enter the description of your research project') + '...'}
                                 className="form-control"
                                 value={this.state.description}
                                 onChange={(e) => {
-                                  this.handleInputChange(e, "description");
+                                  this.handleInputChange(e, 'description');
                                 }}
-                                {...this.validationProps("description")}
+                                {...this.validationProps('description')}
                               />
                             </Col>
                             <Col sm={1}>
                               <InfoArea
                                 id="description"
-                                helpText={gettext("Please enter the description of your research project") + "."}
+                                helpText={gettext('Please enter the description of your research project') + '.'}
                               />
                             </Col>
                           </Row>
@@ -661,22 +667,22 @@ class KeeperArchiveMetadataForm extends React.Component {
                           className="pt-0"
                           for="lbl-year"
                         >
-                          {gettext("Year")}:
+                          {gettext('Year')}:
                         </Label>
                         <Col sm={4}>
                           <Input
                             className="form-control"
-                            placeholder={gettext("Year of project start...")}
+                            placeholder={gettext('Year of project start...')}
                             value={this.state.year}
                             onChange={(e) => {
-                              this.handleInputChange(e, "year");
+                              this.handleInputChange(e, 'year');
                             }}
-                            {...this.validationProps("year")}
+                            {...this.validationProps('year')}
                           />
                         </Col>
                         <InfoArea
                           id="year"
-                          helpText={gettext("Please enter year of project start.")}
+                          helpText={gettext('Please enter year of project start.')}
                         />
                       </FormGroup>
 
@@ -694,7 +700,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                           <Label>{gettext('Institute name')}:</Label>
                           <AsyncCreatableSelect
                             id="institute"
-                            className={this.state.validMd.institute ? "is-valid" : "is-invalid"}
+                            className={this.state.validMd.institute ? 'is-valid' : 'is-invalid'}
                             isClearable
                             cacheOptions
                             value={{
@@ -703,7 +709,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                             }}
                             onChange={this.handleInstituteChange}
                             loadOptions={this.promiseOptions}
-                            {...this.validationProps("institute")}
+                            {...this.validationProps('institute')}
                           />
                         </Col>
                         <Col sm={5} className="form-group md-item">
@@ -713,15 +719,15 @@ class KeeperArchiveMetadataForm extends React.Component {
                           <Input
                             value={this.state.department}
                             onChange={(e) =>
-                              this.handleInputChange(e, "department")
+                              this.handleInputChange(e, 'department')
                             }
-                            {...this.validationProps("department")}
+                            {...this.validationProps('department')}
                           />
                         </Col>
                         <span className="info-area-names">
                           <InfoArea
                             id="institute"
-                            helpText={gettext("Please enter the related Max Planck Institute for this research project.")}
+                            helpText={gettext('Please enter the related Max Planck Institute for this research project.')}
                           />
                         </span>
                         {this.state.directors.map((inputField, index) => (
@@ -735,7 +741,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                               {gettext('Director or PI') +
                               (this.state.directors.length > 1
                                 ? ' #' + (index + 1)
-                                : "")}
+                                : '')}
                               :
                             </Label>
                             <FormGroup className="col-sm-4 md-item">
@@ -812,7 +818,7 @@ class KeeperArchiveMetadataForm extends React.Component {
                         </Col>
                         <InfoArea
                           id="resource-type"
-                          helpText={gettext("Please enter the resource type of the entity. Allowed values for this field: Library (default), Project.")}
+                          helpText={gettext('Please enter the resource type of the entity. Allowed values for this field: Library (default), Project.')}
                         />
                       </Row>
 
@@ -824,21 +830,21 @@ class KeeperArchiveMetadataForm extends React.Component {
                           sm={1}
                           for="license"
                         >
-                          {gettext("License")}:
+                          {gettext('License')}:
                         </Label>
                         <Col sm={7}>
                           <Input
                             id="license"
-                            placeholder={gettext("Please enter the license") + "..."}
+                            placeholder={gettext('Please enter the license') + '...'}
                             className="form-control"
                             value={this.state.license}
                             onChange={(e) => {
-                              this.handleInputChange(e, "license");
+                              this.handleInputChange(e, 'license');
                             }}
                           />
                         </Col>
                         <InfoArea
-                          id="license" helpText={gettext("Please enter the license") + "."}
+                          id="license" helpText={gettext('Please enter the license') + '.'}
                         />
                       </Row>
                       {/*<br />*/}

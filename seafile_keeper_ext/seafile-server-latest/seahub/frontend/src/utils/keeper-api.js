@@ -1,7 +1,7 @@
 // const axios = require('axios');
 
-var _axios = _interopRequireDefault(require("axios"));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+var _axios = _interopRequireDefault(require('axios'));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 class KeeperAPI {
   init({ server, username, password, token }) {
@@ -11,7 +11,7 @@ class KeeperAPI {
     this.token = token; //none
     if (this.token && this.server) {
       // this.req = axios.create({
-      this.req = _axios["default"].create({
+      this.req = _axios['default'].create({
         baseURL: this.server,
         headers: { Authorization: 'Token ' + this.token },
       });
@@ -28,7 +28,7 @@ class KeeperAPI {
     }
 
     // this.req = axios.create({
-    this.req = _axios["default"].create({
+    this.req = _axios['default'].create({
       headers: {
         'X-CSRFToken': xcsrfHeaders,
       },
@@ -49,7 +49,7 @@ class KeeperAPI {
   getToken() {
     const url = this.server + '/api2/auth-token/';
     // axios
-    _axios["default"]
+    _axios['default']
       .post(url, {
         username: this.username,
         password: this.password,
@@ -119,7 +119,7 @@ class KeeperAPI {
   updateArchiveMetadata(repoID, md) {
     const url = this.server + '/api2/archive-metadata/';
     md.repo_id = repoID;
-    md.validate = true
+    md.validate = true;
     return this.req.post(url, md);
   }
 
