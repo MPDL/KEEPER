@@ -959,8 +959,9 @@ def do_generate(args):
 def do_run(args):
     if args.frontend_dev:
         Utils.info('Run react.js dev server...')
+        Utils.info('NOTE: Restart keeper service right after!')
         #FIXME: switch to OpenSSL 3.0
-        cmd = "set NODE_OPTIONS=--openssl-legacy-provider && npm run dev" 
+        cmd = "set NODE_OPTIONS=--openssl-legacy-provider && NODE_ENV='development' npm run dev" 
         RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
