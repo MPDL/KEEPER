@@ -222,6 +222,7 @@ module.exports = function (webpackEnv) {
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.
+      // publicPath: paths.publicUrlOrPath, 
       // KEEPER: TO BE CHECKED!!!
       publicPath: isEnvDevelopment ? '__SERVICE_URL__:3000/assets/bundles/' : paths.publicUrlOrPath,
       // Point sourcemap entries to original disk location (format as URL on Windows)
@@ -806,7 +807,9 @@ module.exports = function (webpackEnv) {
       // integrated into python
       new webpackBundleTracker({
         filename: isEnvProduction ? './webpack-stats.pro.json' : './webpack-stats.dev.json',
-        publicPath: isEnvProduction ? '' : paths.publicUrlOrPath
+        // publicPath: isEnvProduction ? '' : paths.publicUrlOrPath
+        // KEEPER
+        publicPath: isEnvProduction ? '' : '__SERVICE_URL__:3000/assets/bundles/'
       }),
     ].filter(Boolean),
     // Turn off performance processing because we utilize
