@@ -269,7 +269,11 @@ class MylibRepoMenu extends React.Component {
                     </DropdownToggle>
                     <DropdownMenu>
                       {advancedOperations.map((item, index)=> {
-                        return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick} onKeyDown={this.onMenuItemKeyDown}>{this.translateOperations(item)}</DropdownItem>);
+                        if (item == 'Divider') {
+                          return <DropdownItem key={index} divider />;
+                        } else {
+                          return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick} onKeyDown={this.onMenuItemKeyDown}>{this.translateOperations(item)}</DropdownItem>);
+                        }
                       })}
                     </DropdownMenu>
                   </Dropdown>
