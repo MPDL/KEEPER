@@ -402,7 +402,7 @@ def DoiView(request, repo_id, commit_id):
             'owner_contact_email': email2contact_email(repo_owner) })
 
     cdc = get_cdc_id_by_repo(repo_id) is not None
-    link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+    link = SERVICE_URL + "/repo/" + repo_id + "/snapshot/?commit_id=" + commit_id
     return render(request, './catalog_detail/landing_page.html', {
         'share_link': link,
         'cdc': cdc,
@@ -540,7 +540,7 @@ def ArchiveView(request, repo_id, version_id, is_tombstone):
         link = SERVICE_URL + '/archive/libs/' + repo_id + '/' + version_id + '/1/'
     else:
         repo_owner_email = email2contact_email(repo_owner)
-        link = SERVICE_URL + "/repo/history/view/" + repo_id + "/?commit_id=" + commit_id
+        link = SERVICE_URL + "/repo/" + repo_id + "/snapshot/?commit_id=" + commit_id
 
     return render(request, './catalog_detail/archive_page.html', {
         'share_link': link,
