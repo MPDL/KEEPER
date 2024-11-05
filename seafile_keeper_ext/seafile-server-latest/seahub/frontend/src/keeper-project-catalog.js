@@ -1,8 +1,8 @@
-import React, { Fragment } from "react";
-import { Form, FormGroup, Input } from "reactstrap";
-import ReactDOM from "react-dom";
-import { navigate } from "@reach/router";
-import { Utils } from "./utils/utils";
+import React, { Fragment } from 'react';
+import { Form, FormGroup, Input } from 'reactstrap';
+import ReactDOM from 'react-dom';
+import { navigate } from '@gatsbyjs/reach-router';
+import { Utils } from './utils/utils';
 import {
   gettext,
   logoHeight,
@@ -11,24 +11,24 @@ import {
   mediaUrl,
   siteRoot,
   siteTitle,
-} from "./utils/constants";
-import { keeperAPI } from "./utils/seafile-api";
-import Loading from "./components/loading";
-import Paginator from "./components/paginator";
-import CommonToolbar from "./components/toolbar/common-toolbar";
-import KeeperCatalogFacetDialog from "./components/dialog/keeper-catalog-facet-dialog";
+} from './utils/constants';
+import { keeperAPI } from './utils/seafile-api';
+import Loading from './components/loading';
+import Paginator from './components/paginator';
+import CommonToolbar from './components/toolbar/common-toolbar';
+import KeeperCatalogFacetDialog from './components/dialog/keeper-catalog-facet-dialog';
 
-import "./css/toolbar.css";
-import "./css/search.css";
+import './css/toolbar.css';
+import './css/search.css';
 
-import "./css/keeper-project-catalog.css";
+import './css/keeper-project-catalog.css';
 
 const { repoID, repoName, userPerm } = window.app.pageOptions;
 
 const maxDescLength = 500;
 
 const defaultFacet = {
-  order: "asc",
+  order: 'asc',
   termEntries: {},
   termsChecked: [],
 };
@@ -38,13 +38,13 @@ class KeeperProjectCatalog extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      errorMsg: "",
+      errorMsg: '',
       currentPage: 1,
       perPage: 25,
       hasNextPage: false,
       items: [],
       catalogScope: [],
-      searchTerm: "",
+      searchTerm: '',
       isAuthorFacetDialogOpen: false,
       isYearFacetDialogOpen: false,
       isInstituteFacetDialogOpen: false,
@@ -59,17 +59,17 @@ class KeeperProjectCatalog extends React.Component {
     const { currentPage, perPage } = this.state;
     this.setState(
       {
-        perPage: parseInt(urlParams.get("per_page") || perPage),
-        currentPage: parseInt(urlParams.get("page") || currentPage),
+        perPage: parseInt(urlParams.get('per_page') || perPage),
+        currentPage: parseInt(urlParams.get('page') || currentPage),
       },
       () => {
         this.getItems(this.state.currentPage, true);
       }
     );
-    const script = document.createElement("script");
+    const script = document.createElement('script');
     script.src =
-      "https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa";
-    script.id = "ze-snippet";
+      'https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa';
+    script.id = 'ze-snippet';
     script.async = true;
     document.body.appendChild(script);
   }
@@ -89,7 +89,7 @@ class KeeperProjectCatalog extends React.Component {
     let scope = new Set();
     for (let fkey of Object.keys(fs)) {
       let f = fs[fkey];
-      if ("termsChecked" in f && f.termsChecked.length > 0) {
+      if ('termsChecked' in f && f.termsChecked.length > 0) {
         for (let tc of f.termsChecked) {
           for (let e of f.termEntries[tc]) scope.add(e);
         }
@@ -143,7 +143,7 @@ class KeeperProjectCatalog extends React.Component {
           hasNextPage: d.more,
           catalogScope: d.scope,
           facets: this.updateFacets(d.facets),
-          isAccessDenied: "is_access_denied" in d && d.is_access_denied,
+          isAccessDenied: 'is_access_denied' in d && d.is_access_denied,
         });
       })
       .catch((error) => {
@@ -166,7 +166,7 @@ class KeeperProjectCatalog extends React.Component {
   };
 
   _chk = (f) => {
-    return f && "termsChecked" in f && f.termsChecked.length > 0;
+    return f && 'termsChecked' in f && f.termsChecked.length > 0;
   };
 
   setHasTermsChecked = () => {
@@ -207,20 +207,20 @@ class KeeperProjectCatalog extends React.Component {
     if (selectedItem.is_dir === true) {
       let url =
         siteRoot +
-        "library/" +
+        'library/' +
         selectedItem.repo_id +
-        "/" +
+        '/' +
         selectedItem.repo_name +
         selectedItem.path;
       navigate(url, { repalce: true });
     } else {
       let url =
         siteRoot +
-        "lib/" +
+        'lib/' +
         selectedItem.repo_id +
-        "/file" +
+        '/file' +
         Utils.encodePath(selectedItem.path);
-      let newWindow = window.open("about:blank");
+      let newWindow = window.open('about:blank');
       newWindow.location.href = url;
     }
   };
@@ -257,13 +257,13 @@ class KeeperProjectCatalog extends React.Component {
     let f = this.state.facets[fkey];
     return (
       <Fragment>
-        <a href="#" style={{ color: "#575859", fontWeight: "lighter" }}>
+        <a href="#" style={{ color: '#575859', fontWeight: 'lighter' }}>
           {gettext(fkey.charAt(0).toUpperCase() + fkey.slice(1))}
         </a>
         {f.termsChecked.length > 0 && (
           <i
             className={
-              "ml-1 fa fa-arrow-" + (f.order == "desc" ? "up" : "down")
+              'ml-1 fa fa-arrow-' + (f.order == 'desc' ? 'up' : 'down')
             }
           />
         )}
@@ -275,8 +275,8 @@ class KeeperProjectCatalog extends React.Component {
                   <li className="ml-5 mb-0">
                     {t +
                       (t in f.termEntries
-                        ? " (" + f.termEntries[t].length + ")"
-                        : "")}
+                        ? ' (' + f.termEntries[t].length + ')'
+                        : '')}
                   </li>
                 </Fragment>
               )
@@ -295,7 +295,7 @@ class KeeperProjectCatalog extends React.Component {
       facets,
       searchTerm,
     } = this.state;
-    const hasSearchTerm = Boolean(searchTerm && searchTerm.trim() != "");
+    const hasSearchTerm = Boolean(searchTerm && searchTerm.trim() != '');
     return (
       <Fragment>
         <div className="h-100 d-flex flex-column">
@@ -316,44 +316,44 @@ class KeeperProjectCatalog extends React.Component {
               {this.state.isAccessDenied ? (
                 <h3 className="offset-md-2 col-md-8 mt-9 text-center error">
                   {gettext(
-                    "Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support."
+                    'Sie sind leider nicht berechtigt den Projektkatalog zu öffnen. Bitte wenden Sie sich an den Keeper Support.'
                   )}
                 </h3>
               ) : (
                 <div className="col-md-8 offset-md-2">
                   <h3 className="d-flex offset-md-3" id="header">
                     {gettext(
-                      "The KEEPER Project Catalog of the Max Planck Society"
+                      'The KEEPER Project Catalog of the Max Planck Society'
                     )}
                   </h3>
                   <div className="row">
                     <div id="facet" className="col-md-3">
                       <h3
                         style={{
-                          color: "#57a5b8",
-                          fontSize: "1.75em",
+                          color: '#57a5b8',
+                          fontSize: '1.75em',
                           fontWeight: 500,
                         }}
                       >
-                        {gettext("Show Projects")} (
+                        {gettext('Show Projects')} (
                         {this.state.catalogScope.length})
                       </h3>
                       <div onClick={this.toggleAuthorFacetDialog}>
-                        {this.getFacetFragment("author")}
+                        {this.getFacetFragment('author')}
                       </div>
                       <div onClick={this.toggleYearFacetDialog}>
-                        {this.getFacetFragment("year")}
+                        {this.getFacetFragment('year')}
                       </div>
                       <div onClick={this.toggleInstituteFacetDialog}>
-                        {this.getFacetFragment("institute")}
+                        {this.getFacetFragment('institute')}
                       </div>
                       <div onClick={this.toggleDirectorFacetDialog}>
-                        {this.getFacetFragment("director")}
+                        {this.getFacetFragment('director')}
                       </div>
                       {this.state.hasTermsChecked && (
                         <div className="mt-1">
                           <a href="#" onClick={this.cleanAllFacets}>
-                            {gettext("Reset all")}
+                            {gettext('Reset all')}
                           </a>
                         </div>
                       )}
@@ -363,8 +363,8 @@ class KeeperProjectCatalog extends React.Component {
                         <FormGroup>
                           <Input
                             type="search"
-                            style={{ height: "60%" }}
-                            placeholder={gettext("Search") + "..."}
+                            style={{ height: '60%' }}
+                            placeholder={gettext('Search') + '...'}
                             value={this.state.searchTerm}
                             onChange={this.inputSearchTerm}
                           />
@@ -399,7 +399,7 @@ class KeeperProjectCatalog extends React.Component {
         </div>
         {isAuthorFacetDialogOpen && (
           <KeeperCatalogFacetDialog
-            name={"author"}
+            name={'author'}
             values={facets.author}
             hasCatalogSearchTerm={hasSearchTerm}
             catalogScope={this.state.catalogScope}
@@ -409,7 +409,7 @@ class KeeperProjectCatalog extends React.Component {
         )}
         {isYearFacetDialogOpen && (
           <KeeperCatalogFacetDialog
-            name={"year"}
+            name={'year'}
             values={facets.year}
             hasCatalogSearchTerm={hasSearchTerm}
             catalogScope={this.state.catalogScope}
@@ -419,7 +419,7 @@ class KeeperProjectCatalog extends React.Component {
         )}
         {isInstituteFacetDialogOpen && (
           <KeeperCatalogFacetDialog
-            name={"institute"}
+            name={'institute'}
             values={facets.institute}
             hasCatalogSearchTerm={hasSearchTerm}
             catalogScope={this.state.catalogScope}
@@ -429,7 +429,7 @@ class KeeperProjectCatalog extends React.Component {
         )}
         {isDirectorFacetDialogOpen && (
           <KeeperCatalogFacetDialog
-            name={"director"}
+            name={'director'}
             values={facets.director}
             hasCatalogSearchTerm={hasSearchTerm}
             catalogScope={this.state.catalogScope}
@@ -485,43 +485,43 @@ class Item extends React.Component {
 
   getAuthors = (item) => {
     let author = [];
-    if ("authors" in item && item.authors.length > 0) {
+    if ('authors' in item && item.authors.length > 0) {
       let authors = item.authors;
       for (let j = 0; j < authors.length; j++) {
-        let tauthor = "";
-        let tauthors = this.toTitleCase(authors[j].name).split(", ");
+        let tauthor = '';
+        let tauthors = this.toTitleCase(authors[j].name).split(', ');
         for (let i = 0; i < tauthors.length; i++) {
           if (i == 0 && tauthors[i].trim().length) {
-            tauthor += tauthors[i] + ", ";
+            tauthor += tauthors[i] + ', ';
           } else if (tauthors[i].trim().length > 1)
-            tauthor += tauthors[i].trim().charAt(0) + "., ";
+            tauthor += tauthors[i].trim().charAt(0) + '., ';
         }
         tauthor = tauthor.trim().slice(0, -1);
-        if (j >= 5) tauthor = "et al.";
+        if (j >= 5) tauthor = 'et al.';
         author.push(tauthor);
         if (j >= 5) break;
-        if ("affs" in authors[j])
-          author.push(this.toTitleCase(authors[j].affs.join(", ")));
+        if ('affs' in authors[j])
+          author.push(this.toTitleCase(authors[j].affs.join(', ')));
       }
     }
-    return author.join("; ");
+    return author.join('; ');
   };
 
   //TODO
   getDirectors = (str) => {
     let dirs = str
-      .split("|")
+      .split('|')
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     if (dirs.length > 0) {
-      return dirs.join("; ");
+      return dirs.join('; ');
     }
     return null;
   };
 
   instituteFragment = (ins) => {
     const split = ins
-      .split(";")
+      .split(';')
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     if (!(split && split.length && split.length > 0)) return;
@@ -529,8 +529,8 @@ class Item extends React.Component {
     const dirs = split.length >= 3 ? this.getDirectors(split[2]) : null;
     return (
       <Fragment>
-        {split[0] && <p>{gettext("Institute") + ": " + split[0]}</p>}
-        {split[1] && <p>{gettext("Department") + ": " + split[1]}</p>}
+        {split[0] && <p>{gettext('Institute') + ': ' + split[0]}</p>}
+        {split[1] && <p>{gettext('Department') + ': ' + split[1]}</p>}
         {/*{dirs &&*/}
         {/*  <p>{gettext("Directors or PIs") + ": " + dirs}</p>*/}
         {/*}*/}
@@ -552,42 +552,42 @@ class Item extends React.Component {
             <div className="col-md-11">
               <h3>
                 {item.landing_page_url ? (
-                  <a href={"/landing-page/libs/" + item.repo_id + "/"}>
+                  <a href={'/landing-page/libs/' + item.repo_id + '/'}>
                     {item.title}
                   </a>
                 ) : (
                   item.title ||
-                  gettext("Project archive no.") + ": " + item.catalog_id
+                  gettext('Project archive no.') + ': ' + item.catalog_id
                 )}
               </h3>
               {item.description && (
                 <p>
                   {showExpandDesc
                     ? !this.state.descExpanded
-                      ? item.description.substring(0, maxDescLength - 4) + "..."
+                      ? item.description.substring(0, maxDescLength - 4) + '...'
                       : item.description
                     : item.description}
                   {showExpandDesc && (
                     <i
                       onClick={this.toggleDescription}
                       className={
-                        "keeper-icon-triangle-" +
-                        (this.state.descExpanded ? "up" : "down")
+                        'keeper-icon-triangle-' +
+                        (this.state.descExpanded ? 'up' : 'down')
                       }
                     />
                   )}
                 </p>
               )}
               {item.authors && <p>{this.getAuthors(item)}</p>}
-              {item.year && <p>{gettext("Year") + ": " + item.year}</p>}
+              {item.year && <p>{gettext('Year') + ': ' + item.year}</p>}
               {item.institute && this.instituteFragment(item.institute)}
               {item.owner && (
-                <p>{gettext("Contact") + ": " + item.owner.toLowerCase()}</p>
+                <p>{gettext('Contact') + ': ' + item.owner.toLowerCase()}</p>
               )}
               {item.landing_page_url && (
                 <p>
-                  <a href={"/landing-page/libs/" + item.repo_id + "/"}>
-                    {gettext("Landing Page")}
+                  <a href={'/landing-page/libs/' + item.repo_id + '/'}>
+                    {gettext('Landing Page')}
                   </a>
                 </p>
               )}
@@ -611,14 +611,14 @@ class Footer extends React.Component {
                 <h4>Be informed</h4>
                 <a
                   href="https://keeper.mpdl.mpg.de/f/d17ecbb967/"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   About Keeper
                 </a>
                 <br />
                 <a
                   href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   Cared Data Commitment
                 </a>
@@ -638,11 +638,11 @@ class Footer extends React.Component {
                 <h4>Find help</h4>
                 <a href="mailto:keeper@mpdl.mpg.de">
                   Contact Keeper Support
-                </a>{" "}
+                </a>{' '}
                 <br />
                 <a
                   href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   Help / Knowledge Base
                 </a>
@@ -651,21 +651,21 @@ class Footer extends React.Component {
                 <h4>Check terms</h4>
                 <a
                   href="https://keeper.mpdl.mpg.de/f/2206ad0c0a8346cb8f9e/"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   Terms of Services
-                </a>{" "}
+                </a>{' '}
                 <br />
                 <a
                   href="https://keeper.mpdl.mpg.de/f/17e4e9d648/"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   Disclaimer
                 </a>
                 <br />
                 <a
                   href="https://keeper.mpdl.mpg.de/f/bf2c8a977f70428587eb/"
-                  target="_blank"
+                  target="_blank" rel="noreferrer"
                 >
                   Privacy Policy
                 </a>
@@ -674,8 +674,8 @@ class Footer extends React.Component {
             <div id="seafile-credits" className="row">
               <div className="col-md-12 text-center">
                 <div>
-                  <a href="https://www.seafile.com/en/home/" target="_blank">
-                    The software behind Keeper{" "}
+                  <a href="https://www.seafile.com/en/home/" target="_blank" rel="noreferrer">
+                    The software behind Keeper{' '}
                     <img
                       id="seafile-logo"
                       src="/media/custom/seafile_logo_footer.png"
@@ -693,4 +693,4 @@ class Footer extends React.Component {
   }
 }
 
-ReactDOM.render(<KeeperProjectCatalog />, document.getElementById("wrapper"));
+ReactDOM.render(<KeeperProjectCatalog />, document.getElementById('wrapper'));
