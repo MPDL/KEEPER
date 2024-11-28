@@ -941,10 +941,11 @@ def do_generate(args):
             Utils.error(f"Cannot run {cmd}, RC={RC}")
     elif args.frontend:
         Utils.info('Generate frontend...')
+        Utils.info('NOTE: Restart keeper service right after!')
         #cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} NODE_ENV='production' npm run build"
         #see https://stackoverflow.com/questions/53230823/fatal-error-ineffective-mark-compacts-near-heap-limit-allocation-failed-javas
         #cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build" ### <- on dev only!
-        cmd = f"npm install --legacy-peer-deps && NODE_ENV='production' npm run build"
+        cmd = "npm install --legacy-peer-deps && NODE_ENV='production' npm run build"
         RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
