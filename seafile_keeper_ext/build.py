@@ -997,6 +997,11 @@ def do_upgrade(args):
         shutil.rmtree(dest_dir)
         shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
 
+        src_path =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'webpack-stats.pro.json')
+        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend' )
+        shutil.copy(src_path, dest_dir)
+
+
         # Utils.info("Copy frontend/build files into ext")
         # src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
         # dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
