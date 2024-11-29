@@ -13,7 +13,8 @@ setup-git:
 
 dist: locale statici18n collectstatic
 
-dist-keeper: locale-keeper statici18n collectstatic
+#dist-keeper: locale-keeper statici18n collectstatic
+dist-keeper: locale-keeper statici18n
 locale:
 	@echo "--> Compile locales"
 	django-admin compilemessages
