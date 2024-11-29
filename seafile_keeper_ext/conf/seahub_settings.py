@@ -143,11 +143,11 @@ LOGGING = {
             # 'formatter': 'syslog-seahub'
         # },
         'keeper_debug': {
-            # 'level':'DEBUG' if DEBUG else 'INFO',
-            'level':'DEBUG',
+            'level':'DEBUG' if DEBUG else 'INFO',
+            # 'level':'DEBUG',
             'class':'logging.FileHandler',
             'filename': '/tmp/keeper_debug2.log',
-            'mode': 'a',
+            # 'mode': 'a',
             'formatter':'keeper_debug',
         },
     },
