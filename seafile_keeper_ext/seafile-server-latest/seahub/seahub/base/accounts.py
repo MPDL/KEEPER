@@ -139,11 +139,11 @@ class UserManager(object):
 
         return self.get(email=virtual_id)
 
-    def update_role(self, email, role):
+    def update_role(self, email, role, is_manual_set=True):
         """
         If user has a role, update it; or create a role for user.
         """
-        ccnet_api.update_role_emailuser(email, role)
+        ccnet_api.update_role_emailuser(email, role, is_manual_set=is_manual_set)
         return self.get(email=email)
 
     def create_oauth_user(self, email=None, password=None, is_staff=False, is_active=False):
@@ -452,6 +452,11 @@ class UserPermissions(object):
             return False
 
         return self._get_perm_by_roles('can_publish_repo')
+    
+    def can_choose_office_suite(self):
+        if not settings.ENABLE_MULTIPLE_OFFICE_SUITE:
+            return False
+        return self._get_perm_by_roles('can_choose_office_suite')
 
 
 class AdminPermissions(object):

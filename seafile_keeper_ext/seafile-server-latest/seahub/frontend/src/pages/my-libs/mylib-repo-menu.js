@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, DropdownMenu, DropdownToggle, DropdownItem } from 'reactstrap';
-import { gettext, isPro, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured, enableRepoAutoDel, enableSeaTableIntegration } from '../../utils/constants';
+import { gettext, isPro, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured, enableRepoAutoDel, enableSeaTableIntegration, enableMultipleOfficeSuite } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
 const propTypes = {
@@ -133,6 +133,9 @@ class MylibRepoMenu extends React.Component {
     if (enableSeaTableIntegration) {
       operations.push('SeaTable integration');
     }
+    if (enableMultipleOfficeSuite && isPro) {
+      operations.push('Office Suite');
+    }
     //KEEPER
     operations.push('Divider');
     if (showAssignDoiMenuItem) {
@@ -206,6 +209,9 @@ class MylibRepoMenu extends React.Component {
         break;
       case 'SeaTable integration':
         translateResult = gettext('SeaTable integration');
+        break;
+      case 'Office Suite':
+        translateResult = gettext('Office Suite');
         break;
       //KEEPER
       case 'Assign DOI to current state':

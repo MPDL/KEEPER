@@ -337,6 +337,7 @@ LDAP_USER_ROLE_ATTR = ''
 ACTIVATE_USER_WHEN_IMPORT = True
 
 SSO_LDAP_USE_SAME_UID = False
+USE_LDAP_SYNC_ONLY = False
 
 # enable ldap sasl auth
 ENABLE_SASL = False
@@ -893,6 +894,25 @@ SEATABLE_EX_PROPS_BASE_API_TOKEN = ''
 EX_PROPS_TABLE = ''
 EX_EDITABLE_COLUMNS = []
 
+#############################
+# multi office suite support
+#############################
+ENABLE_MULTIPLE_OFFICE_SUITE = False
+OFFICE_SUITE_LIST = [
+    { 
+        "id": "onlyoffice",
+        "name": "OnlyOffice",
+        "is_default": True,
+    },
+    {
+        "id": "collabora",
+        "name": "CollaboraOnline",
+        "is_default": False,
+    }
+]
+ROLES_DEFAULT_OFFCICE_SUITE = {}
+OFFICE_SUITE_ENABLED_FILE_TYPES = []
+OFFICE_SUITE_ENABLED_EDIT_FILE_TYPES = []
 d = os.path.dirname
 EVENTS_CONFIG_FILE = os.environ.get(
     'EVENTS_CONFIG_FILE',
@@ -1042,4 +1062,4 @@ if ENABLE_LDAP:
 
 
 
-SEAFILE_VERSION = "11.0.15"
+SEAFILE_VERSION = "11.0.18"

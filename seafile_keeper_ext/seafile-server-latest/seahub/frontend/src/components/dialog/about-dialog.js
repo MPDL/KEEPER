@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Modal, ModalBody} from 'reactstrap';
-import {gettext, lang, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion, additionalAboutDialogLinks, aboutDialogCustomHtml} from '../../utils/constants';
+import { Modal, ModalBody } from 'reactstrap';
+import { gettext, lang, mediaUrl, logoPath, logoWidth, logoHeight, siteTitle, seafileVersion, additionalAboutDialogLinks, aboutDialogCustomHtml } from '../../utils/constants';
 
 const propTypes = {
-    onCloseAboutDialog: PropTypes.func.isRequired,
+  onCloseAboutDialog: PropTypes.func.isRequired,
 };
 
 class AboutDialog extends React.Component {
@@ -32,7 +32,7 @@ class AboutDialog extends React.Component {
                         <p>
                             {gettext('Server Version: ')}
                             {seafileVersion}
-                            <br />© 2024 {gettext('KEEPER')}
+                            <br />© 2025 {gettext('KEEPER')}
                         </p>
                     </div>
                 </ModalBody>

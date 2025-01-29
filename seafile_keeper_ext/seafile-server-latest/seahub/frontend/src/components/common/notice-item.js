@@ -1,342 +1,257 @@
-import React from "react";
-import PropTypes from "prop-types";
-import moment from "moment";
-import { gettext, siteRoot } from "../../utils/constants";
-import { Utils } from "../../utils/utils";
+import React from 'react';
+import PropTypes from 'prop-types';
+import moment from 'moment';
+import { gettext, siteRoot } from '../../utils/constants';
+import { Utils } from '../../utils/utils';
 
 const propTypes = {
   noticeItem: PropTypes.object.isRequired,
   tr: PropTypes.any,
-  onNoticeItemClick: PropTypes.func,
+  onNoticeItemClick: PropTypes.func
 };
 
-const MSG_TYPE_ADD_USER_TO_GROUP = "add_user_to_group";
-const MSG_TYPE_REPO_SHARE = "repo_share";
-const MSG_TYPE_REPO_SHARE_TO_GROUP = "repo_share_to_group";
-const MSG_TYPE_REPO_TRANSFER = "repo_transfer";
-const MSG_TYPE_FILE_UPLOADED = "file_uploaded";
-const MSG_TYPE_FOLDER_UPLOADED = "folder_uploaded";
+const MSG_TYPE_ADD_USER_TO_GROUP = 'add_user_to_group';
+const MSG_TYPE_REPO_SHARE = 'repo_share';
+const MSG_TYPE_REPO_SHARE_TO_GROUP = 'repo_share_to_group';
+const MSG_TYPE_REPO_TRANSFER = 'repo_transfer';
+const MSG_TYPE_FILE_UPLOADED = 'file_uploaded';
+const MSG_TYPE_FOLDER_UPLOADED = 'folder_uploaded';
 // const MSG_TYPE_GUEST_INVITATION_ACCEPTED = 'guest_invitation_accepted';
-const MSG_TYPE_REPO_MONITOR = "repo_monitor";
-const MSG_TYPE_DELETED_FILES = "deleted_files";
-const MSG_TYPE_SAML_SSO_FAILED = "saml_sso_failed";
-const MSG_TYPE_REPO_SHARE_PERM_CHANGE = "repo_share_perm_change";
-const MSG_TYPE_REPO_SHARE_PERM_DELETE = "repo_share_perm_delete";
+const MSG_TYPE_REPO_MONITOR = 'repo_monitor';
+const MSG_TYPE_DELETED_FILES = 'deleted_files';
+const MSG_TYPE_SAML_SSO_FAILED = 'saml_sso_failed';
+const MSG_TYPE_REPO_SHARE_PERM_CHANGE = 'repo_share_perm_change';
+const MSG_TYPE_REPO_SHARE_PERM_DELETE = 'repo_share_perm_delete';
 
 class NoticeItem extends React.Component {
-  generatorNoticeInfo() {
+
+  generatorNoticeInfo () {
     let noticeItem = this.props.noticeItem;
     let noticeType = noticeItem.type;
     let detail = noticeItem.detail;
 
     if (noticeType === MSG_TYPE_ADD_USER_TO_GROUP) {
+
       let avatar_url = detail.group_staff_avatar_url;
 
       let groupStaff = detail.group_staff_name;
 
       // group name does not support special characters
-      let userHref = siteRoot + "profile/" + detail.group_staff_email + "/";
-      let groupHref = siteRoot + "group/" + detail.group_id + "/";
+      let userHref = siteRoot + 'profile/' + detail.group_staff_email + '/';
+      let groupHref = siteRoot + 'group/' + detail.group_id + '/';
       let groupName = detail.group_name;
 
-      let notice = gettext("User {user_link} has added you to {group_link}");
-      let userLink = "<a href=" + userHref + ">" + groupStaff + "</a>";
-      let groupLink = "<a href=" + groupHref + ">" + groupName + "</a>";
+      let notice = gettext('User {user_link} has added you to {group_link}');
+      let userLink = '<a href=' + userHref + '>' + groupStaff + '</a>';
+      let groupLink = '<a href=' + groupHref + '>' + groupName + '</a>';
 
-      notice = notice.replace("{user_link}", userLink);
-      notice = notice.replace("{group_link}", groupLink);
+      notice = notice.replace('{user_link}', userLink);
+      notice = notice.replace('{group_link}', groupLink);
 
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE) {
+
       let avatar_url = detail.share_from_user_avatar_url;
 
       let shareFrom = detail.share_from_user_name;
 
       let repoName = detail.repo_name;
-      let repoUrl =
-        siteRoot + "library/" + detail.repo_id + "/" + repoName + "/";
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' +  repoName + '/';
 
       let path = detail.path;
-      let notice = "";
+      let notice = '';
       // 1. handle translate
-      if (path === "/") {
-        // share repo
-        notice = gettext(
-          "{share_from} has shared a library named {repo_link} to you."
-        );
-      } else {
-        // share folder
-        notice = gettext(
-          "{share_from} has shared a folder named {repo_link} to you."
-        );
+      if (path === '/') { // share repo
+        notice = gettext('{share_from} has shared a library named {repo_link} to you.');
+      } else { // share folder
+        notice = gettext('{share_from} has shared a folder named {repo_link} to you.');
       }
 
       // 2. handle xss(cross-site scripting)
-      notice = notice.replace("{share_from}", shareFrom);
-      notice = notice.replace("{repo_link}", `{tagA}${repoName}{/tagA}`);
+      notice = notice.replace('{share_from}', shareFrom);
+      notice = notice.replace('{repo_link}', `{tagA}${repoName}{/tagA}`);
       notice = Utils.HTMLescape(notice);
 
       // 3. add jump link
-      notice = notice.replace(
-        "{tagA}",
-        `<a href='${Utils.encodePath(repoUrl)}'>`
-      );
-      notice = notice.replace("{/tagA}", "</a>");
+      notice = notice.replace('{tagA}', `<a href='${Utils.encodePath(repoUrl)}'>`);
+      notice = notice.replace('{/tagA}', '</a>');
 
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_PERM_CHANGE) {
+
       let avatar_url = detail.share_from_user_avatar_url;
       let shareFrom = detail.share_from_user_name;
       let permission = detail.permission;
       let repoName = detail.repo_name;
-      let repoUrl =
-        siteRoot + "library/" + detail.repo_id + "/" + repoName + "/";
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' +  repoName + '/';
       let path = detail.path;
-      let notice = "";
+      let notice = '';
       // 1. handle translate
-      if (path === "/") {
-        // share repo
-        notice = gettext(
-          "{share_from} has changed the permission of library {repo_link} to {permission}."
-        );
-      } else {
-        // share folder
-        notice = gettext(
-          "{share_from} has changed the permission of folder {repo_link} to {permission}."
-        );
+      if (path === '/') { // share repo
+        notice = gettext('{share_from} has changed the permission of library {repo_link} to {permission}.');
+      } else { // share folder
+        notice = gettext('{share_from} has changed the permission of folder {repo_link} to {permission}.');
       }
 
       // 2. handle xss(cross-site scripting)
-      notice = notice.replace("{share_from}", shareFrom);
-      notice = notice.replace("{repo_link}", `{tagA}${repoName}{/tagA}`);
-      notice = notice.replace("{permission}", permission);
+      notice = notice.replace('{share_from}', shareFrom);
+      notice = notice.replace('{repo_link}', `{tagA}${repoName}{/tagA}`);
+      notice = notice.replace('{permission}', permission);
       notice = Utils.HTMLescape(notice);
 
       // 3. add jump link
-      notice = notice.replace(
-        "{tagA}",
-        `<a href='${Utils.encodePath(repoUrl)}'>`
-      );
-      notice = notice.replace("{/tagA}", "</a>");
+      notice = notice.replace('{tagA}', `<a href='${Utils.encodePath(repoUrl)}'>`);
+      notice = notice.replace('{/tagA}', '</a>');
 
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_PERM_DELETE) {
+
       let avatar_url = detail.share_from_user_avatar_url;
       let shareFrom = detail.share_from_user_name;
       let repoName = detail.repo_name;
       let path = detail.path;
-      let notice = "";
+      let notice = '';
       // 1. handle translate
-      if (path === "/") {
-        // share repo
-        notice = gettext(
-          "{share_from} has cancelled the sharing of library {repo_name}."
-        );
-      } else {
-        // share folder
-        notice = gettext(
-          "{share_from} has cancelled the sharing of folder {repo_name}."
-        );
+      if (path === '/') { // share repo
+        notice = gettext('{share_from} has cancelled the sharing of library {repo_name}.');
+      } else { // share folder
+        notice = gettext('{share_from} has cancelled the sharing of folder {repo_name}.');
       }
 
       // 2. handle xss(cross-site scripting)
-      notice = notice.replace("{share_from}", shareFrom);
-      notice = notice.replace("{repo_name}", repoName);
+      notice = notice.replace('{share_from}', shareFrom);
+      notice = notice.replace('{repo_name}', repoName);
       notice = Utils.HTMLescape(notice);
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_TO_GROUP) {
+
       let avatar_url = detail.share_from_user_avatar_url;
 
       let shareFrom = detail.share_from_user_name;
 
       let repoName = detail.repo_name;
-      let repoUrl =
-        siteRoot + "library/" + detail.repo_id + "/" + repoName + "/";
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' + repoName + '/';
 
-      let groupUrl = siteRoot + "group/" + detail.group_id + "/";
+      let groupUrl = siteRoot + 'group/' + detail.group_id + '/';
       let groupName = detail.group_name;
 
       let path = detail.path;
-      let notice = "";
+      let notice = '';
       // 1. handle translate
-      if (path === "/") {
-        notice = gettext(
-          "{share_from} has shared a library named {repo_link} to group {group_link}."
-        );
+      if (path === '/') {
+        notice =  gettext('{share_from} has shared a library named {repo_link} to group {group_link}.');
       } else {
-        notice = gettext(
-          "{share_from} has shared a folder named {repo_link} to group {group_link}."
-        );
+        notice =  gettext('{share_from} has shared a folder named {repo_link} to group {group_link}.');
       }
 
       // 2. handle xss(cross-site scripting)
-      notice = notice.replace("{share_from}", shareFrom);
-      notice = notice.replace("{repo_link}", `{tagA}${repoName}{/tagA}`);
-      notice = notice.replace("{group_link}", `{tagB}${groupName}{/tagB}`);
+      notice = notice.replace('{share_from}', shareFrom);
+      notice = notice.replace('{repo_link}', `{tagA}${repoName}{/tagA}`);
+      notice = notice.replace('{group_link}', `{tagB}${groupName}{/tagB}`);
       notice = Utils.HTMLescape(notice);
 
       // 3. add jump link
-      notice = notice.replace(
-        "{tagA}",
-        `<a href='${Utils.encodePath(repoUrl)}'>`
-      );
-      notice = notice.replace("{/tagA}", "</a>");
-      notice = notice.replace(
-        "{tagB}",
-        `<a href='${Utils.encodePath(groupUrl)}'>`
-      );
-      notice = notice.replace("{/tagB}", "</a>");
-      return { avatar_url, notice };
+      notice = notice.replace('{tagA}', `<a href='${Utils.encodePath(repoUrl)}'>`);
+      notice = notice.replace('{/tagA}', '</a>');
+      notice = notice.replace('{tagB}', `<a href='${Utils.encodePath(groupUrl)}'>`);
+      notice = notice.replace('{/tagB}', '</a>');
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_TRANSFER) {
+
       let avatar_url = detail.transfer_from_user_avatar_url;
 
       let repoOwner = detail.transfer_from_user_name;
 
       let repoName = detail.repo_name;
-      let repoUrl =
-        siteRoot + "library/" + detail.repo_id + "/" + repoName + "/";
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' + repoName + '/';
       // 1. handle translate
-      let notice = gettext(
-        "{user} has transfered a library named {repo_link} to you."
-      );
+      let notice = gettext('{user} has transfered a library named {repo_link} to you.');
 
       // 2. handle xss(cross-site scripting)
-      notice = notice.replace("{user}", repoOwner);
-      notice = notice.replace("{repo_link}", `{tagA}${repoName}{/tagA}`);
+      notice = notice.replace('{user}', repoOwner);
+      notice = notice.replace('{repo_link}', `{tagA}${repoName}{/tagA}`);
       notice = Utils.HTMLescape(notice);
 
       // 3. add jump link
-      notice = notice.replace(
-        "{tagA}",
-        `<a href=${Utils.encodePath(repoUrl)}>`
-      );
-      notice = notice.replace("{/tagA}", "</a>");
-      return { avatar_url, notice };
+      notice = notice.replace('{tagA}', `<a href=${Utils.encodePath(repoUrl)}>`);
+      notice = notice.replace('{/tagA}', '</a>');
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_FILE_UPLOADED) {
       let avatar_url = detail.uploaded_user_avatar_url;
       let fileName = detail.file_name;
-      let fileLink =
-        siteRoot + "lib/" + detail.repo_id + "/" + "file" + detail.file_path;
+      let fileLink = siteRoot + 'lib/' + detail.repo_id + '/' + 'file' + detail.file_path;
 
       let folderName = detail.folder_name;
-      let folderLink =
-        siteRoot +
-        "library/" +
-        detail.repo_id +
-        "/" +
-        detail.repo_name +
-        detail.folder_path;
-      let notice = "";
-      if (detail.repo_id) {
-        // todo is repo exist ?
+      let folderLink = siteRoot + 'library/' + detail.repo_id + '/' + detail.repo_name + detail.folder_path;
+      let notice = '';
+      if (detail.repo_id) { // todo is repo exist ?
         // 1. handle translate
-        notice = gettext(
-          "A file named {upload_file_link} is uploaded to {uploaded_link}."
-        );
+        notice = gettext('A file named {upload_file_link} is uploaded to {uploaded_link}.');
 
         // 2. handle xss(cross-site scripting)
-        notice = notice.replace(
-          "{upload_file_link}",
-          `{tagA}${fileName}{/tagA}`
-        );
-        notice = notice.replace(
-          "{uploaded_link}",
-          `{tagB}${folderName}{/tagB}`
-        );
+        notice = notice.replace('{upload_file_link}', `{tagA}${fileName}{/tagA}`);
+        notice = notice.replace('{uploaded_link}', `{tagB}${folderName}{/tagB}`);
         notice = Utils.HTMLescape(notice);
 
         // 3. add jump link
-        notice = notice.replace(
-          "{tagA}",
-          `<a href=${Utils.encodePath(fileLink)}>`
-        );
-        notice = notice.replace("{/tagA}", "</a>");
-        notice = notice.replace(
-          "{tagB}",
-          `<a href=${Utils.encodePath(folderLink)}>`
-        );
-        notice = notice.replace("{/tagB}", "</a>");
+        notice = notice.replace('{tagA}', `<a href=${Utils.encodePath(fileLink)}>`);
+        notice = notice.replace('{/tagA}', '</a>');
+        notice = notice.replace('{tagB}', `<a href=${Utils.encodePath(folderLink)}>`);
+        notice = notice.replace('{/tagB}', '</a>');
       } else {
         // 1. handle translate
-        notice = gettext("A file named {upload_file_link} is uploaded.");
+        notice = gettext('A file named {upload_file_link} is uploaded.');
 
         // 2. handle xss(cross-site scripting)
-        notice = notice.replace("{upload_file_link}", `${fileName}`);
+        notice = notice.replace('{upload_file_link}', `${fileName}`);
         notice = Utils.HTMLescape(notice);
       }
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_FOLDER_UPLOADED) {
       let avatar_url = detail.uploaded_user_avatar_url;
       let folderName = detail.folder_name;
-      let folderLink =
-        siteRoot +
-        "library/" +
-        detail.repo_id +
-        "/" +
-        detail.repo_name +
-        detail.folder_path;
+      let folderLink = siteRoot + 'library/' + detail.repo_id + '/' + detail.repo_name + detail.folder_path;
 
       let parentDirName = detail.parent_dir_name;
-      let parentDirLink =
-        siteRoot +
-        "library/" +
-        detail.repo_id +
-        "/" +
-        detail.repo_name +
-        detail.parent_dir_path;
-      let notice = "";
-      if (detail.repo_id) {
-        // todo is repo exist ?
+      let parentDirLink = siteRoot + 'library/' + detail.repo_id + '/' + detail.repo_name + detail.parent_dir_path;
+      let notice = '';
+      if (detail.repo_id) { // todo is repo exist ?
         // 1. handle translate
-        notice = gettext(
-          "A folder named {upload_folder_link} is uploaded to {uploaded_link}."
-        );
+        notice = gettext('A folder named {upload_folder_link} is uploaded to {uploaded_link}.');
 
         // 2. handle xss(cross-site scripting)
-        notice = notice.replace(
-          "{upload_folder_link}",
-          `{tagA}${folderName}{/tagA}`
-        );
-        notice = notice.replace(
-          "{uploaded_link}",
-          `{tagB}${parentDirName}{/tagB}`
-        );
+        notice = notice.replace('{upload_folder_link}', `{tagA}${folderName}{/tagA}`);
+        notice = notice.replace('{uploaded_link}', `{tagB}${parentDirName}{/tagB}`);
         notice = Utils.HTMLescape(notice);
 
         // 3. add jump link
-        notice = notice.replace(
-          "{tagA}",
-          `<a href=${Utils.encodePath(folderLink)}>`
-        );
-        notice = notice.replace("{/tagA}", "</a>");
-        notice = notice.replace(
-          "{tagB}",
-          `<a href=${Utils.encodePath(parentDirLink)}>`
-        );
-        notice = notice.replace("{/tagB}", "</a>");
+        notice = notice.replace('{tagA}', `<a href=${Utils.encodePath(folderLink)}>`);
+        notice = notice.replace('{/tagA}', '</a>');
+        notice = notice.replace('{tagB}', `<a href=${Utils.encodePath(parentDirLink)}>`);
+        notice = notice.replace('{/tagB}', '</a>');
       } else {
         // 1. handle translate
-        notice = gettext("A folder named {upload_folder_link} is uploaded.");
+        notice = gettext('A folder named {upload_folder_link} is uploaded.');
 
         // 2. handle xss(cross-site scripting)
-        notice = notice.replace("{upload_folder_link}", `${folderName}`);
+        notice = notice.replace('{upload_folder_link}', `${folderName}`);
         notice = Utils.HTMLescape(notice);
       }
-      return { avatar_url, notice };
+      return {avatar_url, notice};
     }
 
     if (noticeType === MSG_TYPE_REPO_MONITOR) {
@@ -345,196 +260,117 @@ class NoticeItem extends React.Component {
         op_user_email,
         op_user_name,
         op_type,
-        repo_id,
-        repo_name,
+        repo_id, repo_name,
         obj_type,
         obj_path_list,
-        old_obj_path_list,
+        old_obj_path_list
       } = detail;
 
-      const userProfileURL = `${siteRoot}profile/${encodeURIComponent(
-        op_user_email
-      )}`;
-      const userLink = `<a href=${userProfileURL} target="_blank">${Utils.HTMLescape(
-        op_user_name
-      )}</a>`;
+      const userProfileURL = `${siteRoot}profile/${encodeURIComponent(op_user_email)}`;
+      const userLink = `<a href=${userProfileURL} target="_blank">${Utils.HTMLescape(op_user_name)}</a>`;
 
-      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(
-        repo_name
-      )}/`;
-      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(
-        repo_name
-      )}</a>`;
+      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(repo_name)}/`;
+      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(repo_name)}</a>`;
 
-      let notice = "";
-      if (obj_type == "file") {
+      let notice = '';
+      if (obj_type == 'file') {
         const fileName = Utils.getFileName(obj_path_list[0]);
-        const fileURL = `${siteRoot}lib/${repo_id}/file${Utils.encodePath(
-          obj_path_list[0]
-        )}`;
-        const fileLink = `<a href=${fileURL} target="_blank">${Utils.HTMLescape(
-          fileName
-        )}</a>`;
+        const fileURL = `${siteRoot}lib/${repo_id}/file${Utils.encodePath(obj_path_list[0])}`;
+        const fileLink = `<a href=${fileURL} target="_blank">${Utils.HTMLescape(fileName)}</a>`;
         switch (op_type) {
-          case "create":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} created file {fileName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} created file {fileName} and {fileCount} other file(s) in library {libraryName}."
-                  );
+          case 'create':
+            notice = obj_path_list.length == 1 ? gettext('{user} created file {fileName} in library {libraryName}.') : gettext('{user} created file {fileName} and {fileCount} other file(s) in library {libraryName}.');
             break;
-          case "delete":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} deleted file {fileName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} deleted file {fileName} and {fileCount} other file(s) in library {libraryName}."
-                  );
-            notice = notice.replace("{fileName}", fileName);
+          case 'delete':
+            notice = obj_path_list.length == 1 ? gettext('{user} deleted file {fileName} in library {libraryName}.') : gettext('{user} deleted file {fileName} and {fileCount} other file(s) in library {libraryName}.');
+            notice = notice.replace('{fileName}', fileName);
             break;
-          case "recover":
-            notice = gettext(
-              "{user} restored file {fileName} in library {libraryName}."
-            );
+          case 'recover':
+            notice = gettext('{user} restored file {fileName} in library {libraryName}.');
             break;
-          case "rename":
-            notice = gettext(
-              "{user} renamed file {oldFileName} {fileName} in library {libraryName}."
-            );
-            notice = notice.replace(
-              "{oldFileName}",
-              Utils.getFileName(old_obj_path_list[0])
-            );
+          case 'rename':
+            notice = gettext('{user} renamed file {oldFileName} {fileName} in library {libraryName}.');
+            notice = notice.replace('{oldFileName}', Utils.getFileName(old_obj_path_list[0]));
             break;
-          case "move":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} moved file {fileName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} moved file {fileName} and {fileCount} other file(s) in library {libraryName}."
-                  );
+          case 'move':
+            notice = obj_path_list.length == 1 ? gettext('{user} moved file {fileName} in library {libraryName}.') : gettext('{user} moved file {fileName} and {fileCount} other file(s) in library {libraryName}.');
             break;
-          case "edit":
-            notice = gettext(
-              "{user} updated file {fileName} in library {libraryName}."
-            );
+          case 'edit':
+            notice = gettext('{user} updated file {fileName} in library {libraryName}.');
             break;
           // no default
         }
-        notice = notice.replace("{fileName}", fileLink);
-        notice = notice.replace("{fileCount}", obj_path_list.length - 1);
-      } else {
-        // dir
+        notice = notice.replace('{fileName}', fileLink);
+        notice = notice.replace('{fileCount}', obj_path_list.length - 1);
+      } else { // dir
         const folderName = Utils.getFolderName(obj_path_list[0]);
-        const folderURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(
-          repo_name
-        )}${Utils.encodePath(obj_path_list[0])}`;
-        const folderLink = `<a href=${folderURL} target="_blank">${Utils.HTMLescape(
-          folderName
-        )}</a>`;
+        const folderURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(repo_name)}${Utils.encodePath(obj_path_list[0])}`;
+        const folderLink = `<a href=${folderURL} target="_blank">${Utils.HTMLescape(folderName)}</a>`;
         switch (detail.op_type) {
-          case "create":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} created folder {folderName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} created folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
-                  );
+          case 'create':
+            notice = obj_path_list.length == 1 ? gettext('{user} created folder {folderName} in library {libraryName}.') : gettext('{user} created folder {folderName} and {folderCount} other folder(s) in library {libraryName}.');
             break;
-          case "delete":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} deleted folder {folderName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} deleted folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
-                  );
-            notice = notice.replace("{folderName}", folderName);
+          case 'delete':
+            notice = obj_path_list.length == 1 ? gettext('{user} deleted folder {folderName} in library {libraryName}.') : gettext('{user} deleted folder {folderName} and {folderCount} other folder(s) in library {libraryName}.');
+            notice = notice.replace('{folderName}', folderName);
             break;
-          case "recover":
-            notice = gettext(
-              "{user} restored folder {folderName} in library {libraryName}."
-            );
+          case 'recover':
+            notice = gettext('{user} restored folder {folderName} in library {libraryName}.');
             break;
-          case "rename":
-            notice = gettext(
-              "{user} renamed folder {oldFolderName} {folderName} in library {libraryName}."
-            );
-            notice = notice.replace(
-              "{oldFolderName}",
-              Utils.getFolderName(old_obj_path_list[0])
-            );
+          case 'rename':
+            notice = gettext('{user} renamed folder {oldFolderName} {folderName} in library {libraryName}.');
+            notice = notice.replace('{oldFolderName}', Utils.getFolderName(old_obj_path_list[0]));
             break;
-          case "move":
-            notice =
-              obj_path_list.length == 1
-                ? gettext(
-                    "{user} moved folder {folderName} in library {libraryName}."
-                  )
-                : gettext(
-                    "{user} moved folder {folderName} and {folderCount} other folder(s) in library {libraryName}."
-                  );
+          case 'move':
+            notice = obj_path_list.length == 1 ? gettext('{user} moved folder {folderName} in library {libraryName}.') : gettext('{user} moved folder {folderName} and {folderCount} other folder(s) in library {libraryName}.');
             break;
           // no default
         }
-        notice = notice.replace("{folderName}", folderLink);
-        notice = notice.replace("{folderCount}", obj_path_list.length - 1);
+        notice = notice.replace('{folderName}', folderLink);
+        notice = notice.replace('{folderCount}', obj_path_list.length - 1);
       }
 
-      notice = notice.replace("{user}", userLink);
-      notice = notice.replace("{libraryName}", repoLink);
+      notice = notice.replace('{user}', userLink);
+      notice = notice.replace('{libraryName}', repoLink);
 
       return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_DELETED_FILES) {
-      const { repo_id, repo_name } = detail;
+      const {
+        repo_id,
+        repo_name,
+      } = detail;
 
-      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(
-        repo_name
-      )}/`;
-      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(
-        repo_name
-      )}</a>`;
+      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(repo_name)}/`;
+      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(repo_name)}</a>`;
 
-      let notice = gettext(
-        "Your library {libraryName} has recently deleted a large number of files."
-      );
-      notice = notice.replace("{libraryName}", repoLink);
+      let notice = gettext('Your library {libraryName} has recently deleted a large number of files.');
+      notice = notice.replace('{libraryName}', repoLink);
 
-      return { avatar_url: null, notice };
+      return { avatar_url : null, notice };
     }
 
     if (noticeType === MSG_TYPE_SAML_SSO_FAILED) {
       const { error_msg } = detail;
       let notice = gettext(error_msg);
 
-      return { avatar_url: null, notice };
+      return { avatar_url : null, notice };
     }
 
     // if (noticeType === MSG_TYPE_GUEST_INVITATION_ACCEPTED) {
 
     // }
     // KEEPER
-    const MSG_KEEPER_CDC = "keeper_cdc_msg";
-    const BLOXBERG_MSG = "bloxberg_msg";
-    const MSG_KEEPER_ARCHIVING = "keeper_archiving_msg";
-    const MSG_INVALID_METADATA = "invalid_metadata_msg";
-    const MSG_DOI = "doi_msg";
-    const MSG_DOI_SUCCESS = "doi_suc_msg";
+    const MSG_KEEPER_CDC = 'keeper_cdc_msg';
+    const BLOXBERG_MSG = 'bloxberg_msg';
+    const MSG_KEEPER_ARCHIVING = 'keeper_archiving_msg';
+    const MSG_INVALID_METADATA = 'invalid_metadata_msg';
+    const MSG_DOI = 'doi_msg';
+    const MSG_DOI_SUCCESS = 'doi_suc_msg';
 
     if (noticeType === MSG_KEEPER_CDC) {
-      let avatar_url = "/media/custom/KeeperAvatar.png";
+      let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice =
         detail.header +
@@ -551,26 +387,26 @@ class NoticeItem extends React.Component {
     }
 
     if (noticeType === BLOXBERG_MSG) {
-      let avatar_url = "/media/custom/KeeperAvatar.png";
+      let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
-      let notice = "";
+      let notice = '';
       if (detail.transaction_id) {
-        if (detail.content_type === "dir") {
+        if (detail.content_type === 'dir') {
           let landing_page_link = `${siteRoot}landing-page/libs/${encodeURIComponent(
             detail.repo_id
           )}/`;
           notice =
             gettext(
-              "This notice verifies that {detail.author_name} certified the files within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the files and the corresponding certificates can be found at"
+              'This notice verifies that {detail.author_name} certified the files within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the files and the corresponding certificates can be found at'
             ) +
             ' <a target="_blank" href="' +
             landing_page_link +
             '">' +
             detail.repo_name +
-            "</a>.";
+            '</a>.';
           notice = notice
-            .replace("{detail.author_name}", detail.author_name)
-            .replace("{detail.repo_name}", detail.repo_name);
+            .replace('{detail.author_name}', detail.author_name)
+            .replace('{detail.repo_name}', detail.repo_name);
         } else {
           let landing_page_link = `${siteRoot}landing-page/libs/${encodeURIComponent(
             detail.repo_id
@@ -580,24 +416,24 @@ class NoticeItem extends React.Component {
           }/file${encodeURIComponent(detail.link_to_file)}/`;
           notice =
             gettext(
-              "This notice verifies that {detail.author_name} certified the file"
+              'This notice verifies that {detail.author_name} certified the file'
             ) +
             ' <a target="_blank" href="' +
             file_link +
             '">' +
             detail.file_name +
-            "</a> " +
+            '</a> ' +
             gettext(
-              "within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at"
+              'within the library {detail.repo_name} via the bloxberg blockchain. Additional information like the file and the corresponding certificate can be found at'
             ) +
             ' <a target="_blank" href="' +
             landing_page_link +
             '">' +
             detail.repo_name +
-            "</a>.";
+            '</a>.';
           notice = notice
-            .replace("{detail.author_name}", detail.author_name)
-            .replace("{detail.repo_name}", detail.repo_name);
+            .replace('{detail.author_name}', detail.author_name)
+            .replace('{detail.repo_name}', detail.repo_name);
         }
       } else {
         notice = detail.message;
@@ -607,22 +443,22 @@ class NoticeItem extends React.Component {
     }
 
     if (noticeType === MSG_INVALID_METADATA) {
-      let avatar_url = "/media/custom/KeeperAvatar.png";
+      let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice =
         detail.message +
         ' Check <a href="/lib/' +
         detail.lib +
-        "/file/" +
+        '/file/' +
         detail.archive_metadata +
         '" target=_new>' +
         detail.archive_metadata +
-        "</a> for more details.";
+        '</a> for more details.';
       return { avatar_url, notice };
     }
 
     if (noticeType === MSG_DOI || noticeType === MSG_DOI_SUCCESS) {
-      let avatar_url = "/media/custom/KeeperAvatar.png";
+      let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice = detail.doi_link
         ? detail.message +
@@ -630,16 +466,16 @@ class NoticeItem extends React.Component {
           detail.doi_link +
           '" target=_new>' +
           detail.doi +
-          "</a>."
+          '</a>.'
         : detail.message;
       return { avatar_url, notice };
     }
 
     if (noticeType === MSG_KEEPER_ARCHIVING) {
-      let avatar_url = "/media/custom/KeeperAvatar.png";
+      let avatar_url = '/media/custom/KeeperAvatar.png';
       detail = JSON.parse(detail);
       let notice =
-        detail.msg === "Archive for %(name)s has been successfully created."
+        detail.msg === 'Archive for %(name)s has been successfully created.'
           ? gettext(detail.msg).replace(
               "%(name)s",
               '<a href="/library/' +
@@ -648,7 +484,7 @@ class NoticeItem extends React.Component {
                 detail.repo_name +
                 '/" target=_new>' +
                 detail.repo_name +
-                "</a>"
+                '</a>'
             )
           : gettext(detail.msg);
       return { avatar_url, notice };
@@ -670,43 +506,27 @@ class NoticeItem extends React.Component {
     let { avatar_url, notice } = this.generatorNoticeInfo();
 
     if (!avatar_url && !notice) {
-      return "";
+      return '';
     }
 
     return this.props.tr ? (
-      <tr className={noticeItem.seen ? "read" : "unread font-weight-bold"}>
+      <tr className={noticeItem.seen ? 'read' : 'unread font-weight-bold'}>
         <td className="text-center">
-          <img
-            src={avatar_url}
-            width="32"
-            height="32"
-            className="avatar"
-            alt=""
-          />
+          <img src={avatar_url} width="32" height="32" className="avatar" alt="" />
         </td>
         <td className="pr-1 pr-md-8">
-          <p className="m-0" dangerouslySetInnerHTML={{ __html: notice }}></p>
+          <p className="m-0" dangerouslySetInnerHTML={{__html: notice}}></p>
         </td>
-        <td>{moment(noticeItem.time).fromNow()}</td>
+        <td>
+          {moment(noticeItem.time).fromNow()}
+        </td>
       </tr>
     ) : (
-      <li
-        onClick={this.onNoticeItemClick}
-        className={noticeItem.seen ? "read" : "unread"}
-      >
+      <li onClick={this.onNoticeItemClick} className={noticeItem.seen ? 'read' : 'unread'}>
         <div className="notice-item">
           <div className="main-info">
-            <img
-              src={avatar_url}
-              width="32"
-              height="32"
-              className="avatar"
-              alt=""
-            />
-            <p
-              className="brief"
-              dangerouslySetInnerHTML={{ __html: notice }}
-            ></p>
+            <img src={avatar_url} width="32" height="32" className="avatar" alt=""/>
+            <p className="brief" dangerouslySetInnerHTML={{__html: notice}}></p>
           </div>
           <p className="time">{moment(noticeItem.time).fromNow()}</p>
         </div>

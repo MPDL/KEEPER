@@ -107,7 +107,7 @@ class SideNavFooter extends React.Component {
                     id="seafile-logo"
                     src="/media/custom/seafile_logo_footer.png"
                   />
-                  &nbsp;© 2024 Seafile
+                  &nbsp;© 2025 Seafile
                 </a>
               </div>
               <div className="right">

@@ -103,11 +103,11 @@ InfoArea.propTypes = infoAreaPropTypes;
 
 const keeperArchiveMetadataFormPropTypes = {
   repoID: PropTypes.string.isRequired,
-  header: PropTypes.string.isRequired,
+  header: PropTypes.object.isRequired,
   onButton1: PropTypes.func.isRequired,
-  onButton2: PropTypes.func.isRequired,
+  // onButton2: PropTypes.func.isRequired,
   button1Label: PropTypes.string.isRequired,
-  button2Label: PropTypes.string.isRequired,
+  // button2Label: PropTypes.string.isRequired,
 };
 
 class KeeperArchiveMetadataForm extends React.Component {
