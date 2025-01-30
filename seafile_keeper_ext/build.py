@@ -692,6 +692,11 @@ def deploy_ext():
     for path in ('scripts', 'seahub-data', 'conf'):
         deploy_dir(path, expand=True)
 
+    ### Clean up frontend static assets before deployment
+    dest_dir = _join(env_mgr.seahub_dir, 'media', 'assets', 'frontend', 'static')
+    Utils.info(f"Clean up {dest_dir} dir...")
+    shutil.rmtree(dest_dir, ignore_errors=True)
+
     # deploy seafile-server-latest w/o expantion
     deploy_dir('seafile-server-latest')
 
@@ -992,7 +997,7 @@ def do_upgrade(args):
                             shutil.copy(src_path, dest_path)
     elif args.frontend_assets:
         #~latest/seahub/media/assets/frontend/static -> ~ext/seafile-server-latest/seahub/media/assets/frontend/static
-        Utils.info("Copy frontend collected static files into ~ext")
+        Utils.info("Copy frontend built static assets into ~ext")
         src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub',  'frontend', 'build', 'frontend', 'static')
         dest_dir1 = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'media', 'assets', 'frontend', 'static')
         Utils.info(f"Clean up {dest_dir1} dir...")
