@@ -953,7 +953,7 @@ def do_generate(args):
             # put built frontend assets into media assets
             Utils.run(f"sudo -u {user} make collectstatic", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
             # put assets into ~ext
-            args.frontend_build = True
+            args.frontend_assets = True
             args.seafile_src_to_ext = False
             do_upgrade(args)
 
@@ -968,6 +968,8 @@ def do_run(args):
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
 
 def do_upgrade(args):
+    keep_ini = env_mgr.keeper_config
+
     print('Upgrade keeper_ext...')
     # for root, dirs, files in os.walk(_join(env_mgr.keeper_ext_dir, 'seafile-server-latest')):
     if args.seafile_src_to_ext:
@@ -988,35 +990,29 @@ def do_upgrade(args):
                         else:
                             Utils.info("Copy from {} to {}".format(src_path, dest_path))
                             shutil.copy(src_path, dest_path)
-    elif args.frontend_build:
+    elif args.frontend_assets:
         #~latest/seahub/media/assets/frontend/static -> ~ext/seafile-server-latest/seahub/media/assets/frontend/static
         Utils.info("Copy frontend collected static files into ~ext")
-        src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub',  'media', 'assets', 'frontend', 'static')
-        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'media', 'assets', 'frontend', 'static')
-        print(src_dir, '->', dest_dir)
-        shutil.rmtree(dest_dir)
-        shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
+        src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub',  'frontend', 'build', 'frontend', 'static')
+        dest_dir1 = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'media', 'assets', 'frontend', 'static')
+        Utils.info(f"Clean up {dest_dir1} dir...")
+        shutil.rmtree(dest_dir1, ignore_errors=True)
+        Utils.info(f"Copy {src_dir} to {dest_dir1}...")
+        shutil.copytree(src_dir, dest_dir1, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
 
         src_path =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'webpack-stats.pro.json')
-        dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend' )
-        shutil.copy(src_path, dest_dir)
+        dest_dir2 = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend' )
+        Utils.info(f"Copy {src_path} to {dest_dir2}...")
+        shutil.copy(src_path, dest_dir2)
 
+        Utils.set_perms(dirs=(
+            dest_dir1,
+            dest_dir2,
+           ),
+           group=keep_ini.get('system', '__OS_GROUP__'),
+           user=keep_ini.get('system', '__OS_USER__')
+        )
 
-        # Utils.info("Copy frontend/build files into ext")
-        # src_dir =  _join(env_mgr.seafile_server_latest_target, 'seahub', 'frontend', 'build')
-        # dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', 'seahub', 'frontend', 'build' )
-        # print(src_dir, '->', dest_dir)
-        # shutil.rmtree(dest_dir)
-        # shutil.copytree(src_dir, dest_dir, ignore=shutil.ignore_patterns('*.*' + BACKUP_POSTFIX))
-
-
-        # Utils.info("Copy assets/scripts files into ext")
-        # p = [ 'seahub', 'media', 'assets', 'scripts' ]
-        # dest_dir = _join(env_mgr.keeper_ext_dir, 'seafile-server-latest', *p )
-        # src_dir =  _join(env_mgr.seafile_server_latest_target, *p)
-        # print(src_dir, '(app, i18n) ->', dest_dir)
-        # shutil.rmtree(_join(dest_dir, 'app'), ignore_errors=True)
-        # shutil.copytree(_join(src_dir, 'app'), _join(dest_dir, 'app'))
 
 env_mgr = EnvManager()
 
@@ -1061,7 +1057,7 @@ def main():
                                 Upgraded files should be merged with the current KEEPER code!
                                 Check https://keeper.mpdl.mpg.de/smart-link/bbc95ef0-c09c-48bd-851b-a5a4a4029058/
                                 ''', action='store_true')
-    parser_upgrade.add_argument('--frontend-build', help='''Copied generated frontend/build files into KEEPER ext.
+    parser_upgrade.add_argument('--frontend-assets', help='''Copy built frontend assets into KEEPER ext.
                                 HowTo generate the build: https://keeper.mpdl.mpg.de/smart-link/50ae2e91-84e9-4fa5-b4b4-742fec4b095d/. 
                                 ''', action='store_true')
 
