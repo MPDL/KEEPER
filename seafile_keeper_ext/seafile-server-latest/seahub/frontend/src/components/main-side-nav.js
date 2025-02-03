@@ -277,12 +277,12 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
             }
-            <li className="nav-item">
-              <Link className={`nav-link ellipsis ${this.getActiveClass('published')}`} to={siteRoot + 'published/'} title={gettext('Published Libraries')} onClick={(e) => this.tabItemClick(e, 'published')}>
-                <span className="sf2-icon-wiki-view" aria-hidden="true"></span>
-                <span className="nav-text">{gettext('Published Libraries')}</span>
-              </Link>
-            </li>
+            {/* <li className="nav-item"> */}
+            {/*   <Link className={`nav-link ellipsis ${this.getActiveClass('published')}`} to={siteRoot + 'published/'} title={gettext('Published Libraries')} onClick={(e) => this.tabItemClick(e, 'published')}> */}
+            {/*     <span className="sf2-icon-wiki-view" aria-hidden="true"></span> */}
+            {/*     <span className="nav-text">{gettext('Published Libraries')}</span> */}
+            {/*   </Link> */}
+            {/* </li> */}
             <li className="nav-item">
               <Link className={`nav-link ellipsis ${this.getActiveClass('linked-devices')}`} to={siteRoot + 'linked-devices/'} title={gettext('Linked Devices')} onClick={(e) => this.tabItemClick(e, 'linked-devices')}>
                 <span className="sf2-icon-monitor" aria-hidden="true"></span>

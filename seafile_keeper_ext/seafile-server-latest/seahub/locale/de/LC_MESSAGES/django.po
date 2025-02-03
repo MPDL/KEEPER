@@ -1583,7 +1583,7 @@ msgstr "%s ist gelöscht."
 #: seahub/invitations/models.py:95
 #, python-format
 msgid "You are invited to join %(site_name)s."
-msgstr "Sie wurden eingeladen,  %(site_name)sbeizutreten."
+msgstr "Sie wurden eingeladen, %(site_name)s beizutreten."
 
 #: seahub/invitations/models.py:98
 #, python-brace-format
@@ -1622,7 +1622,7 @@ msgstr "Sie wurden eingeladen, dem Team  %(org_name)s beizutreten. Klicken Sie d
 msgid ""
 "%(inviter_name)s invited you to join %(site_name)s. Please click the link "
 "below:"
-msgstr "%(inviter_name)s hat Sie eingeladen,  %(site_name)sbeizutreten. Klicken Sie auf den Link unten:"
+msgstr "%(inviter_name)s hat Sie eingeladen,  %(site_name)s beizutreten. Klicken Sie auf den Link unten:"
 
 #: seahub/invitations/templates/invitations/invitation_revoke_email.html:12
 #, python-format

@@ -141,17 +141,17 @@
       "name": "static/js/9834.d4ac0bf3.chunk.js",
       "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/9834.d4ac0bf3.chunk.js"
     },
-    "static/js/app.993e76e7.js": {
-      "name": "static/js/app.993e76e7.js",
-      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/app.993e76e7.js"
+    "static/js/app.7a9632f1.js": {
+      "name": "static/js/app.7a9632f1.js",
+      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/app.7a9632f1.js"
     },
-    "static/js/app.993e76e7.js.LICENSE.txt": {
-      "name": "static/js/app.993e76e7.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/app.993e76e7.js.LICENSE.txt"
+    "static/js/app.7a9632f1.js.LICENSE.txt": {
+      "name": "static/js/app.7a9632f1.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/app.7a9632f1.js.LICENSE.txt"
     },
-    "static/js/bloxbergCertificate.b1ec14d6.js": {
-      "name": "static/js/bloxbergCertificate.b1ec14d6.js",
-      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/bloxbergCertificate.b1ec14d6.js"
+    "static/js/bloxbergCertificate.1298ff24.js": {
+      "name": "static/js/bloxbergCertificate.1298ff24.js",
+      "path": "/opt/seafile/seafile-pro-server-11.0.18/seahub/frontend/build/frontend/static/js/bloxbergCertificate.1298ff24.js"
     },
     "static/js/bloxbergRepoSnapshot.0d7c8115.js": {
       "name": "static/js/bloxbergRepoSnapshot.0d7c8115.js",
@@ -348,14 +348,14 @@
       "static/css/commons.987d9f91.css",
       "static/js/commons.adcc22b7.js",
       "static/css/app.d6d0337c.css",
-      "static/js/app.993e76e7.js"
+      "static/js/app.7a9632f1.js"
     ],
     "bloxbergCertificate": [
       "static/js/runtime.4ee1061d.js",
       "static/css/commons.987d9f91.css",
       "static/js/commons.adcc22b7.js",
       "static/css/bloxbergCertificate.de565805.css",
-      "static/js/bloxbergCertificate.b1ec14d6.js"
+      "static/js/bloxbergCertificate.1298ff24.js"
     ],
     "bloxbergRepoSnapshot": [
       "static/js/runtime.4ee1061d.js",

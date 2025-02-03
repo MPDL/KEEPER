@@ -33,7 +33,7 @@ window.bloxbergCertificate = {
 {% render_bundle 'bloxbergCertificate' 'js' %}
 <script type="text/javascript">
   var keeper_pdf = true;
-  var metadata_url = '{{ metadata_url|escapejs }}';
+  {# var metadata_url = '{{ metadata_url|escapejs }}'; #}
   var pdf_url = '{{ pdf_url|escapejs }}';
   var SEAFILE_FILE_URL = pdf_url;
   var SEAFILE_PDFJS_DIR = '{{MEDIA_URL}}js/pdf';

@@ -48,7 +48,7 @@ class BloxbergCertificatePage extends React.Component {
           </a>
         </div>
 
-        <div className="container-fluid pt-4 pb-6 o-auto">
+          <div className="container-fluid pt-4 pb-6 o-auto" style={{ backgroundColor: 'white' }}>
           <div className="row">
             <div className="col-md-6 offset-md-1 shadow">
               <h1>

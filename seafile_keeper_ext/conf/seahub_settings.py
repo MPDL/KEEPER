@@ -266,6 +266,7 @@ SESSION_SAVE_EVERY_REQUEST = False
 # Since 6.1.0 CE
 ENABLE_WIKI = False
 
+
 ##########################################################################
 #### Repo snapshot label feature
 
