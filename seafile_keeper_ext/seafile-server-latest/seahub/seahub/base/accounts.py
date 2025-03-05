@@ -429,7 +429,8 @@ class UserPermissions(object):
     def can_invite_guest(self):
         # return self._get_perm_by_roles('can_invite_guest')
         # KEEPER
-        return self._get_perm_by_roles('can_invite_guest') and user_can_invite(self.user.email)
+        email = self.user.contact_email or self.user.email
+        return self._get_perm_by_roles('can_invite_guest') and user_can_invite(email)
 
 
     def can_export_files_via_mobile_client(self):
