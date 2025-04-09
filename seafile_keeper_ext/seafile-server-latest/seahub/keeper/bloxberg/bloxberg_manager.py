@@ -7,6 +7,7 @@ import PyPDF2
 import sys
 import hashlib
 import json
+import time
 from seahub.api2.utils import json_response
 from seahub import settings
 from keeper.catalog.catalog_manager import get_catalog
@@ -144,13 +145,46 @@ def update_snapshot_certificate(obj_id, status=None, error_msg=None, certificate
         snapshot_certificate.save()
 
 def request_create_bloxberg_certificate(certify_payload):
-    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
-    response = requests.post(BLOXBERG_CERTIFY_URL, headers=headers, verify=CA_PATH, json=certify_payload, timeout=(5, 1800))
-    return response
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api-key': BLOXBERG_API_KEY}
+    retries = 10
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.post(BLOXBERG_CERTIFY_URL, headers=headers, verify=CA_PATH, json=certify_payload, timeout=(3, 1800))
+            logger.info(f'Response: {response}')
+            if response.status_code == 200:
+                return response
+            else:
+                logger.error(f"Attempt {attempt} failed with status code {response.status_code}")
+        except requests.RequestException as e:
+            logger.error(f"Attempt {attempt} failed with exception: {e}")
+
+        if attempt < retries:
+            time.sleep(1)
+
+    logger.error("Max retries reached, request failed.")
+    return None  # Or return an appropriate error response
 
 def request_generate_pdf(certificate_payload):
-    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
-    response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, headers=headers, verify=CA_PATH, json=certificate_payload, stream=True, timeout=(5, 1800))
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api-key': BLOXBERG_API_KEY}
+    retries = 10
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, headers=headers, verify=CA_PATH, json=certificate_payload, stream=True, timeout=(3, 1800))
+            logger.info(f'Response: {response}')
+            if response.status_code == 200:
+                return response
+            else:
+                logger.error(f"Attempt {attempt} failed with status code {response.status_code}")
+        except requests.RequestException as e:
+            logger.error(f"Attempt {attempt} failed with exception: {e}")
+
+        if attempt < retries:
+            time.sleep(1)
+
+    logger.error("Max retries reached, request failed.")
+    return None  # Or return an appropriate error response
+
+
     return response
 
 def silentremove(filename):
