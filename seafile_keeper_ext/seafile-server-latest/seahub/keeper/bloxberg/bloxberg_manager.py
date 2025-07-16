@@ -144,12 +144,12 @@ def update_snapshot_certificate(obj_id, status=None, error_msg=None, certificate
         snapshot_certificate.save()
 
 def request_create_bloxberg_certificate(certify_payload):
-    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api-key': BLOXBERG_API_KEY}
     response = requests.post(BLOXBERG_CERTIFY_URL, headers=headers, verify=CA_PATH, json=certify_payload, timeout=(5, 1800))
     return response
 
 def request_generate_pdf(certificate_payload):
-    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api_key': BLOXBERG_API_KEY}
+    headers = {'accept': 'application/json', 'content-type': 'application/json', 'api-key': BLOXBERG_API_KEY}
     response = requests.post(BLOXBERG_GENERATE_CERTIFICATE_URL, headers=headers, verify=CA_PATH, json=certificate_payload, stream=True, timeout=(5, 1800))
     return response
 

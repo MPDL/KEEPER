@@ -154,15 +154,48 @@ function start_seafile_server () {
 }
 
 function kill_all () {
-    pkill -f "seaf-server -c ${default_ccnet_conf_dir}"
-    pkill -f "fileserver -c ${default_ccnet_conf_dir}"
-    pkill -f "seafevents.main"
-    pkill -f "convert_server.py"
-    pkill -f "archiving_server.py"
-    pkill -f "soffice.*--invisible --nocrashreport"
-    pkill -f  "wsgidav.server.server_cli"
-    pkill -f  "notification-server -c ${central_config_dir}"
-    pkill -f  "seafile-monitor.sh"
+    # pkill -f "seaf-server -c ${default_ccnet_conf_dir}"
+    # pkill -f "fileserver -c ${default_ccnet_conf_dir}"
+    # pkill -f "seafevents.main"
+    # pkill -f "convert_server.py"
+    # pkill -f "archiving_server.py"
+    # pkill -f "soffice.*--invisible --nocrashreport"
+    # pkill -f "wsgidav.server.server_cli"
+    # pkill -f "notification-server -c ${central_config_dir}"
+    # pkill -f "seafile-monitor.sh"
+
+    local processes=(
+        "seaf-server -c ${default_ccnet_conf_dir}"
+        "fileserver -c ${default_ccnet_conf_dir}"
+        "seafevents.main"
+        "convert_server.py"
+        "archiving_server.py"
+        "soffice.*--invisible --nocrashreport"
+        "wsgidav.server.server_cli"
+        "notification-server -c ${central_config_dir}"
+        "seafile-monitor.sh"
+    )
+
+    for pattern in "${processes[@]}"; do
+        echo "Attempting to gracefully kill: $pattern"
+        pkill -f "$pattern"
+
+        # Wait up to 10 seconds, checking every second
+        for i in {1..10}; do
+            if ! pgrep -f "$pattern" > /dev/null; then
+                echo "Process '$pattern' terminated successfully after $i second(s)."
+                break
+            fi
+            sleep 1
+        done
+
+        # If still running after 10 seconds, force kill
+        if pgrep -f "$pattern" > /dev/null; then
+            echo "Process '$pattern' still running after 10 seconds. Forcing termination..."
+            pkill -9 -f "$pattern"
+        fi
+    done
+    
 }
 
 function stop_seafile_server () {
