@@ -3,7 +3,7 @@ import Select from 'react-select';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 import {Utils} from '../utils/utils';
 import {gettext,} from '../utils/constants';
-import {keeperAPI} from '../utils/seafile-api';
+import {seafileAPI} from '../utils/seafile-api';
 import toaster from './toast';
 import {Col, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label, Row, Tooltip} from 'reactstrap';
 import PropTypes from 'prop-types';
@@ -125,7 +125,7 @@ class KeeperArchiveMetadataForm extends React.Component {
   }
 
   componentDidMount() {
-    keeperAPI
+    seafileAPI
       .getArchiveMetadata(this.props.repoID)
       .then((res) => {
         let newState = this.state;
@@ -155,7 +155,7 @@ class KeeperArchiveMetadataForm extends React.Component {
 
         this.setState(newState, () => this.setButtons());
 
-        keeperAPI.getMpgInstitutes().then((res2) => {
+        seafileAPI.getMpgInstitutes().then((res2) => {
           res2.data.map((v) => {
             mpgInstituteOptions.push({value: v, label: v});
           });

@@ -12,6 +12,12 @@
   max-width: 24px;
 }
 
+.dir-icon .empty-content {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
 .dir-icon .locked {
   position: absolute;
   width: 1rem;
@@ -27,7 +33,7 @@
 .dirent-sdoc-draft-identifier {
   display: inline-block;
   font-size: 14px;
-  color: #888;
+  color: #666;
   background: #eee;
   padding: 0 8px;
   height: 20px;
@@ -35,7 +41,6 @@
   border-radius: 10px;
   margin-left: 6px;
 }
-
 /* KEEPER */
 .small-icon {
   height: 15px;

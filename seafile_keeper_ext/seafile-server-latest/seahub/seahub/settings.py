@@ -27,12 +27,12 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '%s/seahub/seahub.db' % PROJECT_ROOT,  # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'seahub',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
 
@@ -122,6 +122,8 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'n*v0=jz-1rz@(4gx^tf%6^e7c&um@2)g-l=3_)t@19a69n1nv6'
 
+JWT_PRIVATE_KEY = ''
+
 ENABLE_REMOTE_USER_AUTHENTICATION = False
 
 # Order is important
@@ -141,6 +143,7 @@ MIDDLEWARE = [
     'seahub.two_factor.middleware.ForceTwoFactorAuthMiddleware',
     'seahub.trusted_ip.middleware.LimitIpMiddleware',
     'seahub.organizations.middleware.RedirectMiddleware',
+    'seahub.base.middleware.UserAgentMiddleWare',
 ]
 
 SITE_ROOT_URLCONF = 'seahub.urls'
@@ -243,10 +246,11 @@ INSTALLED_APPS = [
     'seahub.api2',
     'seahub.avatar',
     'seahub.contacts',
-    'seahub.drafts',
+    # 'seahub.drafts',
     'seahub.institutions',
     'seahub.invitations',
     'seahub.wiki',
+    'seahub.wiki2',
     'seahub.group',
     'seahub.notifications',
     'seahub.options',
@@ -254,6 +258,7 @@ INSTALLED_APPS = [
     'seahub.profile',
     'seahub.share',
     'seahub.help',
+    'seahub.ai',
     'seahub.thumbnail',
     'seahub.password_session',
     'seahub.admin_log',
@@ -267,9 +272,11 @@ INSTALLED_APPS = [
     'seahub.file_tags',
     'seahub.related_files',
     'seahub.work_weixin',
+    'seahub.weixin',
     'seahub.dingtalk',
     'seahub.file_participants',
     'seahub.repo_api_tokens',
+    'seahub.repo_metadata',
     'seahub.abuse_reports',
     'seahub.repo_auto_delete',
     'seahub.ocm',
@@ -313,6 +320,8 @@ DISABLE_ADFS_USER_PWD_LOGIN = False
 
 ENABLE_OAUTH = False
 ENABLE_WATERMARK = False
+
+ENABLE_CUSTOM_OAUTH = False
 
 ENABLE_SHOW_CONTACT_EMAIL_WHEN_SEARCH_USER = False
 ENABLE_SHOW_LOGIN_ID_WHEN_SEARCH_USER = False
@@ -386,6 +395,9 @@ MAX_NUMBER_OF_FILES_FOR_FILEUPLOAD = 1000
 ENABLE_ENCRYPTED_LIBRARY = True
 ENCRYPTED_LIBRARY_VERSION = 2
 
+ENCRYPTED_LIBRARY_PWD_HASH_ALGO = ""
+ENCRYPTED_LIBRARY_PWD_HASH_PARAMS = ""
+
 # enable reset encrypt library's password when user forget password
 ENABLE_RESET_ENCRYPTED_REPO_PASSWORD = False
 
@@ -448,14 +460,6 @@ SHARE_LINK_EMAIL_LANGUAGE = ''
 # check virus for files uploaded form upload link
 ENABLE_UPLOAD_LINK_VIRUS_CHECK = False
 
-# mininum length for user's password
-USER_PASSWORD_MIN_LENGTH = 6
-
-# LEVEL based on four types of input:
-# num, upper letter, lower letter, other symbols
-# '3' means password must have at least 3 types of the above.
-USER_PASSWORD_STRENGTH_LEVEL = 3
-
 # default False, only check USER_PASSWORD_MIN_LENGTH
 # when True, check password strength level, STRONG(or above) is allowed
 USER_STRONG_PASSWORD_REQUIRED = False
@@ -491,13 +495,17 @@ ENABLE_SHARE_TO_DEPARTMENT = True
 # interval for request unread notifications
 UNREAD_NOTIFICATIONS_REQUEST_INTERVAL = 3 * 60 # seconds
 
-# Enable seafile docs
-ENABLE_SEAFILE_DOCS = False
-
-# enable integration seatbale
-ENABLE_SEATABLE_INTEGRATION = False
 
 ENABLE_CONVERT_TO_TEAM_ACCOUNT = False
+
+
+ADMIN_LOGS_EXPORT_MAX_DAYS = 180
+
+# Enable show about module
+ENABLE_SHOW_ABOUT = True
+
+# enable show wechat support
+SHOW_WECHAT_SUPPORT_GROUP = False
 
 # File preview
 FILE_PREVIEW_MAX_SIZE = 30 * 1024 * 1024
@@ -514,12 +522,11 @@ AVATAR_ALLOWED_FILE_EXTS = ('.jpg', '.png', '.jpeg', '.gif')
 AVATAR_STORAGE_DIR = 'avatars'
 AVATAR_HASH_USERDIRNAMES = True
 AVATAR_HASH_FILENAMES = True
-AVATAR_GRAVATAR_BACKUP = False
 AVATAR_DEFAULT_URL = '/avatars/default.png'
 AVATAR_DEFAULT_NON_REGISTERED_URL = '/avatars/default-non-register.jpg'
 AVATAR_MAX_AVATARS_PER_USER = 1
 AVATAR_CACHE_TIMEOUT = 14 * 24 * 60 * 60
-AUTO_GENERATE_AVATAR_SIZES = (16, 20, 24, 28, 32, 36, 40, 42, 48, 60, 64, 72, 80, 84, 96, 128, 160)
+AVATAR_DEFAULT_SIZE = 256
 # Group avatar
 GROUP_AVATAR_STORAGE_DIR = 'avatars/groups'
 GROUP_AVATAR_DEFAULT_URL = 'avatars/groups/default.png'
@@ -637,86 +644,213 @@ SHOW_LOGOUT_ICON = False
 PRIVACY_POLICY_LINK = ''
 TERMS_OF_SERVICE_LINK = ''
 
-FILE_CONVERTER_SERVER_URL = 'http://127.0.0.1:8888'
-
 # For security consideration, please set to match the host/domain of your site, e.g., ALLOWED_HOSTS = ['.example.com'].
 # Please refer https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts for details.
 ALLOWED_HOSTS = ['*']
 
 # Logging
-LOGGING = {
-    'version': 1,
-
-    # Enable existing loggers so that gunicorn errors will be bubbled up when
-    # server side error page "Internal Server Error" occurs.
-    # ref: https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
-    'disable_existing_loggers': False,
-
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
+seafile_log_to_stdout = os.getenv('SEAFILE_LOG_TO_STDOUT', 'false') == 'true'
+if seafile_log_to_stdout:
+    LOGGING = {
+        'version': 1,
+        # Enable existing loggers so that gunicorn errors will be bubbled up when
+        # server side error page "Internal Server Error" occurs.
+        # ref: https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                # [seahub] [2024-09-05 16:57:40] [INFO] xxx
+                'format': '[seahub] [%(asctime)s] [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
         },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue'
+            },
         },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue'
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': sys.stdout,
+            },
+            'default': {
+                'level': 'INFO',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': sys.stdout,
+            },
+            'onlyoffice_handler': {
+                'level': 'INFO',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': sys.stdout,
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'filters': ['require_debug_false'],
+                'class': 'django.utils.log.AdminEmailHandler'
+            },
+            'file_updates_sender_handler': {
+                'level': 'INFO',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': sys.stdout,
+            },
+            'seahub_email_sender_handler': {
+                'level': 'INFO',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+                'stream': sys.stdout,
+            }
         },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-        },
-        'default': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_DIR, 'seahub.log'),
-            'maxBytes': 1024*1024*100,  # 100 MB
-            'backupCount': 5,
-            'formatter': 'standard',
-        },
-        'onlyoffice_handler': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_DIR, 'onlyoffice.log'),
-            'maxBytes': 1024*1024*100,  # 100 MB
-            'backupCount': 5,
-            'formatter': 'standard',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
+        'loggers': {
+            '': {
+                'handlers': ['default'],
+                'level': 'INFO',
+                'propagate': True
+            },
+            'django.request': {
+                'handlers': ['default', 'mail_admins'],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'py.warnings': {
+                'handlers': ['console', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'onlyoffice': {
+                'handlers': ['onlyoffice_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'file_updates_sender': {
+                'handlers': ['file_updates_sender_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'seahub_email_sender': {
+                'handlers': ['seahub_email_sender_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            }
         }
-    },
-    'loggers': {
-        '': {
-            'handlers': ['default'],
-            'level': 'INFO',
-            'propagate': True
-        },
-        'django.request': {
-            'handlers': ['default', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False
-        },
-        'py.warnings': {
-            'handlers': ['console', ],
-            'level': 'INFO',
-            'propagate': False
-        },
-        'onlyoffice': {
-            'handlers': ['onlyoffice_handler', ],
-            'level': 'INFO',
-            'propagate': False
-        },
     }
-}
+else:
+    LOGGING = {
+        'version': 1,
+
+        # Enable existing loggers so that gunicorn errors will be bubbled up when
+        # server side error page "Internal Server Error" occurs.
+        # ref: https://www.caktusgroup.com/blog/2015/01/27/Django-Logging-Configuration-logging_config-default-settings-logger/
+        'disable_existing_loggers': False,
+
+        'formatters': {
+            'standard': {
+                'format': '[%(asctime)s] [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
+        },
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse'
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue'
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'filters': ['require_debug_true'],
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard',
+            },
+            'default': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'seahub.log'),
+                'maxBytes': 1024*1024*100,  # 100 MB
+                'backupCount': 5,
+                'formatter': 'standard',
+            },
+            'onlyoffice_handler': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'onlyoffice.log'),
+                'maxBytes': 1024*1024*100,  # 100 MB
+                'backupCount': 5,
+                'formatter': 'standard',
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'filters': ['require_debug_false'],
+                'class': 'django.utils.log.AdminEmailHandler'
+            },
+            'file_updates_sender_handler': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'file_updates_sender.log'),
+                'maxBytes': 1024*1024*100,  # 100 MB
+                'backupCount': 5,
+                'formatter': 'standard',
+            },
+            'seahub_email_sender_handler': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, 'seahub_email_sender.log'),
+                'maxBytes': 1024*1024*100,  # 100 MB
+                'backupCount': 5,
+                'formatter': 'standard',
+            }
+        },
+        'loggers': {
+            '': {
+                'handlers': ['default'],
+                'level': 'INFO',
+                'propagate': True
+            },
+            'django.request': {
+                'handlers': ['default', 'mail_admins'],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'py.warnings': {
+                'handlers': ['console', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'onlyoffice': {
+                'handlers': ['onlyoffice_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'file_updates_sender': {
+                'handlers': ['file_updates_sender_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            },
+            'seahub_email_sender': {
+                'handlers': ['seahub_email_sender_handler', ],
+                'level': 'INFO',
+                'propagate': False
+            }
+        }
+    }
+
+
+LOGGING_IGNORE_MODULES = ['seafes', 'xmlschema']
 
 #Login Attempt
 LOGIN_ATTEMPT_LIMIT = 5
@@ -744,11 +878,11 @@ if os.path.exists(SEAHUB_DATA_ROOT):
 else:
     THUMBNAIL_ROOT = os.path.join(PROJECT_ROOT, 'seahub/thumbnail/thumb')
 
-THUMBNAIL_EXTENSION = 'png'
+THUMBNAIL_EXTENSION = 'jpeg'
 
 # for thumbnail: height(px) and width(px)
-THUMBNAIL_DEFAULT_SIZE = 48
-THUMBNAIL_SIZE_FOR_GRID = 192
+THUMBNAIL_DEFAULT_SIZE = 256
+THUMBNAIL_SIZE_FOR_GRID = 512
 THUMBNAIL_SIZE_FOR_ORIGINAL = 1024
 
 # size(MB) limit for generate thumbnail
@@ -759,10 +893,13 @@ THUMBNAIL_IMAGE_ORIGINAL_SIZE_LIMIT = 256
 ENABLE_VIDEO_THUMBNAIL = False
 THUMBNAIL_VIDEO_FRAME_TIME = 5  # use the frame at 5 second as thumbnail
 
+# pdf thumbnails
+ENABLE_PDF_THUMBNAIL = True
+
 # template for create new office file
 OFFICE_TEMPLATE_ROOT = os.path.join(MEDIA_ROOT, 'office-template')
 
-ENABLE_WEBDAV_SECRET = False
+ENABLE_WEBDAV_SECRET = True
 WEBDAV_SECRET_MIN_LENGTH = 1
 WEBDAV_SECRET_STRENGTH_LEVEL = 1
 
@@ -773,6 +910,9 @@ ENABLE_USER_SET_NAME = True
 ENABLE_SSO_TO_THIRDPART_WEBSITE = False
 THIRDPART_WEBSITE_SECRET_KEY = ''
 THIRDPART_WEBSITE_URL = ''
+
+
+SSO_SECRET_KEY = ''
 
 # client sso
 CLIENT_SSO_VIA_LOCAL_BROWSER = False
@@ -804,21 +944,8 @@ FILESERVER_TOKEN_ONCE_ONLY = True
 SEND_EMAIL_ON_ADDING_SYSTEM_MEMBER = True # Whether to send email when a system staff adding new member.
 SEND_EMAIL_ON_RESETTING_USER_PASSWD = True # Whether to send email when a system staff resetting user's password.
 
-##########################
-# Settings for Extra App #
-##########################
+ENABLE_SMIME = False
 
-##########################
-# Settings for frontend  #
-##########################
-
-SEAFILE_COLLAB_SERVER = ''
-
-##########################
-# Settings for dtable web  #
-##########################
-
-DTABLE_WEB_SERVER = ''
 
 ##########################
 # Settings for seadoc    #
@@ -827,7 +954,14 @@ DTABLE_WEB_SERVER = ''
 ENABLE_SEADOC = False
 SEADOC_PRIVATE_KEY = ''
 SEADOC_SERVER_URL = 'http://127.0.0.1:7070'
+FILE_CONVERTER_SERVER_URL = 'http://127.0.0.1:8888'
 
+
+##########################
+# Settings for tldraw    #
+##########################
+
+ENABLE_WHITEBOARD = False
 
 ############################
 # Settings for Seahub Priv #
@@ -853,10 +987,6 @@ ENABLE_REPO_SNAPSHOT_LABEL = False
 #  Repo wiki mode
 ENABLE_REPO_WIKI_MODE = True
 
-SEAFILE_AI_SECRET_KEY = ''
-SEAFILE_AI_SERVER_URL = ''
-ENABLE_SEAFILE_AI = False
-
 ############################
 # HU berlin additional #
 ############################
@@ -866,12 +996,6 @@ ENABLE_SEAFILE_AI = False
 #     'content': 'Do not share personal or confidential official data with **.'
 # }
 ADDITIONAL_SHARE_DIALOG_NOTE = None
-
-# ADDITIONAL_APP_BOTTOM_LINKS = {
-#     'seafile': 'http://dev.seahub.com/seahub',
-#     'dtable-web': 'http://dev.seahub.com/dtable-web'
-# }
-ADDITIONAL_APP_BOTTOM_LINKS = None
 
 # ADDITIONAL_ABOUT_DIALOG_LINKS = {
 #     'seafile': 'http://dev.seahub.com/seahub',
@@ -887,19 +1011,19 @@ if os.environ.get('SEAFILE_DOCS', None):
     LOGO_WIDTH = ''
     ENABLE_WIKI = True
 
-#######################
-# extended properties #
-#######################
-SEATABLE_EX_PROPS_BASE_API_TOKEN = ''
-EX_PROPS_TABLE = ''
-EX_EDITABLE_COLUMNS = []
+##############################
+# metadata server properties #
+##############################
+ENABLE_METADATA_MANAGEMENT = False
+METADATA_SERVER_URL = ''
+METADATA_SERVER_SECRET_KEY = ''
 
 #############################
 # multi office suite support
 #############################
 ENABLE_MULTIPLE_OFFICE_SUITE = False
 OFFICE_SUITE_LIST = [
-    { 
+    {
         "id": "onlyoffice",
         "name": "OnlyOffice",
         "is_default": True,
@@ -913,6 +1037,34 @@ OFFICE_SUITE_LIST = [
 ROLES_DEFAULT_OFFCICE_SUITE = {}
 OFFICE_SUITE_ENABLED_FILE_TYPES = []
 OFFICE_SUITE_ENABLED_EDIT_FILE_TYPES = []
+
+# file tags
+ENABLE_FILE_TAGS = True
+
+METADATA_FILE_TYPES = {
+    '_picture': ('gif', 'jpeg', 'jpg', 'heic', 'png', 'ico', 'bmp', 'tif', 'tiff', 'psd', 'webp', 'jfif', 'mpo', 'jpe', 'xbm',
+                 'svg', 'ppm', 'pcx', 'xcf', 'xpm', 'mgn', 'ufo', 'ai'),
+    '_document': ('oform', 'ppt', 'pptx', 'odt', 'fodt', 'odp', 'fodp', 'odg', 'pdf', 'xls', 'xlsx', 'ods',
+                  'fods', 'xmind', 'ac', 'am', 'bat', 'diff', 'org', 'properties', 'vi', 'vim', 'xml', 'log',
+                  'csv', 'rst', 'patch', 'txt', 'text', 'tex', 'markdown', 'md', 'sdoc', 'doc', 'docx', ),
+    '_code': ('cc', 'c', 'cmake', 'cpp', 'cs', 'css', 'el', 'h', 'html', 'htm', 'java', 'js', 'less', 'make', 'php', 'pl',
+              'py', 'rb', 'scala', 'script', 'sh', 'sql', 'groovy', 'go', 'yml', 'xhtml', 'json', ),
+    '_video': ('mp4', 'ogv', 'webm', 'mov', 'avi', 'wmv', 'asf', 'asx', 'rm', 'rmvb', 'mpg', 'mpeg', 'mpe', '3gp',
+               'm4v', 'mkv', 'flv', 'vob'),
+    '_audio': ('mp3', 'oga', 'ogg', 'wav', 'flac', 'opus', 'aac', 'au', 'm4a', 'aif', 'aiff', 'wma', 'rm', 'mp1', 'mp2'),
+    '_compressed': ('rar', 'zip', '7z', 'tar', 'gz', 'bz2', 'tgz', 'xz', 'lzma'),
+    '_diagram': ('draw', ),
+}
+
+##############################
+#         seafile ai         #
+##############################
+
+SEAFILE_AI_SERVER_URL = ''
+SEAFILE_AI_SECRET_KEY = ''
+
+ENABLE_SEAFILE_AI = False
+
 d = os.path.dirname
 EVENTS_CONFIG_FILE = os.environ.get(
     'EVENTS_CONFIG_FILE',
@@ -924,6 +1076,18 @@ EVENTS_CONFIG_FILE = os.environ.get(
 del d
 if not os.path.exists(EVENTS_CONFIG_FILE):
     del EVENTS_CONFIG_FILE
+
+#####################
+#   Map settings    #
+#####################
+
+# baidu map
+BAIDU_MAP_KEY = ''
+
+# google map
+GOOGLE_MAP_KEY = ''
+GOOGLE_MAP_ID = ''
+
 
 #####################
 # External settings #
@@ -976,16 +1140,53 @@ else:
     load_local_settings(seahub_settings)
     del seahub_settings
 
+# Add default handler when used custom LOGGING
+if 'default' not in LOGGING['handlers']:
+    LOGGING['handlers']['default'] = {
+        'level': 'INFO',
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': os.path.join(LOG_DIR, 'seahub.log'),
+        'maxBytes': 1024*1024*100,  # 100 MB
+        'backupCount': 5,
+        'formatter': 'standard',
+    }
+# Ignore logs of component in INFO level, and set it to ERROR level
+for module in LOGGING_IGNORE_MODULES:
+    if module not in LOGGING['loggers']:
+        LOGGING['loggers'][module] = {
+            'handlers': ['default'],
+            'level': 'ERROR',
+            'propagate': False
+        }
+
+# config in env
+JWT_PRIVATE_KEY = os.environ.get('JWT_PRIVATE_KEY', '') or JWT_PRIVATE_KEY
+
+if os.environ.get('ENABLE_SEADOC', ''):
+    ENABLE_SEADOC = os.environ.get('ENABLE_SEADOC', '').lower() == 'true'
+SEADOC_PRIVATE_KEY = JWT_PRIVATE_KEY
+SEADOC_SERVER_URL = os.environ.get('SEADOC_SERVER_URL', '') or SEADOC_SERVER_URL
+FILE_CONVERTER_SERVER_URL = SEADOC_SERVER_URL.rstrip('/') + '/converter'
+
+if os.environ.get('SITE_ROOT', ''):
+    SITE_ROOT = os.environ.get('SITE_ROOT', '')
+SEAFILE_SERVER_PROTOCOL = os.environ.get('SEAFILE_SERVER_PROTOCOL', '')
+SEAFILE_SERVER_HOSTNAME = os.environ.get('SEAFILE_SERVER_HOSTNAME', '')
+if SEAFILE_SERVER_PROTOCOL and SEAFILE_SERVER_HOSTNAME:
+    host_url = SEAFILE_SERVER_PROTOCOL + '://' + SEAFILE_SERVER_HOSTNAME.rstrip('/')
+    SERVICE_URL = host_url + SITE_ROOT.rstrip('/')
+    FILE_SERVER_ROOT = host_url + '/seafhttp'
+
 # Remove install_topdir from path
 sys.path.pop(0)
 
 # Following settings are private, can not be overwrite.
 INNER_FILE_SERVER_ROOT = 'http://127.0.0.1:' + FILE_SERVER_PORT
 
+SEAFEVENTS_SERVER_URL = 'http://127.0.0.1:8889'
+
 CONSTANCE_ENABLED = ENABLE_SETTINGS_VIA_WEB
 CONSTANCE_CONFIG = {
-    'SERVICE_URL': (SERVICE_URL, ''),
-    'FILE_SERVER_ROOT': (FILE_SERVER_ROOT, ''),
     'DISABLE_SYNC_WITH_ANY_FOLDER': (DISABLE_SYNC_WITH_ANY_FOLDER, ''),
 
     'ENABLE_SIGNUP': (ENABLE_SIGNUP, ''),
@@ -1001,8 +1202,6 @@ CONSTANCE_CONFIG = {
     'FORCE_PASSWORD_CHANGE': (FORCE_PASSWORD_CHANGE, ''),
 
     'USER_STRONG_PASSWORD_REQUIRED': (USER_STRONG_PASSWORD_REQUIRED, ''),
-    'USER_PASSWORD_MIN_LENGTH': (USER_PASSWORD_MIN_LENGTH, ''),
-    'USER_PASSWORD_STRENGTH_LEVEL': (USER_PASSWORD_STRENGTH_LEVEL, ''),
 
     'SHARE_LINK_TOKEN_LENGTH': (SHARE_LINK_TOKEN_LENGTH, ''),
     'SHARE_LINK_FORCE_USE_PASSWORD': (SHARE_LINK_FORCE_USE_PASSWORD, ''),
@@ -1033,7 +1232,7 @@ if ENABLE_REMOTE_USER_AUTHENTICATION:
     MIDDLEWARE.append('seahub.auth.middleware.SeafileRemoteUserMiddleware')
     AUTHENTICATION_BACKENDS += ('seahub.auth.backends.SeafileRemoteUserBackend',)
 
-if ENABLE_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
+if ENABLE_OAUTH or ENABLE_CUSTOM_OAUTH or ENABLE_WORK_WEIXIN or ENABLE_WEIXIN or ENABLE_DINGTALK:
     AUTHENTICATION_BACKENDS += ('seahub.oauth.backends.OauthRemoteUserBackend',)
 
 if ENABLE_CAS:
@@ -1062,4 +1261,4 @@ if ENABLE_LDAP:
 
 
 
-SEAFILE_VERSION = "11.0.18"
+SEAFILE_VERSION = "12.0.16"

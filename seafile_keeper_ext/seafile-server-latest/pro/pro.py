@@ -546,65 +546,6 @@ suffix = md,txt,doc,docx,xls,xlsx,ppt,pptx,sdoc
         with open(self.seafevents_conf, 'w') as fp:
             fp.write(template % dict(db_config_text=db_config_text))
 
-class MigratingProfessionalConfigurator(ProfessionalConfigurator):
-    '''This scripts is used standalone to migrate from community version to
-    professional version
-
-    '''
-    def __init__(self, args):
-        ProfessionalConfigurator.__init__(self, args, migrate=True)
-
-    def check_pre_condition(self):
-        pass
-
-    def config(self):
-        self.detect_db_type()
-        self.update_avatars_link()
-
-    def detect_db_type(self):
-        '''Read database info from seahub_settings.py'''
-        sys.path.insert(0, env_mgr.central_config_dir)
-        try:
-            from seahub_settings import DATABASES # pylint: disable=F0401
-        except ImportError:
-            print('Failed to import "DATABASES" from seahub_settings.py, assuming sqlite3')
-            self.db_config = SQLiteDBConf()
-            return
-
-        try:
-            default_config = DATABASES['default']
-            if default_config['ENGINE'] == 'django.db.backends.mysql':
-                db_config = MySQLDBConf()
-                db_config.mysql_host = default_config.get('HOST', '')
-                db_config.mysql_port = default_config.get('PORT', '')
-                db_config.mysql_user = default_config.get('USER', '')
-                db_config.mysql_password = default_config.get('PASSWORD', '')
-                db_config.mysql_db = default_config['NAME']
-
-                if db_config.mysql_port:
-                    db_config.mysql_port = int(db_config.mysql_port)
-
-                print('Your seafile server is using mysql')
-
-                self.db_config = db_config
-            else:
-                print('Your seafile server is using sqlite3')
-                self.db_config = SQLiteDBConf()
-
-        except KeyError:
-            Utils.error('Error in your config %s' % \
-                        os.path.join(env_mgr.top_dir, 'seahub_settings.py'))
-
-    def update_avatars_link(self):
-        minor_upgrade_script = os.path.join(env_mgr.install_path, 'upgrade', 'minor-upgrade.sh')
-        argv = [
-            minor_upgrade_script
-        ]
-
-        if Utils.run_argv(argv) != 0:
-            Utils.error('failed to update avatars folder')
-
-
 class SetupProfessionalConfigurator(ProfessionalConfigurator):
     '''This script is invokded by setup-seafile.sh/setup-seafile-mysql.sh to
     generate seafile pro related conf
@@ -643,21 +584,65 @@ class SetupProfessionalConfigurator(ProfessionalConfigurator):
 def do_setup(args):
     global pro_config
 
-    if args.migrate:
-        pro_config = MigratingProfessionalConfigurator(args)
-    else:
-        pro_config = SetupProfessionalConfigurator(args)
+    pro_config = SetupProfessionalConfigurator(args)
 
     pro_config.check_pre_condition()
     pro_config.config()
     pro_config.generate()
 
+
+def parse_bool(v):
+    if isinstance(v, bool):
+        return v
+
+    v = str(v).lower()
+
+    if v == '1' or v == 'true':
+        return True
+    else:
+        return False
+
+
+def get_opt_from_conf_or_env(config, section, key, env_key=None, default=None):
+    """Get option value from events.conf. If not specified in events.conf, check the environment variable.
+    """
+    try:
+        return config.get(section, key)
+    except configparser.Error:
+        if env_key is None:
+            return default
+        else:
+            return os.environ.get(env_key.upper(), default)
+
+
 def handle_search_commands(args):
     '''provide search related utility'''
+    events_conf = os.path.join(env_mgr.central_config_dir, 'seafevents.conf')
+    config = Utils.read_config(events_conf)
+
+    es_section_name = 'INDEX FILES'
+    seasearch_section_name = 'SEASEARCH'
+    key_enabled = 'enabled'
+
+    es_enabled = get_opt_from_conf_or_env(config, es_section_name, key_enabled, default=False)
+    seaseach_enabled = get_opt_from_conf_or_env(config, seasearch_section_name, key_enabled, default=False)
+
+    es_enabled = parse_bool(es_enabled)
+    seaseach_enabled = parse_bool(seaseach_enabled)
+
+    if es_enabled and seaseach_enabled:
+        raise Exception('ES and seasearch cannot be configured simultaneously.')
+
     if args.update:
-        update_search_index()
+        if seaseach_enabled:
+            update_seasearch_index()
+        elif es_enabled:
+            update_search_index()
     elif args.clear:
-        delete_search_index()
+        if seaseach_enabled:
+            delete_seasearch_index()
+        elif es_enabled:
+            delete_search_index()
 
 def get_seafes_env():
     env = env_mgr.get_seahub_env()
@@ -668,16 +653,35 @@ def get_seafes_env():
     return env
 
 def update_search_index():
+    update_file_search_index()
+    update_wiki_search_index()
+
+
+def update_file_search_index():
     argv = [
         Utils.get_python_executable(),
-        '-m', 'seafes.index_local',
+        '-m', 'seafes.indexes.repo_file.index_local',
         '--loglevel', 'debug',
         'update',
     ]
 
-    Utils.info('\nUpdating search index, this may take a while...\n')
+    Utils.info('\nUpdating file index, this may take a while...\n')
 
     Utils.run_argv(argv, env=get_seafes_env())
+
+
+def update_wiki_search_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafes.indexes.wiki.index_wiki_local',
+        '--loglevel', 'debug',
+        'update',
+    ]
+
+    Utils.info('\nUpdating wiki index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
 
 def delete_search_index():
     choice = None
@@ -688,16 +692,105 @@ def delete_search_index():
     if choice == 'n':
         return
 
+    delete_file_search_index()
+    delete_wiki_search_index()
+
+
+def delete_file_search_index():
     argv = [
         Utils.get_python_executable(),
-        '-m', 'seafes.index_local',
+        '-m', 'seafes.indexes.repo_file.index_local',
         '--loglevel', 'debug',
         'clear',
     ]
 
-    Utils.info('\nDelete search index, this may take a while...\n')
+    Utils.info('\nDelete file index, this may take a while...\n')
 
     Utils.run_argv(argv, env=get_seafes_env())
+
+
+def delete_wiki_search_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafes.indexes.wiki.index_wiki_local',
+        '--loglevel', 'debug',
+        'clear',
+    ]
+
+    Utils.info('\nDelete wiki index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
+
+def update_seasearch_index():
+    update_file_seasearch_index()
+    update_wiki_seasearch_index()
+
+
+def update_file_seasearch_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafevents.seasearch.script.repo_filename_index_local',
+        '--loglevel', 'debug',
+        'update',
+    ]
+
+    Utils.info('\nUpdating seasearch filename index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
+
+def update_wiki_seasearch_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafevents.seasearch.script.wiki_index_local',
+        '--loglevel', 'debug',
+        'update',
+    ]
+
+    Utils.info('\nUpdating seasearch wiki index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
+
+def delete_seasearch_index():
+    choice = None
+    while choice not in ('y', 'n', ''):
+        prompt = 'Delete seafile search index ([y]/n)? '
+        choice = input(prompt).strip()
+
+    if choice == 'n':
+        return
+
+    delete_file_seasearch_index()
+    delete_wiki_seasearch_index()
+
+
+def delete_file_seasearch_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafevents.seasearch.script.repo_filename_index_local',
+        '--loglevel', 'debug',
+        'clear',
+    ]
+
+    Utils.info('\nDelete seasearch filename index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
+
+def delete_wiki_seasearch_index():
+    argv = [
+        Utils.get_python_executable(),
+        '-m', 'seafevents.seasearch.script.wiki_index_local',
+        '--loglevel', 'debug',
+        'clear',
+    ]
+
+    Utils.info('\nDelete seasearch wiki index, this may take a while...\n')
+
+    Utils.run_argv(argv, env=get_seafes_env())
+
 
 def handle_ldap_sync_commands(args):
     if args.test:
@@ -775,7 +868,6 @@ def main():
     # setup
     parser_setup = subparsers.add_parser('setup', help='Setup extra components of seafile pro')
     parser_setup.set_defaults(func=do_setup)
-    parser_setup.add_argument('--migrate', help='migrate from community version', action='store_true')
 
     # for non-migreate setup
     parser_setup.add_argument('--mysql', help='use mysql', action='store_true')

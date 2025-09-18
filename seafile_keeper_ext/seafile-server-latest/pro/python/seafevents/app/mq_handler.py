@@ -12,6 +12,7 @@ import seafevents.events_publisher.handlers as publisher_handlers
 import seafevents.statistics.handlers as stats_handlers
 from seafevents.db import init_db_session_class
 from seafevents.app.event_redis import RedisClient
+import seafevents.repo_metadata.handlers as metadata_handler
 
 logger = logging.getLogger(__name__)
 
@@ -48,19 +49,23 @@ class MessageHandler(object):
             funcs.append(func)
 
     def handle_message(self, config, session, redis_connection, channel, msg):
-        pos = msg['content'].find('\t')
-        if pos == -1:
+        try:
+            content = json.loads(msg.get('content'))
+        except:
             logger.warning("invalid message format: %s", msg)
             return
 
-        msg_type = channel + ':' + msg['content'][:pos]
+        if not content.get('msg_type'):
+            return
+
+        msg_type = channel + ':' + content.get('msg_type')
         if msg_type not in self._handlers:
             return
 
         funcs = self._handlers.get(msg_type)
         for func in funcs:
             try:
-                if func.__name__ == 'RepoUpdatePublishHandler':
+                if func.__name__ == 'RepoUpdatePublishHandler' or func.__name__ == 'RepoMetadataUpdateHandler':
                     func(config, redis_connection, msg)
                 else:
                     func(config, session, msg)
@@ -96,6 +101,7 @@ def init_message_handlers(config):
     events_handlers.register_handlers(message_handler, enable_audit)
     stats_handlers.register_handlers(message_handler)
     publisher_handlers.register_handlers(message_handler)
+    metadata_handler.register_handlers(message_handler)
 
 
 class EventsHandler(object):
@@ -132,7 +138,7 @@ class EventsHandler(object):
                     # self._counter += 1
                 if msg:
                     if channel == 'seaf_server.event':
-                        k_log.debug(msg)
+                    k_log.debug(msg)
                     try:
                         message_handler.handle_message(config, session, redis_connection, channel, msg)
                     except Exception as e:
@@ -144,16 +150,16 @@ class EventsHandler(object):
                             redis_connection.close()
                 else:
                     time.sleep(0.5)
-                    
         except SystemExit as sa:
             raise Exception("Catched SystemExit exception", sa)
         finally:
             k_log.debug('Leaving channel %s thread...', channel)
+
 
     def start(self):
         channels = message_handler.get_channels()
         logger.info('Subscribe to channels: %s', channels)
         for channel in channels:
             self._past_ts_dict[channel] = datetime.now()
-            event_handler = Thread(target=self.handle_event, name=channel, args=(channel, ))
+            event_handler = Thread(target=self.handle_event, args=(channel, ))
             event_handler.start()

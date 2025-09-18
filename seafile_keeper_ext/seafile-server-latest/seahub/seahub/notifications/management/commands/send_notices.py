@@ -31,8 +31,7 @@ from seahub.notifications.utils import gen_sdoc_smart_link
 from seahub.utils.auth import VIRTUAL_ID_EMAIL_DOMAIN
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger('seahub_email_sender')
 
 class Command(BaseCommand):
     help = 'Send Email notifications to user if he/she has an unread notices every period of seconds .'
@@ -43,14 +42,14 @@ class Command(BaseCommand):
         self.do_action()
         logger.debug('Finish sending user notices.\n')
 
-    def get_avatar(self, username, default_size=32):
-        img_tag = avatar(username, default_size)
+    def get_avatar(self, username):
+        img_tag = avatar(username, 128)
         pattern = r'src="(.*)"'
         repl = r'src="%s\1"' % get_site_scheme_and_netloc()
         return re.sub(pattern, repl, img_tag)
 
-    def get_avatar_src(self, username, default_size=32):
-        avatar_img = self.get_avatar(username, default_size)
+    def get_avatar_src(self, username):
+        avatar_img = self.get_avatar(username)
         m = re.search('<img src="(.*?)".*', avatar_img)
         if m:
             return m.group(1)
@@ -248,40 +247,10 @@ class Command(BaseCommand):
         return notice
 
     def format_repo_monitor_msg(self, notice):
-
         d = json.loads(notice.detail)
-
         op_user_email = d['op_user']
-        notice.user_url = reverse('user_profile', args=[op_user_email])
-        notice.user_name = email2nickname(op_user_email)
         notice.avatar_src = self.get_avatar_src(op_user_email)
-
-        notice.op_type = d['op_type']
-
-        repo_id = d['repo_id']
-        repo_name = d['repo_name']
-        notice.repo_url = reverse('lib_view', args=[repo_id, repo_name, ''])
-        notice.repo_name = d['repo_name']
-
-        obj_type = d['obj_type']
-        obj_path_list = d['obj_path_list']
-        notice.obj_type = obj_type
-        notice.obj_path_count = len(obj_path_list)
-        notice.obj_path_count_minus_one = len(obj_path_list) - 1
-        notice.obj_name = os.path.basename(d['obj_path_list'][0])
-
-        old_obj_path_list = d.get('old_obj_path_list', [])
-        if old_obj_path_list:
-            notice.old_obj_name = os.path.basename(d['old_obj_path_list'][0])
-        else:
-            notice.old_obj_name = ''
-
-        if obj_type == 'file':
-            notice.obj_url = reverse('view_lib_file', args=[repo_id, obj_path_list[0]])
-        else:
-            notice.obj_url = reverse('lib_view',
-                                     args=[repo_id, repo_name, obj_path_list[0].strip('/')])
-
+        notice.repo_monitor_msg = notice.format_msg()
         return notice
 
     def format_saml_sso_error_msg(self, notice):
@@ -407,10 +376,10 @@ class Command(BaseCommand):
             # get and active user language
             user_language = self.get_user_language(to_user)
             translation.activate(user_language)
-            logger.debug('Set language code to %s for user: %s' % (
+            logger.info('Set language code to %s for user: %s' % (
                 user_language, to_user))
-            self.stdout.write('[%s] Set language code to %s for user: %s' % (
-                str(datetime.datetime.now()), user_language, to_user))
+            self.stdout.write('[%s] [INFO] Set language code to %s for user: %s' % (
+                str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), user_language, to_user))
 
             # format mail content and send
             notices = []
@@ -466,7 +435,6 @@ class Command(BaseCommand):
                 elif notice.is_saml_sso_error_msg():
                     notice = self.format_saml_sso_error_msg(notice)
 
-
                 # KEEPER
                 if notice.msg_type in ('keeper_cdc_msg', 'bloxberg_msg', 'doi_suc_msg'):
                     num_keeper_notices += 1
@@ -503,10 +471,10 @@ class Command(BaseCommand):
                 # set new last_emailed_time
                 UserOptions.objects.set_collaborate_last_emailed_time(to_user, now)
                 logger.info('Successfully sent email to %s' % contact_email)
-                self.stdout.write('[%s] Successfully sent email to %s' % (str(datetime.datetime.now()), contact_email))
+                self.stdout.write('[%s] [INFO] Successfully sent email to %s' % (str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), contact_email))
             except Exception as e:
                 logger.error('Failed to send email to %s, error detail: %s' % (contact_email, e))
-                self.stderr.write('[%s] Failed to send email to %s, error detail: %s' % (str(datetime.datetime.now()), contact_email, e))
+                self.stderr.write('[%s] [ERROR] Failed to send email to %s, error detail: %s' % (str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')), contact_email, e))
 
             # restore current language
             translation.activate(cur_language)

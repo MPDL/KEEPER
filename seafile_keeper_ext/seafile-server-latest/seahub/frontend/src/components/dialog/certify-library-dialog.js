@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import {gettext} from '../../utils/constants';
-import {keeperAPI} from '../../utils/seafile-api';
+import {seafileAPI} from '../../utils/seafile-api';
 import {Utils} from '../../utils/utils';
 import toaster from '../toast';
 
@@ -22,7 +22,7 @@ class CertifyLibraryDialog extends React.Component {
     formSubmit = () => {
         this.props.hideDialog();
         const {repoID} = this.props;
-        keeperAPI.canCertify(repoID, 'dir', '/').then(() => {
+        seafileAPI.canCertify(repoID, 'dir', '/').then(() => {
             this.certifyLibrary()
         }).catch(error => {
             let errMessage = Utils.getErrorMsg(error);
@@ -33,7 +33,7 @@ class CertifyLibraryDialog extends React.Component {
     certifyLibrary = () => {
         const {repoID, repoName} = this.props;
         toaster.success(gettext('Your files with the library {repoName} are currently being certified. We will inform you once the task has successfully finished. This may take a while.').replace('{repoName}', repoName), {duration: 3});
-        keeperAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
+        seafileAPI.certifyOnBloxberg(repoID, '/', 'dir', repoName).then(() => {
             }).catch(error => {
             let errMessage = Utils.getErrorMsg(error);
             toaster.danger(errMessage);

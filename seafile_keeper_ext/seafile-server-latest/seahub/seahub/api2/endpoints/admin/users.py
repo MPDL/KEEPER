@@ -50,6 +50,7 @@ from seahub.utils.timeutils import timestamp_to_isoformat_timestr, \
         datetime_to_isoformat_timestr
 from seahub.utils.user_permissions import get_user_role
 from seahub.utils.repo import normalize_repo_status_code
+from seahub.utils.ccnet_db import CcnetDB
 from seahub.constants import DEFAULT_ADMIN, DEFAULT_ORG
 from seahub.role_permissions.models import AdminRole
 from seahub.role_permissions.utils import get_available_roles
@@ -65,38 +66,16 @@ from seahub.auth.utils import get_virtual_id_by_email
 from seahub.auth.models import SocialAuthUser
 
 from seahub.options.models import UserOptions
-from seahub.share.models import FileShare, UploadLinkShare
-from seahub.settings import ENABLE_LDAP, LDAP_FILTER, ENABLE_SASL, SASL_MECHANISM, ENABLE_SSO_USER_CHANGE_PASSWORD
-
-try:
-    from seahub.settings import LDAP_SERVER_URL, LDAP_BASE_DN, LDAP_ADMIN_DN, LDAP_ADMIN_PASSWORD, LDAP_LOGIN_ATTR
-except ImportError:
-    LDAP_SERVER_URL = ''
-    LDAP_BASE_DN = ''
-    LDAP_ADMIN_DN = ''
-    LDAP_ADMIN_PASSWORD = ''
-    LDAP_LOGIN_ATTR = ''
-
-try:
-    from seahub.settings import ENABLE_MULTI_LDAP, MULTI_LDAP_1_SERVER_URL, MULTI_LDAP_1_BASE_DN, \
-         MULTI_LDAP_1_ADMIN_DN, MULTI_LDAP_1_ADMIN_PASSWORD, MULTI_LDAP_1_LOGIN_ATTR
-except ImportError:
-    ENABLE_MULTI_LDAP = False
-    MULTI_LDAP_1_SERVER_URL = ''
-    MULTI_LDAP_1_BASE_DN = ''
-    MULTI_LDAP_1_ADMIN_DN = ''
-    MULTI_LDAP_1_ADMIN_PASSWORD = ''
-    MULTI_LDAP_1_LOGIN_ATTR = ''
-
-
-LDAP_PROVIDER = getattr(settings, 'LDAP_PROVIDER', 'ldap')
-LDAP_USER_OBJECT_CLASS = getattr(settings, 'LDAP_USER_OBJECT_CLASS', 'person')
-MULTI_LDAP_1_USER_OBJECT_CLASS = getattr(settings, 'MULTI_LDAP_1_USER_OBJECT_CLASS', 'person')
-MULTI_LDAP_1_PROVIDER = getattr(settings, 'MULTI_LDAP_1_PROVIDER', 'ldap1')
-MULTI_LDAP_1_FILTER = getattr(settings, 'MULTI_LDAP_1_FILTER', '')
-MULTI_LDAP_1_ENABLE_SASL = getattr(settings, 'MULTI_LDAP_1_ENABLE_SASL', False)
-MULTI_LDAP_1_SASL_MECHANISM = getattr(settings, 'MULTI_LDAP_1_SASL_MECHANISM', '')
-
+from seahub.share.models import FileShare, UploadLinkShare, ExtraSharePermission, CustomSharePermissions, \
+    ExtraGroupsSharePermission
+from seahub.utils.ldap import ENABLE_LDAP, LDAP_FILTER, ENABLE_SASL, SASL_MECHANISM, ENABLE_SSO_USER_CHANGE_PASSWORD, \
+    LDAP_PROVIDER, LDAP_SERVER_URL, LDAP_BASE_DN, LDAP_ADMIN_DN, LDAP_ADMIN_PASSWORD, LDAP_LOGIN_ATTR, LDAP_USER_OBJECT_CLASS, \
+    ENABLE_MULTI_LDAP, MULTI_LDAP_1_SERVER_URL, MULTI_LDAP_1_BASE_DN, MULTI_LDAP_1_ADMIN_DN, \
+    MULTI_LDAP_1_ADMIN_PASSWORD, MULTI_LDAP_1_LOGIN_ATTR, \
+    MULTI_LDAP_1_PROVIDER, MULTI_LDAP_1_FILTER, \
+    MULTI_LDAP_1_ENABLE_SASL, MULTI_LDAP_1_SASL_MECHANISM, MULTI_LDAP_1_USER_OBJECT_CLASS, \
+    MULTI_LDAP_1_PROVIDER, MULTI_LDAP_1_FILTER, MULTI_LDAP_1_ENABLE_SASL, MULTI_LDAP_1_SASL_MECHANISM, \
+    LDAP_FOLLOW_REFERRALS, MULTI_LDAP_1_FOLLOW_REFERRALS
 
 logger = logging.getLogger(__name__)
 json_content_type = 'application/json; charset=utf-8'
@@ -112,10 +91,7 @@ class UserObj(object):
 
 
 def get_user_objs_from_ccnet(email_list):
-    db_name, error_msg = get_ccnet_db_name()
-    if error_msg:
-        logger.error(error_msg)
-        return list(), api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, 'Internal Server Error')
+    db_name = get_ccnet_db_name()
 
     if not email_list:
         return list(), None
@@ -137,11 +113,11 @@ def get_user_objs_from_ccnet(email_list):
     return user_objs, None
 
 
-def ldap_bind(server_url, dn, authc_id, password, enable_sasl, sasl_mechanism):
+def ldap_bind(server_url, dn, authc_id, password, enable_sasl, sasl_mechanism, follow_referrals):
     bind_conn = ldap.initialize(server_url)
 
     try:
-        bind_conn.set_option(ldap.OPT_REFERRALS, 0)
+        bind_conn.set_option(ldap.OPT_REFERRALS, 1 if follow_referrals else 0)
     except Exception as e:
         raise Exception('Failed to set referrals option: %s' % e)
 
@@ -165,9 +141,9 @@ def ldap_bind(server_url, dn, authc_id, password, enable_sasl, sasl_mechanism):
 
 
 def get_ldap_users(server_url, admin_dn, admin_password, enable_sasl, sasl_mechanism, base_dn,
-                   login_attr, serch_filter, object_class):
+                   login_attr, serch_filter, object_class, follow_referrals):
     try:
-        admin_bind = ldap_bind(server_url, admin_dn, admin_dn, admin_password, enable_sasl, sasl_mechanism)
+        admin_bind = ldap_bind(server_url, admin_dn, admin_dn, admin_password, enable_sasl, sasl_mechanism, follow_referrals)
     except Exception as e:
         raise Exception(e)
 
@@ -355,7 +331,7 @@ def create_user_info(request, email, role, nickname,
 
 
 def update_user_info(request, user, password, is_active, is_staff, role,
-                     nickname, login_id, contact_email, reference_id,
+                     nickname, login_id, contact_email,
                      quota_total_mb, institution_name,
                      upload_rate_limit, download_rate_limit):
 
@@ -364,7 +340,7 @@ def update_user_info(request, user, password, is_active, is_staff, role,
     # update basic user info
     if is_active is not None:
         user.is_active = is_active
-        if is_active == False:
+        if not is_active:
             # del tokens and personal repo api tokens (not department)
             from seahub.utils import inactive_user
             try:
@@ -397,13 +373,6 @@ def update_user_info(request, user, password, is_active, is_staff, role,
         Profile.objects.add_or_update(email, contact_email=contact_email)
         key = normalize_cache_key(email, CONTACT_CACHE_PREFIX)
         cache.set(key, contact_email, CONTACT_CACHE_TIMEOUT)
-
-    if reference_id is not None:
-        if reference_id.strip():
-            ccnet_api.set_reference_id(email, reference_id.strip())
-        else:
-            # remove reference id
-            ccnet_api.set_reference_id(email, None)
 
     if institution_name is not None:
         Profile.objects.add_or_update(email, institution=institution_name)
@@ -443,7 +412,6 @@ def get_user_info(email):
 
     info['is_staff'] = user.is_staff
     info['is_active'] = user.is_active
-    info['reference_id'] = user.reference_id if user.reference_id else ''
 
     orgs = ccnet_api.get_orgs_by_user(email)
     try:
@@ -553,7 +521,7 @@ class AdminUsers(APIView):
     throttle_classes = (UserRateThrottle, )
 
     def get_info_of_users_order_by_quota_usage(self, source, direction,
-                                               page, per_page):
+                                               page, per_page, is_active=None, role=None):
 
         # get user's quota usage info
         user_usage_dict = {}
@@ -585,6 +553,13 @@ class AdminUsers(APIView):
         # sort
         users.sort(key=lambda item: item.quota_usage,
                    reverse=direction == 'desc')
+        if is_active == '1':
+            users = [u for u in users if u.is_active]
+        elif is_active == '0':
+            users = [u for u in users if not u.is_active]
+
+        if role:
+            users = [u for u in users if get_user_role(u) == role]
 
         data = []
         MULTI_INSTITUTION = getattr(settings, 'MULTI_INSTITUTION', False)
@@ -637,12 +612,15 @@ class AdminUsers(APIView):
         try:
             page = int(request.GET.get('page', '1'))
             per_page = int(request.GET.get('per_page', '25'))
+            is_active = request.GET.get('is_active', None)
+            role = request.GET.get('role', None)
         except ValueError:
             page = 1
             per_page = 25
+            is_active, role = None, None
 
         start = (page - 1) * per_page
-
+        limit = per_page + 1
         source = request.GET.get('source', 'DB').lower().strip()
         if source not in ['db', 'ldapimport']:
             # source: 'DB' or 'LDAPImport', default is 'DB'
@@ -675,7 +653,10 @@ class AdminUsers(APIView):
                     data = self.get_info_of_users_order_by_quota_usage(source,
                                                                        direction,
                                                                        page,
-                                                                       per_page)
+                                                                       per_page,
+                                                                       is_active,
+                                                                       role,
+                                                                       )
                 except Exception as e:
                     logger.error(e)
                     error_msg = 'Internal Server Error'
@@ -684,7 +665,11 @@ class AdminUsers(APIView):
                 result = {'data': data, 'total_count': total_count}
                 return Response(result)
             else:
-                users = ccnet_api.get_emailusers('DB', start, per_page)
+                try:
+                    ccnet_db = CcnetDB()
+                    users, total_count = ccnet_db.list_eligible_users(start, limit, is_active, role)
+                except Exception:
+                    users = ccnet_api.get_emailusers('DB', start, per_page)
 
         elif source == 'ldapimport':
             ldap_users_count = multi_ldap_users_count = 0
@@ -957,7 +942,7 @@ class AdminLDAPUsers(APIView):
         try:
             ldap_users = get_ldap_users(LDAP_SERVER_URL, LDAP_ADMIN_DN, LDAP_ADMIN_PASSWORD,
                                         ENABLE_SASL, SASL_MECHANISM, LDAP_BASE_DN, LDAP_LOGIN_ATTR,
-                                        LDAP_FILTER, LDAP_USER_OBJECT_CLASS)
+                                        LDAP_FILTER, LDAP_USER_OBJECT_CLASS, LDAP_FOLLOW_REFERRALS)
         except Exception as e:
             logger.error(e)
             error_msg = 'Internal Server Error'
@@ -970,7 +955,7 @@ class AdminLDAPUsers(APIView):
                                                   MULTI_LDAP_1_ADMIN_PASSWORD, MULTI_LDAP_1_ENABLE_SASL,
                                                   MULTI_LDAP_1_SASL_MECHANISM, MULTI_LDAP_1_BASE_DN,
                                                   MULTI_LDAP_1_LOGIN_ATTR, MULTI_LDAP_1_FILTER,
-                                                  MULTI_LDAP_1_USER_OBJECT_CLASS)
+                                                  MULTI_LDAP_1_USER_OBJECT_CLASS, MULTI_LDAP_1_FOLLOW_REFERRALS)
             except Exception as e:
                 logger.error(e)
                 error_msg = 'Internal Server Error'
@@ -1234,14 +1219,6 @@ class AdminUser(APIView):
                 request.user.admin_permissions.can_update_user()):
             return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
 
-        avatar_size = request.data.get('avatar_size', 64)
-        try:
-            avatar_size = int(avatar_size)
-        except Exception as e:
-            logger.error(e)
-            error_msg = 'avatar_size invalid.'
-            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
-
         try:
             User.objects.get(email=email)
         except User.DoesNotExist:
@@ -1249,7 +1226,7 @@ class AdminUser(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         user_info = get_user_info(email)
-        user_info['avatar_url'], _, _ = api_avatar_url(email, avatar_size)
+        user_info['avatar_url'], _, _ = api_avatar_url(email)
         if is_pro_version():
             user_info['upload_rate_limit'] = byte_to_kb(seafile_api.get_user_upload_rate_limit(email))
             user_info['download_rate_limit'] = byte_to_kb(seafile_api.get_user_download_rate_limit(email))
@@ -1327,14 +1304,6 @@ class AdminUser(APIView):
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         password = request.data.get("password")
-
-        reference_id = request.data.get("reference_id", None)
-        if reference_id:
-            if ' ' in reference_id:
-                return api_error(status.HTTP_400_BAD_REQUEST, 'Reference ID can not contain spaces.')
-            primary_id = ccnet_api.get_primary_id(reference_id)
-            if primary_id:
-                return api_error(status.HTTP_400_BAD_REQUEST, 'Reference ID %s already exists.' % reference_id)
 
         quota_total_mb = request.data.get("quota_total", None)
         if quota_total_mb:
@@ -1415,7 +1384,6 @@ class AdminUser(APIView):
                              nickname=name,
                              login_id=login_id,
                              contact_email=contact_email,
-                             reference_id=reference_id,
                              quota_total_mb=quota_total_mb,
                              institution_name=institution,
                              upload_rate_limit=upload_rate_limit,
@@ -1917,26 +1885,6 @@ class AdminUpdateUserCcnetEmail(APIView):
             logger.error(e)
 
         try:
-            from seahub.drafts.models import Draft
-            draft_list = Draft.objects.filter(username=old_ccnet_email)
-            for draft in draft_list:
-                draft.username = new_ccnet_email
-                draft.save()
-            logger.debug('the drafts_draft table in seahub database was successfully updated')
-        except Exception as e:
-            logger.error(e)
-
-        try:
-            from seahub.drafts.models import DraftReviewer
-            draftreviewer_list = DraftReviewer.objects.filter(reviewer=old_ccnet_email)
-            for draftreviewer in draftreviewer_list:
-                draftreviewer.reviewer = new_ccnet_email
-                draftreviewer.save()
-            logger.debug('the drafts_draftreviewer table in seahub database was successfully updated')
-        except Exception as e:
-            logger.error(e)
-
-        try:
             from seahub.file_participants.models import FileParticipant
             fileparticipant_list = FileParticipant.objects.filter(username=old_ccnet_email)
             for fileparticipant in fileparticipant_list:
@@ -2148,12 +2096,12 @@ class AdminUserConvertToTeamView(APIView):
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     permission_classes = (IsAdminUser,)
     throttle_classes = (UserRateThrottle,)
-    
+
     def post(self, request):
         username = request.data.get('email')
         if not username:
             return api_error(status.HTTP_400_BAD_REQUEST, 'email invalid.')
-        
+
         # resource check
         try:
             user = User.objects.get(email=username)
@@ -2181,7 +2129,7 @@ class AdminUserConvertToTeamView(APIView):
             else:
                 nickname_characters.append(character)
         org_name = ''.join(nickname_characters)
-        
+
         try:
             # 1. Create a new org, and add the user(username) to org as a team admin
             #    by ccnet_api.create_org
@@ -2198,5 +2146,186 @@ class AdminUserConvertToTeamView(APIView):
             logger.error(e)
             error_msg = 'Internal Server Error'
             return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
-        
+
         return Response({'success': True})
+    
+
+class AdminUserSharedFolders(APIView):
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    throttle_classes = (UserRateThrottle,)
+    permission_classes = (IsAdminUser,)
+
+    def get(self, request, email):
+        """ List 'all' folders a user share out
+
+        Permission checking:
+        1. only admin can perform this action.
+        """
+
+        if not request.user.admin_permissions.can_manage_user():
+            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
+
+        shared_repos = []
+        username = email
+
+        try:
+            if is_org_user(username):
+                orgs = ccnet_api.get_orgs_by_user(username)
+                org = orgs[0]
+                org_id = org.org_id
+                shared_repos += seafile_api.get_org_share_out_repo_list(org_id, username, -1, -1)
+                shared_repos += seafile_api.get_org_group_repos_by_owner(org_id, username)
+            else:
+                shared_repos += seafile_api.get_share_out_repo_list(username, -1, -1)
+                shared_repos += seafile_api.get_group_repos_by_owner(username)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        repo_id_list = []
+        for repo in shared_repos:
+    
+            if repo.is_virtual:
+                continue
+    
+            repo_id = repo.repo_id
+            repo_id_list.append(repo_id)
+
+        custom_permission_dict = {}
+        custom_permissions = CustomSharePermissions.objects.filter(repo_id__in=repo_id_list)
+        for custom_permission in custom_permissions:
+            custom_id = f'custom-{custom_permission.id}'
+            custom_permission_dict[custom_id] = custom_permission.name
+
+        returned_result = []
+        shared_repos.sort(key=lambda x: x.repo_name)
+        for repo in shared_repos:
+            if not repo.is_virtual:
+                continue
+    
+            result = {}
+            result['repo_id'] = repo.origin_repo_id
+            result['repo_name'] = repo.origin_repo_name
+            result['path'] = repo.origin_path
+            result['folder_name'] = repo.name
+            result['share_type'] = repo.share_type
+            result['share_permission'] = repo.permission
+            result['share_permission_name'] = custom_permission_dict.get(repo.permission, '')
+            result['share_from']  = username
+            result['share_from_user_name']  = email2nickname(username)
+    
+            if repo.share_type == 'personal':
+                result['user_name'] = email2nickname(repo.user)
+                result['user_email'] = repo.user
+                result['contact_email'] = Profile.objects.get_contact_email_by_user(repo.user)
+    
+            if repo.share_type == 'group':
+                group = ccnet_api.get_group(repo.group_id)
+        
+                if not group:
+                    if is_org_user(username):
+                        seafile_api.org_unshare_subdir_for_group(org_id,
+                                                                 repo.repo_id,
+                                                                 repo.origin_path,
+                                                                 username,
+                                                                 repo.group_id)
+                    else:
+                        seafile_api.unshare_subdir_for_group(repo.repo_id,
+                                                             repo.origin_path,
+                                                             username,
+                                                             repo.group_id)
+                    continue
+        
+                result['group_id'] = repo.group_id
+                result['group_name'] = group.group_name
+    
+            returned_result.append(result)
+
+        return Response(returned_result)
+
+
+class AdminUserSharedRepos(APIView):
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    throttle_classes = (UserRateThrottle,)
+    permission_classes = (IsAdminUser,)
+    
+    def get(self, request, email):
+        """ List 'all' repos a user share out
+
+        Permission checking:
+        1. only admin can perform this action.
+        """
+        
+        if not request.user.admin_permissions.can_manage_user():
+            return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied.')
+
+        shared_repos = []
+        username = email
+        try:
+            if is_org_user(username):
+                orgs = ccnet_api.get_orgs_by_user(username)
+                org = orgs[0]
+                org_id = org.org_id
+                shared_repos += seafile_api.get_org_share_out_repo_list(org_id, username, -1, -1)
+                shared_repos += seafile_api.get_org_group_repos_by_owner(org_id, username)
+                shared_repos += seafile_api.list_org_inner_pub_repos_by_owner(org_id, username)
+            else:
+                shared_repos += seafile_api.get_share_out_repo_list(username, -1, -1)
+                shared_repos += seafile_api.get_group_repos_by_owner(username)
+                if not request.cloud_mode:
+                    shared_repos += seafile_api.list_inner_pub_repos_by_owner(username)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        repo_id_list = []
+        for repo in shared_repos:
+    
+            if repo.is_virtual:
+                continue
+    
+            repo_id = repo.repo_id
+            repo_id_list.append(repo_id)
+
+        custom_permission_dict = {}
+        custom_permissions = CustomSharePermissions.objects.filter(repo_id__in=repo_id_list)
+        for custom_permission in custom_permissions:
+            custom_id = f'custom-{custom_permission.id}'
+            custom_permission_dict[custom_id] = custom_permission.name
+
+        returned_result = []
+        shared_repos.sort(key=lambda x: x.repo_name)
+
+        for repo in shared_repos:
+            if repo.is_virtual:
+                continue
+    
+            result = {}
+            result['repo_id'] = repo.repo_id
+            result['repo_name'] = repo.repo_name
+            result['encrypted'] = repo.encrypted
+            result['share_type'] = repo.share_type
+            result['share_permission'] = repo.permission
+            result['share_permission_name'] = custom_permission_dict.get(repo.permission, '')
+            result['modifier_email'] = repo.last_modifier
+            result['modifier_name'] = email2nickname(repo.last_modifier)
+            result['modifier_contact_email'] = email2contact_email(repo.last_modifier)
+            result['share_from'] = username
+            result['share_from_user_name'] = email2nickname(username)
+    
+            if repo.share_type == 'personal':
+                result['user_name'] = email2nickname(repo.user)
+                result['user_email'] = repo.user
+                result['contact_email'] = Profile.objects.get_contact_email_by_user(repo.user)
+    
+            if repo.share_type == 'group':
+                group = ccnet_api.get_group(repo.group_id)
+                result['group_id'] = repo.group_id
+                result['group_name'] = group.group_name if group else ''
+    
+            returned_result.append(result)
+
+        return Response(returned_result)

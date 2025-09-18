@@ -2,21 +2,14 @@
 {% load i18n %}
 
 {% block sub_title %}{% trans "Log In" %} - {% endblock %}
-{% block header_css_class %}{% endblock %}
-{% block main_css_class %}{% endblock %}
-
-
 {% comment "SEAFILE" %}
 {% block header_css_class %}hide{% endblock %}
-
 {% block extra_base_style %}
-<link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}fontawesome/css/fontawesome-all.min.css" />
 <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/seafile-ui.css" />
 {% endblock %}
 {% endcomment %}
 
 {% block extra_style %}
-<meta name="description" content="Archive the way you work - Profit from safe data storage, seamlessly integrated into your research workflow. Free to use for all Max Planck Societies researcher." />
 <style type="text/css">
 
 html, body, #wrapper { 
@@ -134,7 +127,7 @@ html, body, #wrapper {
         <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input mb-3" />
         <div class="position-relative">
           <input id="password-input" type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input" autocomplete="off" />
-          <i id="toggle-show-password" class="fas fa-eye-slash"></i>
+          <i id="toggle-show-password" class="sf3-font sf3-font-eye-slash"></i>
         </div>
 
         {% if form.captcha %}
@@ -157,7 +150,7 @@ html, body, #wrapper {
         {% elif form.errors.not_found %}
         <p class="error mt-2">{{ form.errors.not_found }}</p>
         {% elif form.errors.disable_pwd_login %}
-        <p class="error mt-2">{% trans "You cannot login with email and password." %}</p>
+        <p class="error mt-2">{% trans "Please use Single Sign-On to login." %}</p>
         {% else %}
         <p class="error mt-2">{% trans "Incorrect email or password" %}</p>
         {% endif %}
@@ -356,8 +349,8 @@ $('#lang-context').on('click', function() {
 $('[name="login"]').trigger('focus');
 
 $('#toggle-show-password').click(function() {
-  $(this).toggleClass('fa-eye-slash fa-eye');
-  if ($(this).hasClass('fa-eye-slash')) {
+  $(this).toggleClass('sf3-font-eye-slash sf3-font-eye');
+  if ($(this).hasClass('sf3-font-eye-slash')) {
     $('#password-input').attr('type', 'password');
   } else {
     $('#password-input').attr('type', 'text');

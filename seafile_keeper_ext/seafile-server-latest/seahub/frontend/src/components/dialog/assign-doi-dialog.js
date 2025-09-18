@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap'; 
 import { gettext } from '../../utils/constants';
-import { keeperAPI } from '../../utils/seafile-api';
+import { seafileAPI } from '../../utils/seafile-api';
 import { Utils } from '../../utils/utils';
 import toaster from '../toast';
 
@@ -20,7 +20,7 @@ class AssignDoiDialog extends React.Component {
   formSubmit = () => {
     const {repoID, repoName} = this.props;
     this.props.toggleDialog();
-    keeperAPI.addDoi(repoID).then((res) => {
+    seafileAPI.addDoi(repoID).then((res) => {
       if (res.data && res.data['msg']) {
         toaster.success(res.data['msg'], {duration: 3});
       }

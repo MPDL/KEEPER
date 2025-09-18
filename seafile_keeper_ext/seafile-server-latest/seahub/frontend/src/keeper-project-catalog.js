@@ -12,7 +12,7 @@ import {
   siteRoot,
   siteTitle,
 } from './utils/constants';
-import { keeperAPI } from './utils/seafile-api';
+import { seafileAPI } from './utils/seafile-api';
 import Loading from './components/loading';
 import Paginator from './components/paginator';
 import CommonToolbar from './components/toolbar/common-toolbar';
@@ -122,7 +122,7 @@ class KeeperProjectCatalog extends React.Component {
     let st = this.state;
     let fs = this.state.facets;
     let scope = resetScope ? [] : this.calculateScopeFromFacets();
-    keeperAPI
+    seafileAPI
       .getProjectCatalog(
         page,
         st.perPage,

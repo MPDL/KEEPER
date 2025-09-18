@@ -13,20 +13,29 @@
 echo ""
 
 SCRIPT=$(readlink -f "$0")
-SEAFILE_DIR=__SEAFILE_DIR__
-INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
+### TODO: to be removed?
+# SEAFILE_DIR=__SEAFILE_DIR__
+# INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
+INSTALLPATH=$(dirname "${SCRIPT}")
 TOPDIR=$(dirname "${INSTALLPATH}")
 default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
 central_config_dir=${TOPDIR}/conf
-seaf_controller="${INSTALLPATH}/seafile/bin/seafile-controller"
 pro_pylibs_dir=${INSTALLPATH}/pro/python
 seafesdir=$pro_pylibs_dir/seafes
+seahubdir=${INSTALLPATH}/seahub
+seafile_rpc_pipe_path=${INSTALLPATH}/runtime
 IS_PRO_SEAFEVENTS=`awk '/is_pro/{getline;print $2;exit}' ${pro_pylibs_dir}/seafevents/seafevents_api.py`
 
 export PATH=${INSTALLPATH}/seafile/bin:$PATH
 export ORIG_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
 export SEAFILE_LD_LIBRARY_PATH=${INSTALLPATH}/seafile/lib/:${INSTALLPATH}/seafile/lib64:${LD_LIBRARY_PATH}
+export SEAFILE_CENTRAL_CONF_DIR=${central_config_dir}
+export CCNET_CONF_DIR=${default_ccnet_conf_dir}
+export SEAFILE_CONF_DIR=${default_seafile_data_dir}
+export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
+export SEAHUB_DIR=$seahubdir
+export SEAFDAV_CONF=${central_config_dir}/seafdav.conf
 
 script_name=$0
 function usage () {
@@ -52,11 +61,42 @@ function validate_running_user () {
     fi
 }
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:${central_config_dir}:$PYTHONPATH
 if [[ -d ${INSTALLPATH}/pro ]]; then
     export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
     export SEAFES_DIR=$seafesdir
 fi
+
+function set_env_config () {
+    if [ -z "${JWT_PRIVATE_KEY}" ]; then
+        echo "Cannot find JWT_PRIVATE_KEY value from environment, try to read .env file."
+        if [ ! -e "${central_config_dir}/.env" ]; then
+            echo "Error: .env file not found."
+            echo "Please follow the upgrade manual to set the .env file."
+            echo ""
+            exit -1;
+        fi
+
+        # load the .env file
+        source "${central_config_dir}/.env"
+
+        if [ -z "${JWT_PRIVATE_KEY}" ]; then
+            echo "Error: JWT_PRIVATE_KEY not found in .env file."
+            echo "Please follow the upgrade manual to set the .env file."
+            echo ""
+            exit -1;
+        fi
+        export JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+        export SEAFILE_MYSQL_DB_CCNET_DB_NAME=${SEAFILE_MYSQL_DB_CCNET_DB_NAME:-ccnet_db}
+        export SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=${SEAFILE_MYSQL_DB_SEAFILE_DB_NAME:-seafile_db}
+        export SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=${SEAFILE_MYSQL_DB_SEAHUB_DB_NAME:-seahub_db}
+        export SEAFILE_SERVER_PROTOCOL=${SEAFILE_SERVER_PROTOCOL}
+        export SEAFILE_SERVER_HOSTNAME=${SEAFILE_SERVER_HOSTNAME}
+        export SITE_ROOT=${SITE_ROOT:-/}
+        export ENABLE_FILESERVER=${ENABLE_FILESERVER}
+        export ENABLE_SEAFDAV=${ENABLE_SEAFDAV}
+    fi
+}
 
 function validate_central_conf_dir () {
     if [[ ! -d ${central_config_dir} ]]; then
@@ -76,12 +116,6 @@ function validate_seafile_data_dir () {
     fi
 }
 
-function test_config() {	
-    if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -t -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}" ; then	
-        exit 1;	
-    fi	
-}
-
 function check_component_running() {
     name=$1
     cmd=$2
@@ -97,85 +131,90 @@ function check_component_running() {
 }
 
 function validate_already_running () {
-    if pid=$(pgrep -f "seafile-controller -c ${default_ccnet_conf_dir}" 2>/dev/null); then
-        echo "Seafile controller is already running, pid $pid"
+    if pid=$(pgrep -f "seafile-monitor.sh" 2>/dev/null); then
+        echo "Seafile monitor is already running, pid $pid"
         echo
         exit 1;
     fi
 
-    check_component_running "seaf-server" "seaf-server -c ${default_ccnet_conf_dir}"
-    check_component_running "fileserver" "fileserver -c ${default_ccnet_conf_dir}"
+    check_component_running "seaf-server" "seaf-server"
+    check_component_running "fileserver" "fileserver"
     check_component_running "seafdav" "wsgidav.server.server_cli"
     check_component_running "seafevents" "seafevents.main --config-file ${central_config_dir}"
 }
 
 function start_seafile_server () {
+    set_env_config;
     validate_already_running;
     validate_central_conf_dir;
     validate_seafile_data_dir;
     validate_running_user;
 
-    if [[ $IS_PRO_SEAFEVENTS = "True" ]]; then
-        test_config;
-    fi
-
     echo "Starting seafile server, please wait ..."
 
     mkdir -p $TOPDIR/logs
+    mkdir -p $TOPDIR/pids
 
+    # seaf-server
     if [[ $IS_PRO_SEAFEVENTS = "True" ]]; then
-        if ! LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} -c "${default_ccnet_conf_dir}" -d "${default_seafile_data_dir}" -F "${central_config_dir}"; then
-            controller_log="$default_seafile_data_dir/controller.log"
-            echo
-            echo "Failed to start seafile server. See $controller_log for more details."
-            echo
-            exit 1
-        fi
+        LD_LIBRARY_PATH=${SEAFILE_LD_LIBRARY_PATH} ${INSTALLPATH}/seafile/bin/seaf-server \
+            -F ${SEAFILE_CENTRAL_CONF_DIR} \
+            -c ${CCNET_CONF_DIR} \
+            -d ${SEAFILE_CONF_DIR} \
+            -l ${TOPDIR}/logs/seafile.log \
+            -P ${TOPDIR}/pids/seaf-server.pid \
+            -p ${SEAFILE_RPC_PIPE_PATH} \
+            -f -L ${TOPDIR} &
     else
-        LD_LIBRARY_PATH=$SEAFILE_LD_LIBRARY_PATH ${seaf_controller} \
-                    -c "${default_ccnet_conf_dir}" \
-                    -d "${default_seafile_data_dir}" \
-                    -F "${central_config_dir}"
+        LD_LIBRARY_PATH=${SEAFILE_LD_LIBRARY_PATH} ${INSTALLPATH}/seafile/bin/seaf-server \
+            -F ${SEAFILE_CENTRAL_CONF_DIR} \
+            -c ${CCNET_CONF_DIR} \
+            -d ${SEAFILE_CONF_DIR} \
+            -l ${TOPDIR}/logs/seafile.log \
+            -P ${TOPDIR}/pids/seaf-server.pid \
+            -p ${SEAFILE_RPC_PIPE_PATH} \
+            -f &
     fi
 
-    sleep 3
+    sleep 2
+
+    # seafile-monitor
+    if [[ $SEAFILE_LOG_TO_STDOUT = "true" ]]; then
+        ${INSTALLPATH}/seafile-monitor.sh &
+    else
+        ${INSTALLPATH}/seafile-monitor.sh &>> ${TOPDIR}/logs/seafile-monitor.log &
+    fi
+
+    sleep 1
 
     # check if seafile server started successfully
-    if ! pgrep -f "seafile-controller -c ${default_ccnet_conf_dir}" 2>/dev/null 1>&2; then
+    if ! pgrep -f "seaf-server" 2>/dev/null 1>&2; then
         echo "Failed to start seafile server"
+        kill_all
         exit 1;
     fi
-
-    # seafevents, notification-sever
-    ${INSTALLPATH}/seafile-monitor.sh &>> ${TOPDIR}/logs/seafile-monitor.log &
 
     echo "Seafile server started"
     echo
 }
 
 function kill_all () {
-    # pkill -f "seaf-server -c ${default_ccnet_conf_dir}"
-    # pkill -f "fileserver -c ${default_ccnet_conf_dir}"
+    # pkill -f "seaf-server"
+    # pkill -f "fileserver"
     # pkill -f "seafevents.main"
-    # pkill -f "convert_server.py"
-    # pkill -f "archiving_server.py"
-    # pkill -f "soffice.*--invisible --nocrashreport"
     # pkill -f "wsgidav.server.server_cli"
-    # pkill -f "notification-server -c ${central_config_dir}"
     # pkill -f "seafile-monitor.sh"
+    # pkill -f "archiving_server.py"
 
-    local processes=(
-        "seaf-server -c ${default_ccnet_conf_dir}"
-        "fileserver -c ${default_ccnet_conf_dir}"
+    local_processes=(
+        "seaf-server"
+        "fileserver"
         "seafevents.main"
-        "convert_server.py"
-        "archiving_server.py"
-        "soffice.*--invisible --nocrashreport"
         "wsgidav.server.server_cli"
-        "notification-server -c ${central_config_dir}"
         "seafile-monitor.sh"
+        "archiving_server.py"
     )
-
+    
     for pattern in "${processes[@]}"; do
         echo "Attempting to gracefully kill: $pattern"
         pkill -f "$pattern"
@@ -195,18 +234,16 @@ function kill_all () {
             pkill -9 -f "$pattern"
         fi
     done
-    
-}
+ }
 
 function stop_seafile_server () {
-    if ! pgrep -f "seafile-controller -c ${default_ccnet_conf_dir}" 2>/dev/null 1>&2; then
+    if ! pgrep -f "seafile-monitor.sh" 2>/dev/null 1>&2; then
         echo "seafile server not running yet"
         kill_all
         return 1
     fi
 
     echo "Stopping seafile server ..."
-    pkill -SIGTERM -f "seafile-controller -c ${default_ccnet_conf_dir}"
     kill_all
 
     return 0

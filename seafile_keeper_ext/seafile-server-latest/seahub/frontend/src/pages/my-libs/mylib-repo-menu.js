@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, DropdownMenu, DropdownToggle, DropdownItem } from 'reactstrap';
-import { gettext, isPro, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured, enableRepoAutoDel, enableSeaTableIntegration, enableMultipleOfficeSuite } from '../../utils/constants';
+import { gettext, isPro, folderPermEnabled, enableRepoSnapshotLabel, enableResetEncryptedRepoPassword, isEmailConfigured, enableMultipleOfficeSuite } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
 const propTypes = {
@@ -47,12 +47,12 @@ class MylibRepoMenu extends React.Component {
   toggleOperationMenu = (e) => {
     let dataset = e.target ? e.target.dataset : null;
     if (dataset && dataset.toggle && dataset.toggle === 'Rename') {
-      this.setState({isItemMenuShow: !this.state.isItemMenuShow});
+      this.setState({ isItemMenuShow: !this.state.isItemMenuShow });
       return;
     }
 
     this.setState(
-      {isItemMenuShow: !this.state.isItemMenuShow},
+      { isItemMenuShow: !this.state.isItemMenuShow },
       () => {
         if (this.state.isItemMenuShow) {
           this.props.onFreezedItem();
@@ -103,7 +103,7 @@ class MylibRepoMenu extends React.Component {
       operations.push(monitorOp);
     }
 
-    operations.push('Divider', 'History Setting', 'Advanced');
+    operations.push('Divider', 'Advanced');
     // Remove adjacent excess 'Divider'
     for (let i = 0; i < operations.length; i++) {
       if (operations[i] === 'Divider' && operations[i + 1] === 'Divider') {
@@ -121,22 +121,17 @@ class MylibRepoMenu extends React.Component {
     let showArchiveLibraryMenuItem = !repo.encrypted;
     let showCertifyLibraryMenuItem = !repo.encrypted;
     let showEditMetadatayMenuItem = !repo.encrypted;
+    // END KEEPER
 
     const operations = [];
     operations.push('API Token');
     if (this.props.isPC && enableRepoSnapshotLabel) {
       operations.push('Label Current State');
     }
-    if (enableRepoAutoDel) {
-      operations.push('Old Files Auto Delete');
-    }
-    if (enableSeaTableIntegration) {
-      operations.push('SeaTable integration');
-    }
     if (enableMultipleOfficeSuite && isPro) {
       operations.push('Office Suite');
     }
-    //KEEPER
+   // KEEPER
     operations.push('Divider');
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
@@ -150,12 +145,13 @@ class MylibRepoMenu extends React.Component {
     if (showEditMetadatayMenuItem) {
       operations.push('Edit Metadata');
     }
+   // END KEEPER
     return operations;
   };
 
   translateOperations = (item) => {
     let translateResult = '';
-    switch(item) {
+    switch (item) {
       case 'Star':
         translateResult = gettext('Star');
         break;
@@ -173,9 +169,6 @@ class MylibRepoMenu extends React.Component {
         break;
       case 'Transfer':
         translateResult = gettext('Transfer');
-        break;
-      case 'History Setting':
-        translateResult = gettext('History Setting');
         break;
       case 'Change Password':
         translateResult = gettext('Change Password');
@@ -201,9 +194,6 @@ class MylibRepoMenu extends React.Component {
       case 'Share Admin':
         translateResult = gettext('Share Admin');
         break;
-      case 'Old Files Auto Delete':
-        translateResult = gettext('Auto Deletion Setting');
-        break;
       case 'Advanced':
         translateResult = gettext('Advanced');
         break;
@@ -213,7 +203,7 @@ class MylibRepoMenu extends React.Component {
       case 'Office Suite':
         translateResult = gettext('Office Suite');
         break;
-      //KEEPER
+      // KEEPER
       case 'Assign DOI to current state':
         translateResult = gettext('Assign DOI to current state');
         break;
@@ -226,6 +216,7 @@ class MylibRepoMenu extends React.Component {
       case 'Edit Metadata':
         translateResult = gettext('Edit Metadata');
         break;
+      // END KEEPER
       default:
         break;
     }
@@ -245,7 +236,7 @@ class MylibRepoMenu extends React.Component {
             tag="i"
             role="button"
             tabIndex="0"
-            className="sf-dropdown-toggle sf2-icon-caret-down"
+            className="sf-dropdown-toggle sf3-font-more sf3-font"
             title={gettext('More operations')}
             aria-label={gettext('More operations')}
             onClick={this.onDropdownToggleClick}
@@ -253,7 +244,7 @@ class MylibRepoMenu extends React.Component {
             data-toggle="dropdown"
           />
           <DropdownMenu onMouseMove={this.onDropDownMouseMove}>
-            {operations.map((item, index)=> {
+            {operations.map((item, index) => {
               if (item == 'Divider') {
                 return <DropdownItem key={index} divider />;
               } else if (item == 'Advanced') {
@@ -267,19 +258,15 @@ class MylibRepoMenu extends React.Component {
                     onMouseMove={(e) => {e.stopPropagation();}}
                   >
                     <DropdownToggle
-                      caret
                       className="dropdown-item font-weight-normal rounded-0 d-flex justify-content-between align-items-center pr-2"
                       onMouseEnter={this.toggleAdvancedMenuShown}
                     >
                       {this.translateOperations(item)}
+                      <i className="sf3-font-down sf3-font rotate-270"></i>
                     </DropdownToggle>
                     <DropdownMenu>
-                      {advancedOperations.map((item, index)=> {
-                        if (item == 'Divider') {
-                          return <DropdownItem key={index} divider />;
-                        } else {
-                          return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick} onKeyDown={this.onMenuItemKeyDown}>{this.translateOperations(item)}</DropdownItem>);
-                        }
+                      {advancedOperations.map((item, index) => {
+                        return (<DropdownItem key={index} data-toggle={item} onClick={this.onMenuItemClick} onKeyDown={this.onMenuItemKeyDown}>{this.translateOperations(item)}</DropdownItem>);
                       })}
                     </DropdownMenu>
                   </Dropdown>
@@ -303,7 +290,7 @@ class MylibRepoMenu extends React.Component {
       <Dropdown isOpen={this.state.isItemMenuShow} toggle={this.toggleOperationMenu}>
         <DropdownToggle
           tag="i"
-          className="sf-dropdown-toggle fa fa-ellipsis-v ml-0"
+          className="sf-dropdown-toggle sf3-font sf3-font-more-vertical ml-0"
           title={gettext('More operations')}
           aria-label={gettext('More operations')}
           data-toggle="dropdown"

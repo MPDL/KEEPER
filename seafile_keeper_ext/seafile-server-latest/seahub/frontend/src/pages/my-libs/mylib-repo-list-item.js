@@ -1,18 +1,17 @@
 import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import MediaQuery from 'react-responsive';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { Link, navigate } from '@gatsbyjs/reach-router';
 import { Utils } from '../../utils/utils';
-// KEEPER
-import { keeperAPI, seafileAPI } from '../../utils/seafile-api';
+import { seafileAPI } from '../../utils/seafile-api';
 import { gettext, siteRoot, storages } from '../../utils/constants';
 import ModalPortal from '../../components/modal-portal';
 import ShareDialog from '../../components/dialog/share-dialog';
 import toaster from '../../components/toast';
 import DeleteRepoDialog from '../../components/dialog/delete-repo-dialog';
 import TransferDialog from '../../components/dialog/transfer-dialog';
-import LibHistorySettingDialog from '../../components/dialog/lib-history-setting-dialog';
 import ChangeRepoPasswordDialog from '../../components/dialog/change-repo-password-dialog';
 import ResetEncryptedRepoPasswordDialog from '../../components/dialog/reset-encrypted-repo-password-dialog';
 import LabelRepoStateDialog from '../../components/dialog/label-repo-state-dialog';
@@ -20,28 +19,32 @@ import LibSubFolderPermissionDialog from '../../components/dialog/lib-sub-folder
 import Rename from '../../components/rename';
 import MylibRepoMenu from './mylib-repo-menu';
 import RepoAPITokenDialog from '../../components/dialog/repo-api-token-dialog';
-import RepoSeaTableIntegrationDialog from '../../components/dialog/repo-seatable-integration-dialog';
 import RepoShareAdminDialog from '../../components/dialog/repo-share-admin-dialog';
-import LibOldFilesAutoDelDialog from '../../components/dialog/lib-old-files-auto-del-dialog';
 import OfficeSuiteDialog from '../../components/dialog/repo-office-suite-dialog';
 import RepoMonitoredIcon from '../../components/repo-monitored-icon';
+import { LIST_MODE } from '../../components/dir-view-mode/constants';
 import { userAPI } from '../../utils/user-api';
+
 // KEEPER
 import AssignDoiDialog from '../../components/dialog/assign-doi-dialog';
 import ArchiveLibraryDialog from '../../components/dialog/archive-library-dialog';
 import CertifyLibraryDialog from '../../components/dialog/certify-library-dialog';
 
 const propTypes = {
+  currentViewMode: PropTypes.string,
   repo: PropTypes.object.isRequired,
+  inAllLibs: PropTypes.bool,
   isItemFreezed: PropTypes.bool.isRequired,
   onFreezedItem: PropTypes.func.isRequired,
   onUnfreezedItem: PropTypes.func.isRequired,
   onRenameRepo: PropTypes.func.isRequired,
   onDeleteRepo: PropTypes.func.isRequired,
   onTransferRepo: PropTypes.func.isRequired,
-  onRepoClick: PropTypes.func.isRequired,
   onMonitorRepo: PropTypes.func.isRequired,
+  onContextMenu: PropTypes.func.isRequired,
 };
+
+dayjs.extend(relativeTime);
 
 // KEEPER
 var handleCanArchiveResponse = (obj, resp) => {
@@ -69,6 +72,7 @@ var handleCanArchiveResponse = (obj, resp) => {
   if (error) toaster.danger(error);
   else if (msg) toaster.success(msg);
 };
+// END KEEPER
 
 class MylibRepoListItem extends React.Component {
 
@@ -81,16 +85,13 @@ class MylibRepoListItem extends React.Component {
       isShareDialogShow: false,
       isDeleteDialogShow: false,
       isTransferDialogShow: false,
-      isHistorySettingDialogShow: false,
       isChangePasswordDialogShow: false,
       isResetPasswordDialogShow: false,
       isLabelRepoStateDialogOpen: false,
       isFolderPermissionDialogShow: false,
       isAPITokenDialogShow: false,
-      isSeaTableIntegrationShow: false,
       isRepoShareAdminDialogOpen: false,
       isRepoDeleted: false,
-      isOldFilesAutoDelDialogOpen: false,
       isOfficeSuiteDialogShow: false,
       // KEEPER
       isAssignDoiDialogShow: false,
@@ -127,7 +128,7 @@ class MylibRepoListItem extends React.Component {
   };
 
   onMenuItemClick = (item) => {
-    switch(item) {
+    switch (item) {
       case 'Star':
       case 'Unstar':
         this.onToggleStarRepo();
@@ -143,9 +144,6 @@ class MylibRepoListItem extends React.Component {
         break;
       case 'Transfer':
         this.onTransferToggle();
-        break;
-      case 'History Setting':
-        this.onHistorySettingToggle();
         break;
       case 'Change Password':
         this.onChangePasswordToggle();
@@ -171,15 +169,10 @@ class MylibRepoListItem extends React.Component {
       case 'Share Admin':
         this.toggleRepoShareAdminDialog();
         break;
-      case 'Old Files Auto Delete':
-        this.toggleOldFilesAutoDelDialog();
-        break;
-      case 'SeaTable integration':
-        this.onSeaTableIntegrationToggle();
-        break;
       case 'Office Suite':
         this.onOfficeSuiteToggle();
         break;
+      // KEEPER
       case 'Assign DOI to current state':
         this.onAssignDoiToggle();
         break;
@@ -192,6 +185,7 @@ class MylibRepoListItem extends React.Component {
       case 'Edit Metadata':
         this.onEditMetadataToggle();
         break;
+      //END KEEPER
       default:
         break;
     }
@@ -203,16 +197,11 @@ class MylibRepoListItem extends React.Component {
     }
   };
 
-  onRepoClick = () => {
-    this.props.onRepoClick(this.props.repo);
-  };
-
-  onToggleStarRepo = (e) => {
-    e.preventDefault();
+  onToggleStarRepo = () => {
     const repoName = this.props.repo.repo_name;
     if (this.state.isStarred) {
       seafileAPI.unstarItem(this.props.repo.repo_id, '/').then(() => {
-        this.setState({isStarred: !this.state.isStarred});
+        this.setState({ isStarred: !this.state.isStarred });
         const msg = gettext('Successfully unstarred {library_name_placeholder}.')
           .replace('{library_name_placeholder}', repoName);
         toaster.success(msg);
@@ -222,7 +211,7 @@ class MylibRepoListItem extends React.Component {
       });
     } else {
       seafileAPI.starItem(this.props.repo.repo_id, '/').then(() => {
-        this.setState({isStarred: !this.state.isStarred});
+        this.setState({ isStarred: !this.state.isStarred });
         const msg = gettext('Successfully starred {library_name_placeholder}.')
           .replace('{library_name_placeholder}', repoName);
         toaster.success(msg);
@@ -253,55 +242,41 @@ class MylibRepoListItem extends React.Component {
     });
   };
 
-  onShareToggle = (e) => {
-    // when close share dialog after send share link email,
-    // there is no event
-    if (e != undefined) {
-      e.preventDefault();
-    }
-    this.setState({isShareDialogShow: !this.state.isShareDialogShow});
+  onShareToggle = () => {
+    this.setState({ isShareDialogShow: !this.state.isShareDialogShow });
   };
 
-  onDeleteToggle = (e) => {
-    e.preventDefault();
-    this.setState({isDeleteDialogShow: !this.state.isDeleteDialogShow});
+  onDeleteToggle = () => {
+    this.setState({ isDeleteDialogShow: !this.state.isDeleteDialogShow });
   };
 
   onRenameToggle = () => {
     this.props.onFreezedItem();
-    this.setState({isRenaming: !this.state.isRenaming});
+    this.setState({ isRenaming: !this.state.isRenaming });
   };
 
   onTransferToggle = () => {
-    this.setState({isTransferDialogShow: !this.state.isTransferDialogShow});
-  };
-
-  onHistorySettingToggle = () => {
-    this.setState({isHistorySettingDialogShow: !this.state.isHistorySettingDialogShow});
+    this.setState({ isTransferDialogShow: !this.state.isTransferDialogShow });
   };
 
   onChangePasswordToggle = () => {
-    this.setState({isChangePasswordDialogShow: !this.state.isChangePasswordDialogShow});
+    this.setState({ isChangePasswordDialogShow: !this.state.isChangePasswordDialogShow });
   };
 
   onResetPasswordToggle = () => {
-    this.setState({isResetPasswordDialogShow: !this.state.isResetPasswordDialogShow});
+    this.setState({ isResetPasswordDialogShow: !this.state.isResetPasswordDialogShow });
   };
 
   onLabelToggle = () => {
-    this.setState({isLabelRepoStateDialogOpen: !this.state.isLabelRepoStateDialogOpen});
+    this.setState({ isLabelRepoStateDialogOpen: !this.state.isLabelRepoStateDialogOpen });
   };
 
   onFolderPermissionToggle = () => {
-    this.setState({isFolderPermissionDialogShow: !this.state.isFolderPermissionDialogShow});
+    this.setState({ isFolderPermissionDialogShow: !this.state.isFolderPermissionDialogShow });
   };
 
   onAPITokenToggle = () => {
-    this.setState({isAPITokenDialogShow: !this.state.isAPITokenDialogShow});
-  };
-
-  onSeaTableIntegrationToggle = () => {
-    this.setState({isSeaTableIntegrationShow: !this.state.isSeaTableIntegrationShow});
+    this.setState({ isAPITokenDialogShow: !this.state.isAPITokenDialogShow });
   };
 
   onOfficeSuiteToggle = () => {
@@ -309,11 +284,7 @@ class MylibRepoListItem extends React.Component {
   };
 
   toggleRepoShareAdminDialog = () => {
-    this.setState({isRepoShareAdminDialogOpen: !this.state.isRepoShareAdminDialogOpen});
-  };
-
-  toggleOldFilesAutoDelDialog = () => {
-    this.setState({isOldFilesAutoDelDialogOpen: !this.state.isOldFilesAutoDelDialogOpen});
+    this.setState({ isRepoShareAdminDialogOpen: !this.state.isRepoShareAdminDialogOpen });
   };
 
   onUnfreezedItem = () => {
@@ -338,20 +309,20 @@ class MylibRepoListItem extends React.Component {
 
   onRenameCancel = () => {
     this.props.onUnfreezedItem();
-    this.setState({isRenaming: !this.state.isRenaming});
+    this.setState({ isRenaming: !this.state.isRenaming });
   };
 
-  onTransferRepo = (user) => {
+  onTransferRepo = (email, reshare) => {
     let repoID = this.props.repo.repo_id;
-    seafileAPI.transferRepo(repoID, user.email).then(res => {
+    userAPI.transferRepo(repoID, email, reshare).then(res => {
       this.props.onTransferRepo(repoID);
       let message = gettext('Successfully transferred the library.');
       toaster.success(message);
     }).catch(error => {
-      if (error.response){
-        toaster.danger(error.response.data.error_msg || gettext('Error'), {duration: 3});
+      if (error.response) {
+        toaster.danger(error.response.data.error_msg || gettext('Error'), { duration: 3 });
       } else {
-        toaster.danger(gettext('Failed. Please check the network.'), {duration: 3});
+        toaster.danger(gettext('Failed. Please check the network.'), { duration: 3 });
       }
     });
     this.onTransferToggle();
@@ -392,21 +363,31 @@ class MylibRepoListItem extends React.Component {
       }
       toaster.danger(errMessage);
 
-      this.setState({isRepoDeleted: false});
+      this.setState({ isRepoDeleted: false });
     });
   };
 
+  handleContextMenu = (event) => {
+    this.props.onContextMenu(event, this.props.repo);
+  };
+
   renderPCUI = () => {
-    let repo = this.props.repo;
+    const { isStarred } = this.state;
+    const { repo, currentViewMode = LIST_MODE, inAllLibs } = this.props;
     let iconUrl = Utils.getLibIconUrl(repo);
     let iconTitle = Utils.getLibIconTitle(repo);
     let repoURL = `${siteRoot}library/${repo.repo_id}/${Utils.encodePath(repo.repo_name)}/`;
-    return (
-      <tr className={this.state.highlight ? 'tr-highlight' : ''} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onClick={this.onRepoClick} onFocus={this.onFocus}>
+    return currentViewMode == LIST_MODE ? (
+      <tr className={this.state.highlight ? 'tr-highlight' : ''} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onFocus={this.onFocus} onContextMenu={this.handleContextMenu}>
         <td className="text-center">
-          <a href="#" role="button" aria-label={this.state.isStarred ? gettext('Unstar') : gettext('Star')} onClick={this.onToggleStarRepo}>
-            <i className={`fa-star ${this.state.isStarred ? 'fas' : 'far star-empty'}`}></i>
-          </a>
+          <i
+            role="button"
+            title={this.state.isStarred ? gettext('Unstar') : gettext('Star')}
+            aria-label={this.state.isStarred ? gettext('Unstar') : gettext('Star')}
+            onClick={this.onToggleStarRepo}
+            className={`op-icon m-0 ${this.state.isStarred ? 'sf3-font-star' : 'sf3-font-star-empty'} sf3-font`}
+          >
+          </i>
         </td>
         <td><img src={iconUrl} title={iconTitle} alt={iconTitle} width="24" /></td>
         <td>
@@ -420,7 +401,7 @@ class MylibRepoListItem extends React.Component {
           {!this.state.isRenaming && repo.repo_name && (
             <Fragment>
               <Link to={repoURL}>{repo.repo_name}</Link>
-              {repo.monitored && <RepoMonitoredIcon repoID={repo.repo_id} />}
+              {repo.monitored && <RepoMonitoredIcon repoID={repo.repo_id} className="ml-1 op-icon" />}
             </Fragment>
           )}
           {!this.state.isRenaming && !repo.repo_name &&
@@ -430,8 +411,8 @@ class MylibRepoListItem extends React.Component {
         <td>
           {(repo.repo_name && this.state.isOpIconShow) && (
             <div>
-              <a href="#" className="op-icon sf2-icon-share" title={gettext('Share')} role="button" aria-label={gettext('Share')} onClick={this.onShareToggle}></a>
-              <a href="#" className="op-icon sf2-icon-delete" title={gettext('Delete')} role="button" aria-label={gettext('Delete')} onClick={this.onDeleteToggle}></a>
+              <i className="op-icon sf3-font-share sf3-font" title={gettext('Share')} role="button" aria-label={gettext('Share')} onClick={this.onShareToggle}></i>
+              <i className="op-icon sf3-font-delete1 sf3-font" title={gettext('Delete')} role="button" aria-label={gettext('Delete')} onClick={this.onDeleteToggle}></i>
               <MylibRepoMenu
                 isPC={true}
                 repo={this.props.repo}
@@ -443,9 +424,60 @@ class MylibRepoListItem extends React.Component {
           )}
         </td>
         <td>{repo.size}</td>
-        {storages.length > 0 && <td>{repo.storage_name}</td>}
-        <td title={moment(repo.last_modified).format('llll')}>{moment(repo.last_modified).fromNow()}</td>
+        {(storages.length > 0 && !inAllLibs) && <td>{repo.storage_name}</td>}
+        <td title={dayjs(repo.last_modified).format('dddd, MMMM D, YYYY h:mm:ss A')}>{dayjs(repo.last_modified).fromNow()}</td>
       </tr>
+    ) : (
+      <div
+        className="library-grid-item px-3 d-flex justify-content-between align-items-center"
+        onMouseEnter={this.onMouseEnter}
+        onMouseLeave={this.onMouseLeave}
+        onFocus={this.onFocus}
+        onContextMenu={this.handleContextMenu}
+      >
+        <div className="d-flex align-items-center text-truncate">
+          <img src={iconUrl} title={iconTitle} alt={iconTitle} width="36" className="mr-2" />
+          {this.state.isRenaming && (
+            <Rename
+              name={repo.repo_name}
+              onRenameConfirm={this.onRenameConfirm}
+              onRenameCancel={this.onRenameCancel}
+            />
+          )}
+          {!this.state.isRenaming && repo.repo_name && (
+            <Fragment>
+              <Link to={repoURL} className="library-name text-truncate" title={repo.repo_name}>{repo.repo_name}</Link>
+              {isStarred &&
+                <i
+                  role="button"
+                  title={gettext('Unstar')}
+                  aria-label={gettext('Unstar')}
+                  className='op-icon library-grid-item-icon sf3-font-star sf3-font'
+                  onClick={this.onToggleStarRepo}
+                >
+                </i>
+              }
+              {repo.monitored && <RepoMonitoredIcon repoID={repo.repo_id} className="op-icon library-grid-item-icon" />}
+            </Fragment>
+          )}
+          {!this.state.isRenaming && !repo.repo_name &&
+            (<span>{gettext('Broken (please contact your administrator to fix this library)')}</span>)
+          }
+        </div>
+        {(repo.repo_name && this.state.isOpIconShow) && (
+          <div className="flex-shrink-0">
+            <i className="op-icon sf3-font-share sf3-font" title={gettext('Share')} role="button" aria-label={gettext('Share')} onClick={this.onShareToggle}></i>
+            <i className="op-icon sf3-font-delete1 sf3-font" title={gettext('Delete')} role="button" aria-label={gettext('Delete')} onClick={this.onDeleteToggle}></i>
+            <MylibRepoMenu
+              isPC={true}
+              repo={this.props.repo}
+              onMenuItemClick={this.onMenuItemClick}
+              onFreezedItem={this.props.onFreezedItem}
+              onUnfreezedItem={this.onUnfreezedItem}
+            />
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -456,7 +488,7 @@ class MylibRepoListItem extends React.Component {
     let repoURL = this.repoURL = `${siteRoot}library/${repo.repo_id}/${Utils.encodePath(repo.repo_name)}/`;
 
     return (
-      <tr className={this.state.highlight ? 'tr-highlight' : ''}  onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave} onClick={this.onRepoClick}>
+      <tr className={this.state.highlight ? 'tr-highlight' : ''} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}>
         <td onClick={this.visitRepo}><img src={iconUrl} title={iconTitle} alt={iconTitle} width="24" /></td>
         <td onClick={this.visitRepo}>
           {this.state.isRenaming && (
@@ -469,14 +501,14 @@ class MylibRepoListItem extends React.Component {
           {!this.state.isRenaming && repo.repo_name && (
             <div>
               <Link to={repoURL}>{repo.repo_name}</Link>
-              {repo.monitored && <RepoMonitoredIcon repoID={repo.repo_id} />}
+              {repo.monitored && <RepoMonitoredIcon repoID={repo.repo_id} className="ml-1 op-icon" />}
             </div>
           )}
           {!this.state.isRenaming && !repo.repo_name &&
             <div>(gettext('Broken (please contact your administrator to fix this library)'))</div>
           }
           <span className="item-meta-info">{repo.size}</span>
-          <span className="item-meta-info" title={moment(repo.last_modified).format('llll')}>{moment(repo.last_modified).fromNow()}</span>
+          <span className="item-meta-info" title={dayjs(repo.last_modified).format('dddd, MMMM D, YYYY h:mm:ss A')}>{dayjs(repo.last_modified).fromNow()}</span>
         </td>
         <td>
           {repo.repo_name && (
@@ -503,7 +535,7 @@ class MylibRepoListItem extends React.Component {
   };
 
   onArchiveLibraryToggle = () => {
-    keeperAPI
+    seafileAPI
       .canArchive(this.props.repo.repo_id)
       .then((resp) => {
         const d = resp.data;
@@ -532,7 +564,7 @@ class MylibRepoListItem extends React.Component {
   };
 
   onEditMetadataToggle = () => {
-    keeperAPI
+    seafileAPI
       .canArchive(this.props.repo.repo_id)
       .then((resp) => {
         const d = resp.data;
@@ -548,6 +580,7 @@ class MylibRepoListItem extends React.Component {
         });
       });
   };
+  // END KEEPER
 
   render() {
     let repo = this.props.repo;
@@ -566,6 +599,7 @@ class MylibRepoListItem extends React.Component {
               itemName={repo.repo_name}
               itemPath={'/'}
               repoID={repo.repo_id}
+              repo={repo}
               repoEncrypted={repo.encrypted}
               enableDirPrivateShare={true}
               userPerm={repo.permission}
@@ -580,6 +614,7 @@ class MylibRepoListItem extends React.Component {
               isRepoDeleted={this.state.isRepoDeleted}
               onDeleteRepo={this.onDeleteRepo}
               toggle={this.onDeleteToggle}
+              isGetShare={true}
             />
           </ModalPortal>
         )}
@@ -587,17 +622,8 @@ class MylibRepoListItem extends React.Component {
           <ModalPortal>
             <TransferDialog
               itemName={repo.repo_name}
-              submit={this.onTransferRepo}
+              onTransferRepo={this.onTransferRepo}
               toggleDialog={this.onTransferToggle}
-            />
-          </ModalPortal>
-        )}
-        {this.state.isHistorySettingDialogShow && (
-          <ModalPortal>
-            <LibHistorySettingDialog
-              repoID={repo.repo_id}
-              itemName={repo.repo_name}
-              toggleDialog={this.onHistorySettingToggle}
             />
           </ModalPortal>
         )}
@@ -648,28 +674,11 @@ class MylibRepoListItem extends React.Component {
           </ModalPortal>
         )}
 
-        {this.state.isSeaTableIntegrationShow && (
-          <ModalPortal>
-            <RepoSeaTableIntegrationDialog
-              repo={repo}
-              onSeaTableIntegrationToggle={this.onSeaTableIntegrationToggle}
-            />
-          </ModalPortal>
-        )}
-
         {this.state.isRepoShareAdminDialogOpen && (
           <ModalPortal>
             <RepoShareAdminDialog
               repo={repo}
               toggleDialog={this.toggleRepoShareAdminDialog}
-            />
-          </ModalPortal>
-        )}
-        {this.state.isOldFilesAutoDelDialogOpen && (
-          <ModalPortal>
-            <LibOldFilesAutoDelDialog
-              repoID={repo.repo_id}
-              toggleDialog={this.toggleOldFilesAutoDelDialog}
             />
           </ModalPortal>
         )}
@@ -726,6 +735,7 @@ class MylibRepoListItem extends React.Component {
             />
           </ModalPortal>
         )}
+        {/* END KEEPER */}
       </Fragment>
     );
   }

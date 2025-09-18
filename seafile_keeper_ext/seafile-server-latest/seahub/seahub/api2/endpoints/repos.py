@@ -1,7 +1,11 @@
 # Copyright (c) 2012-2016 Seafile Ltd.
 import logging
+import os
 import datetime
-
+from io import BytesIO
+import json
+import requests
+from PIL import Image
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +14,7 @@ from rest_framework import status
 
 from seahub.api2.throttling import UserRateThrottle
 from seahub.api2.authentication import TokenAuthentication
-from seahub.api2.utils import api_error
+from seahub.api2.utils import api_error, is_wiki_repo
 
 from seahub.api2.endpoints.group_owned_libraries import get_group_id_by_repo_owner
 
@@ -18,13 +22,16 @@ from seahub.base.models import UserStarredFiles, UserMonitoredRepos
 from seahub.base.templatetags.seahub_tags import email2nickname, \
         email2contact_email
 from seahub.signals import repo_deleted
+from seahub.thumbnail.utils import remove_thumbnail_by_id
 from seahub.views import check_folder_permission, list_inner_pub_repos
 from seahub.share.models import ExtraSharePermission
 from seahub.group.utils import group_id_to_name
-from seahub.utils import is_org_context, is_pro_version
+from seahub.utils import is_org_context, is_pro_version, gen_inner_file_get_url, gen_file_upload_url, \
+    get_file_type_and_ext, file_types
 from seahub.utils.timeutils import timestamp_to_isoformat_timestr
 from seahub.utils.repo import get_repo_owner, is_repo_admin, \
         repo_has_been_shared_out, normalize_repo_status_code
+from seahub.avatar.templatetags.avatar_tags import api_avatar_url
 
 from seahub.settings import ENABLE_STORAGE_CLASSES
 
@@ -116,8 +123,13 @@ class ReposView(APIView):
                 # do not return virtual repos
                 if r.is_virtual:
                     continue
+
+                if is_wiki_repo(r):
+                    continue
+                url, _, _ = api_avatar_url(email)
+
                 enable_onlyoffice, _ = get_office_feature_by_repo(r)
-                
+
                 # KEEPER
                 doi_repos = DoiRepo.objects.get_valid_doi_repos(r.repo_id)
                 history_limit = seafile_api.get_repo_history_limit(r.repo_id)
@@ -129,6 +141,7 @@ class ReposView(APIView):
                     "owner_email": email,
                     "owner_name": email2nickname(email),
                     "owner_contact_email": email2contact_email(email),
+                    "owner_avatar": url,
                     "last_modified": timestamp_to_isoformat_timestr(r.last_modify),
                     "modifier_email": r.last_modifier,
                     "modifier_name": nickname_dict.get(r.last_modifier, ''),
@@ -181,6 +194,9 @@ class ReposView(APIView):
             shared_repos.sort(key=lambda x: x.last_modify, reverse=True)
             for r in shared_repos:
 
+                if is_wiki_repo(r):
+                    continue
+
                 owner_email = r.user
 
                 group_name = ''
@@ -192,6 +208,7 @@ class ReposView(APIView):
 
                 owner_name = group_name if is_group_owned_repo else nickname_dict.get(owner_email, '')
                 owner_contact_email = '' if is_group_owned_repo else contact_email_dict.get(owner_email, '')
+                url, _, _ = api_avatar_url(owner_email)
 
                 enable_onlyoffice, _ = get_office_feature_by_repo(r)
 
@@ -206,6 +223,7 @@ class ReposView(APIView):
                     "owner_email": owner_email,
                     "owner_name": owner_name,
                     "owner_contact_email": owner_contact_email,
+                    "owner_avatar": url,
                     "size": r.size,
                     "encrypted": r.encrypted,
                     "permission": r.permission,
@@ -251,6 +269,10 @@ class ReposView(APIView):
                 monitored_repo_id_list = []
 
             for r in group_repos:
+
+                if is_wiki_repo(r):
+                    continue
+
                 enable_onlyoffice, _ = get_office_feature_by_repo(r)
                 repo_info = {
                     "type": "group",
@@ -297,7 +319,12 @@ class ReposView(APIView):
                     nickname_dict[e] = email2nickname(e)
 
             for r in public_repos:
+
+                if is_wiki_repo(r):
+                    continue
+
                 repo_owner = repo_id_owner_dict[r.repo_id]
+                url, _, _ = api_avatar_url(repo_owner)
                 enable_onlyoffice, _ = get_office_feature_by_repo(r)
                 repo_info = {
                     "type": "public",
@@ -310,6 +337,7 @@ class ReposView(APIView):
                     "owner_email": repo_owner,
                     "owner_name": nickname_dict.get(repo_owner, ''),
                     "owner_contact_email": contact_email_dict.get(repo_owner, ''),
+                    "owner_avatar": url,
                     "size": r.size,
                     "encrypted": r.encrypted,
                     "permission": r.permission,
@@ -323,8 +351,9 @@ class ReposView(APIView):
         utc_dt = datetime.datetime.utcnow()
         timestamp = utc_dt.strftime('%Y-%m-%d %H:%M:%S')
         org_id = request.user.org.org_id if is_org_context(request) else -1
+        from seahub.utils import send_user_login_msg
         try:
-            seafile_api.publish_event('seahub.stats', 'user-login\t%s\t%s\t%s' % (email, timestamp, org_id))
+            send_user_login_msg(email, timestamp, org_id)
         except Exception as e:
             logger.error('Error when sending user-login message: %s' % str(e))
 
@@ -365,6 +394,7 @@ class RepoView(APIView):
             lib_need_decrypt = True
 
         repo_owner = get_repo_owner(request, repo_id)
+        url, _, _ = api_avatar_url(repo_owner)
 
         try:
             has_been_shared_out = repo_has_been_shared_out(request, repo_id)
@@ -375,10 +405,11 @@ class RepoView(APIView):
         result = {
             "repo_id": repo.id,
             "repo_name": repo.name,
-
+            "repo_type": repo.repo_type,
             "owner_email": repo_owner,
             "owner_name": email2nickname(repo_owner),
             "owner_contact_email": email2contact_email(repo_owner),
+            "owner_avatar": url,
 
             "size": repo.size,
             "encrypted": repo.encrypted,
@@ -517,3 +548,103 @@ class RepoShareInfoView(APIView):
         }
 
         return Response(result)
+    
+class RepoImageRotateView(APIView):
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated, )
+    throttle_classes = (UserRateThrottle, )
+
+    def post(self, request, repo_id):
+        # arguments check
+        path = request.data.get('path')
+        if not path:
+            error_msg = 'path is invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        angle = request.data.get('angle')
+        if not angle or angle not in ('90', '180', '270'):
+            error_msg = 'angle is invalid.'
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+        angle = {'90': 2, '180': 3, '270': 4}[angle]
+
+        repo = seafile_api.get_repo(repo_id)
+        if not repo:
+            error_msg = 'Library %s not found.' % repo_id
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+
+        parent_dir = os.path.dirname(path)
+        asset_path = path
+        asset_id = seafile_api.get_file_id_by_path(repo_id, asset_path)
+        if not asset_id:
+            error_msg = 'Picture %s not found.' % (path,)
+            return api_error(status.HTTP_404_NOT_FOUND, error_msg)
+        asset_name = os.path.basename(path)
+        file_type, _ = get_file_type_and_ext(asset_name)
+        
+        if file_type != file_types.IMAGE:
+            error_msg = '%s is not a picture.' % (path,)
+            return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
+
+        # permission check
+        permission = check_folder_permission(request, repo_id, '/')
+        if permission is None:
+            error_msg = 'Permission denied.'
+            return api_error(status.HTTP_403_FORBIDDEN, error_msg)
+        username = request.user.username
+        # get token
+        try:
+            token = seafile_api.get_fileserver_access_token(
+                repo_id, asset_id, 'view', username, use_onetime=False
+            )
+        except Exception as e:
+            logger.error('get view token error: %s', e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        asset_url = gen_inner_file_get_url(token, asset_name)
+
+        # request pic
+        try:
+            response = requests.get(asset_url)
+            if response.status_code != 200:
+                logger.error('request asset url: %s response code: %s', asset_url, response.status_code)
+                error_msg = 'Internal Server Error'
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        except Exception as e:
+            logger.error('request: %s error: %s', asset_url, e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        img = response.content
+
+        # get upload link
+        old_img = Image.open(BytesIO(img))
+        obj_id = json.dumps({'parent_dir': parent_dir})
+        try:
+            token = seafile_api.get_fileserver_access_token(repo_id, obj_id, 'upload',
+                                                            username, use_onetime=False)
+        except Exception as e:
+            logger.error(e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        upload_link = gen_file_upload_url(token, 'upload-api')
+
+        # upload
+        try:
+            # rotate and save to fp
+            fp = BytesIO()
+            content_type = response.headers['Content-Type']
+            old_img.transpose(angle).save(fp, content_type.split('/')[1])
+            response = requests.post(upload_link, data={'parent_dir': parent_dir, 'replace': 1}, files={
+                'file': (asset_name, fp.getvalue(), content_type)
+            })
+            if response.status_code != 200:
+                logger.error('upload: %s status code: %s', upload_link, response.status_code)
+                error_msg = 'Internal Server Error'
+                return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+        except Exception as e:
+            logger.error('upload rotated image error: %s', e)
+            error_msg = 'Internal Server Error'
+            return api_error(status.HTTP_500_INTERNAL_SERVER_ERROR, error_msg)
+
+        # remove thumbnails
+        remove_thumbnail_by_id(asset_id)
+
+        return Response({'success': True})

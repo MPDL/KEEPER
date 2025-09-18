@@ -90,6 +90,24 @@ const hasJsxRuntime = (() => {
   }
 })();
 
+// Load third-party packages on demand
+const excludedChunkNames = [
+  'sharedFileViewAudio',
+  'sharedFileViewVideo',
+  'fileView',
+  'viewFileSdoc',
+  'sharedFileViewSdoc',
+  'sdocPublishedRevision',
+  'sdocFileHistory',
+  'wiki2',
+  'sharedFileViewText',
+  'viewFileText',
+  'sharedFileViewMarkdown',
+  'markdownEditor',
+  'plainMarkdownEditor',
+  'tldrawEditor',
+];
+
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 module.exports = function (webpackEnv) {
@@ -300,7 +318,9 @@ module.exports = function (webpackEnv) {
       // https://twitter.com/wSokra/status/969633336732905474
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
       splitChunks: {
-        chunks: 'all',
+        chunks(chunk) {
+          return !excludedChunkNames.includes(chunk.name);
+        },
         automaticNameDelimiter: '-',
         cacheGroups: {
           default: false,
@@ -311,7 +331,7 @@ module.exports = function (webpackEnv) {
             priority: 30000,
             reuseExistingChunk: true,
           },
-        }
+        },
       },
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
@@ -319,6 +339,7 @@ module.exports = function (webpackEnv) {
       runtimeChunk: {
         name: 'runtime',
       },
+      // concatenateModules: false,
     },
     resolve: {
       // This allows you to set a fallback for where webpack should look for modules.
@@ -338,6 +359,7 @@ module.exports = function (webpackEnv) {
         .map(ext => `.${ext}`)
         .filter(ext => useTypeScript || !ext.includes('ts')),
       alias: {
+        '@': path.resolve(process.cwd(), 'src'),
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         'react-native': 'react-native-web',
@@ -579,7 +601,7 @@ module.exports = function (webpackEnv) {
                   loader: 'svg-sprite-loader', options: {}
                 },
                 { loader: 'svgo-loader', options: {
-                  plugins:[
+                  plugins: [
                     'removeTitle',
                     'removeStyleElement',
                     'cleanupIDs',

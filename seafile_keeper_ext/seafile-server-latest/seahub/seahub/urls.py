@@ -2,7 +2,11 @@
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
-from seahub.auth.views import multi_adfs_sso
+from seahub.ai.apis import ImageCaption, GenerateSummary, GenerateFileTags, OCR, Translate, WritingAssistant
+from seahub.api2.endpoints.share_link_auth import ShareLinkUserAuthView, ShareLinkEmailAuthView
+from seahub.api2.endpoints.internal_api import InternalUserListView, InternalCheckShareLinkAccess, \
+    InternalCheckFileOperationAccess
+from seahub.auth.views import multi_adfs_sso, login_simple_check
 from seahub.views import *
 from seahub.views.mobile import mobile_login
 from seahub.views.sysadmin import *
@@ -13,7 +17,7 @@ from seahub.views.sso_to_thirdpart import sso_to_thirdpart
 from seahub.views.file import view_history_file, view_trash_file,\
     view_snapshot_file, view_shared_file, view_file_via_shared_dir,\
     text_diff, view_raw_file, download_file, view_lib_file, \
-    file_access, view_lib_file_via_smart_link, view_media_file_via_share_link, \
+    view_lib_file_via_smart_link, view_media_file_via_share_link, \
     view_media_file_via_public_wiki, view_sdoc_revision
 from seahub.views.repo import repo_history_view, repo_snapshot, view_shared_dir, \
     view_shared_upload_link, view_lib_as_wiki
@@ -23,17 +27,20 @@ from seahub.dingtalk.views import dingtalk_login, dingtalk_callback, \
 
 from seahub.api2.endpoints.search_file import SearchFile
 
-from seahub.api2.endpoints.smart_link import SmartLink, SmartLinkToken 
+from seahub.api2.endpoints.smart_link import SmartLink, SmartLinkToken
 from seahub.api2.endpoints.groups import Groups, Group
 from seahub.api2.endpoints.all_groups import AllGroups
 from seahub.api2.endpoints.departments import Departments
+from seahub.api2.endpoints.address_book.departments import AddressBookDepartments, \
+        AddressBookDepartmentMembers
 from seahub.api2.endpoints.shareable_groups import ShareableGroups
 from seahub.api2.endpoints.group_libraries import GroupLibraries, GroupLibrary
 
 from seahub.api2.endpoints.group_owned_libraries import GroupOwnedLibraries, \
         GroupOwnedLibrary, GroupOwnedLibraryUserFolderPermission, \
         GroupOwnedLibraryGroupFolderPermission, GroupOwnedLibraryUserShare, \
-        GroupOwnedLibraryGroupShare, GroupOwnedLibraryUserShareInLibrary
+        GroupOwnedLibraryGroupShare, GroupOwnedLibraryUserShareInLibrary, \
+        GroupOwnedLibraryTransferView
 from seahub.api2.endpoints.address_book.groups import AddressBookGroupsSubGroups
 from seahub.api2.endpoints.address_book.members import AddressBookGroupsSearchMember
 
@@ -57,14 +64,15 @@ from seahub.api2.endpoints.repos_batch import ReposBatchView, \
         ReposBatchCopyItemView, ReposBatchMoveItemView, \
         ReposAsyncBatchCopyItemView, ReposAsyncBatchMoveItemView, \
         ReposSyncBatchCopyItemView, ReposSyncBatchMoveItemView, \
-        ReposBatchDeleteItemView
-from seahub.api2.endpoints.repos import RepoView, ReposView, RepoShareInfoView
+        ReposBatchDeleteItemView, RepoFoldersItemBatchDelete
+from seahub.api2.endpoints.repos import RepoView, ReposView, RepoShareInfoView, RepoImageRotateView
 from seahub.api2.endpoints.file import FileView
+from seahub.api2.endpoints.file_access_log import FileAccessLogView
 from seahub.api2.endpoints.file_history import FileHistoryView, NewFileHistoryView
 from seahub.api2.endpoints.dir import DirView, DirDetailView
 from seahub.api2.endpoints.file_tag import FileTagView
 from seahub.api2.endpoints.file_tag import FileTagsView
-from seahub.api2.endpoints.repo_trash import RepoTrash, RepoTrashRevertDirents
+from seahub.api2.endpoints.repo_trash import RepoTrash, RepoTrashRevertDirents, RepoTrash2
 from seahub.api2.endpoints.repo_commit import RepoCommitView
 from seahub.api2.endpoints.repo_commit_dir import RepoCommitDirView
 from seahub.api2.endpoints.repo_commit_revert import RepoCommitRevertView
@@ -87,13 +95,10 @@ from seahub.api2.endpoints.notifications import NotificationsView, NotificationV
 from seahub.api2.endpoints.repo_file_uploaded_bytes import RepoFileUploadedBytesView
 from seahub.api2.endpoints.user_avatar import UserAvatarView
 from seahub.api2.endpoints.wikis import WikisView, WikiView
-from seahub.api2.endpoints.drafts import DraftsView, DraftView
-from seahub.api2.endpoints.draft_reviewer import DraftReviewerView
-from seahub.api2.endpoints.repo_draft_info import RepoDraftInfo, RepoDraftCounts
 from seahub.api2.endpoints.activities import ActivitiesView
 from seahub.api2.endpoints.wiki_pages import WikiPagesDirView, WikiPageContentView
 from seahub.api2.endpoints.revision_tag import TaggedItemsView, TagNamesView
-from seahub.api2.endpoints.user import User, UserConvertToTeamView
+from seahub.api2.endpoints.user import User, UserConvertToTeamView, ResetPasswordView
 from seahub.api2.endpoints.auth_token_by_session import AuthTokenBySession
 from seahub.api2.endpoints.repo_tags import RepoTagsView, RepoTagView
 from seahub.api2.endpoints.file_tag import RepoFileTagsView, RepoFileTagView
@@ -105,9 +110,10 @@ from seahub.api2.endpoints.monitored_repos import MonitoredRepos, MonitoredRepo
 from seahub.api2.endpoints.markdown_lint import MarkdownLintView
 from seahub.api2.endpoints.public_repos_search import PublishedRepoSearchView
 from seahub.api2.endpoints.recent_added_files import RecentAddedFilesView
-from seahub.api2.endpoints.repo_api_tokens import RepoAPITokensView, RepoAPITokenView
+from seahub.api2.endpoints.repo_api_tokens import RepoAPITokensView, RepoAPITokenView, RepoNotificationJwtTokenView
 from seahub.api2.endpoints.via_repo_token import ViaRepoDirView, ViaRepoUploadLinkView, RepoInfoView, \
-    ViaRepoDownloadLinkView, ViaRepoBatchMove, ViaRepoBatchCopy, ViaRepoBatchDelete, ViaRepoTokenFile
+    ViaRepoDownloadLinkView, ViaRepoBatchMove, ViaRepoBatchCopy, ViaRepoBatchDelete, ViaRepoTokenFile, \
+    ViaRepoMoveDir, ViaRepoShareLink
 from seahub.api2.endpoints.abuse_reports import AbuseReportsView
 from seahub.api2.endpoints.ocm import OCMProtocolView, OCMSharesView, OCMNotificationsView, \
     OCMSharesPrepareView, OCMSharePrepareView, OCMSharesReceivedView, OCMShareReceivedView
@@ -120,9 +126,8 @@ from seahub.ocm_via_webdav.ocm_api import OCMProviderView
 from seahub.api2.endpoints.repo_share_links import RepoShareLinks, RepoShareLink
 from seahub.api2.endpoints.repo_upload_links import RepoUploadLinks, RepoUploadLink
 
-from seahub.api2.endpoints.extended_properties import ExtendedPropertiesView, ApplyFolderExtendedPropertiesView
-
 # Admin
+from seahub.api2.endpoints.admin.logs_export import SysLogsExport, sys_log_export_excel
 from seahub.api2.endpoints.admin.abuse_reports import AdminAbuseReportsView, AdminAbuseReportView
 from seahub.api2.endpoints.admin.revision_tag import AdminTaggedItemsView
 from seahub.api2.endpoints.admin.login_logs import LoginLogs, AdminLoginLogs
@@ -141,16 +146,19 @@ from seahub.api2.endpoints.admin.devices import AdminDevices
 from seahub.api2.endpoints.admin.device_errors import AdminDeviceErrors
 from seahub.api2.endpoints.admin.users import AdminUsers, AdminUser, AdminUserResetPassword, AdminAdminUsers, \
     AdminUserGroups, AdminUserShareLinks, AdminUserUploadLinks, AdminUserBeSharedRepos, \
-    AdminLDAPUsers, AdminSearchUser, AdminUpdateUserCcnetEmail, AdminUserList, AdminUserConvertToTeamView
+    AdminLDAPUsers, AdminSearchUser, AdminUpdateUserCcnetEmail, AdminUserList, AdminUserConvertToTeamView, \
+    AdminUserSharedFolders, AdminUserSharedRepos
 from seahub.api2.endpoints.admin.device_trusted_ip import AdminDeviceTrustedIP
 from seahub.api2.endpoints.admin.libraries import AdminLibraries, AdminLibrary, \
         AdminSearchLibrary
+from seahub.api2.endpoints.admin.wikis import AdminWikis
 from seahub.api2.endpoints.admin.library_dirents import AdminLibraryDirents, AdminLibraryDirent
 from seahub.api2.endpoints.admin.system_library import AdminSystemLibrary, \
         AdminSystemLibraryUploadLink
 from seahub.api2.endpoints.admin.default_library import AdminDefaultLibrary
 from seahub.api2.endpoints.admin.trash_libraries import AdminTrashLibraries, AdminTrashLibrary
-from seahub.api2.endpoints.admin.groups import AdminGroups, AdminGroup, AdminSearchGroup, AdminDepartments
+from seahub.api2.endpoints.admin.groups import AdminGroups, AdminGroup, AdminSearchGroup, \
+        AdminDepartments, AdminGroupToDeptView
 from seahub.api2.endpoints.admin.group_libraries import AdminGroupLibraries, AdminGroupLibrary
 from seahub.api2.endpoints.admin.group_members import AdminGroupMembers, AdminGroupMember
 from seahub.api2.endpoints.admin.shares import AdminShares
@@ -200,11 +208,15 @@ from seahub.api2.endpoints.repo_related_users import RepoRelatedUsersView
 from seahub.api2.endpoints.repo_auto_delete import RepoAutoDeleteView
 from seahub.seadoc.views import sdoc_revision, sdoc_revisions, sdoc_to_docx
 from seahub.ocm.settings import OCM_ENDPOINT
+from seahub.wiki2.views import wiki_view, wiki_publish_view, wiki_history_view
+from seahub.api2.endpoints.wiki2 import Wikis2View, Wiki2View, Wiki2ConfigView, Wiki2PagesView, Wiki2PageView, \
+    Wiki2DuplicatePageView, WikiPageTrashView, Wiki2PublishView, Wiki2PublishConfigView, Wiki2PublishPageView, \
+    WikiSearch, WikiConvertView
+from seahub.api2.endpoints.subscription import SubscriptionView, SubscriptionPlansView, SubscriptionLogsView
+from seahub.api2.endpoints.user_list import UserListView
+from seahub.api2.endpoints.seahub_io import SeahubIOStatus
 from seahub.api2.endpoints.repo_office_suite import OfficeSuiteConfig
 
-from seahub.ai.apis import LibrarySdocIndexes, Search, LibrarySdocIndex, TaskStatus, \
-    LibraryIndexState, QuestionAnsweringSearchInLibrary, FileDownloadToken
-from seahub.api2.endpoints.subscription import SubscriptionView, SubscriptionPlansView, SubscriptionLogsView
 
 # KEEPER
 from seahub.api2.views_keeper import DoiView, LandingPageView, ArchiveView, project_catalog_starter, \
@@ -239,7 +251,6 @@ urlpatterns = [
     re_path(r'^repo/sdoc_revision/(?P<repo_id>[-0-9a-f]{36})/$', sdoc_revision, name='sdoc_revision'),
     re_path(r'^repo/sdoc_revisions/(?P<repo_id>[-0-9a-f]{36})/$', sdoc_revisions, name='sdoc_revisions'),
     re_path(r'^repo/sdoc_export_to_docx/(?P<repo_id>[-0-9a-f]{36})/$', sdoc_to_docx, name='sdoc_export_to_docx'),
-    re_path(r'^repo/file-access/(?P<repo_id>[-0-9a-f]{36})/$', file_access, name='file_access'),
     re_path(r'^repo/text_diff/(?P<repo_id>[-0-9a-f]{36})/$', text_diff, name='text_diff'),
     re_path(r'^repo/history/(?P<repo_id>[-0-9a-f]{36})/$', repo_history, name='repo_history'),
     re_path(r'^repo/history/view/(?P<repo_id>[-0-9a-f]{36})/$', repo_history_view, name='repo_history_view'),
@@ -292,6 +303,7 @@ urlpatterns = [
     path('share-admin-upload-links/', react_fake_view, name="share_admin_upload_links"),
     path('shared-libs/', react_fake_view, name="shared_libs"),
     path('shared-with-ocm/', react_fake_view, name="shared_with_ocm"),
+    path('libraries/', react_fake_view, name="libs"),
     path('my-libs/', react_fake_view, name="my_libs"),
     path('groups/', react_fake_view, name="groups"),
     path('group/<int:group_id>/', react_fake_view, name="group"),
@@ -316,9 +328,14 @@ urlpatterns = [
 
     ## user
     re_path(r'^api/v2.1/user/$', User.as_view(), name="api-v2.1-user"),
-    
+
     # user:convert to team account
     re_path(r'^api/v2.1/user/convert-to-team/$', UserConvertToTeamView.as_view(), name="api-v2.1-user-convert-to-team"),
+
+    # user list
+    re_path(r'^api/v2.1/user-list/$', UserListView.as_view(), name='api-v2.1-user-list'),
+
+    re_path(r'^api/v2.1/user/reset-password/$', ResetPasswordView.as_view(), name="api-v2.1-user-reset-password"),
 
     ## obtain auth token by login session
     re_path(r'^api/v2.1/auth-token-by-session/$', AuthTokenBySession.as_view(), name="api-v2.1-auth-token-by-session"),
@@ -331,7 +348,13 @@ urlpatterns = [
     re_path(r'^api/v2.1/search-file/$', SearchFile.as_view(), name='api-v2.1-search-file'),
 
     # departments
-    re_path(r'api/v2.1/departments/$', Departments.as_view(), name='api-v2.1-all-departments'),
+    re_path(r'^api/v2.1/departments/$', Departments.as_view(), name='api-v2.1-all-departments'),
+    re_path(r'^api/v2.1/address-book/departments/$',
+            AddressBookDepartments.as_view(),
+            name='api-v2.1-address-book-groups-departments'),
+    re_path(r'^api/v2.1/address-book/departments/(?P<department_id>\d+)/members/$',
+            AddressBookDepartmentMembers.as_view(),
+            name='api-v2.1-address-book-groups-department-members'),
 
     ## user::groups
     re_path(r'^api/v2.1/all-groups/$', AllGroups.as_view(), name='api-v2.1-all-groups'),
@@ -342,6 +365,7 @@ urlpatterns = [
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/libraries/(?P<repo_id>[-0-9a-f]{36})/$', GroupLibrary.as_view(), name='api-v2.1-group-library'),
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/group-owned-libraries/$', GroupOwnedLibraries.as_view(), name='api-v2.1-group-owned-libraries'),
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/group-owned-libraries/(?P<repo_id>[-0-9a-f]{36})/$', GroupOwnedLibrary.as_view(), name='api-v2.1-owned-group-library'),
+    re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/group-owned-libraries/(?P<repo_id>[-0-9a-f]{36})/transfer/$', GroupOwnedLibraryTransferView.as_view(), name='api-v2.1-group-owned-group-library-transfer'),
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/members/$', GroupMembers.as_view(), name='api-v2.1-group-members'),
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/search-member/$', GroupSearchMember.as_view(), name='api-v2.1-group-search-member'),
     re_path(r'^api/v2.1/groups/(?P<group_id>\d+)/members/bulk/$', GroupMembersBulk.as_view(), name='api-v2.1-group-members-bulk'),
@@ -388,6 +412,8 @@ urlpatterns = [
 
     re_path(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/repo-tags/$', ShareLinkRepoTags.as_view(), name='api-v2.1-share-link-repo-tags'),
     re_path(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/tagged-files/(?P<tag_id>\d+)/$', ShareLinkRepoTagsTaggedFiles.as_view(), name='api-v2.1-share-link-repo-tags-tagged-files'),
+    re_path(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/user-auth/$', ShareLinkUserAuthView.as_view(), name='api-v2.1-share-link-user-auth'),
+    re_path(r'^api/v2.1/share-links/(?P<token>[a-f0-9]+)/email-auth/$', ShareLinkEmailAuthView.as_view(), name='api-v2.1-share-link-user-auth'),
 
     ## user::shared-upload-links
     re_path(r'^api/v2.1/upload-links/$', UploadLinks.as_view(), name='api-v2.1-upload-links'),
@@ -407,6 +433,7 @@ urlpatterns = [
     re_path(r'^api/v2.1/repos/batch-copy-item/$', ReposBatchCopyItemView.as_view(), name='api-v2.1-repos-batch-copy-item'),
     re_path(r'^api/v2.1/repos/batch-move-item/$', ReposBatchMoveItemView.as_view(), name='api-v2.1-repos-batch-move-item'),
 
+    re_path(r'^api/v2.1/repos/batch-delete-folders-item/$', RepoFoldersItemBatchDelete.as_view(), name='api-v2.1-repos-folders-batch-delete'),
     re_path(r'^api/v2.1/repos/batch-delete-item/$', ReposBatchDeleteItemView.as_view(), name='api-v2.1-repos-batch-delete-item'),
     re_path(r'^api/v2.1/repos/async-batch-copy-item/$', ReposAsyncBatchCopyItemView.as_view(), name='api-v2.1-repos-async-batch-copy-item'),
     re_path(r'^api/v2.1/repos/async-batch-move-item/$', ReposAsyncBatchMoveItemView.as_view(), name='api-v2.1-repos-async-batch-move-item'),
@@ -420,6 +447,7 @@ urlpatterns = [
     re_path(r'^api/v2.1/repos/$', ReposView.as_view(), name='api-v2.1-repos-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/$', RepoView.as_view(), name='api-v2.1-repo-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/$', FileView.as_view(), name='api-v2.1-file-view'),
+    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/access-log/$', FileAccessLogView.as_view(), name='api-v2.1-file-access-log-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/history/$', FileHistoryView.as_view(), name='api-v2.1-file-history-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/new_history/$', NewFileHistoryView.as_view(), name='api-v2.1-new-file-history-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/dir/$', DirView.as_view(), name='api-v2.1-dir-view'),
@@ -428,6 +456,7 @@ urlpatterns = [
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/commits/(?P<commit_id>[0-9a-f]{40})/revert/$', RepoCommitRevertView.as_view(), name='api-v2.1-repo-commit-revert'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/dir/detail/$', DirDetailView.as_view(), name='api-v2.1-dir-detail-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/trash/$', RepoTrash.as_view(), name='api-v2.1-repo-trash'),
+    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/trash2/$', RepoTrash2.as_view(), name='api-v2.1-repo-trash2'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/trash/revert-dirents/$', RepoTrashRevertDirents.as_view(), name='api-v2.1-repo-trash-revert-dirents'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/history/$', RepoHistory.as_view(), name='api-v2.1-repo-history'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/set-password/$', RepoSetPassword.as_view(), name="api-v2.1-repo-set-password"),
@@ -441,10 +470,6 @@ urlpatterns = [
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/file/participant/$', FileParticipantView.as_view(), name='api-v2.1-file-participant'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/related-users/$', RepoRelatedUsersView.as_view(), name='api-v2.1-related-user'),
 
-    ## user:file:extended-props
-    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/extended-properties/$', ExtendedPropertiesView.as_view(), name='api-v2.1-extended-properties'),
-    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/apply-folder-extended-properties/$', ApplyFolderExtendedPropertiesView.as_view(), name='api-v2.1-apply-folder-extended-properties'),
-
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/auto-delete/$', RepoAutoDeleteView.as_view(), name='api-v2.1-repo-auto-delete'),
 
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/share-links/$', RepoShareLinks.as_view(), name='api-v2.1-repo-share-links'),
@@ -452,11 +477,15 @@ urlpatterns = [
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/upload-links/$', RepoUploadLinks.as_view(), name='api-v2.1-repo-upload-links'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/upload-links/(?P<token>[a-f0-9]+)/$', RepoUploadLink.as_view(), name='api-v2.1-repo-upload-link'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/share-info/$', RepoShareInfoView.as_view(), name='api-v2.1-repo-share-info-view'),
+    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/image-rotate/$', RepoImageRotateView.as_view(), name='api-v2.1-repo-image-rotate-view'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/office-suite/$', OfficeSuiteConfig.as_view(), name='api-v2.1-repo-office-suite'),
 
     ## user:: repo-api-tokens
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/repo-api-tokens/$', RepoAPITokensView.as_view(), name='api-v2.1-repo-api-tokens'),
     re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/repo-api-tokens/(?P<app_name>.*)/$', RepoAPITokenView.as_view(), name='api-v2.1-repo-api-token'),
+
+    ## user:: repo-jwt-tokens
+    re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/repo-notification-jwt-token/$', RepoNotificationJwtTokenView.as_view(), name='api-v2.1-repo-jwt-token'),
 
     ## access repo from repo_api_tokens
     re_path(r'^api/v2.1/via-repo-token/dir/$', ViaRepoDirView.as_view(), name='via-repo-dir'),
@@ -467,6 +496,8 @@ urlpatterns = [
     re_path(r'^api/v2.1/via-repo-token/sync-batch-copy-item/$', ViaRepoBatchCopy.as_view(), name='via-repo-token-copy'),
     re_path(r'^api/v2.1/via-repo-token/batch-delete-item/$', ViaRepoBatchDelete.as_view(), name='via-repo-token-delete'),
     re_path(r'^api/v2.1/via-repo-token/file/$', ViaRepoTokenFile.as_view(), name='via-repo-token-file'),
+    re_path(r'^api/v2.1/via-repo-token/move-dir/$', ViaRepoMoveDir.as_view(), name='via-repo-token-move-dir'),
+    re_path(r'^api/v2.1/via-repo-token/share-links/$', ViaRepoShareLink.as_view(), name='via-repo-token-share-links'),
 
     # user::related-files
     re_path(r'^api/v2.1/related-files/$', RelatedFilesView.as_view(), name='api-v2.1-related-files'),
@@ -521,18 +552,26 @@ urlpatterns = [
 
     ## user::wiki
     re_path(r'^api/v2.1/wikis/$', WikisView.as_view(), name='api-v2.1-wikis'),
-    re_path(r'^api/v2.1/wikis/(?P<slug>[^/]+)/$', WikiView.as_view(), name='api-v2.1-wiki'),
-    re_path(r'^api/v2.1/wikis/(?P<slug>[^/]+)/dir/$', WikiPagesDirView.as_view(), name='api-v2.1-wiki-pages-dir'),
-    re_path(r'^api/v2.1/wikis/(?P<slug>[^/]+)/content/$', WikiPageContentView.as_view(), name='api-v2.1-wiki-pages-content'),
+    re_path(r'^api/v2.1/wikis/(?P<wiki_id>\d+)/$', WikiView.as_view(), name='api-v2.1-wiki'),
+    re_path(r'^api/v2.1/wikis/(?P<wiki_id>\d+)/dir/$', WikiPagesDirView.as_view(), name='api-v2.1-wiki-pages-dir'),
+    re_path(r'^api/v2.1/wikis/(?P<wiki_id>\d+)/content/$', WikiPageContentView.as_view(), name='api-v2.1-wiki-pages-content'),
     path('view-image-via-public-wiki/', view_media_file_via_public_wiki, name='view_media_file_via_public_wiki'),
 
+    ## user::wiki2
+    re_path(r'^api/v2.1/wikis2/$', Wikis2View.as_view(), name='api-v2.1-wikis2'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/$', Wiki2View.as_view(), name='api-v2.1-wiki2'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/config/$', Wiki2ConfigView.as_view(), name='api-v2.1-wiki2-config'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/publish/config/$', Wiki2PublishConfigView.as_view(), name='api-v2.1-wiki2-publish-config'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/pages/$', Wiki2PagesView.as_view(), name='api-v2.1-wiki2-pages'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/page/(?P<page_id>[-0-9a-zA-Z]{4})/$', Wiki2PageView.as_view(), name='api-v2.1-wiki2-page'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/publish/page/(?P<page_id>[-0-9a-zA-Z]{4})/$', Wiki2PublishPageView.as_view(), name='api-v2.1-wiki2-page'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/duplicate-page/$', Wiki2DuplicatePageView.as_view(), name='api-v2.1-wiki2-duplicate-page'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/trash/', WikiPageTrashView.as_view(), name='api-v2.1-wiki2-trash'),
+    re_path(r'^api/v2.1/wiki2/(?P<wiki_id>[-0-9a-f]{36})/publish/$', Wiki2PublishView.as_view(), name='api-v2.1-wiki2-publish'),
+    re_path(r'^api/v2.1/wiki2/search/$', WikiSearch.as_view(), name='api-v2.1-wiki2-search'),
+    re_path(r'^api/v2.1/convert-wiki/$', WikiConvertView.as_view(), name='api-v2.1-wiki-convert'),
     ## user::drafts
-    re_path(r'^api/v2.1/drafts/$', DraftsView.as_view(), name='api-v2.1-drafts'),
-    re_path(r'^api/v2.1/drafts/(?P<pk>\d+)/$', DraftView.as_view(), name='api-v2.1-draft'),
-
-    re_path(r'^api/v2.1/drafts/(?P<pk>\d+)/reviewer/$', DraftReviewerView.as_view(), name='api-v2.1-draft-reviewer'),
-    re_path(r'^api/v2.1/repo/(?P<repo_id>[-0-9a-f]{36})/drafts/$', RepoDraftInfo.as_view(), name='api-v2.1-repo-drafts'),
-    re_path(r'^api/v2.1/repo/(?P<repo_id>[-0-9a-f]{36})/draft-counts/$', RepoDraftCounts.as_view(), name='api-v2.1-repo-draft-counts'),
+    
 
     ## user::activities
     re_path(r'^api/v2.1/activities/$', ActivitiesView.as_view(), name='api-v2.1-acitvity'),
@@ -603,6 +642,8 @@ urlpatterns = [
     re_path(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/share-links/$', AdminUserShareLinks.as_view(), name='api-v2.1-admin-user-share-links'),
     re_path(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/upload-links/$', AdminUserUploadLinks.as_view(), name='api-v2.1-admin-user-upload-links'),
     re_path(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/beshared-repos/$', AdminUserBeSharedRepos.as_view(), name='api-v2.1-admin-user-beshared-repos'),
+    re_path(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/shared-folders/$', AdminUserSharedFolders.as_view(), name='api-v2.1-admin-user-shared-folders'),
+    re_path(r'^api/v2.1/admin/users/(?P<email>[^/]+@[^/]+)/shared-repos/$', AdminUserSharedRepos.as_view(), name='api-v2.1-admin-user-shared-repos'),
 
     re_path(r'^api/v2.1/admin/admin-users/$', AdminAdminUsers.as_view(), name='api-v2.1-admin-admin-users'),
 
@@ -645,10 +686,11 @@ urlpatterns = [
     re_path(r'^api/v2.1/admin/groups/(?P<group_id>\d+)/members/(?P<email>[^/]+)/$', AdminGroupMember.as_view(), name='api-v2.1-admin-group-member'),
     re_path(r'^api/v2.1/admin/groups/(?P<group_id>\d+)/group-owned-libraries/$', AdminGroupOwnedLibraries.as_view(), name='api-v2.1-admin-group-owned-libraries'),
     re_path(r'^api/v2.1/admin/groups/(?P<group_id>\d+)/group-owned-libraries/(?P<repo_id>[-0-9a-f]{36})/$', AdminGroupOwnedLibrary.as_view(), name='api-v2.1-admin-owned-group-library'),
-    
+    re_path(r'^api/v2.1/admin/groups/(?P<group_id>\d+)/group-to-department/', AdminGroupToDeptView.as_view(), name='api-v2.1-admin-group-to-department'),
+
     ## admin::departments
     re_path(r'api/v2.1/admin/departments/$', AdminDepartments.as_view(), name='api-v2.1-admin-departments'),
-    
+
     ## admin::shares
     re_path(r'^api/v2.1/admin/shares/$', AdminShares.as_view(), name='api-v2.1-admin-shares'),
 
@@ -710,8 +752,16 @@ urlpatterns = [
     re_path(r'^api/v2.1/admin/invitations/$', AdminInvitations.as_view(), name='api-v2.1-admin-invitations'),
     re_path(r'^api/v2.1/admin/invitations/(?P<token>[a-f0-9]{32})/$', AdminInvitation.as_view(), name='api-v2.1-admin-invitation'),
 
+    ## admin:: wiki
+    re_path(r'^api/v2.1/admin/wikis/$', AdminWikis.as_view(), name='api-v2.1-admin-wikis'),
+
+    re_path(r'^wikis/(?P<wiki_id>[^/]+)/$', wiki_view, name='wiki'),
+    re_path(r'^wikis/(?P<wiki_id>[^/]+)/(?P<page_id>[-0-9a-zA-Z]{4})/$', wiki_view, name='wiki'),
+    re_path(r'^wiki/publish/(?P<publish_url>[-0-9a-zA-Z]+)/$', wiki_publish_view, name='wiki-publish'),
+    re_path(r'^wiki/publish/(?P<publish_url>[-0-9a-zA-Z]+)/(?P<page_id>[-0-9a-zA-Z]{4})/$', wiki_publish_view, name='wiki-publish'),
+    re_path(r'^wiki/file_revisions/(?P<wiki_id>[^/]+)/$', wiki_history_view, name='wiki-history'),
+
     path('avatar/', include('seahub.avatar.urls')),
-    path('notice/', include('seahub.notifications.urls')),
     path('group/', include('seahub.group.urls')),
     path('options/', include('seahub.options.urls')),
     path('profile/', include('seahub.profile.urls')),
@@ -726,7 +776,7 @@ urlpatterns = [
     path('work-weixin/', include('seahub.work_weixin.urls')),
     path('weixin/', include('seahub.weixin.urls')),
     # Must specify a namespace if specifying app_name.
-    path('drafts/', include(('seahub.drafts.urls', 'drafts'), namespace='drafts')),
+    # path('drafts/', include(('seahub.drafts.urls', 'drafts'), namespace='drafts')),
 
     ## admin::address book
     re_path(r'^api/v2.1/admin/address-book/groups/$', AdminAddressBookGroups.as_view(), name='api-v2.1-admin-address-book-groups'),
@@ -761,6 +811,11 @@ urlpatterns = [
     re_path(r'^api/v2.1/admin/dingtalk/users/batch/$', AdminDingtalkUsersBatch.as_view(), name='api-v2.1-admin-dingtalk-users-batch'),
     re_path(r'^api/v2.1/admin/dingtalk/departments/import/$', AdminDingtalkDepartmentsImport.as_view(), name='api-v2.1-admin-dingtalk-department-import'),
 
+    ## internal
+    re_path(r'^api/v2.1/internal/user-list/$', InternalUserListView.as_view(), name="api-v2.1-internal-user-list"),
+    re_path(r'^api/v2.1/internal/check-share-link-access/$', InternalCheckShareLinkAccess.as_view(), name="api-v2.1-internal-share-link-info"),
+    re_path(r'^api/v2.1/internal/repos/(?P<repo_id>[-0-9a-f]{36})/check-access/$', InternalCheckFileOperationAccess.as_view(), name="api-v2.1-internal-check-file-op-access"),
+
     ### system admin ###
     re_path(r'^sys/seafadmin/delete/(?P<repo_id>[-0-9a-f]{36})/$', sys_repo_delete, name='sys_repo_delete'),
     path('sys/useradmin/export-excel/', sys_useradmin_export_excel, name='sys_useradmin_export_excel'),
@@ -790,6 +845,7 @@ urlpatterns = [
     path('sys/notifications/', sysadmin_react_fake_view, name="sys_notifications"),
     path('sys/web-settings/', sysadmin_react_fake_view, name="sys_web_settings"),
     path('sys/all-libraries/', sysadmin_react_fake_view, name="sys_all_libraries"),
+    path('sys/all-wikis/', sysadmin_react_fake_view, name="sys_all_wikis"),
     path('sys/search-libraries/', sysadmin_react_fake_view, name="sys_search_libraries"),
     path('sys/system-library/', sysadmin_react_fake_view, name="sys_system_library"),
     path('sys/trash-libraries/', sysadmin_react_fake_view, name="sys_trash_libraries"),
@@ -878,31 +934,19 @@ urlpatterns += [
     re_path(r'^demo/', demo),
 ]
 
-from seahub.utils import HAS_FILE_SEARCH
-if HAS_FILE_SEARCH:
-    from seahub.search.views import search, pubuser_search
-    urlpatterns += [
-        path('search/', search, name='search'),
-        path('pubinfo/users/search/', pubuser_search, name='pubuser_search'),
-    ]
-
 from seahub.utils import is_pro_version
 if is_pro_version():
-    from seahub.sysadmin_extra.views import \
-        sys_login_admin_export_excel, sys_log_file_audit_export_excel, \
-        sys_log_file_update_export_excel, sys_log_perm_audit_export_excel
     urlpatterns += [
         re_path(r'^api/v2.1/admin/logs/login/$', LoginLogs.as_view(), name='api-v2.1-admin-logs-login'),
-        path('sys/loginadmin/export-excel/', sys_login_admin_export_excel, name='sys_login_admin_export_excel'),
-
         re_path(r'^api/v2.1/admin/logs/file-audit/$', FileAudit.as_view(), name='api-v2.1-admin-logs-file-audit'),
-        path('sys/log/fileaudit/export-excel/', sys_log_file_audit_export_excel, name='sys_log_file_audit_export_excel'),
-
         re_path(r'^api/v2.1/admin/logs/file-update/$', FileUpdate.as_view(), name='api-v2.1-admin-logs-file-update'),
-        path('sys/log/fileupdate/export-excel/', sys_log_file_update_export_excel, name='sys_log_file_update_export_excel'),
-
         re_path(r'^api/v2.1/admin/logs/perm-audit/$', PermAudit.as_view(), name='api-v2.1-admin-logs-perm-audit'),
-        path('sys/log/permaudit/export-excel/', sys_log_perm_audit_export_excel, name='sys_log_perm_audit_export_excel'),
+
+        re_path(r'^api/v2.1/admin/logs/export-excel/$', SysLogsExport.as_view(), name='api-v2.1-admin-logs-export-excel'),
+        re_path(r'^api/v2.1/query-io-status/$', SeahubIOStatus.as_view(), name='api-v2.1-query-export-status'),
+        path('sys/log/export-excel/', sys_log_export_excel, name='sys_log_export_excel'),
+
+
     ]
 
 if getattr(settings, 'MULTI_TENANCY', False):
@@ -926,6 +970,12 @@ if getattr(settings, 'ENABLE_SHIB_LOGIN', False):
 if getattr(settings, 'ENABLE_KRB5_LOGIN', False):
     urlpatterns += [
         re_path(r'^krb5-login/', shib_login, name="krb5_login"),
+    ]
+
+
+if getattr(settings, 'ENABLE_LOGIN_SIMPLE_CHECK', False):
+    urlpatterns += [
+        re_path(r'^sso-auto-login/', login_simple_check),
     ]
 
 # serve office converter static files
@@ -982,11 +1032,6 @@ if getattr(settings, 'ENABLE_ONLYOFFICE', False) or getattr(settings, 'ENABLE_MU
         path('onlyoffice-api/', include('seahub.onlyoffice.api_urls')),
     ]
 
-if getattr(settings, 'ENABLE_BISHENG_OFFICE', False):
-    from seahub.bisheng_office.views import BishengOfficeView
-    urlpatterns += [
-        re_path(r'^api/v2.1/bisheng-office/$', BishengOfficeView.as_view(), name='api-v2.1-bisheng-office'),
-    ]
 
 if getattr(settings, 'ENABLE_CAS', False):
     from seahub.django_cas_ng.views import login as cas_login
@@ -1003,16 +1048,6 @@ if getattr(settings, 'ENABLE_SEADOC', False):
         re_path(r'^api/v2.1/seadoc/', include('seahub.seadoc.urls')),
     ]
 
-if settings.ENABLE_SEAFILE_AI:
-    urlpatterns += [
-        re_path(r'^api/v2.1/ai/library-sdoc-indexes/$', LibrarySdocIndexes.as_view(), name='api-v2.1-ai-library-sdoc-indexes'),
-        re_path(r'^api/v2.1/ai/search/$', Search.as_view(), name='api-v2.1-ai-search'),
-        re_path(r'^api/v2.1/ai/question-answering-search-in-library/$', QuestionAnsweringSearchInLibrary.as_view(), name='api-v2.1-ai-question-answering-search-in-library'),
-        re_path(r'^api/v2.1/ai/library-sdoc-index/$', LibrarySdocIndex.as_view(), name='api-v2.1-ai-library-sdoc-index'),
-        re_path(r'^api/v2.1/ai/task-status/$', TaskStatus.as_view(), name='api-v2.1-ai-task-status'),
-        re_path(r'^api/v2.1/ai/library-index-state/$', LibraryIndexState.as_view(), name='api-v2.1-ai-library-index-state'),
-        re_path(r'^api/v2.1/ai/repo/file-download-token/$', FileDownloadToken.as_view(), name='api-v2.1-ai-repo-file-download-token'),
-    ]
 
 if getattr(settings, 'CLIENT_SSO_VIA_LOCAL_BROWSER', False):
     urlpatterns += [
@@ -1027,3 +1062,18 @@ if getattr(settings, 'ENABLE_SUBSCRIPTION', False):
         re_path(r'^api/v2.1/subscription/plans/$', SubscriptionPlansView.as_view(), name='api-v2.1-subscription-plans'),
         re_path(r'^api/v2.1/subscription/logs/$', SubscriptionLogsView.as_view(), name='api-v2.1-subscription-logs'),
     ]
+
+if getattr(settings, 'ENABLE_METADATA_MANAGEMENT', False):
+    urlpatterns += [
+        re_path(r'^api/v2.1/repos/(?P<repo_id>[-0-9a-f]{36})/metadata/', include('seahub.repo_metadata.urls')),
+    ]
+
+# ai API
+urlpatterns += [
+    re_path(r'^api/v2.1/ai/image-caption/$', ImageCaption.as_view(), name='api-v2.1-image-caption'),
+    re_path(r'^api/v2.1/ai/generate-file-tags/$', GenerateFileTags.as_view(), name='api-v2.1-generate-file-tags'),
+    re_path(r'^api/v2.1/ai/generate-summary/$', GenerateSummary.as_view(), name='api-v2.1-generate-summary'),
+    re_path(r'^api/v2.1/ai/ocr/$', OCR.as_view(), name='api-v2.1-ocr'),
+    re_path(r'^api/v2.1/ai/translate/$', Translate.as_view(), name='api-v2.1-translate'),
+    re_path(r'^api/v2.1/ai/writing-assistant/$', WritingAssistant.as_view(), name='api-v2.1-writing-assistant'),
+]

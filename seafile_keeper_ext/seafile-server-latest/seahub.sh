@@ -126,9 +126,9 @@ else
 fi
 
 function warning_if_seafile_not_running () {
-    if ! pgrep -f "seafile-controller -c ${default_ccnet_conf_dir}" 2>/dev/null 1>&2; then
+    if ! pgrep -f "seafile-monitor.sh" 2>/dev/null 1>&2; then
         echo
-        echo "Warning: seafile-controller not running. Have you run \"./seafile.sh start\" ?"
+        echo "Warning: seafile server not running. Have you run \"./seafile.sh start\" ?"
         echo
         exit 1
     fi
@@ -136,10 +136,11 @@ function warning_if_seafile_not_running () {
 
 function prepare_seahub_log_dir() {
     logdir=${TOPDIR}/logs
-    if ! mkdir -p "${logdir}"; then
-
-        echo "ERROR: failed to create logs dir \"${logdir}\""
-        exit 1
+    if ! [[ -d ${logdir} ]]; then
+        if ! mkdir -p "${logdir}"; then
+            echo "ERROR: failed to create logs dir \"${logdir}\""
+            exit 1
+        fi
     fi
     export SEAHUB_LOG_DIR=${logdir}
 }
@@ -175,8 +176,9 @@ function start_seahub () {
     # $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload --check-config
     ### for runtime debugging: https://docs.gunicorn.org/en/stable/settings.html#errorlog
     # $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --error-logfile /tmp/gunicorn.err.log --log-level 'debug' --preload
-    
-    $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload
+
+    ### VLAD: why is & ?
+    $PYTHON $gunicorn_exe seahub.wsgi:application -c "${gunicorn_conf}" --preload &
 
     # Ensure seahub is started successfully
     sleep 5
@@ -190,7 +192,39 @@ function start_seahub () {
     echo
 }
 
+function set_env_config () {
+    if [ -z "${JWT_PRIVATE_KEY}" ]; then
+        echo "Cannot find JWT_PRIVATE_KEY value from environment, try to read .env file."
+        if [ ! -e "${central_config_dir}/.env" ]; then
+            echo "Error: .env file not found."
+            echo "Please follow the upgrade manual to set the .env file."
+            echo ""
+            exit -1;
+        fi
+
+        # load the .env file
+        source "${central_config_dir}/.env"
+
+        if [ -z "${JWT_PRIVATE_KEY}" ]; then
+            echo "Error: JWT_PRIVATE_KEY not found in .env file."
+            echo "Please follow the upgrade manual to set the .env file."
+            echo ""
+            exit -1;
+        fi
+        export JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+        export SEAFILE_MYSQL_DB_CCNET_DB_NAME=${SEAFILE_MYSQL_DB_CCNET_DB_NAME:-ccnet_db}
+        export SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=${SEAFILE_MYSQL_DB_SEAFILE_DB_NAME:-seafile_db}
+        export SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=${SEAFILE_MYSQL_DB_SEAHUB_DB_NAME:-seahub_db}
+        export SEAFILE_SERVER_PROTOCOL=${SEAFILE_SERVER_PROTOCOL}
+        export SEAFILE_SERVER_HOSTNAME=${SEAFILE_SERVER_HOSTNAME}
+        export SITE_ROOT=${SITE_ROOT:-/}
+        export ENABLE_SEADOC=${ENABLE_SEADOC}
+        export SEADOC_SERVER_URL=${SEADOC_SERVER_URL}
+    fi
+}
+
 function prepare_env() {
+    set_env_config;
     check_python_executable;
     validate_seafile_data_dir;
 

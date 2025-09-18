@@ -11,37 +11,49 @@ from datetime import timedelta
 from os.path import splitext
 
 from django.core.cache import cache
-from sqlalchemy import select, text
+from sqlalchemy import select, text, desc, func
 import pymysql
 
 from seaserv import get_org_id_by_repo_id, seafile_api, get_commit
 from seafobj import CommitDiffer, commit_mgr, fs_mgr
 from seafobj.commit_differ import DiffEntry
 from seafevents.events.db import save_file_audit_event, save_file_update_event, \
-        save_perm_audit_event, save_user_activity, save_filehistory, update_user_activity_timestamp
+        save_perm_audit_event, save_user_activity, save_filehistory, update_user_activity_timestamp, \
+        save_repo_trash, restore_repo_trash
 from seafevents.app.config import TIME_ZONE
 from seafevents.utils import get_opt_from_conf_or_env
 from .change_file_path import ChangeFilePathHandler
-from .change_extended_props import ChangeExtendedPropsHandler
-from .models import Activity
+from .models import Activity, FileTrash
 from seafevents.batch_delete_files_notice.utils import get_deleted_files_count, save_deleted_files_msg
 from seafevents.batch_delete_files_notice.db import get_deleted_files_total_count, save_deleted_files_count
+
+recent_added_events = {'recent_added_events': []}
+EXCLUDED_PATHS = ['/_Internal', '/images/sdoc', '/images/auto-upload']
 
 # KEEPER
 from keeper.cdc.cdc_manager import generate_certificate_by_commit
 from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
 
-recent_added_events = {'recent_added_events': []}
+def _check_ignored_path(path):
+    for p in EXCLUDED_PATHS:
+        if path.startswith(p):
+            return True
+    return False
 
 
 def RepoUpdateEventHandler(config, session, msg):
-    elements = msg['content'].split('\t')
-    if len(elements) != 3:
-        logging.warning("got bad message: %s", elements)
+    try:
+        elements = json.loads(msg['content'])
+    except:
+        logging.warning("got bad message: %s", msg)
         return
 
-    repo_id = elements[1]
-    commit_id = elements[2]
+    repo_id = elements.get('repo_id')
+    commit_id = elements.get('commit_id')
+
+    if not repo_id or not commit_id:
+        logging.warning("repo_id: %s, or commit_id: %s invalid.", repo_id, commit_id)
+        return
 
     commit = commit_mgr.load_commit(repo_id, 1, commit_id)
     if commit is None:
@@ -53,30 +65,24 @@ def RepoUpdateEventHandler(config, session, msg):
         parent = commit_mgr.load_commit(repo_id, commit.version, commit.parent_id)
 
         if parent is not None:
-            differ = CommitDiffer(repo_id, commit.version, parent.root_id, commit.root_id,
-                                  True, True)
-            added_files, deleted_files, added_dirs, deleted_dirs, modified_files,\
-                renamed_files, moved_files, renamed_dirs, moved_dirs = differ.diff()
+            description = commit.description
+            if description.startswith('Deleted') and 'more' in description:
+                differ = CommitDiffer(repo_id, commit.version, parent.root_id, commit.root_id, False, False)
+            else:
+                differ = CommitDiffer(repo_id, commit.version, parent.root_id, commit.root_id, True, True)
+            added_files, deleted_files, added_dirs, deleted_dirs, modified_files, \
+            renamed_files, moved_files, renamed_dirs, moved_dirs = differ.diff()
 
-            if renamed_files or renamed_dirs or moved_files or moved_dirs or deleted_files or deleted_dirs:
+            if renamed_files or renamed_dirs or moved_files or moved_dirs:
                 changer = ChangeFilePathHandler(session)
-                ex_props_changer = ChangeExtendedPropsHandler()
                 for r_file in renamed_files:
                     changer.update_db_records(repo_id, r_file.path, r_file.new_path, 0)
-                    ex_props_changer.change_file_ex_props(repo_id, r_file.path, r_file.new_path)
                 for r_dir in renamed_dirs:
                     changer.update_db_records(repo_id, r_dir.path, r_dir.new_path, 1)
-                    ex_props_changer.change_dir_ex_props(repo_id, r_dir.path, r_dir.new_path)
                 for m_file in moved_files:
                     changer.update_db_records(repo_id, m_file.path, m_file.new_path, 0)
-                    ex_props_changer.change_file_ex_props(repo_id, m_file.path, m_file.new_path)
                 for m_dir in moved_dirs:
                     changer.update_db_records(repo_id, m_dir.path, m_dir.new_path, 1)
-                    ex_props_changer.change_dir_ex_props(repo_id, m_dir.path, m_dir.new_path)
-                for d_file in deleted_files:
-                    ex_props_changer.delete_file_ex_props(repo_id, d_file.path)
-                for d_dir in deleted_dirs:
-                    ex_props_changer.delete_dir_ex_props(repo_id, d_dir.path)
 
             users = []
             org_id = get_org_id_by_repo_id(repo_id)
@@ -106,13 +112,12 @@ def RepoUpdateEventHandler(config, session, msg):
                                     parent, time)
                     save_file_histories(config, session, records)
 
-                records = generate_activity_records(added_files, deleted_files,
+                records, trash_records = generate_activity_records(added_files, deleted_files,
                         added_dirs, deleted_dirs, modified_files, renamed_files,
                         moved_files, renamed_dirs, moved_dirs, commit, repo_id,
                         parent, users, time)
 
                 save_user_activities(session, records)
-
                 # TODO check: catalog entry update
                 # KEEPER
                 logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
@@ -122,7 +127,7 @@ def RepoUpdateEventHandler(config, session, msg):
                 else:
                     logging.error("Something went wrong...")
 
-
+                save_repo_trashs(session, trash_records)
                 # save repo monitor recodes
                 records = generate_repo_monitor_records(repo_id, commit,
                                                         added_files, deleted_files,
@@ -131,6 +136,7 @@ def RepoUpdateEventHandler(config, session, msg):
                                                         moved_files, moved_dirs,
                                                         modified_files)
                 save_message_to_user_notification(session, records)
+
 
             enable_collab_server = False
             if config.has_option('COLLAB_SERVER', 'enabled'):
@@ -237,6 +243,8 @@ def generate_repo_monitor_records(repo_id, commit,
     #            'version': 1}}
 
     repo = seafile_api.get_repo(repo_id)
+    if repo.repo_type == 'wiki':
+        return []
     base_record = {
         'op_user': getattr(commit, 'creator_name', ''),
         'repo_id': repo_id,
@@ -258,7 +266,8 @@ def generate_repo_monitor_records(repo_id, commit,
         #  'path': '/3',
         #  'size': 0}
         for de in added_files:
-
+            if _check_ignored_path(de.path):
+                continue
             if commit.description.startswith('Reverted'):
                 op_type = OP_RECOVER
             else:
@@ -276,12 +285,12 @@ def generate_repo_monitor_records(repo_id, commit,
         records.append(added_files_record)
 
     if deleted_files:
-
         deleted_files_record = copy.copy(base_record)
         deleted_files_record["commit_diff"] = []
 
         for de in deleted_files:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_DELETE
             commit_diff['obj_type'] = OBJ_FILE
@@ -299,7 +308,8 @@ def generate_repo_monitor_records(repo_id, commit,
         added_dirs_record["commit_diff"] = []
 
         for de in added_dirs:
-
+            if _check_ignored_path(de.path):
+                continue
             if commit.description.startswith('Recovered'):
                 op_type = OP_RECOVER
             else:
@@ -321,7 +331,8 @@ def generate_repo_monitor_records(repo_id, commit,
         deleted_dirs_record["commit_diff"] = []
 
         for de in deleted_dirs:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_DELETE
             commit_diff['obj_type'] = OBJ_DIR
@@ -338,7 +349,8 @@ def generate_repo_monitor_records(repo_id, commit,
         renamed_files_record["commit_diff"] = []
 
         for de in renamed_files:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_RENAME
             commit_diff['obj_type'] = OBJ_FILE
@@ -357,7 +369,8 @@ def generate_repo_monitor_records(repo_id, commit,
         renamed_dirs_record["commit_diff"] = []
 
         for de in renamed_dirs:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_RENAME
             commit_diff['obj_type'] = OBJ_DIR
@@ -376,7 +389,8 @@ def generate_repo_monitor_records(repo_id, commit,
         moved_files_record["commit_diff"] = []
 
         for de in moved_files:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_MOVE
             commit_diff['obj_type'] = OBJ_FILE
@@ -395,7 +409,8 @@ def generate_repo_monitor_records(repo_id, commit,
         moved_dirs_record["commit_diff"] = []
 
         for de in moved_dirs:
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = OP_MOVE
             commit_diff['obj_type'] = OBJ_DIR
@@ -414,12 +429,12 @@ def generate_repo_monitor_records(repo_id, commit,
         modified_files_record["commit_diff"] = []
 
         for de in modified_files:
-
             if commit.description.startswith('Reverted'):
                 op_type = OP_RECOVER
             else:
                 op_type = OP_EDIT
-
+            if _check_ignored_path(de.path):
+                continue
             commit_diff = dict()
             commit_diff['op_type'] = op_type
             commit_diff['obj_type'] = OBJ_FILE
@@ -431,10 +446,18 @@ def generate_repo_monitor_records(repo_id, commit,
 
         records.append(modified_files_record)
 
-    return records
+    filtered_records = []
+    for record in records:
+        if len(record['commit_diff']) == 0:
+            continue
+        filtered_records.append(record)
+    return filtered_records
 
 
 def save_message_to_user_notification(session, records):
+
+    if not records:
+        return
 
     repo_id_monitor_users = {}
 
@@ -554,6 +577,8 @@ def save_message_to_user_notification(session, records):
 
 
 def save_user_activities(session, records):
+    if not records:
+        return
     # If a file was edited many times by same user in 30 minutes, just update timestamp.
     if len(records) == 1 and records[0]['op_type'] == 'edit':
         record = records[0]
@@ -573,6 +598,36 @@ def save_user_activities(session, records):
         for record in records:
             save_user_activity(session, record)
 
+
+def save_repo_trashs(session, records):
+    for record in records:
+        if record['op_type'] == 'delete':
+            save_repo_trash(session, record)
+        if record['op_type'] == 'recover':
+            restore_repo_trash(session, record)
+
+
+def get_delete_records(session, repo_id, show_day, start, limit):
+    if show_day == 0:
+        return [], 0
+    elif show_day == -1:
+        stmt = select(FileTrash).where(FileTrash.repo_id == repo_id)
+        count_stmt = select(func.count(FileTrash.id)).where(FileTrash.repo_id == repo_id)
+
+    else:
+        _timestamp = datetime.datetime.now() - timedelta(days=show_day)
+        stmt = select(FileTrash).where(FileTrash.repo_id == repo_id,
+                                         FileTrash.delete_time > _timestamp,)
+        count_stmt = select(func.count(FileTrash.id)).where(FileTrash.repo_id == repo_id,
+                                                            FileTrash.delete_time > _timestamp,)
+
+    stmt = stmt.order_by(desc(FileTrash.delete_time))
+    total_count = session.scalar(count_stmt)
+    stmt = stmt.slice(start, start + limit)
+    res = session.scalars(stmt).all()
+
+    return res, total_count
+
 def generate_activity_records(added_files, deleted_files, added_dirs,
         deleted_dirs, modified_files, renamed_files, moved_files, renamed_dirs,
         moved_dirs, commit, repo_id, parent, related_users, time):
@@ -588,6 +643,9 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
     OBJ_DIR = 'dir'
 
     repo = seafile_api.get_repo(repo_id)
+    if repo.repo_type == 'wiki':
+        return [], []
+
     base_record = {
         'commit_id': commit.commit_id,
         'timestamp': time,
@@ -596,13 +654,27 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
         'op_user': getattr(commit, 'creator_name', ''),
         'repo_name': repo.repo_name
     }
+    base_trash_record = {
+        'commit_id': commit.parent_id,
+        'op_user': getattr(commit, 'creator_name', ''),
+        'timestamp': time,
+        'repo_id': repo_id,
+    }
     records = []
+    trash_records = []
 
     for de in added_files:
         record = copy.copy(base_record)
+        trash_record = copy.copy(base_trash_record)
         op_type = ''
         if commit.description.startswith('Reverted'):
             op_type = OP_RECOVER
+            trash_record['op_type'] = OP_RECOVER
+            trash_record['obj_id'] = de.obj_id
+            trash_record['obj_name'] = os.path.basename(de.path)
+            trash_record['path'] = '/' if os.path.dirname(de.path) == '/' else os.path.dirname(de.path) + '/'
+            trash_record['size'] = de.size
+            trash_records.append(trash_record)
         else:
             op_type = OP_CREATE
         record['op_type'] = op_type
@@ -621,11 +693,26 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
         record['path'] = de.path
         records.append(record)
 
+        trash_record = copy.copy(base_trash_record)
+        trash_record['obj_type'] = 'file'
+        trash_record['op_type'] = OP_DELETE
+        trash_record['obj_id'] = de.obj_id
+        trash_record['obj_name'] = os.path.basename(de.path)
+        trash_record['path'] = '/' if os.path.dirname(de.path) == '/' else os.path.dirname(de.path) + '/'
+        trash_record['size'] = de.size
+        trash_records.append(trash_record)
     for de in added_dirs:
         record = copy.copy(base_record)
+        trash_record = copy.copy(base_trash_record)
         op_type = ''
         if commit.description.startswith('Recovered'):
             op_type = OP_RECOVER
+            trash_record['op_type'] = OP_RECOVER
+            trash_record['obj_id'] = de.obj_id
+            trash_record['obj_name'] = os.path.basename(de.path)
+            trash_record['path'] = '/' if os.path.dirname(de.path) == '/' else os.path.dirname(de.path) + '/'
+            trash_record['size'] = de.size
+            trash_records.append(trash_record)
         else:
             op_type = OP_CREATE
         record['op_type'] = op_type
@@ -642,6 +729,14 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
         record['path'] = de.path
         records.append(record)
 
+        trash_record = copy.copy(base_trash_record)
+        trash_record['obj_type'] = 'dir'
+        trash_record['op_type'] = OP_DELETE
+        trash_record['obj_id'] = de.obj_id
+        trash_record['obj_name'] = os.path.basename(de.path)
+        trash_record['path'] = '/' if os.path.dirname(de.path) == '/' else os.path.dirname(de.path) + '/'
+        trash_record['size'] = de.size
+        trash_records.append(trash_record)
     for de in modified_files:
         record = copy.copy(base_record)
         op_type = ''
@@ -708,8 +803,7 @@ def generate_activity_records(added_files, deleted_files, added_dirs,
             record['old_path'] = record['old_path'].rstrip('/')
         record['path'] = record['path'].rstrip('/') if record['path'] != '/' else '/'
         filtered_records.append(record)
-
-    return filtered_records
+    return filtered_records, trash_records
 
 def list_file_in_dir(repo_id, dirents, op_type):
     _dirents = copy.copy(dirents)
@@ -846,13 +940,17 @@ def should_record(config, record):
 
 
 def FileUpdateEventHandler(config, session, msg):
-    elements = msg['content'].split('\t')
-    if len(elements) != 3:
-        logging.warning("got bad message: %s", elements)
+    try:
+        elements = json.loads(msg['content'])
+    except:
+        logging.warning("got bad message: %s", msg)
         return
 
-    repo_id = elements[1]
-    commit_id = elements[2]
+    repo_id = elements.get('repo_id')
+    commit_id = elements.get('commit_id')
+    if not repo_id or not commit_id:
+        logging.debug("repo_id: %s, or commit_id: %s invalid.", repo_id, commit_id)
+        return
 
     org_id = get_org_id_by_repo_id(repo_id)
 
@@ -866,7 +964,6 @@ def FileUpdateEventHandler(config, session, msg):
     creator_name = getattr(commit, 'creator_name', '')
     if creator_name is None:
         creator_name = ''
-
     # KEEPER
     logging.info("FILE UPDATE EVENT: %s, try generate_certificate", commit.desc)
     generate_certificate_by_commit(commit)
@@ -875,18 +972,19 @@ def FileUpdateEventHandler(config, session, msg):
                            repo_id, commit_id, commit.desc)
 
 def FileAuditEventHandler(config, session, msg):
-    elements = msg['content'].split('\t')
-    if len(elements) != 6:
-        logging.warning("got bad message: %s", elements)
+    try:
+        elements = json.loads(msg['content'])
+    except:
+        logging.warning("got bad message: %s", msg)
         return
 
     timestamp = datetime.datetime.utcfromtimestamp(msg['ctime'])
-    msg_type = elements[0]
-    user_name = elements[1]
-    ip = elements[2]
-    user_agent = elements[3]
-    repo_id = elements[4]
-    file_path = elements[5]
+    msg_type = elements.get('msg_type')
+    user_name = elements.get('user_name')
+    ip = elements.get('ip')
+    user_agent = elements.get('user_agent')
+    repo_id = elements.get('repo_id')
+    file_path = elements.get('file_path')
     if not file_path.startswith('/'):
         file_path = '/' + file_path
 
@@ -896,60 +994,24 @@ def FileAuditEventHandler(config, session, msg):
                           user_agent, org_id, repo_id, file_path)
 
 def PermAuditEventHandler(config, session, msg):
-    elements = msg['content'].split('\t')
-    if len(elements) != 7:
-        logging.warning("got bad message: %s", elements)
+    try:
+        elements = json.loads(msg['content'])
+    except:
+        logging.warning("got bad message: %s", msg)
         return
 
     timestamp = datetime.datetime.utcfromtimestamp(msg['ctime'])
-    etype = elements[1]
-    from_user = elements[2]
-    to = elements[3]
-    repo_id = elements[4]
-    file_path = elements[5]
-    perm = elements[6]
+    etype = elements.get('etype')
+    from_user = elements.get('from_user')
+    to = elements.get('to')
+    repo_id = elements.get('repo_id')
+    file_path = elements.get('file_path')
+    perm = elements.get('perm')
 
     org_id = get_org_id_by_repo_id(repo_id)
 
     save_perm_audit_event(session, timestamp, etype, from_user, to,
                           org_id, repo_id, file_path, perm)
-
-
-def DraftPublishEventHandler(config, session, msg):
-
-    elements = msg['content'].split('\t')
-    if len(elements) != 6:
-        logging.warning("got bad message: %s", elements)
-        return
-
-    record = dict()
-    record["timestamp"] = datetime.datetime.utcfromtimestamp(msg['ctime'])
-    record["op_type"] = elements[0]
-    record["obj_type"] = elements[1]
-    record["repo_id"] = elements[2]
-    repo = seafile_api.get_repo(elements[2])
-    record["repo_name"] = repo.name if repo else ''
-    record["op_user"] = elements[3]
-    record["path"] = elements[4]
-    record["old_path"] = elements[5]
-
-    users = []
-    org_id = get_org_id_by_repo_id(elements[2])
-    if org_id > 0:
-        users.extend(seafile_api.org_get_shared_users_by_repo(org_id, elements[2]))
-        owner = seafile_api.get_org_repo_owner(elements[2])
-    else:
-        users.extend(seafile_api.get_shared_users_by_repo(elements[2]))
-        owner = seafile_api.get_repo_owner(elements[2])
-
-    if owner not in users:
-        users = users + [owner]
-    if not users:
-        return
-
-    record["related_users"] = users
-
-    save_user_activity(session, record)
 
 
 def register_handlers(handlers, enable_audit):
@@ -964,4 +1026,3 @@ def register_handlers(handlers, enable_audit):
         handlers.add_handler('seahub.audit:file-download-api', FileAuditEventHandler)
         handlers.add_handler('seahub.audit:file-download-share-link', FileAuditEventHandler)
         handlers.add_handler('seahub.audit:perm-change', PermAuditEventHandler)
-        handlers.add_handler('seahub.draft:publish', DraftPublishEventHandler)

@@ -2,7 +2,7 @@ import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import {Modal, ModalBody, ModalFooter, ModalHeader} from 'reactstrap';
 import {gettext} from '../../utils/constants';
-import {keeperAPI} from '../../utils/seafile-api';
+import {seafileAPI} from '../../utils/seafile-api';
 import {Utils} from '../../utils/utils';
 import toaster from '../toast';
 import KeeperArchiveMetadataForm from '../keeper-archive-metadata-form';
@@ -25,7 +25,7 @@ class ArchiveLibraryDialog extends React.Component {
             newState[k] = state[k];
         });
         //return promise, not run!
-        return keeperAPI
+        return seafileAPI
             .updateArchiveMetadata(this.props.repoID, newState)
             .then((res) => {
                 newState = res.data;
@@ -49,7 +49,7 @@ class ArchiveLibraryDialog extends React.Component {
     onArchiveClick = (a, b) => {
         this.props.hideDialog();
         //return promise, not run!
-        return keeperAPI.archiveLibrary(this.props.repoID)
+        return seafileAPI.archiveLibrary(this.props.repoID)
             .then((resp) => {
                 return resp.data.msg;
         });

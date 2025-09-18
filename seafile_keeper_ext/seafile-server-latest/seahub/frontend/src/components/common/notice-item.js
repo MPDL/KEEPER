@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { gettext, siteRoot } from '../../utils/constants';
 import { Utils } from '../../utils/utils';
 
@@ -22,10 +23,13 @@ const MSG_TYPE_DELETED_FILES = 'deleted_files';
 const MSG_TYPE_SAML_SSO_FAILED = 'saml_sso_failed';
 const MSG_TYPE_REPO_SHARE_PERM_CHANGE = 'repo_share_perm_change';
 const MSG_TYPE_REPO_SHARE_PERM_DELETE = 'repo_share_perm_delete';
+const MSG_TYPE_FACE_CLUSTER = 'face_cluster';
+
+dayjs.extend(relativeTime);
 
 class NoticeItem extends React.Component {
 
-  generatorNoticeInfo () {
+  generatorNoticeInfo() {
     let noticeItem = this.props.noticeItem;
     let noticeType = noticeItem.type;
     let detail = noticeItem.detail;
@@ -37,18 +41,17 @@ class NoticeItem extends React.Component {
       let groupStaff = detail.group_staff_name;
 
       // group name does not support special characters
-      let userHref = siteRoot + 'profile/' + detail.group_staff_email + '/';
+      let userHref = siteRoot + 'profile/' + encodeURIComponent(detail.group_staff_email) + '/';
       let groupHref = siteRoot + 'group/' + detail.group_id + '/';
       let groupName = detail.group_name;
 
       let notice = gettext('User {user_link} has added you to {group_link}');
-      let userLink = '<a href=' + userHref + '>' + groupStaff + '</a>';
-      let groupLink = '<a href=' + groupHref + '>' + groupName + '</a>';
-
+      let userLink = '<a href=' + userHref + '>' + Utils.HTMLescape(groupStaff) + '</a>';
+      let groupLink = '<a href=' + groupHref + '>' + Utils.HTMLescape(groupName) + '</a>';
       notice = notice.replace('{user_link}', userLink);
       notice = notice.replace('{group_link}', groupLink);
 
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE) {
@@ -58,7 +61,7 @@ class NoticeItem extends React.Component {
       let shareFrom = detail.share_from_user_name;
 
       let repoName = detail.repo_name;
-      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' +  repoName + '/';
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' + repoName + '/';
 
       let path = detail.path;
       let notice = '';
@@ -78,7 +81,7 @@ class NoticeItem extends React.Component {
       notice = notice.replace('{tagA}', `<a href='${Utils.encodePath(repoUrl)}'>`);
       notice = notice.replace('{/tagA}', '</a>');
 
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_PERM_CHANGE) {
@@ -87,7 +90,7 @@ class NoticeItem extends React.Component {
       let shareFrom = detail.share_from_user_name;
       let permission = detail.permission;
       let repoName = detail.repo_name;
-      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' +  repoName + '/';
+      let repoUrl = siteRoot + 'library/' + detail.repo_id + '/' + repoName + '/';
       let path = detail.path;
       let notice = '';
       // 1. handle translate
@@ -107,7 +110,7 @@ class NoticeItem extends React.Component {
       notice = notice.replace('{tagA}', `<a href='${Utils.encodePath(repoUrl)}'>`);
       notice = notice.replace('{/tagA}', '</a>');
 
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_PERM_DELETE) {
@@ -128,7 +131,7 @@ class NoticeItem extends React.Component {
       notice = notice.replace('{share_from}', shareFrom);
       notice = notice.replace('{repo_name}', repoName);
       notice = Utils.HTMLescape(notice);
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_SHARE_TO_GROUP) {
@@ -147,9 +150,9 @@ class NoticeItem extends React.Component {
       let notice = '';
       // 1. handle translate
       if (path === '/') {
-        notice =  gettext('{share_from} has shared a library named {repo_link} to group {group_link}.');
+        notice = gettext('{share_from} has shared a library named {repo_link} to group {group_link}.');
       } else {
-        notice =  gettext('{share_from} has shared a folder named {repo_link} to group {group_link}.');
+        notice = gettext('{share_from} has shared a folder named {repo_link} to group {group_link}.');
       }
 
       // 2. handle xss(cross-site scripting)
@@ -163,7 +166,7 @@ class NoticeItem extends React.Component {
       notice = notice.replace('{/tagA}', '</a>');
       notice = notice.replace('{tagB}', `<a href='${Utils.encodePath(groupUrl)}'>`);
       notice = notice.replace('{/tagB}', '</a>');
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_TRANSFER) {
@@ -185,7 +188,7 @@ class NoticeItem extends React.Component {
       // 3. add jump link
       notice = notice.replace('{tagA}', `<a href=${Utils.encodePath(repoUrl)}>`);
       notice = notice.replace('{/tagA}', '</a>');
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_FILE_UPLOADED) {
@@ -218,7 +221,7 @@ class NoticeItem extends React.Component {
         notice = notice.replace('{upload_file_link}', `${fileName}`);
         notice = Utils.HTMLescape(notice);
       }
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_FOLDER_UPLOADED) {
@@ -251,7 +254,7 @@ class NoticeItem extends React.Component {
         notice = notice.replace('{upload_folder_link}', `${folderName}`);
         notice = Utils.HTMLescape(notice);
       }
-      return {avatar_url, notice};
+      return { avatar_url, notice };
     }
 
     if (noticeType === MSG_TYPE_REPO_MONITOR) {
@@ -348,14 +351,27 @@ class NoticeItem extends React.Component {
       let notice = gettext('Your library {libraryName} has recently deleted a large number of files.');
       notice = notice.replace('{libraryName}', repoLink);
 
-      return { avatar_url : null, notice };
+      return { avatar_url: null, notice };
+    }
+
+    if (noticeType === MSG_TYPE_FACE_CLUSTER) {
+      let repo_id = detail.repo_id;
+      let repo_name = detail.repo_name;
+
+      const repoURL = `${siteRoot}library/${repo_id}/${encodeURIComponent(repo_name)}/`;
+      const repoLink = `<a href=${repoURL} target="_blank">${Utils.HTMLescape(repo_name)}</a>`;
+
+      let notice = gettext('Face recognition is done for library {libraryName}.');
+      notice = notice.replace('{libraryName}', repoLink);
+
+      return { avatar_url: null, notice };
     }
 
     if (noticeType === MSG_TYPE_SAML_SSO_FAILED) {
       const { error_msg } = detail;
       let notice = gettext(error_msg);
 
-      return { avatar_url : null, notice };
+      return { avatar_url: null, notice };
     }
 
     // if (noticeType === MSG_TYPE_GUEST_INVITATION_ACCEPTED) {
@@ -515,10 +531,10 @@ class NoticeItem extends React.Component {
           <img src={avatar_url} width="32" height="32" className="avatar" alt="" />
         </td>
         <td className="pr-1 pr-md-8">
-          <p className="m-0" dangerouslySetInnerHTML={{__html: notice}}></p>
+          <p className="m-0" dangerouslySetInnerHTML={{ __html: notice }}></p>
         </td>
         <td>
-          {moment(noticeItem.time).fromNow()}
+          {dayjs(noticeItem.time).fromNow()}
         </td>
       </tr>
     ) : (
@@ -526,9 +542,9 @@ class NoticeItem extends React.Component {
         <div className="notice-item">
           <div className="main-info">
             <img src={avatar_url} width="32" height="32" className="avatar" alt=""/>
-            <p className="brief" dangerouslySetInnerHTML={{__html: notice}}></p>
+            <p className="brief" dangerouslySetInnerHTML={{ __html: notice }}></p>
           </div>
-          <p className="time">{moment(noticeItem.time).fromNow()}</p>
+          <p className="time">{dayjs(noticeItem.time).fromNow()}</p>
         </div>
       </li>
     );
