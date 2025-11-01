@@ -41,7 +41,11 @@
 
 <p>{% trans "or use the dropdown menu under \"My libraries\"." %}</p>
 
-<p><img src="{{ MEDIA_URL }}img/help/edit_metadata.png" alt="" /></p>
+{% if LANGUAGE_CODE == 'de' %}
+  <p><img src="{{ MEDIA_URL }}img/help/edit_metadata_de.png" alt="" /></p>
+{% else %}
+  <p><img src="{{ MEDIA_URL }}img/help/edit_metadata.png" alt="" /></p>
+{% endif %}
 
 <h4>{% trans "Metadata is on a per library level, so single files will all have the same information." %}</h4>
 
