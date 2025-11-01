@@ -9930,6 +9930,12 @@ msgstr "Bibliothek archivieren"
 msgid "Archive {library_name}"
 msgstr "Archivierung von {library_name}"
 
+msgid "Additional resources"
+msgstr "Weitere Ressourcen"
+
+msgid "Contact Support"
+msgstr "Support kontaktieren"
+
 msgid "By archiving this library, the current state of everything contained within it will be archived on a dedicated archiving system. For more information, please follow the link: {archive_info_link} This library can be archived {quota} more times."
 msgstr "Durch die Archivierung der Bibliothek wird die aktuelle Version der ausgewählten Bibliothek (Schnappschuss) und deren Inhalt in ein dediziertes Archivierungssystem kopiert. Für mehr Informationen folgen Sie bitte dem nachfolgenden Link: {archive_info_link} Diese Bibliothek kann noch {quota} Mal archiviert werden."
 
@@ -9951,6 +9957,9 @@ msgstr "Archivieren"
 msgid "Library Details"
 msgstr "Bibliotheksdetails"
 
+msgid "Edit Metadata"
+msgstr "Metadaten editieren"
+
 # footer
 msgid "Project Catalog"
 msgstr "Projektkatalog"
@@ -9966,6 +9975,12 @@ msgstr "Metadaten editieren für die Bibliothek {library_name}"
 msgid "Metadata"
 msgstr "Metadaten"
 
+msgid "Library Metadata"
+msgstr "Bibliotheksmetadaten"
+
+msgid "Certify Library"
+msgstr "Bibliothek zertifizieren"
+
 msgid "Title"
 msgstr "Titel"
 
@@ -9980,9 +9995,6 @@ msgstr "Nachname"
 
 msgid "Affiliation"
 msgstr "Zugehörigkeit"
-
-msgid "Year"
-msgstr "Jahr"
 
 msgid "Institute"
 msgstr "Institut"

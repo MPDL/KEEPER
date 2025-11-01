@@ -50,7 +50,7 @@ class SideNavFooter extends React.Component {
               {gettext('Project Catalog')}
             </a>
             <a
-              href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper"
+              href="/help/"
               target="_blank"
               className="item"
             >

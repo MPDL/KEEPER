@@ -66,12 +66,12 @@ class KeeperProjectCatalog extends React.Component {
         this.getItems(this.state.currentPage, true);
       }
     );
-    const script = document.createElement('script');
-    script.src =
-      'https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa';
-    script.id = 'ze-snippet';
-    script.async = true;
-    document.body.appendChild(script);
+    // const script = document.createElement('script');
+    // script.src =
+    //   'https://static.zdassets.com/ekr/snippet.js?key=32977f9b-455d-428b-8dd5-f4c65aad0daa';
+    // script.id = 'ze-snippet';
+    // script.async = true;
+    // document.body.appendChild(script);
   }
 
   doResetFacets = () => {
@@ -641,7 +641,7 @@ class Footer extends React.Component {
                 </a>{' '}
                 <br />
                 <a
-                  href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper"
+                  href="/help/"
                   target="_blank" rel="noreferrer"
                 >
                   Help / Knowledge Base

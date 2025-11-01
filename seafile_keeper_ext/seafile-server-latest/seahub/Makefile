@@ -13,8 +13,8 @@ setup-git:
 
 dist: locale statici18n collectstatic
 
-#dist-keeper: locale-keeper statici18n collectstatic
-dist-keeper: locale-keeper statici18n
+dist-keeper: locale-keeper statici18n collectstatic
+# dist-keeper: locale-keeper statici18n
 locale:
 	@echo "--> Compile locales"
 	django-admin compilemessages
@@ -28,7 +28,7 @@ locale-keeper:
 
 statici18n:
 	@echo "--> Generate JS locale files in static/scripts/i18n"
-	# python3 manage.py compilejsi18n
+	# python manage.py compilejsi18n
 	$(RUN_KEEPER) manage.py compilejsi18n
 
 collectstatic:

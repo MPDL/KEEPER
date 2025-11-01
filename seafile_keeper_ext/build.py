@@ -423,7 +423,7 @@ class EnvManager(object):
             'system/postfix.main.cf@background': _join('/etc', 'postfix', 'main.cf'),
             'system/nagios.keeper.cfg': _join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': _join('/etc', 'nginx', 'nginx.conf'),
-            'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+           'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
             'system/clamd.conf': _join('/etc', 'clamav', 'clamd.conf'),
             'system/clamav-daemon.service': _join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
@@ -504,10 +504,8 @@ class EnvManager(object):
         '''
         extra_python_path = [
             self.pro_pylibs_dir,
-
             _join(self.top_dir, 'conf'), # LDAP sync has to access seahub_settings.py
             _join(self.install_path, 'seahub', 'thirdpart'),
-
             _join(self.install_path, 'seafile/lib/python3/site-packages'),
         ]
 
@@ -612,7 +610,7 @@ def deploy_file(path, expand=False, dest_dir=None, skip_backup=True):
     if os.path.basename(path) in ignore_list or path.endswith(ignore_exts):
         return
 
-    p = path.strip('/').split('/')
+    p = path.strip('/').lstrip('./').split('/')
 
     # file is in mapping
     if os.path.isfile(path) and path in env_mgr.SEAF_EXT_DIR_MAPPING:
@@ -642,7 +640,7 @@ def deploy_file(path, expand=False, dest_dir=None, skip_backup=True):
 
     # black_list_exts = ('.jar', '.png', '.jpg', '.zip', '.svg', '.pdf', '.ttf', '.woff')
     # file types to be expanded
-    white_list_ends = ('.conf', '.cfg', '.cnf', '.cf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service')
+    white_list_ends = ('.conf', '.cfg', '.cnf', '.cf', '.py', '.html', '.js', '.sh', '.css', '.txt', '.ini', '.service', '.env', '.po')
     # files to be expanded
     white_list_names = ('Makefile', 'cron-keeper', 'cron-keeper-background')
     if expand and (dest_path.endswith(white_list_ends) or os.path.basename(dest_path) in white_list_names):
@@ -759,6 +757,7 @@ def deploy_i18n():
     Utils.info('Deploy i18n...')
     ## deploy dirs
     deploy_dir('seafile-server-latest/seahub/locale', expand=True)
+    deploy_dir('seafile-server-latest/seahub/seahub/help/locale', expand=True)
     Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
     Utils.info('Done.')
@@ -933,11 +932,11 @@ def do_generate(args):
         for po_file in ['django.po']:
             backup(_join(en_django_po_dir, po_file), mv=False)
             Utils.run(f"msgen {po_file + BACKUP_POSTFIX} > {po_file}", cwd=en_django_po_dir, env=env_mgr.get_seahub_env())
-    elif args.i18n:
-        Utils.info('Generate i18n...')
-        Utils.run("make locale-keeper statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
-        # Utils.run("make statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
-        Utils.info('Done.')
+    # elif args.i18n:
+    #     Utils.info('Generate i18n...')
+    #     # Utils.run("make locale-keeper statici18n", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
+    #     Utils.run("bash seahub.sh python-env seahub/manage.py compilejsi18n", cwd=env_mgr.install_path, env=env_mgr.get_seahub_env())
+    #     Utils.info('Done.')
     elif args.min_css:
         Utils.info('Generate seahub.min.css...')
         cmd = "yui-compressor -v seahub.css -o seahub.min.css"
@@ -947,10 +946,11 @@ def do_generate(args):
     elif args.frontend:
         Utils.info('Generate frontend...')
         Utils.info('NOTE: Restart keeper service right after!')
-        #cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} NODE_ENV='production' npm run build"
+        # cmd = f"sudo -u {user} npm install --legacy-peer-deps && sudo -u {user} NODE_ENV=production npm run build"
         #see https://stackoverflow.com/questions/53230823/fatal-error-ineffective-mark-compacts-near-heap-limit-allocation-failed-javas
         #cmd = f"npm install --legacy-peer-deps && set NODE_OPTIONS=--max-old-space-size=8192 && npm run build" ### <- on dev only!
-        cmd = "npm install --legacy-peer-deps && NODE_ENV='production' npm run build"
+        # cmd = "npm install --legacy-peer-deps && NODE_ENV=production npm run build"
+        cmd = "npm install --legacy-peer-deps && NODE_ENV=production npm run build"
         RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error(f"Cannot run {cmd}, RC={RC}")
@@ -963,11 +963,16 @@ def do_generate(args):
             do_upgrade(args)
 
 def do_run(args):
+    keep_ini = env_mgr.keeper_config
+    user=keep_ini.get('system', '__OS_USER__')
+
     if args.frontend_dev:
         Utils.info('Run react.js dev server...')
         Utils.info('NOTE: Restart keeper service right after!')
         #FIXME: switch to OpenSSL 3.0
-        cmd = "set NODE_OPTIONS=--openssl-legacy-provider && NODE_ENV='development' npm run dev" 
+        # cmd = "set NODE_OPTIONS=--openssl-legacy-provider && NODE_ENV=development npm run dev" 
+        cmd = "NODE_ENV=development npm run dev" 
+        # cmd = f"sudo -u {user} NODE_ENV=development npm run dev"
         RC = Utils.run(cmd, cwd=_join(env_mgr.seahub_dir, 'frontend'))
         if RC != 0:
             Utils.error("Cannot run {}, RC={}".format(cmd, RC))
@@ -1070,7 +1075,7 @@ def main():
     parser_generate = subparsers.add_parser('generate', help='Generate components')
     parser_generate.set_defaults(func=do_generate)
     parser_generate.add_argument('--msgen', help='Create English translation catalog (i.e. copy msgid to msgstr in en/LC_MESSAGES/django.po)', action='store_true')
-    parser_generate.add_argument('--i18n', help='Compile i18n files', action='store_true')
+    # parser_generate.add_argument('--i18n', help='Compile i18n files', action='store_true')
     parser_generate.add_argument('--min-css', help='''Generate min.css file for seahub.css.
                                  Please install yui-compressor: http://yui.github.io/yuicompressor in your system!
                                  ''', action='store_true')

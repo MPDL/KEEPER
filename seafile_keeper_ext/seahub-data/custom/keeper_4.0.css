@@ -14,6 +14,14 @@
 /* common settings for mobile and pc version */
 /*********************************************/
 
+/* HEADER */
+
+#header {
+    border-bottom: 0;
+    height: 57px;
+}
+
+
 /* language selector inside header */
 #lang-context {
   color: #57a5b8 !important;
@@ -35,9 +43,20 @@
   font-size: 10pt;
   color: black !important;
 }
+
 #login-footer-ctn h4 {
   font-size: 10pt;
   font-weight: bold;
+}
+
+#seafile-credits {
+  text-align: right;
+  padding: 2px;
+  background-color: #f8fafd;
+}
+
+#seafile-credits div {
+    line-height: 46px;
 }
 
 /* background of the footer(if any) */
@@ -180,21 +199,24 @@
 
 #info_panel h3 {
   font-size: 3em;
-  color: #b71a52;
+  /* color: #b71a52; */
+  color: #235b70;
 }
 
 #info_panel p {
   font-size: 1.35em;
+  color: #235b70;
 }
 
 /* Login panel */
 #login_panel {
   float: none;
-  width: 345px;
-  transition: top 0.8s;
+  /* width: 345px; */
+  /* transition: top 0.8s; */
   transition: right 0.8s;
   background: rgba(255, 255, 255, 1) !important;
-  box-shadow: none;
+  border-radius: 12px;
+  box-shadow: 4px 24px 24px 0 rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
 
@@ -208,15 +230,52 @@
 }
 
 #login_panel .con {
-  padding: 20px 0 20px;
+  padding: 0 0 20px;
   width: 268px;
   margin: 0 auto;
 }
 
+#login_panel h3 {
+    font-size: 1.5em;
+    padding: 28px 0 0 38px;
+    font-weight: bold;
+}
+
+#login_panel h2 { 
+    padding-left: 20px;
+}
+
+#login_panel .forgot-passwd {
+    padding-left: 12px;
+}
+
+#login_panel a {
+    text-decoration: underline;
+}
+
+#login_panel *, #login_panel input::placeholder {
+    color: #235b70;
+}
+
+#login_panel #login_btn {
+    color: white;
+    font-weight: bold;
+    font-size: 1.2em;
+    border-radius: 24px;
+    width: 126px;
+    height: 44px;
+    margin-bottom: 18px;
+    background-color: #e42f6e;
+}
+
+#login_panel #knowledge_base {
+    margin: 12px 0 16px 0;
+}
+
 /* banner  */
+/*
 #login_panel .con.auth {
   padding: 5px 0px 10px 0px;
-  /*padding-bottom: 10px;*/
 }
 
 #banner p {
@@ -240,6 +299,7 @@
     width: 343px;
   }
 }
+*/
 
 /* FOOTER */
 #lg_footer {
@@ -252,18 +312,23 @@
 }
 
 #lg_footer div a {
-  color: #575859;
-  font-weight: lighter;
+  color: #33677a;
+  /* color: #575859; */
+  font-weight: normal;
 }
 
 #lg_footer div h4 {
-  color: #b71a52;
+  /* color: #b71a52; */
+  color: #33677a;
+  font-weight: bold;
+  font-size: 1em;
+  margin-bottom: 0.5em;
 }
 
-#lg_footer img {
-  height: 30px;
-  width: auto;
-}
+/* #lg_footer img { */
+  /* height: 30px; */
+  /* width: auto; */
+/* } */
 
 /*footer on inner pages*/
 #footer-ctn a {

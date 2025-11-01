@@ -30,10 +30,6 @@ from seafevents.batch_delete_files_notice.db import get_deleted_files_total_coun
 recent_added_events = {'recent_added_events': []}
 EXCLUDED_PATHS = ['/_Internal', '/images/sdoc', '/images/auto-upload']
 
-# KEEPER
-from keeper.cdc.cdc_manager import generate_certificate_by_commit
-from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
-
 def _check_ignored_path(path):
     for p in EXCLUDED_PATHS:
         if path.startswith(p):
@@ -118,8 +114,9 @@ def RepoUpdateEventHandler(config, session, msg):
                         parent, users, time)
 
                 save_user_activities(session, records)
-                # TODO check: catalog entry update
+
                 # KEEPER
+                from keeper.catalog.catalog_manager import generate_catalog_entry_by_repo_id
                 logging.info("REPO UPDATED EVENT repo_id: %s" % repo_id)
                 logging.info("Trying to create/update keeper catalog entry for repo_id: %s..." % repo_id)
                 if bool(generate_catalog_entry_by_repo_id(repo_id)):
@@ -964,7 +961,9 @@ def FileUpdateEventHandler(config, session, msg):
     creator_name = getattr(commit, 'creator_name', '')
     if creator_name is None:
         creator_name = ''
+
     # KEEPER
+    from keeper.cdc.cdc_manager import generate_certificate_by_commit
     logging.info("FILE UPDATE EVENT: %s, try generate_certificate", commit.desc)
     generate_certificate_by_commit(commit)
 

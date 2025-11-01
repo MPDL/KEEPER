@@ -198,6 +198,28 @@ function stop_elastic_container () {
     fi
 }
 
+function check_container_running () { 
+    container_name=$1
+    if ! sudo docker inspect "$container_name" > /dev/null 2>&1  || [ "$(sudo docker inspect -f '{{.State.Running}}' "$container_name")" != "true" ]; then
+        echo_red "[$container_name] is not running"
+        [[ $2 == "CRITICAL" ]] && RC=1
+    else
+        echo "[$container_name] container is running"
+    fi
+}
+
+
+function start_container () {
+    env_path=$1
+    RES=$(sudo docker compose --env-file $env_path up -d > /dev/null 2>&1)
+}
+ 
+function stop_container () {
+    env_path=$1
+    RES=$(sudo docker compose --env-file $env_path down > /dev/null 2>&1)
+}
+
+
 echo "Keeper ${__NODE_TYPE__} node ${__NODE_FQDN__}, cmd: $1"
 
 case "$1" in
@@ -228,6 +250,8 @@ case "$1" in
                     echo "Starting..."
                 fi
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                start_container "/opt/seafile-notification/.env"
+                start_container "/opt/seadoc/.env"
                 start_elastic_container
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
@@ -238,6 +262,8 @@ case "$1" in
                     echo "Starting..."
                 fi
                 ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                start_container "/opt/seafile-notification/.env"
+                start_container "/opt/seadoc/.env"
                 start_elastic_container
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh ${1} >> ${background_init_log}
@@ -252,20 +278,24 @@ case "$1" in
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
-                if [ "$2" != "--force" ]; then
+                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ] && [ "$2" != "--force" ]; then
                     check_and_exit_keeper_archiving_running
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 stop_elastic_container
+                stop_container "/opt/seafile-notification/.env"
+                stop_container "/opt/seadoc/.env"
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
-                if [ "$2" != "--force" ]; then
+                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ] && [ "$2" != "--force" ]; then
                     check_and_exit_keeper_archiving_running
                 fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 stop_elastic_container
+                stop_container "/opt/seafile-notification/.env"
+                stop_container "/opt/seadoc/.env"
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             fi
             sleep 3
@@ -297,16 +327,21 @@ case "$1" in
             if [ ${__NODE_TYPE__} != "BACKGROUND" ] ; then
                 check_mysql
             fi
-            check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
+            # check_component_running "seafile-controller" "seafile-controller -c ${default_ccnet_conf_dir}" "CRITICAL"
             check_seahub_running "CRITICAL"
             #check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "fileserver" "fileserver.*fileserver.pid" "CRITICAL"
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
-                check_component_running "notification-server" "notification-server" "CRITICAL"
+                # check_component_running "notification-server" "notification-server" "CRITICAL"
+                # check_notification_running "CRITICAL"
+                check_container_running "notification-server" "CRITICAL"
+                check_container_running "seadoc" "CRITICAL"
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
-                check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
+                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ]; then
+                    check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
+                fi
                 check_component_running "elasticsearch" "org.elasticsearch.bootstrap.Elasticsearch" "CRITICAL"
             fi    
             if [ ${__NODE_TYPE__} == "APP" ] ; then

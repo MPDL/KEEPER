@@ -33,7 +33,7 @@ class AssignDoiDialog extends React.Component {
   render() {
     return (
       <Modal isOpen={true} toggle={this.props.toggleDialog}>
-        <ModalHeader toggle={this.props.toggleDialog}> <span>{gettext('Assign DOI to {library_name}').replace('{library_name}','')}</span> <span style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
+        <ModalHeader toggle={this.props.toggleDialog}> <span>{gettext('Assign DOI to {library_name}').replace('{library_name}', '')}</span> <span style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
         <ModalBody>
           {gettext("Please note: a DOI identifier will be assigned to the current state of the selected library (snapshot). The DOI will persistently reference to the snapshot and not the latest state of the library. A DOI can only be created once per library.")}
         </ModalBody>

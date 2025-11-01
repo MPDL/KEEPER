@@ -24,6 +24,12 @@ const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const webpackBundleTracker = require('webpack-bundle-tracker');
 
+// KEEPER
+const dotenv = require('dotenv').config({ path: '../../../conf/.env' });
+const SERVICE_URL = process.env.SEAFILE_SERVER_PROTOCOL + '://' + process.env.SEAFILE_SERVER_HOSTNAME;
+console.log(process.env)
+console.log(SERVICE_URL)
+
 const ForkTsCheckerWebpackPlugin =
   process.env.TSC_COMPILE_ON_ERROR === 'true'
     ? require('react-dev-utils/ForkTsCheckerWarningWebpackPlugin')
@@ -242,7 +248,9 @@ module.exports = function (webpackEnv) {
       // We inferred the "public path" (such as / or /my-project) from homepage.
       // publicPath: paths.publicUrlOrPath, 
       // KEEPER: TO BE CHECKED!!!
+      // publicPath: isEnvDevelopment ? SERVICE_URL + ':3000/assets/bundles/' : paths.publicUrlOrPath,
       publicPath: isEnvDevelopment ? '__SERVICE_URL__:3000/assets/bundles/' : paths.publicUrlOrPath,
+
       // Point sourcemap entries to original disk location (format as URL on Windows)
       devtoolModuleFilenameTemplate: isEnvProduction
         ? info =>
@@ -831,7 +839,10 @@ module.exports = function (webpackEnv) {
         filename: isEnvProduction ? './webpack-stats.pro.json' : './webpack-stats.dev.json',
         // publicPath: isEnvProduction ? '' : paths.publicUrlOrPath
         // KEEPER
+        // publicPath: isEnvProduction ? '' : SERVICE_URL + ':3000/assets/bundles/'
+        // KEEPER
         publicPath: isEnvProduction ? '' : '__SERVICE_URL__:3000/assets/bundles/'
+ 
       }),
     ].filter(Boolean),
     // Turn off performance processing because we utilize

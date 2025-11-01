@@ -118,7 +118,9 @@ class MylibRepoMenu extends React.Component {
     // KEEPER
     let repo = this.props.repo;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
-    let showArchiveLibraryMenuItem = !repo.encrypted;
+    // Archiving is switched off, switch on next line if KEEPER_ARCHIVING_ENABLED is set to true
+    // let showArchiveLibraryMenuItem = !repo.encrypted;
+    let showArchiveLibraryMenuItem = false;
     let showCertifyLibraryMenuItem = !repo.encrypted;
     let showEditMetadatayMenuItem = !repo.encrypted;
     // END KEEPER
@@ -132,7 +134,7 @@ class MylibRepoMenu extends React.Component {
       operations.push('Office Suite');
     }
    // KEEPER
-    operations.push('Divider');
+    // operations.push('Divider');
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
     }

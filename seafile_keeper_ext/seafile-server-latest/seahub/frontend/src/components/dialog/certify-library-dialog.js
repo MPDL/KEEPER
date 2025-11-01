@@ -44,7 +44,8 @@ class CertifyLibraryDialog extends React.Component {
         return (
             <Modal isOpen={true} toggle={this.props.hideDialog}>
                 <ModalHeader toggle={this.props.hideDialog}>
-                    <span>{gettext('Certify')}</span> <span style={{color: '#57a5b8'}}>{this.props.repoName}</span> </ModalHeader>
+                    <span>{gettext('Certify')}</span> <span style={{color: '#57a5b8'}}>{this.props.repoName}</span>
+                </ModalHeader>
                 <ModalBody>
                     <span>{gettext('Certify all files within the library via the bloxberg blockchain. A new entry under “Library Details” on the left sidebar will be created, where you can access the certified version and the file and a proof of certification. Certifying may take some time, depending on the size of the library. Adding metadata is optional, but recommended.')}</span>
                 </ModalBody>

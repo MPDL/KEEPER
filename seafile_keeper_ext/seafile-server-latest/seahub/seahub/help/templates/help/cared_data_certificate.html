@@ -1,0 +1,45 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+<h3 class="hd">{% trans "Cared Data Certificate" %}</h3>
+
+<p>{% blocktrans %}Unique to Keeper is the Cared Data Certificate, a way to acknowledge to you our commitment to store and/or archive your data long term (10 years)*.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}The Cared Data Certificate (CDC) requires some data input from your side so we can personalize the CDC specially for you. It's also specific to one library and multiple CDCs can be generated in case you are using multiple libraries and would like to have the CDC for some or all of them.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}To get started, each new library comes with two automatically generated files, the <code>archive-metadata.md</code> and the <code>Cared-Data-Certificate-HowTo.pdf</code>. At the end of the article, you can find the "How To" for your convenience. In short: once you've added metadata to any of your libraries, the CDC will be automatically generated and stored within your library (limitations apply; please see the How-to below for details).{% endblocktrans %}</p>
+
+<h4>{% blocktrans %}A few general points:{% endblocktrans %}</h4>
+<ul>
+  <li>{% blocktrans %}Please either select the metadata form via the dropdown menu ("My libraries", mouseover a library, see the dropdown next to the trash icon, go to Advanced, Edit Metadata) or the Metadata entry while browsing within a library.{% endblocktrans %}</li>
+  <li>{% blocktrans %}The metadata form is interactive and will give you feedback. Red means something is still not properly formated or entered, while green is an indication that all is well. Check out the "?" to get more instructions.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Should you have deleted the <code>archive-metadata.md</code> or the <code>Cared-Data-Certificate-HowTo.pdf</code> on purpose or by accident, no problem. You can just copy both files from existing or new libraries. Please keep in mind, should you copy a correctly filled out archive-metadata.md file into another library, the CDC will use that data. So better use a blank file, just to be sure.{% endblocktrans %}</li>
+  <li>{% blocktrans %}The <code>archive-metadata.md</code> can also be edited directly if you prefer that way, but is mainly used to store the metadata itself. We recommend to use the interactive form to add/edit metadata.{% endblocktrans %}</li>
+</ul>
+
+<h4>{% blocktrans %}The HowTo:{% endblocktrans %}</h4>
+
+<p>{% blocktrans %}The Keeper Service takes care of your data even after a project's end and therefore ensures long term compliant archiving, up to 10 years.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}With storing your data in Keeper and agreeing to the Cared Data Commitment, you gain the Cared Data Certificate for your project. It can act as a proof of long term compliant archiving on your institutional homepage or poster and presentations.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}If you want to gain the Cared Data Certificate you just have to do the following steps:{% endblocktrans %}</p>
+<ol>
+  <li>{% blocktrans %}<strong>Read</strong> the Cared Data Commitment <a href="https://keeper.mpdl.mpg.de/f/1b0bfceac2/" target="_blank">https://keeper.mpdl.mpg.de/f/1b0bfceac2/</a>. The Max Planck Digital Library assigns the Cared Data Certificate on a base of trust, so we assume you act in accordance to this commitment once you received the Cared Data Certificate.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Fill out the <code>archive-metadata.md</code> text file via the interactive form and provide <strong>basic metadata</strong> for your project. Please follow the recommendations you can find by hovering over "?" in the interactive form.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Your project must <strong>not</strong> be <strong>empty</strong> to receive the Cared Data Certificate.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Your project must <strong>not</strong> be <strong>encrypted</strong> to receive the Cared Data Certificate.{% endblocktrans %}</li>
+</ol>
+
+
+<p>{% blocktrans %}If you accomplished the before mentioned steps a Cared Data Certificate will automatically be added to your project in Keeper and you will receive a confirmation email.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}Accordingly to the Cared Data Certificate the metadata of your project will be listed in the Keeper project catalogue, which will be (only) accessible within the Max Planck Society.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}The Keeper Team of the Max Planck Digital Library will happily assist you, please contact <a href="mailto:keeper@mpdl.mpg.de">keeper@mpdl.mpg.de</a>.{% endblocktrans %}</p>
+
+{% endblock %}
+
+

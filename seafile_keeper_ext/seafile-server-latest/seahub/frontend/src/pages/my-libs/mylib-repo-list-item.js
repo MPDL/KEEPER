@@ -50,7 +50,8 @@ dayjs.extend(relativeTime);
 var handleCanArchiveResponse = (obj, resp) => {
   const d = resp.data;
   //alert(JSON.stringify(d));
-  let msg, error;
+  let msg;
+  let error;
   const default_error =
     'Can not archive library due to unknown reason, please contact support.';
   if (d.status === 'success') obj.setState({ quota: d.quota });

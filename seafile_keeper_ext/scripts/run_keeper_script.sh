@@ -1,11 +1,12 @@
 #!/bin/bash
-SEAFILE_DIR=__SEAFILE_DIR__
+SEAFILE_DIR=/opt/seafile
 INSTALLPATH=${SEAFILE_DIR}/seafile-server-latest
 default_ccnet_conf_dir=${SEAFILE_DIR}/ccnet
 central_config_dir=${SEAFILE_DIR}/conf
 default_seafile_data_dir=${SEAFILE_DIR}/seafile-data
 seafile_rpc_pipe_path=${INSTALLPATH}/runtime
-
+pro_pylibs_dir=${INSTALLPATH}/pro/python
+ 
 # INJECT ENV
 source "${SEAFILE_DIR}/scripts/inject_keeper_env.sh"
 if [ $? -ne 0  ]; then
@@ -21,16 +22,14 @@ export SEAHUB_DIR=${INSTALLPATH}/seahub
 export SEAHUB_LOG_DIR=${SEAFILE_DIR}/logs
 export SEAFILE_RPC_PIPE_PATH=${seafile_rpc_pipe_path}
 
-export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
-#Vlad: TODO: check security
-export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
-export PYTHONPATH=${INSTALLPATH}/pro/python:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seafile/lib/python3/site-packages:${INSTALLPATH}/seafile/lib64/python3/site-packages:${INSTALLPATH}/seahub:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$pro_pylibs_dir
 
 #export PYTHON_EGG_CACHE=$SEAFILE_DIR/.cache/Python-Eggs
 
 export PYTHONIOENCODING=utf-8
 
-#echo $PYTHONPATH
+# echo $PYTHONPATH
 
 python3 $*  
 

@@ -1,0 +1,56 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+<h3 class="hd">{% trans "Office in Keeper" %}</h3>
+
+<h4>{% trans "Summary" %}</h4>
+
+<p>{% trans "Keeper offers the possibility to directly work on Office files in the browser - independently of your operating system and device. You can also work with your colleagues on the same document at the same time, while also tracking changes, chatting, commenting, and reviewing. There's also the possibility to work with non-Keeper users, making it the perfect place to collaborate or to work on a file alone, but seamlessly with multiple devices." %}</p>
+
+<h4>{% trans "Details" %}</h4>
+
+<h5>{% trans "OnlyOffice" %}</h5>
+
+<p>{% blocktrans %}In Keeper we use <a href="https://www.onlyoffice.com/" target="_blank">OnlyOffice</a> since it offers great compatibility with Microsoft (Desktop) Office, while also enabling collaborative work in the same document without sacrificing valuable features like the tracking/reviewing of changes, commenting, or simply a fast synchronization between users, while working on the same document at the same time.{% endblocktrans %}</p>
+
+<p><strong>{% blocktrans %}Please keep in mind, you can't mix opening a file on your desktop and editing in the browser at the same time - it will result in a file lock and if you ignore it, in conflict files.{% endblocktrans %}</strong></p>
+
+<p>{% blocktrans %}You can work with as many users as you'd like via the browser though, as long as everyone is editing in the browser as well.{% endblocktrans %}</p>
+
+<h5>{% trans "Collaboration" %}</h5>
+
+<p>{% blocktrans %}As mentioned before, work with internal, external, Keeper, and non-Keeper colleagues on the same document, with any device you'd like to use. Start typing on your laptop, switch to your tablet, go back, let someone else finish - as long as you don't get confused, Keeper shouldn't either!{% endblocktrans %}</p>
+
+<h5>{% trans "Sharing" %}</h5>
+
+<p>{% blocktrans %}In general, you have a few ways to share a file:{% endblocktrans %}</p>
+<ul>
+  <li>{% blocktrans %}Internal Link: best used when sharing with colleagues who have access to the file via Keeper. This is the most secure way of sharing, since Keeper will check for user rights before anyone can see or change the file{% endblocktrans %}</li>
+  <li>{% blocktrans %}Sharing Link: use this one to share with colleagues who don't have direct access to the file. This is less secure than the Internal Link, since anyone with the Sharing Link can access the file. You have a few options with the Sharing Link:{% endblocktrans %}
+    <ul>
+      <li>{% blocktrans %}Add a password to protect the link: anyone who wants to access the file needs the password{% endblocktrans %}</li>
+      <li>{% blocktrans %}Add auto expiration: the link will only work a set amount of days{% endblocktrans %}</li>
+      <li>{% blocktrans %}Set permissions: straight forward (preview, preview & download, edit on cloud & download), but if you'd like to have non-Keeper users working on your document, this is the option to choose. It'll allow anonymous users to edit the file, until the link is revoked - use at your own risk!{% endblocktrans %}</li>
+    </ul>
+  </li>
+</ul>
+
+<h5>{% trans "Compatibility" %}</h5>
+
+<p>{% blocktrans %}We've tested the compatibility with Microsoft Office at length and found only in very few cases issues (like ten TAB stops in a row where slightly differently displayed). Compatibility will never be 100% perfect, but it's close, so feel free to mix online editing in Keeper with Microsoft Office on your local machine. In case you run into issues, please send us feedback to <a href="mailto:keeper@mpdl.mpg.de">keeper@mpdl.mpg.de</a> and we'll forward it immediately!{% endblocktrans %}</p>
+
+<h5>{% trans "Track Changes, Chat & Comments" %}</h5>
+
+<p>{% blocktrans %}Go to the Collaboration Tab in OnlyOffice and there you'll find all the features you are used to from e.g. Microsoft Office. Enable Track Changes, review, make comments, or chat with others in the document.{% endblocktrans %}</p>
+
+<h5>{% trans "Help" %}</h5>
+
+<p>{% blocktrans %}Need some help with OnlyOffice and how it works? There's an extensive help section directly integrated - simply go to File -> Help...{% endblocktrans %}</p>
+
+<p><img src="{{ MEDIA_URL }}img/help/office_help.png" alt="" /></p>
+
+{% endblock %}
+
+

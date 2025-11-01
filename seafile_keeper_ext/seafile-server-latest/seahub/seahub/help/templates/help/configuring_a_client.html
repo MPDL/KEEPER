@@ -1,0 +1,10 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+<h3 class="hd">{% trans "Configuring a client" %}</h3>
+
+<p>{% blocktrans %}We encourage users to use clients in order to fully utilize the sync and share advantages of Keeper. Any client will ask you for login credentials and the server address. Please make sure to enter as server address <a href="https://keeper.mpdl.mpg.de">https://keeper.mpdl.mpg.de</a>. It should look like this (or similar, depending on the client). Please use your Email and password, which you provided during registration with Keeper.{% endblocktrans %}</p>
+<p><img src="{{ MEDIA_URL }}img/help/configuring_a_client.png" alt="" /></p>
+{% endblock %}

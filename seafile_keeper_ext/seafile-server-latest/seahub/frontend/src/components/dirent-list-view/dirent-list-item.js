@@ -28,7 +28,6 @@ import '../../css/dirent-list-item.css';
 
 // KEEPER
 import ReactTooltip from 'react-tooltip';
-import { keeperAPI } from '../../utils/seafile-api';
 import bergImage from '../../assets/berg_icon.png';
 
 
@@ -309,13 +308,14 @@ class DirentListItem extends React.Component {
     e.preventDefault();
     e.nativeEvent.stopImmediatePropagation(); // for document event
     this.props.onItemDelete(this.state.dirent);
+  }
 
   // KEEPER
   onItemCertify = (e) => {
     e.nativeEvent.stopImmediatePropagation();
     const { dirent, repoID } = this.props;
     let filePath = this.getDirentPath(dirent);
-    keeperAPI
+    seafileAPI
       .canCertify(repoID, dirent.type, filePath)
       .then(() => {
         this.certifyFile();
@@ -332,7 +332,7 @@ class DirentListItem extends React.Component {
     toaster.success(gettext('Certify the file through bloxberg...'), {
       duration: 3,
     });
-    keeperAPI
+    seafileAPI
       .certifyOnBloxberg(repoID, filePath, dirent.type, dirent.name)
       .then(() => {
         toaster.success(gettext('Transaction succeeded'));

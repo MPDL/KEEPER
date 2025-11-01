@@ -28,9 +28,9 @@ const {
 } = window.libraryDetails.pageOptions;
 
 const propTypes = {
-  type : PropTypes.string.isRequired,
-  data: PropTypes.object.isRequired,
-  theadData: PropTypes.object.isRequired,
+  // type: PropTypes.string.isRequired,
+  // data: PropTypes.object.isRequired,
+  // theadData: PropTypes.object.isRequired,
 };
 
 
@@ -56,7 +56,9 @@ class LibraryDetailsPage extends React.Component {
     ];
 
     this.state = {
-      showArchives: JSON.parse(archive_repos).length > 0,
+      // switch on next line if KEEPER_ARCHIVING_ENABLED is true
+      // showArchives: JSON.parse(archive_repos).length > 0,
+      showArchives: false,
       showDoi: JSON.parse(doi_repos).length > 0,
       showCerts: JSON.parse(bloxberg_certs).length > 0,
     };
@@ -251,7 +253,3 @@ class Content extends React.Component {
 LibraryDetailsPage.propTypes = propTypes;
 
 ReactDOM.render(<LibraryDetailsPage />, document.getElementById('wrapper'));
-
-// const container = document.getElementById('root');
-// const root = createRoot(container);
-// root.render(<LibraryDetailsPage />);

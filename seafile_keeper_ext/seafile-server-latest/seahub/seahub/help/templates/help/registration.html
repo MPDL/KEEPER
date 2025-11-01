@@ -1,0 +1,10 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+<h3 class="hd">{% trans "Registration" %}</h3>
+
+<p>{% blocktrans %}Currently Keeper is having its own user management, which means you need to create new account in order to use Keeper. Please register your new account under <a href="{{ SITE_ROOT }}accounts/register/">https://keeper.mpdl.mpg.de/accounts/register/</a> and use a unique password. Once you have registered, MPG users will automatically receive an email to activate the account; non-MPG users have to be invited by MPG users to receive their account. Any new users invited by MPG users can activate their account without any additional help.{% endblocktrans %}</p>
+<p>{% blocktrans %}If you haven’t received an activation email, please double check your email provided during registration (typo, wrong domain, etc.). If it still run into issues, please contact the Keeper support.{% endblocktrans %}</p>
+{% endblock %}

@@ -187,21 +187,22 @@ LOGGING = {
     }
 }
 
+NODE_ENV = os.environ.get('NODE_ENV', 'production')
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'frontend/',
-        'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.%s.json' % ('dev' if '__FRONTEND__' == 'dev' else 'pro')),
+        'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.%s.json' % ('dev' if NODE_ENV == 'development' else 'pro')),
+        # 'STATS_FILE': os.path.join('__SEAFILE_DIR__', 'seafile-server-latest', 'seahub', 'frontend/webpack-stats.%s.json' % ('dev' if True else 'pro')),
     }
 }
 
-
 # KEEPER Service URL
-SERVICE_URL = '__SERVICE_URL__'
+# SERVICE_URL = '__SERVICE_URL__'
 
 ##########################################################################
 #### Web server <-> file server
 
-FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
+# FILE_SERVER_ROOT = '__SERVICE_URL__/seafhttp'
 
 ##########################################################################
 #### Cluster settings
@@ -264,8 +265,7 @@ SESSION_SAVE_EVERY_REQUEST = False
 
 # Whether enable personal wiki and group wiki. Default is `False`
 # Since 6.1.0 CE
-ENABLE_WIKI = False
-
+ENABLE_WIKI = True
 
 ##########################################################################
 #### Repo snapshot label feature
@@ -510,7 +510,11 @@ LANGUAGES = (
     ('en', 'English'),
 )
 
-
+# Fix error: "AttributeError: 'Settings' object has no attribute 'STATICI18N_DOMAIN'. Did you mean: 'STATICI18N_ROOT'?"
+STATICI18N_DOMAIN = 'djangojs'
+STATICI18N_NAMESPACE = None
+STATICI18N_PACKAGES = 'django.conf'
+STATICI18N_FILENAME_FUNCTION = 'statici18n.utils.default_filename'
 
 ##########################################################################
 #### Pro edition only options
@@ -655,6 +659,15 @@ ENABLE_SYS_ADMIN_GENERATE_USER_AUTH_TOKEN = True
 # '3' means password must have at least 3 types of the above.
 SHARE_LINK_PASSWORD_STRENGTH_LEVEL = 3
 
+
+CUSTOM_NAV_ITEMS = [
+    {'icon': 'sf2-icon-library',
+     'desc': 'Project Catalog',
+     'link': '/project-catalog'
+    },
+]
+
+
 ##########################################################################
 ####  KEEPER specific settings
 
@@ -699,3 +712,4 @@ BLOXBERG_API_KEY = '__BLOXBERG_API_KEY__'
 TEST_SERVER='__TEST_SERVER__'
 TEST_SERVER_ADMIN='__TEST_SERVER_ADMIN__'
 TEST_SERVER_PASSWORD="__TEST_SERVER_ADMIN_PASSWORD__"
+

@@ -199,41 +199,41 @@ function start_seafile_server () {
 }
 
 function kill_all () {
-    # pkill -f "seaf-server"
-    # pkill -f "fileserver"
-    # pkill -f "seafevents.main"
-    # pkill -f "wsgidav.server.server_cli"
-    # pkill -f "seafile-monitor.sh"
-    # pkill -f "archiving_server.py"
+    pkill -f "seaf-server"
+    pkill -f "fileserver"
+    pkill -f "seafevents.main"
+    pkill -f "wsgidav.server.server_cli"
+    pkill -f "seafile-monitor.sh"
+    pkill -f "archiving_server.py"
 
-    local_processes=(
-        "seaf-server"
-        "fileserver"
-        "seafevents.main"
-        "wsgidav.server.server_cli"
-        "seafile-monitor.sh"
-        "archiving_server.py"
-    )
+    # local_processes=(
+    #     "seaf-server"
+    #     "fileserver"
+    #     "seafevents.main"
+    #     "wsgidav.server.server_cli"
+    #     "seafile-monitor.sh"
+    #     "archiving_server.py"
+    # )
     
-    for pattern in "${processes[@]}"; do
-        echo "Attempting to gracefully kill: $pattern"
-        pkill -f "$pattern"
+    # for pattern in "${processes[@]}"; do
+    #     echo "Attempting to gracefully kill: $pattern"
+    #     pkill -f "$pattern"
 
-        # Wait up to 10 seconds, checking every second
-        for i in {1..10}; do
-            if ! pgrep -f "$pattern" > /dev/null; then
-                echo "Process '$pattern' terminated successfully after $i second(s)."
-                break
-            fi
-            sleep 1
-        done
+    #     # Wait up to 10 seconds, checking every second
+    #     for i in {1..10}; do
+    #         if ! pgrep -f "$pattern" > /dev/null; then
+    #             echo "Process '$pattern' terminated successfully after $i second(s)."
+    #             break
+    #         fi
+    #         sleep 1
+    #     done
 
-        # If still running after 10 seconds, force kill
-        if pgrep -f "$pattern" > /dev/null; then
-            echo "Process '$pattern' still running after 10 seconds. Forcing termination..."
-            pkill -9 -f "$pattern"
-        fi
-    done
+    #     # If still running after 10 seconds, force kill
+    #     if pgrep -f "$pattern" > /dev/null; then
+    #         echo "Process '$pattern' still running after 10 seconds. Forcing termination..."
+    #         pkill -9 -f "$pattern"
+    #     fi
+    # done
  }
 
 function stop_seafile_server () {

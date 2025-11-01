@@ -24,7 +24,6 @@ import EventBus from './common/event-bus';
 
 
 //KEEPER
-import { seafileAPI } from '../utils/seafile-api';
 import LibraryDetails from '../models/library-details';
 
 const propTypes = {
@@ -134,10 +133,10 @@ class MainSideNav extends React.Component {
               </span>
             </li>
             {this.state.isCreateGroupDialogOpen &&
-            <CreateGroupDialog
-              toggleDialog={this.toggleCreateGroupDialog}
-              onCreateGroup={this.onCreateGroup}
-            />
+              <CreateGroupDialog
+                toggleDialog={this.toggleCreateGroupDialog}
+                onCreateGroup={this.onCreateGroup}
+              />
             }
           </>
         )}
@@ -197,7 +196,7 @@ class MainSideNav extends React.Component {
             </Link>
           </li>
         )}
-        { height !== 0 && linksNavItem}
+        {height !== 0 && linksNavItem}
       </ul>
     );
   }
@@ -207,9 +206,9 @@ class MainSideNav extends React.Component {
       customNavItems.map((item, idx) => {
         return (
           <li key={idx} className='nav-item'>
-            <a href={item.link} className="nav-link ellipsis" title={item.desc}>
+            <a href={item.link} className="nav-link ellipsis" title={gettext(item.desc)}>
               <span className={item.icon} aria-hidden="true"></span>
-              <span className="nav-text">{item.desc}</span>
+              <span className="nav-text">{gettext(item.desc)}</span>
             </a>
           </li>
         );
@@ -244,7 +243,7 @@ class MainSideNav extends React.Component {
             <h2 className="mb-2 px-2 font-weight-normal heading">{gettext('Workspace')}</h2>
             <ul className="nav nav-pills flex-column nav-container">
               <li id="files" className={`nav-item flex-column ${this.getActiveClass('libraries')}`}>
-                <Link to={ siteRoot + 'libraries/' } className={`nav-link ellipsis ${this.getActiveClass('libraries')}`} title={gettext('Files')} onClick={(e) => this.tabItemClick(e, 'libraries')}>
+                <Link to={siteRoot + 'libraries/'} className={`nav-link ellipsis ${this.getActiveClass('libraries')}`} title={gettext('Files')} onClick={(e) => this.tabItemClick(e, 'libraries')}>
                   <span className="sf3-font-files sf3-font" aria-hidden="true"></span>
                   <span className="nav-text">{gettext('Files')}</span>
                   <span className={`toggle-icon sf3-font sf3-font-down ${filesNavUnfolded ? '' : 'rotate-90'}`} aria-hidden="true" onClick={this.toggleFilesNav}></span>
@@ -258,32 +257,6 @@ class MainSideNav extends React.Component {
                   {this.renderAddGroup()}
                 </ul>
               </li>
-
-            {/* KEEPER lib details button. <- TO BE FIXED!!!*/}
-            <li className="nav-item flex-column" id="group-nav">
-              <a
-                className="nav-link ellipsis"
-                title={gettext('Library Details')}
-                onClick={this.libdtExtend}
-              >
-                <span className="sf2-icon-group" aria-hidden="true"></span>
-                <span className="nav-text">
-                  {gettext('Library Details')}
-                </span>
-                <span
-                  className={`toggle-icon fas ${
-                    this.state.libraryDetailsExtended
-                      ? "fa-caret-down"
-                      : "fa-caret-left"
-                  }`}
-                  aria-hidden="true"
-                ></span>
-              </a>
-              {this.renderLibraryDetails()}
-            </li>
-            {/* END KEEPER lib details button. */}
-
-
               <li className={`nav-item ${this.getActiveClass('starred')}`}>
                 <Link className={`nav-link ellipsis ${this.getActiveClass('starred')}`} to={siteRoot + 'starred/'} title={gettext('Favorites')} onClick={(e) => this.tabItemClick(e, 'starred')}>
                   <span className="sf3-font-starred sf3-font" aria-hidden="true"></span>
@@ -291,12 +264,12 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
               {showActivity &&
-              <li className={`nav-item ${this.getActiveClass('dashboard')}`}>
-                <Link className={`nav-link ellipsis ${this.getActiveClass('dashboard')}`} to={siteRoot + 'dashboard/'} title={gettext('Activities')} onClick={(e) => this.tabItemClick(e, 'dashboard')}>
-                  <span className="sf3-font-activities sf3-font" aria-hidden="true"></span>
-                  <span className="nav-text">{gettext('Activities')}</span>
-                </Link>
-              </li>
+                <li className={`nav-item ${this.getActiveClass('dashboard')}`}>
+                  <Link className={`nav-link ellipsis ${this.getActiveClass('dashboard')}`} to={siteRoot + 'dashboard/'} title={gettext('Activities')} onClick={(e) => this.tabItemClick(e, 'dashboard')}>
+                    <span className="sf3-font-activities sf3-font" aria-hidden="true"></span>
+                    <span className="nav-text">{gettext('Activities')}</span>
+                  </Link>
+                </li>
               }
               <li className={`nav-item ${this.getActiveClass('published')}`}>
                 <Link className={`nav-link ellipsis ${this.getActiveClass('published')}`} to={siteRoot + 'published/'} title={gettext('Wikis')} onClick={(e) => this.tabItemClick(e, 'published')}>
@@ -305,12 +278,12 @@ class MainSideNav extends React.Component {
                 </Link>
               </li>
               {canInvitePeople &&
-              <li className={`nav-item ${this.getActiveClass('invitations')}`}>
-                <Link className={`nav-link ellipsis ${this.getActiveClass('invitations')}`} to={siteRoot + 'invitations/'} title={gettext('Invite Guest')} onClick={(e) => this.tabItemClick(e, 'invitations')}>
-                  <span className="sf3-font-invite-visitors sf3-font" aria-hidden="true"></span>
-                  <span className="nav-text">{gettext('Invite Guest')}</span>
-                </Link>
-              </li>
+                <li className={`nav-item ${this.getActiveClass('invitations')}`}>
+                  <Link className={`nav-link ellipsis ${this.getActiveClass('invitations')}`} to={siteRoot + 'invitations/'} title={gettext('Invite Guest')} onClick={(e) => this.tabItemClick(e, 'invitations')}>
+                    <span className="sf3-font-invite-visitors sf3-font" aria-hidden="true"></span>
+                    <span className="nav-text">{gettext('Invite Guest')}</span>
+                  </Link>
+                </li>
               }
               <li id="share-admin-nav" className='nav-item flex-column'>
                 <a className="nav-link ellipsis" title={gettext('Share Admin')} onClick={this.shExtend}>
@@ -320,51 +293,82 @@ class MainSideNav extends React.Component {
                 </a>
                 {this.renderSharedAdmin()}
               </li>
+            </ul>
+            <h2 className="mb-2 pt-1 px-2 font-weight-normal heading">{gettext('Additional resources')}</h2>
+            <ul className="nav nav-pills flex-column nav-container" style={{ marginBottom: 0 }}>
+              {/* KEEPER */}
+              <li className="nav-item flex-column" id="group-nav">
+                <a
+                  className="nav-link ellipsis"
+                  title={gettext('Library Details')}
+                  onClick={this.libdtExtend}
+                >
+                  <span className="sf2-icon-group" aria-hidden="true"></span>
+                  <span className="nav-text">
+                    {gettext('Library Details')}
+                  </span>
+                  <span className={`toggle-icon sf3-font sf3-font-down ${this.state.libraryDetailsExtended ? '' : 'rotate-90'}`} aria-hidden="true"></span>
+                </a>
+                {this.renderLibraryDetails()}
+              </li>
+              <li className="nav-item flex-column">
+                <a className={'nav-link'} href={siteRoot + 'help/'} title={gettext('Help')}>
+                  <span className="sf3-font-help sf3-font" aria-hidden="true"></span>
+                  <span className="nav-text">{gettext('Help')}</span>
+                </a>
+              </li>
+              <li className="nav-item flex-column">
+                <a className={'nav-link'} href="mailto:keeper@mpdl.mpg.de?subject=Keeper%20Support%20Request&body=Dear%20Keeper%20Support,%0A%0A" title={gettext('Contact Support')}>
+                  <span className="sf3-font-hi sf3-font" aria-hidden="true"></span>
+                  <span className="nav-text">{gettext('Contact Support')}</span>
+                </a>
+              </li>
               {customNavItems && this.renderCustomNavItems()}
             </ul>
-
-            <h2 className="mb-2 pt-1 px-2 font-weight-normal heading">{gettext('Help and resources')}</h2>
+            {/*<h2 className="mb-2 pt-1 px-2 font-weight-normal heading">{gettext('Help and resources')}</h2>*/}
             {sideNavFooterCustomHtml ? (
               <div className='side-nav-footer' dangerouslySetInnerHTML={{ __html: sideNavFooterCustomHtml }}></div>
             ) : (
               <ul className="nav nav-pills flex-column nav-container">
-                <li className='nav-item'>
-                  <a className={'nav-link'} href={siteRoot + 'help/'} title={gettext('Help')}>
-                    <span className="sf3-font-help sf3-font" aria-hidden="true"></span>
-                    <span className="nav-text">{gettext('Help')}</span>
-                  </a>
-                </li>
-                {enableTC &&
-                <li className='nav-item'>
-                  <a href={`${siteRoot}terms/`} className="nav-link">
-                    <span className="sf3-font-terms sf3-font" aria-hidden="true"></span>
-                    <span className="nav-text">{gettext('Terms')}</span>
-                  </a>
-                </li>
-                }
                 <li className='nav-item'>
                   <a href={siteRoot + 'download_client_program/'} className="nav-link">
                     <span className="sf3-font-devices sf3-font" aria-hidden="true"></span>
                     <span className="nav-text">{gettext('Clients')}</span>
                   </a>
                 </li>
-                {enableShowAbout &&
+                {enableTC &&
+                  <li className='nav-item'>
+                    <a href={`${siteRoot}terms/`} className="nav-link">
+                      <span className="sf3-font-terms sf3-font" aria-hidden="true"></span>
+                      <span className="nav-text">{gettext('Terms')}</span>
+                    </a>
+                  </li>
+                }
+                {/* KEEPER */}
                 <li className='nav-item'>
-                  <a href="#" className="nav-link" onClick={this.toggleAboutDialog}>
+                  <a href="https://keeper.mpdl.mpg.de/f/d17ecbb967/" className="nav-link">
                     <span className="sf3-font-about sf3-font" aria-hidden="true"></span>
-                    <span className="nav-text">{gettext('About')}</span>
+                    <span className="nav-text">{gettext('About Keeper')}</span>
                   </a>
                 </li>
+                {/* END KEEPER */}
+                {enableShowAbout &&
+                  <li className='nav-item'>
+                    <a href="#" className="nav-link" onClick={this.toggleAboutDialog}>
+                      <span className="sf3-font-about sf3-font" aria-hidden="true"></span>
+                      <span className="nav-text">{gettext('About Seafile')}</span>
+                    </a>
+                  </li>
                 }
                 {showWechatSupportGroup &&
-                <li className='nav-item'>
-                  <a href="#" className="nav-link" onClick={this.toggleWechatDialog}>
-                    <span className="sf3-font-hi sf3-font" aria-hidden="true"></span>
-                    <span className="nav-text">
-                      {`加入${this.isWorkWeixin ? '企业' : ''}微信咨询群`}
-                    </span>
-                  </a>
-                </li>
+                  <li className='nav-item'>
+                    <a href="#" className="nav-link" onClick={this.toggleWechatDialog}>
+                      <span className="sf3-font-hi sf3-font" aria-hidden="true"></span>
+                      <span className="nav-text">
+                        {`加入${this.isWorkWeixin ? '企业' : ''}微信咨询群`}
+                      </span>
+                    </a>
+                  </li>
                 }
               </ul>
             )
@@ -382,13 +386,13 @@ class MainSideNav extends React.Component {
         )}
         {this.state.isShowWechatDialog &&
           <ModalPortal>
-            <WechatDialog toggleWechatDialog={this.toggleWechatDialog}/>
+            <WechatDialog toggleWechatDialog={this.toggleWechatDialog} />
           </ModalPortal>
         }
       </Fragment>
     );
   }
-   
+
   // KEEPER
   libdtExtend = () => {
     this.setState({
@@ -399,7 +403,7 @@ class MainSideNav extends React.Component {
 
   loadLibraryDetails = () => {
     let _this = this;
-    keeperAPI
+    seafileAPI
       .listLibraryDetails()
       .then((res) => {
         let libraryDetailsList = res.data.map((item) => {
@@ -408,7 +412,7 @@ class MainSideNav extends React.Component {
         });
 
         this.libraryDetailsHeight =
-          (libraryDetailsList.length + 1) * _this.listHeight;
+          (libraryDetailsList.length) * SUB_NAV_ITEM_HEIGHT;
         _this.setState({
           libraryDetailItems: libraryDetailsList.sort((a, b) => {
             return a.repo_name.toLowerCase() < b.repo_name.toLowerCase()
@@ -430,9 +434,8 @@ class MainSideNav extends React.Component {
     }
     return (
       <ul
-        className={`nav sub-nav nav-pills flex-column grp-list ${
-          this.state.groupsExtended ? "side-panel-slide" : "side-panel-slide-up"
-        }`}
+        className={`nav sub-nav nav-pills flex-column grp-list ${this.state.groupsExtended ? "side-panel-slide" : "side-panel-slide-up"
+          }`}
         style={style}
       >
         {this.state.libraryDetailItems.map((item) => {

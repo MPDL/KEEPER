@@ -76,7 +76,8 @@ class ArchiveLibraryDialog extends React.Component {
                         <Fragment>
                             {split[0]}
                             <a href="https://mpdl.zendesk.com/hc/en-us/articles/360011432700-Archiving"
-                                target="_blank">{gettext("Information on Archiving")}</a>.
+                                target="_blank">{gettext("Information on Archiving")}
+                            </a>.
                             {split[1]}
                         </Fragment>
                     }

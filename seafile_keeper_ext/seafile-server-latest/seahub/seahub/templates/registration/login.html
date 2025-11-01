@@ -17,8 +17,19 @@ html, body, #wrapper {
 }
 
 #wrapper {
+    /*
     background: url('/media/custom/keeper-login-page-background_1600px.svg') center top no-repeat scroll;
     background-size: cover;
+    */
+    background-color: #235b70;
+}
+
+#central-wrapper {
+    background-image: url('/media/custom/keeper-team-background.svg');
+    background-position: left 90px bottom 10px;
+    background-repeat: no-repeat;
+    padding: 50px 0 200px 40px;
+    background-color: rgba(168, 219, 221, 100);
 }
 
 #main {
@@ -29,10 +40,6 @@ html, body, #wrapper {
     border-radius: 0;
 }       
 
-
-#header {
-    border-bottom: 0;
-}
 
 .row {
     background-color: rgba(244,243,245,0.9);
@@ -45,23 +52,54 @@ html, body, #wrapper {
 }
 
 #info_panel {
-    padding: 0 0 150px 40px;
+    padding: 0 0 200px 40px;
 
 }
 
+/* Login panel */
 
-#login_panel h2 { 
-    padding-left: 20px;
+#login_panel input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;  /* Safari and Chrome */
+    -moz-appearance: none;     /* Firefox */
+    width: 24px;
+    height: 24px;
+    background-color: #f3f3f3;
+    border: none;
+    border-radius: 6px; /* Change this to control roundness */
+    cursor: pointer;
+    position: relative;
+    margin-right: 8px;
 }
 
+/* Checked state with background color */
+#login_panel input[type="checkbox"]:checked {
+    background-color: #0078d7;
+    border-radius: 6px; /* Ensure same radius on checked state */
+}
+
+/* Optional: custom checkmark */
+#login_panel input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 3px;
+    width: 8px;
+    height: 14px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
 
 #login_panel .input.name-input, #login_panel .input.passwd-input, #login_panel input:-webkit-autofill {
-    background-color: #f8dc9b !important;
-    -webkit-box-shadow: 0 0 0px 1000px #f8dc9b  inset;
-}
-
-#login_panel .input.name-input, #login_panel .input.passwd-input {
-    background-color: #f8dc9b !important;
+    background-color: #f3f3f3 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #f3f3f3 inset;
+    height: 38px;
+    width: 254px;
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    padding-left: 12px;
 }
 
 .new-narrow-panel {
@@ -70,21 +108,8 @@ html, body, #wrapper {
 }
 
 #lg_footer #keeper-links {
-    background-color: #f8dc9b;
-    padding: 10px 40px 10px 40px;
-}
-
-#lg_footer #keeper-links h4 {
-    margin-bottom: 0.3em;
-}
-
-#seafile-credits {
-    background-color: #d48074;
-    text-align: right;
-}
-
-#seafile-credits div {
-    line-height: 46px;
+    background-color: white;
+    padding: 20px 40px 20px 40px;
 }
 
 @media (max-width: 991px) {
@@ -122,7 +147,7 @@ html, body, #wrapper {
 {% comment "SEAFILE" %}
 <div class="login-panel-outer-container vh">
 <div class="login-panel" id="log-in-panel">
-    <h1 class="login-panel-hd">{% trans "Log In" %}</h1>
+    <h1 class="login-panel-hd">BLA{% trans "Log In" %}</h1>
     <form action="" method="post" id="login-form">{% csrf_token %}
         <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input mb-3" />
         <div class="position-relative">
@@ -163,7 +188,9 @@ html, body, #wrapper {
             <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
         </label>
 
-        <button type="submit" class="submit btn btn-primary btn-block h-auto mb-3">{% trans "Log In" %}</button>
+        <!-- <button id="login_btn" type="submit" class="submit btn btn-primary btn-block h-auto mb-3">{% trans "Log In" %}</button> -->
+        bla!!!
+        <button id="login_btn" class="btn btn-secondary btn-block">{% trans "Log In" %}</button>
     </form>
 
     {% if enable_sso %}
@@ -216,18 +243,18 @@ html, body, #wrapper {
 {% endcomment %}
 
 <div class="container">
-    <div class="row">
-        <div id="mpdl-flag" class="col-lg-12 hidden-md-down">
-            <img src="/media/custom/logo-mpdl-twocolor-dark-var2-box_keeper.svg" alt=""/>
-        </div>
+    <!-- <div class="row"> -->
+        <!-- <div id="mpdl-flag" class="col-lg-12 hidden-md-down"> -->
+            <!-- <img src="/media/custom/logo-mpdl-twocolor-dark-var2-box_keeper.svg" alt=""/> -->
+        <!-- </div> -->
 
-    </div>
+    <!-- </div> -->
     <div id="central-wrapper" class="row">
         <div class="col-xl-7 col-lg-7 hidden-md-down">
             <div id="info_panel">
                 <h3>Archive the way you work</h3>
                 <div id="intro_en">
-                    <p>A free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</p>
+                    <p>A free hoho service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</p>
                     <p>You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</p>
                 </div>
                 <div id="intro_de">
@@ -243,7 +270,7 @@ html, body, #wrapper {
             {#<div class="login-panel">#}
                 <div id="login_panel" class="new-narrow-panel">
                     {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
-                    <h2 class="hd">{% trans "Log In" %}</h2>
+                    <h3>{% trans "Log In" %}</h3>
                     <form action="" method="post" class="con">{% csrf_token %}
                         <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
                         <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
@@ -274,9 +301,8 @@ html, body, #wrapper {
                             <input type="checkbox" name="remember_me" class="vam remember-input" />
                             <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
                         </label>
-                        <button type="submit" class="submit">{% trans "Log In" %}</button>
+                        <button id="login_btn" type="submit" class="submit">{% trans "Log In" %}</button>
 
-                        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
                     </form>
 
                     <div class="con auth">
@@ -285,20 +311,16 @@ html, body, #wrapper {
                         <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
                         {% endif %}
 
+                        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
+
                         {% if enable_sso %}
                         <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
                         {% endif %}
-                        
-                    </div> 
-                    <div id="banner">
-                            {% comment %}<iframe width="330" src="https://www.powtoon.com/embed/cbnrU8gqG0w/" frameborder="0"></iframe>{% endcomment %}
-                            {% comment %}<a href="https://www.powtoon.com/embed/cbnrU8gqG0w/" target="_blank">{% endcomment %}
-                            <a href="https://mpdl.zendesk.com/hc/en-us/categories/360001234340-Keeper" target="_blank">
-                                <img src="/media/custom/knowledge_base.svg" title="Knowledge Base" />
-                            </a>
-                            {% comment %}</a>{% endcomment %}
-                   </div>
 
+                        <div id="knowledge_base">
+                          <a href="{{ SITE_ROOT }}help/" class="normal" target="_blank">KEEPER Knowledge Base</a>
+                        </div>
+                    </div> 
                 </div>
             </div>
 

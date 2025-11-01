@@ -1,0 +1,22 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<h3 class="hd">{% trans "How to invite external collaborators" %}</h3>
+
+<p>{% trans "While Keeper is primarily for those working within the Max Planck Society, we also encourage collaboration with external users, as long as it is related to any work within the Max Planck Society." %}</p>
+<p>{% blocktrans %}I order to invite people yourself, simply go to the web version of Keeper at <a href="{{ SITE_ROOT }}#invitations/">https://keeper.mpdl.mpg.de/#invitations</a>.{% endblocktrans %}</p>
+<p>{% blocktrans %}Under "Invite People" on the left side, you will see a button at the top of the page. Simply press it and you can start inviting your collaborators, by entering their email addresses and pressing submit. {% endblocktrans %}</p>
+
+{% if LANGUAGE_CODE == 'de' %}
+  <p><img src="{{ MEDIA_URL }}img/help/invite_externals_de.png" alt="" /></p>
+{% else %}
+  <p><img src="{{ MEDIA_URL }}img/help/invite_externals.png" alt="" /></p>
+{% endif %}
+
+
+{% endblock %}
+

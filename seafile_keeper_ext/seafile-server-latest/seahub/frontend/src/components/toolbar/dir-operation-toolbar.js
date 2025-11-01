@@ -33,7 +33,7 @@ const propTypes = {
   onUploadFolder: PropTypes.func.isRequired,
   direntList: PropTypes.array.isRequired,
   children: PropTypes.object,
-  loadDirentList: PropTypes.func
+  loadDirentList: PropTypes.func,
   // KEEPER
   isRepoOwner: PropTypes.bool.isRequired,
 };
@@ -220,7 +220,7 @@ class DirOperationToolbar extends React.Component {
   };
 
   onArchiveLibraryToggle = () => {
-    keeperAPI
+    seafileAPI
       .canArchive(this.props.repoID)
       .then((resp) => {
         const d = resp.data;

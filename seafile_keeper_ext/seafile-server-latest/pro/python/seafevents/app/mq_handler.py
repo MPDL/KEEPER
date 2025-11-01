@@ -1,5 +1,6 @@
 import time
 import logging
+import json
 from threading import Thread, excepthook
 import threading
 import traceback
@@ -138,16 +139,16 @@ class EventsHandler(object):
                     # self._counter += 1
                 if msg:
                     if channel == 'seaf_server.event':
-                    k_log.debug(msg)
-                    try:
-                        message_handler.handle_message(config, session, redis_connection, channel, msg)
-                    except Exception as e:
-                        logger.error(e)
-                        k_log.debug('Failed to handle_message in channel %s: %s', channel, e)
-                    finally:
-                        session.close()
-                        if redis_connection:
-                            redis_connection.close()
+                        k_log.debug(msg)
+                        try:
+                            message_handler.handle_message(config, session, redis_connection, channel, msg)
+                        except Exception as e:
+                            logger.error(e)
+                            k_log.debug('Failed to handle_message in channel %s: %s', channel, e)
+                        finally:
+                            session.close()
+                            if redis_connection:
+                                redis_connection.close()
                 else:
                     time.sleep(0.5)
         except SystemExit as sa:

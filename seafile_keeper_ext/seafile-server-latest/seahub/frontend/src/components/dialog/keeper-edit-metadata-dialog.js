@@ -61,7 +61,7 @@ class KeeperEditMetadataDialog extends React.Component {
           <Fragment>
             {split[0]}
             <span style={{ color: "#57a5b8" }}> {this.props.repoName}</span>
-            {split.length>1 && split[1]}
+            {split.length > 1 && split[1]}
           </Fragment>
         }
         onButton1={this.onUpdateArchiveMetadata}

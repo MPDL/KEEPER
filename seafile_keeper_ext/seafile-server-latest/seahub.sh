@@ -220,6 +220,8 @@ function set_env_config () {
         export SITE_ROOT=${SITE_ROOT:-/}
         export ENABLE_SEADOC=${ENABLE_SEADOC}
         export SEADOC_SERVER_URL=${SEADOC_SERVER_URL}
+        # KEEPER
+        export NODE_ENV=${NODE_ENV:-production}
     fi
 }
 

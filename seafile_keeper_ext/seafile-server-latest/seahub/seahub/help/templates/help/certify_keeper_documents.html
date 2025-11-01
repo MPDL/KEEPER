@@ -1,0 +1,90 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<h3 class="hd">{% trans "Certify Keeper documents" %}</h3>
+
+<h4>{% trans "In a nutshell" %}</h4>
+
+<ul>
+  <li>{% blocktrans %}Anonymously (without exposing data) create a digital fingerprint of your file(s), which includes a unique identifier of the specific file, a timestamp, and optional metadata (anonymous/not exposed to the public) secured by a blockchain. Note: adding metadata will add your project to Keeper's project catalog - only visible to MPG users.{% endblocktrans %}</li>
+  <li>{% blocktrans %}No impact on your files &amp; can be used at any time in your data life-cycle.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Keeper stores the certificate(s) representing the digital fingerprint.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Keeper also reconciles the certificate(s) with the specific file version you certified and give you easy access to both (as long as you don't delete the files).{% endblocktrans %}</li>
+  <li>{% blocktrans %}Prerequisite: you need to be the owner (in the Keeper sense) of the data.{% endblocktrans %}</li>
+</ul>
+
+<h4>{% trans "Why certify files?" %}</h4>
+
+<p>{% trans "A certified file has some useful properties:" %}</p>
+
+<ul>
+  <li>{% trans "The hash is unique to the exact file you've just certified and cannot be reproduced by anyone with any other file (or even another version of that specific file)." %}</li>
+  <li>{% blocktrans %}With the certificate or the transaction ID you've received, you can prove, that this specific file has been certified by you at the specific time. If you haven't separately stored the certified version, you can simply go to "Library Details" and find your certificates and files and download any of the files. Reconcile it with the previous transaction by using <a href="https://certify.bloxberg.org/verify" target="_blank">https://certify.bloxberg.org/verify</a> and proof your initial certification.{% endblocktrans %}</li>
+  <li>{% trans "You can also use the feature to make sure you are using the exact version of a file you wanted to use. You've uploaded some raw data to be used months later? Certify the file now and before you want to use it. Both hashes will be the same and you can be certain it contains the same data - without only the slightest adjustment." %}</li>
+  <li>{% trans "Need to timestamp data? Then the certification is also suitable - just with much more features." %}</li>
+</ul>
+
+<h4>{% trans "How to certify (and add metadata)?" %}</h4>
+
+<p>{% trans "You have two options, explained below. You can optionally add metadata, just press Library Metadata:" %}</p>
+
+{% if LANGUAGE_CODE == 'de' %}
+  <p><img src="{{ MEDIA_URL }}img/help/library_metadata_de.png" alt="" /></p>
+{% else %}
+  <p><img src="{{ MEDIA_URL }}img/help/library_metadata.png" alt="" /></p>
+{% endif %}
+
+
+<p>{% trans "or use the dropdown menu under \"My libraries\"." %}</p>
+
+<p><img src="{{ MEDIA_URL }}img/help/edit_metadata.png" alt="" /></p>
+
+<h4>{% trans "Metadata is on a per library level, so single files will all have the same information." %}</h4>
+
+<h5>{% trans "Single file certification" %}</h5>
+
+<p>{% blocktrans %}Go to any file that you own or that has been shared with you and you will see the bloxberg icon (as shown below). When you click the icon, your file will be hashed and digitally signed on the bloxberg blockchain. You'll receive a notification and an email with the relevant information to show the file has been certified by you.{% endblocktrans %}</p>
+
+{% if LANGUAGE_CODE == 'de' %}
+  <p><img src="{{ MEDIA_URL }}img/help/certify_with_bxb_de.png" alt="" /></p>
+{% else %}
+  <p><img src="{{ MEDIA_URL }}img/help/certify_with_bxb.png" alt="" /></p>
+{% endif %}
+
+<h5>{% trans "Certify a library (currently up to 1000 files)" %}</h5>
+
+<p>{% blocktrans %}Similar to where you can add the data, either use the dropdown menu under "My libraries" or the buttons while accessing the library.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}The certification may take a couple minutes, depending on how many tasks are in our queue. You'll get notified once it's done. You can keep working - it all happens in the background.{% endblocktrans %}</p>
+
+<h4>{% trans "Where can I find my certificates and certified files?" %}</h4>
+
+<p>{% blocktrans %}We keep all the files in exactly the version you certified and the certificates expect when you decide to delete the library. Deleted the library on accident? Restore it and it's back to normal.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}The files and certificates can be found by navigating the the sidebar on the left and expanding "Library Details"{% endblocktrans %}</p>
+
+{% if LANGUAGE_CODE == 'de' %}
+  <p><img src="{{ MEDIA_URL }}img/help/library_details_de.png" alt="" /></p>
+{% else %}
+  <p><img src="{{ MEDIA_URL }}img/help/library_details.png" alt="" /></p>
+{% endif %}
+
+
+<p>{% blocktrans %}Click on the library containing the certified files and select the certification you are looking for. You'll either{% endblocktrans %}</p>
+
+<ul>
+  <li>{% trans "for single file certification see a page showing the certificate, the validation widget and a possibility to download any of the files, or" %}</li>
+  <li>{% trans "for library certification see the file list with the possibility to download the files and the corresponding certificate." %}</li>
+</ul>
+
+<h4>{% trans "Feedback?" %}</h4>
+
+<p>{% blocktrans %}We will try to improve the certification on a regular basis. You feedback is most valuable to us - please get in touch in case you'd like to see any changes or just would like to chat about the feature: <a href="mailto:keeper@mpdl.mpg.de">keeper@mpdl.mpg.de</a>{% endblocktrans %}</p>
+
+{% endblock %}
+
+

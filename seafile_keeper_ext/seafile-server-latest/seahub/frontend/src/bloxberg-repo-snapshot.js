@@ -88,7 +88,7 @@ class BloxbergRepoSnapshot extends React.Component {
           if (index > 0 && index != pathList.length - 1) {
             return (
               <React.Fragment key={index}>
-                <a href="#" onClick={this.clickFolderPath.bind(this, pathList.slice(0, index+1).join('/'))}>{pathList[index]}</a>
+                <a href="#" onClick={this.clickFolderPath.bind(this, pathList.slice(0, index + 1).join('/'))}>{pathList[index]}</a>
                 <span> / </span>
               </React.Fragment>
             );  
@@ -237,10 +237,10 @@ class FolderItem extends React.Component {
         <td><a href={`${siteRoot}repo/${repoID}/snapshot/files/?obj_id=${item.obj_id}&commit_id=${commitID}&p=${encodeURIComponent(Utils.joinPath(folderPath, item.name))}`} target="_blank">{item.name}</a></td>
         <td>{Utils.bytesToSize(item.size)}</td>
         <td className="text-center">
-          <a href={`${siteRoot}api2/bloxberg-pdf/${transactionId}/${JSON.parse(checksums)[Utils.joinPath(folderPath, item.name)]}/?p=${encodeURIComponent(Utils.joinPath(folderPath, item.name))}`} download className={`${isIconShown ? '': 'invisible'}`} title={gettext('Download Certificate')}>{gettext('Download Certificate')}</a>
+          <a href={`${siteRoot}api2/bloxberg-pdf/${transactionId}/${JSON.parse(checksums)[Utils.joinPath(folderPath, item.name)]}/?p=${encodeURIComponent(Utils.joinPath(folderPath, item.name))}`} download className={`${isIconShown ? '' : 'invisible'}`} title={gettext('Download Certificate')}>{gettext('Download Certificate')}</a>
         </td>
         <td className="text-center">
-          <a href={`${siteRoot}repo/${repoID}/${item.obj_id}/download/?file_name=${encodeURIComponent(item.name)}&p=${encodeURIComponent(Utils.joinPath(folderPath, item.name))}`} className={`${isIconShown ? '': 'invisible'}`} title={gettext('Download File')}>{gettext('Download File')}</a>
+          <a href={`${siteRoot}repo/${repoID}/${item.obj_id}/download/?file_name=${encodeURIComponent(item.name)}&p=${encodeURIComponent(Utils.joinPath(folderPath, item.name))}`} className={`${isIconShown ? '' : 'invisible'}`} title={gettext('Download File')}>{gettext('Download File')}</a>
         </td>
       </tr>
     );
