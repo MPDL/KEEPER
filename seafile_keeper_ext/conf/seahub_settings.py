@@ -145,11 +145,12 @@ LOGGING = {
         'keeper_debug': {
             'level':'DEBUG' if DEBUG else 'INFO',
             # 'level':'DEBUG',
-            'class':'logging.FileHandler',
-            'filename': '/tmp/keeper_debug2.log',
-            # 'mode': 'a',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join('/tmp', 'keeper_debug2.log'),
+            'maxBytes': 1024*1024*100,  # 100 MB
+            'backupCount': 5,
             'formatter':'keeper_debug',
-        },
+         },
     },
     'loggers': {
         '': {
