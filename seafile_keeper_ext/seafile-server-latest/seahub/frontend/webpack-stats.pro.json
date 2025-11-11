@@ -1,9 +1,9 @@
 {
   "status": "done",
   "assets": {
-    "static/css/app.b426dcc2.css": {
-      "name": "static/css/app.b426dcc2.css",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/css/app.b426dcc2.css"
+    "static/css/app.adb2573c.css": {
+      "name": "static/css/app.adb2573c.css",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/css/app.adb2573c.css"
     },
     "static/css/bloxbergCertificate.de565805.css": {
       "name": "static/css/bloxbergCertificate.de565805.css",
@@ -871,7 +871,7 @@
       "static/js/runtime.d7d57809.js",
       "static/css/commons.aeb38a21.css",
       "static/js/commons.f668d96f.js",
-      "static/css/app.b426dcc2.css",
+      "static/css/app.adb2573c.css",
       "static/js/app.9967cb6f.js"
     ],
     "bloxbergCertificate": [
