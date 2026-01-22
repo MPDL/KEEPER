@@ -423,7 +423,7 @@ class EnvManager(object):
             'system/postfix.main.cf@background': _join('/etc', 'postfix', 'main.cf'),
             'system/nagios.keeper.cfg': _join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': _join('/etc', 'nginx', 'nginx.conf'),
-           'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
+            'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
             'system/clamd.conf': _join('/etc', 'clamav', 'clamd.conf'),
             'system/clamav-daemon.service': _join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
@@ -695,8 +695,12 @@ def deploy_ext():
     Utils.info(f"Clean up {dest_dir} dir...")
     shutil.rmtree(dest_dir, ignore_errors=True)
 
+
     # deploy seafile-server-latest w/o expantion
     deploy_dir('seafile-server-latest')
+
+    ### deploy this dir explicitely, does not work in v7.0? 
+    deploy_dir(_join('seafile-server-latest', 'seahub', 'media', 'assets'))
 
     # redeploy selected files with expantion (i.e. with props in them) in seafile-server-latest
     deploy_file('seafile-server-latest/seafile.sh', expand=True)
