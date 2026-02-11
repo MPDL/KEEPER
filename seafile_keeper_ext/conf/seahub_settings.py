@@ -268,6 +268,9 @@ SESSION_SAVE_EVERY_REQUEST = False
 # Since 6.1.0 CE
 ENABLE_WIKI = True
 
+# ENABLE API Token
+ENABLE_GET_AUTH_TOKEN_BY_SESSION = True
+ 
 ##########################################################################
 #### Repo snapshot label feature
 
@@ -362,10 +365,32 @@ ORG_MEMBER_QUOTA_ENABLED = True
 ##########################################################################
 #### External authentication
 
-# Enable authentication with ADFS
-# Default is False
-# Since 6.0.9
-ENABLE_ADFS_LOGIN = False
+# Enable SAML / ADFS login
+ENABLE_ADFS_LOGIN = '__ENABLE_ADFS_LOGIN__'.lower() == 'true'
+
+# Redirect after successful SAML login (important!)
+LOGIN_REDIRECT_URL = '/saml2/complete/'
+
+# URL to fetch IdP metadata
+SAML_REMOTE_METADATA_URL = '__SAML_REMOTE_METADATA_URL__'
+
+# Alternative: If you have a local XML file
+# SAML_REMOTE_METADATA = '/path/to/idp-metadata.xml'
+
+# Attribute mapping: map IdP attributes → Seafile user fields
+# Adjust keys according to what your IdP sends (check IdP debug / attributes)
+SAML_ATTRIBUTE_MAPPING = {
+    'mail': ('contact_email', ),          # Email (usually used as username/login)
+    # 'sn': ('display_name', ),
+    # 'givenName': ('display_name', ),           # Full name / display name
+    # 'employeeNumber': ('display_name', ),                # Optional
+    # 'seafile_groups': ('', ),           # Optional: if IdP sends group/dept info
+}
+
+# Optional: auto-activate users after first SSO login
+ACTIVATE_AFTER_FIRST_LOGIN = True
+
+LOGOUT_REDIRECT_URL = '__LOGOUT_REDIRECT_URL__'
 
 # Enable authentication wit Kerberos
 # Default is False
