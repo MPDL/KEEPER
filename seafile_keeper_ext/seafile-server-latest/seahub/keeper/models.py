@@ -581,3 +581,132 @@ class DoiRepo(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     rm = models.DateTimeField(blank=True, default=None, null=True)
     objects = DoiRepoManager()
+
+class KeeperArchiveOwnerQuota(models.Model):
+
+    qid = models.AutoField(
+        primary_key=True,
+        verbose_name="Quota ID"
+    )
+    
+    owner = models.CharField(
+        max_length=255,
+        primary_key=True,          # part of composite PK
+        verbose_name="Archive Owner"
+    )
+    
+    repo_id = models.CharField(
+        max_length=37,             # usually 36 chars UUID + null byte or similar
+        db_index=True,
+        verbose_name="Repository ID"
+    )
+    
+    quota = models.SmallIntegerField(
+        verbose_name="Archive Quota (in some unit)"
+    )
+
+    objects = models.Manager()
+
+    class Meta:
+        db_table = 'keeper_archive_owner_quota'
+        
+        # Important: composite primary key (qid + owner)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['repo_id', 'owner'],
+                name='unq_keeper_archive_quota_owner_repo_id'
+            ),
+        ]
+
+
+MAX_UNICODE_TEXT_LEN = 2**24 - 1  # 16,777,215 — matches MEDIUMTEXT capacity
+
+class KeeperArchive(models.Model):
+
+    aid = models.AutoField(
+        primary_key=True,
+        verbose_name="Archive ID"
+    )
+
+    repo_id = models.CharField(
+        max_length=37,                  # typically 36-char UUID + padding/reserved
+        db_index=True,
+        verbose_name="Repository ID"
+    )
+
+    commit_id = models.CharField(
+        max_length=41,                  # git-style commit hash (40 hex + possible prefix)
+        verbose_name="Commit ID"
+    )
+
+    repo_name = models.CharField(
+        max_length=255,
+        verbose_name="Repository Name (at archive time)"
+    )
+
+    owner = models.CharField(
+        max_length=255,
+        db_index=True,
+        verbose_name="Archive Owner (email or virtual ID)"
+    )
+
+    version = models.SmallIntegerField(
+        db_index=True,
+        verbose_name="Version number"
+    )
+
+    checksum = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Content Checksum"
+    )
+
+    external_path = models.TextField(
+        blank=True,
+        verbose_name="External Storage Path"
+    )
+
+    status = models.CharField(
+        max_length=30,
+        default="NOT_QUEUED",
+        verbose_name="Archiving Status"
+    )
+
+    error_msg = models.TextField(
+        blank=True,
+        verbose_name="Error Message (if failed)"
+    )
+
+    # Equivalent to MEDIUMTEXT (~16 MB)
+    md = models.TextField(
+        max_length=MAX_UNICODE_TEXT_LEN,
+        blank=True,
+        verbose_name="Metadata (JSON or structured text)"
+    )
+
+    created = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        verbose_name="Created Timestamp"
+    )
+
+    archived = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Archived / Completed Timestamp"
+    )
+
+    class Meta:
+        db_table = 'keeper_archive'
+
+        # Replicate the unique constraint from SQLAlchemy
+        constraints = [
+            models.UniqueConstraint(
+                fields=['repo_id', 'owner', 'version'],
+                name='unq_keeper_archive_repo_id_version'
+            ),
+        ]
+
+        managed = False
+        verbose_name = "Keeper Archive Record"
+        verbose_name_plural = "Keeper Archive Records"

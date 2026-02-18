@@ -6,6 +6,8 @@ import datetime
 import re
 
 import logging
+import tempfile
+import json
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 import django
@@ -25,17 +27,17 @@ from keeper.common import parse_markdown, get_logger
 
 from keeper.utils import get_user_name, validate_year, validate_institute, validate_author, validate_resource_type, validate_director
 
-from keeper.models import Catalog
+from keeper.models import Catalog, CDC
 
 from django.core.mail import EmailMessage
 from django.template import Context, loader
 
 
-import tempfile
-import json
-
-from keeper.models import CDC
 from seahub.notifications.models import UserNotification
+from seahub.profile.models import Profile
+
+from django.db.models import Q
+
 
 TEMPLATE_DESC = "Template for creating 'My Libray' for users"
 
@@ -208,6 +210,17 @@ def get_authors_for_email(authors):
 def print_OK():
     print("In cdc_manager")
 
+
+def get_contact_email(user_id):
+    contact_email = user_id
+    try:
+        profile = Profile.objects.get(Q(contact_email=user_id) | Q(user=user_id))
+        contact_email = profile.contact_email or profile.user
+    except Profile.DoesNotExist:
+        logger.error('Cannot find profile for %s, use it as contact email', user_id)
+    return contact_email
+
+
 def generate_certificate(repo, commit):
     """ Generate Cared Data Certificate according to markdown file """
 
@@ -263,6 +276,7 @@ def generate_certificate(repo, commit):
         logger.info('Repo has creative dirents')
 
         owner = seafile_api.get_repo_owner(repo.id)
+        contact_email = get_contact_email(owner)
         logger.info("Certifying repo id: %s, name: %s, owner: %s ..." % (repo.id, repo.name, owner))
         content = file.get_content().decode('utf-8')
         cdc_dict = parse_markdown(content)
@@ -293,7 +307,7 @@ def generate_certificate(repo, commit):
                     "-t", quote_arg(cdc_dict['Title']),
                     "-aa", quote_arg(cdc_dict['Author']),
                     "-d", quote_arg(cdc_dict['Description']),
-                    "-c", quote_arg(owner),
+                    "-c", quote_arg(contact_email),
                     "-u", quote_arg(SERVICE_URL),
                     tmp_path,
                     "1>&2;",
@@ -345,7 +359,7 @@ def generate_certificate(repo, commit):
                 status = 'created'
                 CDC_MSG.append("Certificate has been sucessfully created")
                 # if not DEBUG:
-                send_email(owner, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
+                send_email(contact_email, {'SERVICE_URL': SERVICE_URL, 'USER_NAME': get_user_name(owner), 'PROJECT_NAME': repo.name,
                     'PROJECT_TITLE': cdc_dict['Title'], 'PROJECT_URL': get_repo_pivate_url(repo.id),
                     'AUTHOR_LIST': get_authors_for_email(cdc_dict['Author']), 'CDC_PDF_URL': get_file_pivate_url(repo.id, cdc_pdf), 'CDC_ID': cdc_id })
                 logging.info("CDC has been successfully created for repo %s, id: %s" % (repo.id, cdc_id) )
