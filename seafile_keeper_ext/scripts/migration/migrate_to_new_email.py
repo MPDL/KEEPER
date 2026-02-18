@@ -27,11 +27,8 @@ from seahub.profile.models import Profile
 from keeper.models import Catalog, CDC, DoiRepo, BCertificate, KeeperArchiveOwnerQuota, KeeperArchive
 
 
-# Usually something like: /srv/keeper/bloxberg-certs or /media/keeper/bcert
-# BLOXBERG_CERTS_STORAGE = getattr(settings, 'BLOXBERG_CERTS_STORAGE', '/path/to/__BLOXBERG_CERTS_STORAGE__')
 BLOXBERG_CERTS_STORAGE = getattr(settings, 'BLOXBERG_CERTS_STORAGE', None)
 
-# Usually something like: /keeper/hpss or /mnt/hpss/archive or similar
 HPSS_USER = getattr(settings, 'HPSS_USER', None)
 HPSS_URL = getattr(settings, 'HPSS_URL', None)
 HPSS_STORAGE_PATH = getattr(settings, 'HPSS_STORAGE_PATH', None)
