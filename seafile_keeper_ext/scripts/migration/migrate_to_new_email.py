@@ -6,8 +6,8 @@ Also renames storage directories where applicable.
 Usage:
     python migrate_keeper_user.py old@example.com new@example.com [--apply]
 
-    Without --commit → dry run (shows what would be done)
-    With --commit    → actually saves DB changes + renames directories
+    Without --apply → dry run (shows what would be done)
+    With --apply    → actually saves DB changes + renames directories
 """
 
 import sys
