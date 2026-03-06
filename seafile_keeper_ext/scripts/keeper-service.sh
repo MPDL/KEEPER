@@ -331,7 +331,9 @@ case "$1" in
             check_seahub_running "CRITICAL"
             #check_component_running "ccnet-server" "ccnet-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
             check_component_running "seaf-server" "seaf-server.*-c ${default_ccnet_conf_dir}" "CRITICAL"
-            check_component_running "fileserver" "fileserver.*fileserver.pid" "CRITICAL"
+            if [ ${__USE_GO_FILESERVER__} == "true" ] ; then
+                check_component_running "fileserver" "fileserver.*fileserver.pid" "CRITICAL"
+            fi
             check_component_running "seafevents" "seafevents.main" "CRITICAL"
             if [ ${__NODE_TYPE__} == "BACKGROUND" ] || [ ${__NODE_TYPE__} == "SINGLE" ] ; then
                 # check_component_running "notification-server" "notification-server" "CRITICAL"
