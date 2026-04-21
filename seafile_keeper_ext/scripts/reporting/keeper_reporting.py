@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import json
 import requests
 import argparse
-import pprint
-from pathlib import Path
 from datetime import datetime, timezone
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
@@ -21,10 +18,8 @@ from django.db import connection
 
 DOMAINS_URL = 'https://rena.mpdl.mpg.de/iplists/keeperx.json'
 
-domains = None
 domains_dict = None
 
-pp = pprint.PrettyPrinter(indent=2)
 parser = argparse.ArgumentParser()
 
 def p_header(txt):
@@ -48,7 +43,6 @@ def load_json_from_url(url):
 
 
 def load_rena_domains():
-    # return load_json_from_file('keeperx.json')
     return load_json_from_url(DOMAINS_URL)
 
 def get_rena_domains_dict_set(domains_json):
@@ -74,83 +68,70 @@ def get_rena_domains_dict_set(domains_json):
             domains = inst_data.get('domains', [])
 
             if inst_name and domains:
-                # Optional: normalize name (strip whitespace, etc.)
                 inst_name = inst_name.strip()
                 domains_dict[inst_name] = [d.strip().lower() for d in domains]
                 domains_set.update(domains_dict[inst_name])
 
     return domains_dict, domains_set
 
-def get_users_and_domains_stats(status='active'):
 
-    global domains_dict
-    
-    users = ccnet_threaded_rpc.get_emailusers('DB', -1, -1, status)
-    # print(f"Number of {status} users: {len(users)}")
-   
-    emails = []
-    for u in users:
-        email = str(u.email)
-        if email.endswith("@auth.local"):
-            p = Profile.objects.get_profile_by_user(email)
-            if hasattr(p, 'contact_email'):
-                emails.append(p.contact_email)
-        else:
-            emails.append(u.email)
-        
-    # generate domains_dict
-    domains_count = {}
-    for k in domains_dict.keys():
-        d_list = domains_dict.get(k)
-        for e in emails:
-            if e[e.index('@')+1:] in d_list:
-                if k not in domains_count:
-                    domains_count[k] = 1
-                else:
-                    domains_count[k] += 1
-
-    return users, emails, domains_count
-
-
-def get_users_and_domains_stats_sql_based():
+def get_users_and_domains_stats(status='active', last_interval=None):
 
     global domains_dict
 
-    SQL = """
-        select username, (select contact_email from `seahub-db`.profile_profile where username=profile_profile.user) as contact_mail
-            from base_userlastlogin
-            where last_login >= now() - interval 6 month
-        union
-        select user, (select contact_email from `seahub-db`.profile_profile where api2_tokenv2.user=profile_profile.user) as contact_mail
-            from api2_tokenv2
-            where last_accessed >= now() - interval 6 month
-        order by 2
-        """
-    
-    with connection.cursor() as cursor:
-        cursor.execute(SQL)
-        rows = cursor.fetchall()
+    all_users = ccnet_threaded_rpc.get_emailusers('DB', -1, -1, status)
 
-    emails = [contact_mail if username.endswith("@auth.local") else username for username, contact_mail in rows]
-    # for username, contact_mail in rows:
-    #     if username.endswith("@auth.local"):
-    #         emails.append(contact_mail)
-    #     else:
-    #         emails.append(username)
-        
-    # print(emails)
-    # sys.exit(0)
+    if last_interval:
+        SQL = f"""
+            SELECT
+                username,
+                (
+                    SELECT contact_email
+                    FROM `seahub-db`.profile_profile
+                    WHERE username = profile_profile.user
+                ) AS contact_mail
+            FROM base_userlastlogin
+            WHERE last_login >= NOW() - INTERVAL {last_interval}
 
-    # generate domains_dict
-    domains_count = {}
-    for k in domains_dict.keys():
-        d_list = domains_dict.get(k)
+            UNION
+
+            SELECT
+                user,
+                (
+                    SELECT contact_email
+                    FROM `seahub-db`.profile_profile
+                    WHERE api2_tokenv2.user = profile_profile.user
+                ) AS contact_mail
+            FROM api2_tokenv2
+            WHERE last_accessed >= NOW() - INTERVAL {last_interval}
+
+            ORDER BY 2
+            """
+
+        with connection.cursor() as cursor:
+            cursor.execute(SQL)
+            rows = cursor.fetchall()
+
+        sql_usernames = {username for username, _ in rows}
+        users = [u for u in all_users if u.email in sql_usernames]
+        emails = [contact_mail if username.endswith("@auth.local") else username for username, contact_mail in rows]
+    else:
+        users = all_users
+        emails = []
+        for u in users:
+            email = str(u.email)
+            if email.endswith("@auth.local"):
+                p = Profile.objects.get_profile_by_user(email)
+                if hasattr(p, 'contact_email'):
+                    emails.append(p.contact_email)
+            else:
+                emails.append(email)
+
+    domains_count = defaultdict(int)
+    for inst, d_list in domains_dict.items():
         for e in emails:
             if e[e.index('@')+1:] in d_list:
-                if k not in domains_count:
-                    domains_count[k] = 1
-                else:
-                    domains_count[k] += 1
+                domains_count[inst] += 1
 
     return users, emails, domains_count
 
@@ -229,10 +210,10 @@ def get_institutes_per_creation_year(users, status_filter='all'):
         except IndexError:
             continue
         
-        # Find matching institute
+        # Find matching institute (domains already lowercased in get_rena_domains_dict_set)
         found_inst = None
         for inst_name, domains_list in domains_dict.items():
-            if domain in [d.lower() for d in domains_list]:
+            if domain in domains_list:
                 found_inst = inst_name
                 break
         
@@ -265,13 +246,14 @@ def do(args):
 
     domains_dict, domains_set = get_rena_domains_dict_set(domains_json)
 
-    p_header(f"Reporting timestamp: {datetime.now()}")
-
-
     status = 'active'
-   
-    users, emails, domains_count = get_users_and_domains_stats_sql_based()
-    # users, emails, domains_count = get_users_and_domains_stats(status)
+    last_interval = None
+    # last_interval = '6 month'
+
+
+    p_header(f"Reporting timestamp: {datetime.now()}" + (f", last_interval: {last_interval}" if last_interval else ""))
+
+    users, emails, domains_count = get_users_and_domains_stats(status=status, last_interval=last_interval)
    
 
     if all or args.users_per_mpg_aff:
@@ -287,16 +269,12 @@ def do(args):
         
     if all or args.activated_users:
         p_header(get_help(parser, '--activated-users'))
-        # print(users[0])
-        # for name, value in vars(users[0]).items():  # то же, что obj.__dict__
-        #     print(name, "=", value)
-
         for s in get_usernick_domain_list(users):
             print(s)
  
     if all or args.deactivated_users:
         p_header(get_help(parser, '--deactivated-users'))
-        deactivated_users, _, _ = get_users_and_domains_stats('inactive')
+        deactivated_users, _, _ = get_users_and_domains_stats(status='inactive', last_interval=None)
         for s in get_usernick_domain_list(deactivated_users):
             print(s)
             
