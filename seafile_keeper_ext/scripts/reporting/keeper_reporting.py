@@ -13,8 +13,11 @@ from collections import defaultdict, Counter
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 django.setup()
+
 from seahub.profile.models import Profile
 from seaserv import ccnet_threaded_rpc
+
+from django.db import connection
 
 DOMAINS_URL = 'https://rena.mpdl.mpg.de/iplists/keeperx.json'
 
@@ -107,6 +110,50 @@ def get_users_and_domains_stats(status='active'):
                     domains_count[k] += 1
 
     return users, emails, domains_count
+
+
+def get_users_and_domains_stats_sql_based():
+
+    global domains_dict
+
+    SQL = """
+        select username, (select contact_email from `seahub-db`.profile_profile where username=profile_profile.user) as contact_mail
+            from base_userlastlogin
+            where last_login >= now() - interval 6 month
+        union
+        select user, (select contact_email from `seahub-db`.profile_profile where api2_tokenv2.user=profile_profile.user) as contact_mail
+            from api2_tokenv2
+            where last_accessed >= now() - interval 6 month
+        order by 2
+        """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(SQL)
+        rows = cursor.fetchall()
+
+    emails = [contact_mail if username.endswith("@auth.local") else username for username, contact_mail in rows]
+    # for username, contact_mail in rows:
+    #     if username.endswith("@auth.local"):
+    #         emails.append(contact_mail)
+    #     else:
+    #         emails.append(username)
+        
+    # print(emails)
+    # sys.exit(0)
+
+    # generate domains_dict
+    domains_count = {}
+    for k in domains_dict.keys():
+        d_list = domains_dict.get(k)
+        for e in emails:
+            if e[e.index('@')+1:] in d_list:
+                if k not in domains_count:
+                    domains_count[k] = 1
+                else:
+                    domains_count[k] += 1
+
+    return users, emails, domains_count
+
 
 def get_usernick_domain_list(users):
 
@@ -223,7 +270,8 @@ def do(args):
 
     status = 'active'
    
-    users, emails, domains_count = get_users_and_domains_stats(status)
+    users, emails, domains_count = get_users_and_domains_stats_sql_based()
+    # users, emails, domains_count = get_users_and_domains_stats(status)
    
 
     if all or args.users_per_mpg_aff:
