@@ -7,12 +7,13 @@ import argparse
 from datetime import datetime, timezone
 from collections import defaultdict
 
+import humanize
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "seahub.settings")
 django.setup()
 
 from seahub.profile.models import Profile
-from seaserv import ccnet_threaded_rpc
+from seaserv import ccnet_threaded_rpc, seafserv_threaded_rpc
 
 from django.db import connection
 
@@ -75,13 +76,26 @@ def get_rena_domains_dict_set(domains_json):
     return domains_dict, domains_set
 
 
-def get_users_and_domains_stats(status='active', last_interval=None):
+def get_users_and_domains_stats(status='active', last_interval=None, year=None, all_activity=False):
 
     global domains_dict
 
-    all_users = ccnet_threaded_rpc.get_emailusers('DB', -1, -1, status)
+    if status in (None, 'all'):
+        all_users = ccnet_threaded_rpc.get_emailusers('DB', -1, -1, '')
+    else:
+        all_users = ccnet_threaded_rpc.get_emailusers('DB', -1, -1, status)
 
-    if last_interval:
+    if last_interval or year or all_activity:
+        if all_activity:
+            where_login = ""
+            where_api = ""
+        elif year:
+            where_login = f"WHERE YEAR(last_login) = {year}"
+            where_api = f"WHERE YEAR(last_accessed) = {year}"
+        else:
+            where_login = f"WHERE last_login >= NOW() - INTERVAL {last_interval}"
+            where_api = f"WHERE last_accessed >= NOW() - INTERVAL {last_interval}"
+
         SQL = f"""
             SELECT
                 username,
@@ -91,7 +105,7 @@ def get_users_and_domains_stats(status='active', last_interval=None):
                     WHERE username = profile_profile.user
                 ) AS contact_mail
             FROM base_userlastlogin
-            WHERE last_login >= NOW() - INTERVAL {last_interval}
+            {where_login}
 
             UNION
 
@@ -103,7 +117,7 @@ def get_users_and_domains_stats(status='active', last_interval=None):
                     WHERE api2_tokenv2.user = profile_profile.user
                 ) AS contact_mail
             FROM api2_tokenv2
-            WHERE last_accessed >= NOW() - INTERVAL {last_interval}
+            {where_api}
 
             ORDER BY 2
             """
@@ -130,7 +144,7 @@ def get_users_and_domains_stats(status='active', last_interval=None):
     domains_count = defaultdict(int)
     for inst, d_list in domains_dict.items():
         for e in emails:
-            if e[e.index('@')+1:] in d_list:
+            if e and e[e.index('@')+1:] in d_list:
                 domains_count[inst] += 1
 
     return users, emails, domains_count
@@ -155,8 +169,32 @@ def get_usernick_domain_list(users):
             m = email
         m_prt = m.rpartition("@")
         result.append(f"{nn if nn else m_prt[0]}: {m_prt[2]}")
-        
-    return sorted(result) 
+
+    return sorted(result)
+
+
+def get_non_mpg_list(users, domains_set):
+    result = []
+    for u in users:
+        nn = None
+        email = str(u.email)
+        p = Profile.objects.get_profile_by_user(email)
+        if hasattr(p, 'nickname'):
+            nn = p.nickname
+        if email.endswith("@auth.local"):
+            m = p.contact_email if hasattr(p, 'contact_email') and p.contact_email else None
+        else:
+            m = email
+        if not m:
+            continue
+        try:
+            domain = m.split('@', 1)[1].lower()
+        except IndexError:
+            continue
+        if domain not in domains_set:
+            m_prt = m.rpartition("@")
+            result.append(f"{nn if nn else m_prt[0]}: {m_prt[2]}")
+    return sorted(result)
 
 def ctime_to_datetime(ctime):
     """
@@ -225,6 +263,37 @@ def get_institutes_per_creation_year(users, status_filter='all'):
     
     return year_to_institutes, year_to_count
   
+def get_storage_per_institution(users):
+    global domains_dict
+
+    inst_storage = defaultdict(int)
+
+    for u in users:
+        email = str(u.email)
+        if email.endswith("@auth.local"):
+            p = Profile.objects.get_profile_by_user(email)
+            if hasattr(p, 'contact_email') and p.contact_email:
+                email = p.contact_email
+            else:
+                continue
+
+        try:
+            domain = email.split('@', 1)[1].lower()
+        except IndexError:
+            continue
+
+        usage = seafserv_threaded_rpc.get_user_quota_usage(str(u.email))
+        if not usage or usage <= 0:
+            continue
+
+        for inst_name, domains_list in domains_dict.items():
+            if domain in domains_list:
+                inst_storage[inst_name] += usage
+                break
+
+    return inst_storage
+
+
 def do(args):
     """
     Main doer method
@@ -278,6 +347,39 @@ def do(args):
         for s in get_usernick_domain_list(deactivated_users):
             print(s)
             
+    if all or args.used_last_n_months is not None:
+        months = args.used_last_n_months or 12
+        p_header(get_help(parser, '--used-last-n-months') + f" ({months} months)")
+        users_nm, _, _ = get_users_and_domains_stats(status=None, last_interval=f'{months} MONTH')
+        print(f"Total: {len(users_nm)}")
+        for s in get_usernick_domain_list(users_nm):
+            print(s)
+
+    if all or args.non_mpg_used_in_year is not None:
+        year_val = args.non_mpg_used_in_year or 2025
+        p_header(get_help(parser, '--non-mpg-used-in-year') + f" ({year_val})")
+        users_y, _, _ = get_users_and_domains_stats(status=None, year=year_val)
+        result = get_non_mpg_list(users_y, domains_set)
+        print(f"Total: {len(result)}")
+        for s in result:
+            print(s)
+
+    if all or args.non_mpg_used:
+        p_header(get_help(parser, '--non-mpg-used'))
+        users_all, _, _ = get_users_and_domains_stats(status=None, all_activity=True)
+        result = get_non_mpg_list(users_all, domains_set)
+        print(f"Total: {len(result)}")
+        for s in result:
+            print(s)
+
+    if all or args.storage_per_institution:
+        p_header(get_help(parser, '--storage-per-institution'))
+        inst_storage = get_storage_per_institution(users)
+        total = sum(inst_storage.values())
+        for inst, size in sorted(inst_storage.items(), key=lambda x: x[1], reverse=True):
+            print(f"{inst}: {humanize.naturalsize(size)}")
+        print(f"Total (mapped to MPG institutions): {humanize.naturalsize(total)}")
+
     if all or args.institutes_per_creation_year:
         p_header(get_help(parser, '--institutes-per-creation-year'))
         
@@ -305,11 +407,19 @@ parser.add_argument('--users-per-mpg-aff', action='store_true', help='Members pe
 # parser.add_argument('--mpg-affs', action='store_true', help='Number of MPG Affiliations on board')
 parser.add_argument('--activated-users', action='store_true', help='List of activated user')
 parser.add_argument('--deactivated-users', action='store_true', help='List of deactivated user')
+parser.add_argument('--used-last-n-months', type=int, default=None, metavar='N',
+    help='Users who used Keeper in the last N months (incl. deactivated); default: 12')
+parser.add_argument('--non-mpg-used-in-year', type=int, default=None, metavar='YEAR',
+    help='Non-MPG users who used Keeper in the given year (incl. deactivated); default: 2025')
+parser.add_argument('--non-mpg-used', action='store_true',
+    help='Non-MPG users who ever used Keeper (all years, incl. deactivated)')
 parser.add_argument(
     '--institutes-per-creation-year',
     action='store_true',
     help='Number of distinct MPG institutions per user creation year (based on email domain)'
 )
+parser.add_argument('--storage-per-institution', action='store_true',
+    help='Storage usage per MPG institution (in GB)')
 parser.add_argument('-a', '--all', action='store_true', help='Show all')
 parser.set_defaults(func=do)
 args = parser.parse_args()
