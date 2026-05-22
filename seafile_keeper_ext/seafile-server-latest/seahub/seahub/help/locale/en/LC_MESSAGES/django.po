@@ -1316,10 +1316,10 @@ msgstr ""
 
 #: templates/help/groups_managing.html:10
 msgid ""
-"Each group can have multiple admins. The group owner and group admins can "
+"Each group can have multiple admins. The group owner can "
 "add more group admins."
 msgstr ""
-"Each group can have multiple admins. The group owner and group admins can "
+"Each group can have multiple admins. The group owner can "
 "add more group admins."
 
 #: templates/help/groups_managing.html:11

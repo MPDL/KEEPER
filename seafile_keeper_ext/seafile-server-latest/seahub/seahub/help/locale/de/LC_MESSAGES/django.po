@@ -1393,11 +1393,11 @@ msgstr ""
 
 #: templates/help/groups_managing.html:10
 msgid ""
-"Each group can have multiple admins. The group owner and group admins can "
+"Each group can have multiple admins. The group owner can "
 "add more group admins."
 msgstr ""
-"Jede Gruppe kann mehrere Administratoren haben. Der Gruppenbesitzer und die "
-"Gruppenadministratoren können weitere Gruppenadministratoren hinzufügen."
+"Jede Gruppe kann mehrere Administratoren haben. Der Gruppenbesitzer "
+"kann weitere Gruppenadministratoren hinzufügen."
 
 #: templates/help/groups_managing.html:11
 msgid ""
