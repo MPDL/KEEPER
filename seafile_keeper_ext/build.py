@@ -721,6 +721,12 @@ def deploy_ext():
     ### dist keeper
     Utils.run("make dist-keeper", cwd=env_mgr.seahub_dir, env=env_mgr.get_seahub_env())
 
+    ### redeploy after clean up (see above)
+    src_dir = _join('seafile-server-latest', 'seahub', 'media', 'assets', 'frontend')
+    Utils.info(f"Deploy {src_dir} dir...")
+    deploy_dir(src_dir)
+    
+    
     # TODO: remove, should be fixed in 6.3.12
     do_links((
         (env_mgr.assets_app_link, env_mgr.assets_app_dir),
