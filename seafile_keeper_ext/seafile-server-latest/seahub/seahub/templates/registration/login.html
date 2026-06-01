@@ -314,7 +314,9 @@ html, body, #wrapper {
                         <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
 
                         {% if enable_sso %}
-                        <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
+                        <div style="padding-top: 10px;">
+                            <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
+                        </div>
                         {% endif %}
 
                         <div id="knowledge_base">
