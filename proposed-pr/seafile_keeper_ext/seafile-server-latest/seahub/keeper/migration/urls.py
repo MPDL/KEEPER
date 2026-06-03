@@ -2,19 +2,19 @@
 URL configuration for the self-service KEEPER email migration app.
 
 In the full KEEPER integration, include this from the main seahub or keeper URLs, e.g.:
-    path('account/migrate/', include('keeper.migration.urls')),
+    url(r'^account/migrate/', include('keeper.migration.urls')),
 """
 
-from django.urls import path
+from django.conf.urls import url
 from . import views
 
 # Names are prefixed with keeper_migration_ for easy global use.
 # When including, you can do:
-# path('account/migrate/', include('keeper.migration.urls'))
+# url(r'^account/migrate/', include('keeper.migration.urls'))
 # Then use {% url 'keeper_migration_landing' %} etc.
 
 urlpatterns = [
-    path('', views.migration_landing, name='keeper_migration_landing'),
-    path('status/<int:pk>/', views.migration_status, name='keeper_migration_status'),
-    path('confirm/<int:pk>/', views.confirm_migration, name='keeper_migration_confirm'),
+    url(r'^$', views.migration_landing, name='keeper_migration_landing'),
+    url(r'^status/(?P<pk>\d+)/$', views.migration_status, name='keeper_migration_status'),
+    url(r'^confirm/(?P<pk>\d+)/$', views.confirm_migration, name='keeper_migration_confirm'),
 ]
