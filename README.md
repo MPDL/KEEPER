@@ -136,4 +136,4 @@ Once you provide the token + username, I can run the script for you (or you can 
 ---
 
 **Workspace initialized:** 2026-06-01  
-**Status:** proposed-pr/ ready for PR. Step 1 (web integration prep) complete. See "Next steps to pilot / production" above.
+**Status:** PR created: https://github.com/MPDL/KEEPER/pull/446 (body populated with full PR_DESCRIPTION.md via token automation). Step 1 (web integration prep) complete. The `prepare-and-open-pr.ps1` can be used for future re-runs if needed (it will detect existing PR). See "Next steps to pilot / production" above.
