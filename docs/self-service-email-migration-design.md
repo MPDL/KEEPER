@@ -194,7 +194,6 @@ This decision preserves all current operational safety, SSH access patterns, and
 - Worker CLI `--list-pending` for manual ops (in process_keeper_email_migrations.py). Includes run_migration_worker.sh wrapper.
 - Custom CSS keeper-migration.css for the migration UI pages.
 - `seafile_keeper_ext/seafile-server-latest/seahub/keeper/urls.py` (route registration)
-- `seafile_keeper_ext/conf/seahub_settings.py` (no new settings required; all values have built-in defaults in the migration code. We might expose KEEPER_MIGRATION_* keys here for configuration later, as noted in the code comments and integration notes.)
 - Possibly small additions to `keeper/utils.py` or `common.py`
 
 ### Supporting (in this workspace or automation repo)
