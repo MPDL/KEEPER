@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{# 
+  KEEPER INTEGRATION (apply these changes in your real KEEPER source tree):
+  - Replace "base.html" with the actual base for logged-in pages.
+  - Load your normal keeper_*.css plus this: <link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+  - Keep the identity banner (with SOURCE vs TARGET role) prominent and consistent.
+  - Optionally include custom footer/pieces your base normally provides.
+#}
+{% load i18n %}
+
+{% block title %}Account Data Transfer Status{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+{% endblock %}
+
+{% block main_content %}
+<div class="keeper-migration-page container">
+
+  {# Identity banner - color based on role #}
+  <div class="alert alert-{% if current_email == migration.source_email %}warning{% else %}success{% endif %} migration-identity-banner" style="font-size: 1.05em; padding: 12px; margin-bottom: 20px;">
+    <strong>You are currently logged in as:</strong> <span class="current-email" style="font-weight:bold;">{{ current_email }}</span>
+    {% if current_email == migration.source_email %}
+      <span class="role-badge source" style="background:#f0ad4e; color:white; padding:3px 8px; border-radius:3px; margin-left: 10px; font-weight: bold;">SOURCE ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">This is the source account. Its data will be transferred and the account deactivated upon successful completion.</p>
+    {% else %}
+      <span class="role-badge target" style="background:#5cb85c; color:white; padding:3px 8px; border-radius:3px; margin-left: 10px; font-weight: bold;">TARGET ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">This is the target account that will receive the data from the source account.</p>
+    {% endif %}
+  </div>
+
+  <p class="migration-check-reminder">
+    <strong>Important:</strong> The identity banner at the top of the screen shows the email address with which you are currently authenticated and whether this account is the SOURCE or TARGET of the data transfer. If the banner indicates the incorrect account, log out and log in using the appropriate email address before proceeding.
+  </p>
+
+  <h1>Account Data Transfer Status</h1>
+
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <dl class="dl-horizontal">
+        <dt>Source email</dt>
+        <dd>{{ migration.source_email }}</dd>
+        <dt>Target email</dt>
+        <dd>{{ migration.target_email }}</dd>
+        <dt>Current status</dt>
+        <dd><strong>{{ migration.get_status_display }}</strong></dd>
+        <dt>Transfer requested on</dt>
+        <dd>{{ migration.requested_at|date:"Y-m-d H:i" }}</dd>
+        {% if migration.confirmed_at %}<dt>Confirmed on</dt><dd>{{ migration.confirmed_at|date:"Y-m-d H:i" }}</dd>{% endif %}
+        {% if migration.completed_at %}<dt>Completed / failed on</dt><dd>{{ migration.completed_at|date:"Y-m-d H:i" }}</dd>{% endif %}
+      </dl>
+    </div>
+  </div>
+
+  {% if migration.status == 'pending' %}
+    <div class="alert alert-info">
+      The data transfer has been queued and will commence shortly.
+      You can return to this page later to check the status, or you will receive an email notification.
+    </div>
+  {% elif migration.status == 'in_progress' %}
+    <div class="alert alert-warning">
+      The data transfer is currently in progress. For large volumes of data, this may require considerable time. Please refrain from reconfiguring clients until the transfer has completed.
+    </div>
+  {% elif migration.status == 'completed' %}
+    <div class="alert alert-success">
+      <strong>Transfer completed successfully.</strong> Your libraries, shares, and groups are now available under the new email address.<br>
+      <strong>Next steps:</strong> Log in with the new email address and reconfigure your Seafile clients (desktop, mobile, etc.) as required. It is recommended to point clients to existing local folders where possible. The old email address has been deactivated for Keeper.
+    </div>
+  {% elif migration.status == 'failed' %}
+    <div class="alert alert-danger">
+      <strong>An error occurred during the data transfer.</strong><br>
+      {{ migration.error_message|default:"Please refer to the error details." }}<br>
+      Please contact the Keeper support team and provide both your old and new email addresses.
+    </div>
+  {% endif %}
+
+  <div style="margin-top: 20px;">
+    <a href="{% url 'keeper_migration_landing' %}" class="btn btn-default">Return to the account migration page</a>
+    {% if migration.status == 'completed' %}
+      <a href="/" class="btn btn-primary" style="margin-left: 8px;">Go to Keeper Home</a>
+    {% endif %}
+  </div>
+
+  {# Include KEEPER custom footer for visual consistency #}
+  {% include "keeper_footer.html" ignore missing %}
+
+</div>
+{% endblock %}

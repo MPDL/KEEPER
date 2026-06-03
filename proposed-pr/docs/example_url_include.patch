@@ -1,0 +1,23 @@
+# Copy-paste ready example for adding the migration URLs.
+# Paste this into your main seahub/urls.py (or the KEEPER extension's urls loading point) near other account/keeper includes.
+
+# --- Add the import near the top with your other includes ---
+# from django.urls import path, include
+
+# --- Add inside the urlpatterns list ---
+    # KEEPER self-service account data transfer (recommended location)
+    path('account/migrate/', include('keeper.migration.urls')),
+
+# --- Alternative (if you also want other keeper features under /keeper/) ---
+#     path('keeper/', include('keeper.urls')),
+
+# After this, the page is at /account/migrate/
+# It must be linked from banners/help/emails during migration waves.
+# See the templates in seahub-data/custom/templates/keeper/migration/ for the base.html + CSS swap instructions.
+# See KEEPER_Integration_Notes.md for the complete checklist.
+
+# Test plan after wiring:
+# - As source: visit /account/migrate/, generate code
+# - As target: visit /account/migrate/, paste code, confirm
+# - Run worker with --dry-run or manually to process
+# - Check identity banner always shows correct SOURCE vs TARGET role

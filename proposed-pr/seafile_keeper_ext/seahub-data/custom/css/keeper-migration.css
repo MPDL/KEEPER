@@ -1,0 +1,69 @@
+/* KEEPER Self-Service Migration Page Styles */
+/* 
+   Deploy this file to seahub-data/custom/css/keeper-migration.css
+   Load it from your real KEEPER base (or from the migration templates' extrahead).
+   Use together with your existing keeper_*.css for full visual match.
+*/
+
+.keeper-migration-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.migration-identity-banner {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.role-badge {
+  font-size: 0.8em;
+  vertical-align: middle;
+}
+
+.migration-status, .migration-start, .migration-claim, .migration-confirm-form {
+  margin-bottom: 20px;
+}
+
+.warning-box {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.warning-box.critical {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.confirmation-checks label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.95em;
+}
+
+.form-actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Make buttons and alerts match KEEPER style if needed */
+.btn {
+  /* Override or extend with KEEPER button styles from keeper_*.css */
+}
+
+.alert {
+  /* Extend with KEEPER alert styles */
+}
+
+/* Reminder note (used after identity banner on all migration screens) to verify correct account role */
+.migration-check-reminder {
+  font-size: 0.95em;
+  color: #555;
+  margin: -10px 0 15px 0;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}

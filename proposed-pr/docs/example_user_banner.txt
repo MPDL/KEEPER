@@ -1,0 +1,26 @@
+Example banner text to add to KEEPER login/dashboard or help areas during the email migration waves:
+
+--------------------------------------------------
+📢 Keeper Account Migration – Self-Service Now Available
+
+If your email address has changed, you may initiate the transfer of your Keeper data to the new identity:
+
+1. Log in using your OLD email address.
+2. Navigate to: https://keeper.mpdl.mpg.de/account/migrate/
+3. Request a migration code.
+4. Log in using your NEW email address and return to the same page.
+5. Confirm on the identity banner at the top that it identifies the account as TARGET for the transfer. If it shows SOURCE instead, log out and log in with the new email address.
+6. Enter the migration code and complete the confirmation steps on the page.
+
+The identity banner on the page always indicates the currently authenticated email address and its role (SOURCE or TARGET) in the transfer.
+
+After the transfer has completed:
+- Your old email address will be deactivated for Keeper access.
+- Log in with the new email address to access your data.
+
+For assistance, contact your local IT support or keeper@mpdl.mpg.de.
+
+Link: /account/migrate/  (or the full URL above)
+--------------------------------------------------
+
+This text may be used as a dismissible banner or static help. The self-service transfer page is designed to ensure the correct account is always clearly indicated.
