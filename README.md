@@ -93,7 +93,7 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
    - Run the manual `CREATE TABLE` (your preference; SQL in `create_keeper_email_migration_table.sql` or via `keeper-db.sql` on new deploys).
    - Configure `.env` (KEEPER_DB_*, MIGRATION_SCRIPT_DIR, EMAIL_* for worker notifications, MIGRATION_PAGE_URL, MIGRATION_ALWAYS_CREATE if desired).
    - Set up the cron (example in worker README and script header: `*/5 * * * * cd ... && python3 process...`).
-   - (For your local pilot) you can populate `C:\Users\peterfi\update_seafile_token\migration\` from the proposed tree.
+   - (For your local pilot) the `C:\Users\peterfi\update_seafile_token\migration\` dir has been populated with the worker + .env.example (support contact and examples use your-pilot-email@mpdl.mpg.de for this instance). The real SOP/banner were also updated with your email as pilot contact.
 
 **3. Deploy + promote the page:**
    - Deploy the KEEPER code change (brings the UI, management command, etc.).
@@ -136,4 +136,4 @@ Once you provide the token + username, I can run the script for you (or you can 
 ---
 
 **Workspace initialized:** 2026-06-01  
-**Status:** PR created: https://github.com/MPDL/KEEPER/pull/446 (body populated with full PR_DESCRIPTION.md via token automation). Step 1 (web integration prep) complete. The `prepare-and-open-pr.ps1` can be used for future re-runs if needed (it will detect existing PR). See "Next steps to pilot / production" above.
+**Status:** PR created: https://github.com/MPDL/KEEPER/pull/446 (body populated with full PR_DESCRIPTION.md via token automation). Step 1 (web integration prep) complete. Pilot ops dir (`C:\Users\peterfi\update_seafile_token\migration\`) populated + customized for your-pilot-email@mpdl.mpg.de . The `prepare-and-open-pr.ps1` can be used for future re-runs if needed (it will detect existing PR). See "Next steps to pilot / production" above.
