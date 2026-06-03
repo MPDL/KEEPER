@@ -14,8 +14,9 @@ This includes:
 - process_keeper_email_migrations.py   (this worker)
 - migrate_account.py
 - seafile_common.py
-- bulk_migrate.py (legacy)
 - etc.
+
+(Note: the legacy bulk_migrate.py tool remains in its original location and is not delivered as part of this migration/ subdir.)
 
 The KEEPER app servers have their own scripts at /opt/seafile/scripts/migration/
 (for migrate_to_new_email.py etc.), but this worker runs on the automation/management host
