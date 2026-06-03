@@ -108,3 +108,37 @@ The schema lives in the 'keeper' database (routed via keeper.dbrouter.DbRouter).
 See the design document for more context.
 
 See the main design document in the keeper-email-migration workspace for full context.
+
+## Pilot / manual testing (before web UI is deployed)
+
+For early testing of the worker + legacy pipeline (e.g. on an ops host or locally):
+
+1. Ensure the `keeper_email_migration` table exists in keeper-db (run `create_keeper_email_migration_table.sql` manually if needed).
+
+2. Seed a test row manually (example - replace emails and use a real token value):
+
+```sql
+INSERT INTO keeper_email_migration
+  (source_email, target_email, migration_token, status, token_expires_at, requested_at, metadata)
+VALUES
+  ('old-email@example.org',
+   'new-email@example.org',
+   'PASTE_A_REAL_TOKEN_HERE_OR_USE_SECRETS_GENERATED_ONE',
+   'pending',
+   DATE_ADD(NOW(), INTERVAL 7 DAY),
+   NOW(),
+   JSON_OBJECT('pilot', true));
+```
+
+3. Run with your .env loaded:
+
+```bash
+cd /opt/seafile/scripts/migration
+python3 process_keeper_email_migrations.py --dry-run
+python3 process_keeper_email_migrations.py --list-pending
+# live run (no --dry-run) will call the existing migrate_account.py --from ... --to ... --apply
+```
+
+On Windows for local pilot the equivalent commands use `python` or `py`.
+
+After the web integration (see STEP1 checklist), prefer using the self-service UI to generate real codes instead of manual INSERTs. The worker will consume rows created by the UI exactly the same way.
