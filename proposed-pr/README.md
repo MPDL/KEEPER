@@ -13,7 +13,7 @@ There are two parts:
 
 ## How to use
 
-1. Review the design document: `../docs/self-service-email-migration-design.md`
+1. Review the design document in the workspace: `docs/self-service-email-migration-design.md` (top level of this repo)
 2. Web changes under `seafile_keeper_ext/` mirror the paths inside the KEEPER repository.
 3. Scripts under `opt/seafile/scripts/migration/` should be deployed to `/opt/seafile/scripts/migration/` on the automation/management host.
 4. When ready, the `seafile_keeper_ext/` parts become the actual PR to MPDL/KEEPER. The migration scripts are ops changes.
@@ -45,7 +45,7 @@ The KEEPER application servers also use `/opt/seafile/scripts/migration/` for th
 **Recommended cron:**
     */5 * * * * cd /opt/seafile/scripts/migration && python3 process_keeper_email_migrations.py >> /var/log/keeper-migration-worker.log 2>&1
 
-See `opt/seafile/scripts/migration/README.md` (after deployment) and the main design document (`../docs/...`) for full details.
+See `opt/seafile/scripts/migration/README.md` (after deployment) and the main design document (workspace top-level `docs/self-service-email-migration-design.md`) for full details.
 
 ## Schema change
 

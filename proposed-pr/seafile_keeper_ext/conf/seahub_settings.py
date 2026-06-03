@@ -3,7 +3,7 @@
 # The migration code provides built-in defaults for all configurable values
 # (code lifetime, support contact, page URL, etc.).
 #
-# See KEEPER_Integration_Notes.md for:
+# See the accompanying KEEPER_Integration_Notes.md (and STEP1 checklist) for:
 # - Registering the 'keeper.migration' app
 # - Including the migration URLs (for /account/migrate/)
 # - Deploying custom CSS (keeper-migration.css)

@@ -141,4 +141,4 @@ python3 process_keeper_email_migrations.py --list-pending
 
 On Windows for local pilot the equivalent commands use `python` or `py`.
 
-After the web integration (see STEP1 checklist), prefer using the self-service UI to generate real codes instead of manual INSERTs. The worker will consume rows created by the UI exactly the same way.
+After the web integration (see the STEP1_KEEPER_web_integration.md checklist provided with the PR materials), prefer using the self-service UI to generate real codes instead of manual INSERTs. The worker will consume rows created by the UI exactly the same way.

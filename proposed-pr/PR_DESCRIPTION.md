@@ -52,11 +52,11 @@ See the proposed structure in this repo for the full delta.
 
 - New migration app + templates + keeper-db.sql addition
 - Ops worker + supporting scripts + docs
-- Updated/added SOP and integration notes
+- Operational docs (SOP, integration notes, STEP1 checklist, banner examples) are provided alongside this PR for pilots and deployment (not included in the repo tree).
 
 ## Related
 
 - Original manual process SOP remains for bulk/exception cases.
-- Design doc with all decisions (code 7 days + regenerate, keeper-db, manual sql run, English only, no user cancel, pipeline stays on automation host, etc.).
+- Design doc (in this workspace) with all decisions (code 7 days + regenerate, keeper-db, manual sql run, English only, no user cancel, pipeline stays on automation host, etc.).
 
-This is ready to submit as a PR. The feature (UI + worker + docs) is complete. Integration steps for the KEEPER deployment (base template, CSS, URL wiring) and pilot instructions are documented in KEEPER_Integration_Notes.md and the new STEP1 checklist.
+This is ready to submit as a PR. The feature (UI + worker) is complete. Detailed integration steps for the KEEPER deployment (base template, CSS, URL wiring) and pilot instructions are provided in accompanying checklists and notes outside the core code change (see local copies of STEP1_KEEPER_web_integration.md, KEEPER_Integration_Notes.md, etc.).

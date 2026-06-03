@@ -237,7 +237,7 @@ This decision preserves all current operational safety, SSH access patterns, and
 - Updated SOP for self-service (including merged user instructions in the legacy SOP).
 - Integration notes + PR description + dedicated STEP1 integration checklist.
 - Templates include clear integration comments for real KEEPER base + CSS.
-- Full visual match and URL wiring documented as post-PR deployment steps (see KEEPER_Integration_Notes.md).
+- Full visual match and URL wiring documented as post-PR deployment steps (see local KEEPER_Integration_Notes.md / STEP1 in pilot materials; removed from proposed-pr/ per request).
 
 ---
 

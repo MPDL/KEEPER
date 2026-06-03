@@ -51,7 +51,7 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
 - Django management command `list_migration_requests` for admins (deployed with the KEEPER code).
 - Custom CSS for migration page (keeper-migration.css).
 - Manual SQL run documented (per your preference).
-- Dedicated STEP1/STEP2/etc. checklists prepared in both the proposed tree and your real update_seafile_token/ dir.
+- Dedicated STEP1/STEP2/etc. checklists prepared (moved out of proposed-pr/ per request; copies live in your real update_seafile_token/ dir and workspace history).
 
 **Web / KEEPER PR side (core UI flow implemented + polished + integration docs ready):**
 - Table directly in `keeper-db.sql`.
@@ -60,32 +60,27 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
 - Templates polished with KEEPER panel structure, banners, footer includes, and detailed integration comments.
 - URLs + example include patch + settings placeholder (minimal, defaults builtin).
 - Prominent SOURCE / TARGET identity banners on every page + on-screen reminders.
-- Full integration instructions + STEP1 checklist for web wiring (base template, CSS, URL include) in docs/.
+- Full integration instructions + STEP1 checklist for web wiring (base template, CSS, URL include) provided as separate materials (PR_example_* files at workspace root + your local copies).
 
-**Docs:**
-- Design doc (phases updated to complete)
-- New self-service SOP
-- KEEPER integration notes (with future config note)
-- PR description ready (wording feedback section removed; user confirmed good)
-- STEP1_KEEPER_web_integration.md (new dedicated checklist for the integration step you are on)
+**Docs (kept for pilot / not part of the code PR):**
+- Design doc (phases updated to complete) at `docs/self-service-email-migration-design.md`
+- Operational docs (SOP, integration notes, STEP1, banner text) are in your `update_seafile_token/` pilot copies and were removed from `proposed-pr/` so they are not added to the KEEPER repo in this PR. PR_example_* files at workspace root contain the url wiring examples/patch/banner.
 
 **Remaining (deployment/pilot steps on your side, fully documented):**
 - See the updated list in this README ("Next steps to pilot / production").
 - Wording for users is settled (plain but professional for European scientists).
 - Step 1 (web integration prep/docs) complete.
 
-**Docs:**
-- Design doc
-- New self-service SOP
-- KEEPER integration notes
-- PR description ready
+**Docs (local/pilot only):**
+- Design doc (workspace `docs/`)
+- Operational SOP / integration notes / STEP1 / banner examples (in `update_seafile_token/` and workspace git history; removed from proposed-pr/ for this PR)
 
 **Next steps to pilot / production (the feature core is complete in `proposed-pr/`):**
 
 **1. KEEPER web integration (in the KEEPER source tree, before web redeploy):**
-   - Apply the URL include for `/account/migrate/` (see `proposed-pr/docs/example_main_urls.py` or `example_url_include.patch` into your main seahub/urls.py or equivalent).
+   - Apply the URL include for `/account/migrate/` (see `PR_example_main_urls.py` or `PR_example_url_include.patch` at the workspace root, or the copies in your `update_seafile_token/` dir).
    - In the migration templates (`seahub-data/custom/templates/keeper/migration/*.html`): replace `{% extends "base.html" %}` with the real KEEPER base used for authenticated pages.
-   - Load `seahub-data/custom/keeper_*.css` + `keeper-migration.css` (templates have detailed comments; see also `KEEPER_Integration_Notes.md` section 3).
+   - Load `seahub-data/custom/keeper_*.css` + `keeper-migration.css` (templates have detailed comments; the full KEEPER_Integration_Notes.md is in your local pilot materials).
    - Optionally register the `keeper.migration` app if your extension loader requires it.
 
 **2. Ops / automation host setup (for the worker):**
@@ -97,7 +92,7 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
 
 **3. Deploy + promote the page:**
    - Deploy the KEEPER code change (brings the UI, management command, etc.).
-   - Add the promotion banner text (from `proposed-pr/docs/example_user_banner.txt` or the version in your real SOP dir) to login/dashboard/help pages during waves.
+   - Add the promotion banner text (from `PR_example_user_banner.txt` at workspace root, or the customized version in your real `update_seafile_token/` SOP dir) to login/dashboard/help pages during waves.
 
 **4. Pilot & observe:**
    - Full end-to-end: source generates code → target claims + confirms (with banner checks) → worker picks up and calls the untouched `migrate_account.py` → notifications fire → user reconfigures clients.
@@ -110,11 +105,11 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
    - Any final wording tweaks from real European scientist users.
    - Optional: better stuck-job alerting, more worker CLI flags.
 
-The dedicated `proposed-pr/docs/SOP_Keeper_SelfService_Account_Migration.md` has the merged user + ops view (you've been syncing the key parts into the real legacy SOP).
+The self-service SOP (and full integration notes) live in your local `update_seafile_token/` copies (synced from the removed proposed-pr/docs/ ); the legacy SOP has the merged self-service section.
 
 See `proposed-pr/PR_DESCRIPTION.md` for the PR summary text.
 
-See `docs/self-service-email-migration-design.md` and `proposed-pr/docs/KEEPER_Integration_Notes.md` for the authoritative plan + detailed integration steps (templates comments also have the "replace base + load CSS" instructions).
+See `docs/self-service-email-migration-design.md` (workspace) for the authoritative plan + decisions. The detailed integration steps / KEEPER_Integration_Notes.md + STEP1 checklist are in your `update_seafile_token/` pilot materials (and were removed from `proposed-pr/` for this PR). The migration templates have the "replace base + load CSS" instructions inline.
 
 The core (UI + worker calling the proven legacy pipeline unchanged + plain-language safety) is complete and ready for the above deployment steps.
 
