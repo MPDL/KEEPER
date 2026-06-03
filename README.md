@@ -118,6 +118,21 @@ See `docs/self-service-email-migration-design.md` and `proposed-pr/docs/KEEPER_I
 
 The core (UI + worker calling the proven legacy pipeline unchanged + plain-language safety) is complete and ready for the above deployment steps.
 
+## Doing the actual PR (with token)
+
+A helper script has been prepared on the feature branch:
+
+```powershell
+.\prepare-and-open-pr.ps1 -GithubToken "ghp_yourtokenhere" -GithubUsername "yourgithubusername"
+```
+
+It will:
+- Fork MPDL/KEEPER under your account (if not already)
+- Push this branch to your fork
+- Open the PR using the content from `proposed-pr/PR_DESCRIPTION.md`
+
+Once you provide the token + username, I can run the script for you (or you can run it yourself). The token only needs `repo` (or `public_repo`) scope.
+
 ---
 
 **Workspace initialized:** 2026-06-01  
