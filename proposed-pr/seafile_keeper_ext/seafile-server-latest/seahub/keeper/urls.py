@@ -1,6 +1,10 @@
 """
 URLs for the keeper package.
 
+NOTE: This urls.py did not exist prior to the self-service email migration feature.
+It is being added as part of this PR to encapsulate KEEPER-specific URL routing inside the
+keeper app (instead of directly patching the core seahub/seahub/urls.py for every new feature).
+
 To integrate the self-service migration:
 
 In your main seahub/urls.py or wherever KEEPER custom URLs are included, add something like:
