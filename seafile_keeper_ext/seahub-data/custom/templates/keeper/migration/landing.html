@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{# 
+  KEEPER INTEGRATION (do this in your real KEEPER source under seahub-data/custom):
+  - Replace "base.html" with the actual base template used for logged-in/authenticated pages in your deployment.
+  - Make sure seahub-data/custom/keeper_*.css (your normal KEEPER styles) + this file's CSS are loaded (either in the base or add the link below).
+  - Add: <link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+  - Optionally: {% include "keeper_footer.html" ignore missing %} or other custom includes your base normally provides.
+  - Goal: the page must feel 100% native to KEEPER (same header, footer, colors, fonts, buttons).
+#}
+{% load i18n %}
+
+{% block title %}Account Data Transfer{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+{% endblock %}
+
+{% block main_content %}
+<div class="keeper-migration-page container">  {# Add KEEPER container class if used #}
+
+  {# CRITICAL SAFETY BANNER - Always visible, different colors for SOURCE (warning/red) vs TARGET (success/green) #}
+  <div class="alert alert-{% if is_source %}warning{% elif is_target %}success{% else %}info{% endif %} migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 20px; border: 2px solid; border-radius: 4px;">
+    <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
+    <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
+    {% if is_source %}
+      <span class="role-badge source" style="background-color: #f0ad4e; color: #fff; padding: 3px 8px; border-radius: 3px; margin-left: 10px; font-weight: bold;">SOURCE ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">This is the source account. Its data will be transferred and the account deactivated upon successful completion.</p>
+    {% elif is_target %}
+      <span class="role-badge target" style="background-color: #5cb85c; color: #fff; padding: 3px 8px; border-radius: 3px; margin-left: 10px; font-weight: bold;">TARGET ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">This is the target account that will receive the data from the source account.</p>
+    {% endif %}
+  </div>
+
+  <p class="migration-check-reminder">
+    <strong>Important:</strong> The identity banner at the top of the screen shows the email address with which you are currently authenticated and whether this account is the SOURCE or TARGET of the data transfer. If the banner indicates the incorrect account, log out and log in using the appropriate email address before proceeding.
+  </p>
+
+  <div class="page-header">
+    <h1>Account Data Transfer</h1>
+    <p class="lead">Transfer all your libraries, shares, and groups to your new email identity. The process is designed to be secure and to preserve all data and permissions without loss.</p>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger" style="font-size: 1.05em;">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  {% endif %}
+
+  {% if as_source %}
+    {# User is the source of an existing move #}
+    <div class="panel panel-default migration-status">
+      <div class="panel-heading">
+        <h3 class="panel-title">Data transfer from this old email</h3>
+      </div>
+      <div class="panel-body">
+        <p><strong>Current status:</strong> <span class="label label-{% if as_source.status == 'pending' %}warning{% elif as_source.status == 'in_progress' %}info{% else %}default{% endif %}">{{ as_source.get_status_display }}</span></p>
+        <p><strong>Target email:</strong> {{ as_source.target_email }}</p>
+        <p><strong>Transfer requested on:</strong> {{ as_source.requested_at|date:"Y-m-d H:i" }}</p>
+
+        {% if as_source.status == 'pending' %}
+          <div class="well well-sm">
+            <p>The migration code is ready and valid for 7 days. It should only be used after logging in with the new email and confirming on the identity banner that the account is shown as TARGET.</p>
+            <form method="post" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" name="regenerate_token" class="btn btn-warning">Request new migration code (extends validity by 7 days)</button>
+            </form>
+            <a href="{% url 'keeper_migration_status' as_source.pk %}" class="btn btn-default">View transfer status</a>
+          </div>
+        {% else %}
+          <a href="{% url 'keeper_migration_status' as_source.pk %}" class="btn btn-primary">View transfer status</a>
+        {% endif %}
+      </div>
+    </div>
+
+  {% elif as_target %}
+    {# User is the target of an existing move #}
+    <div class="panel panel-success migration-status">
+      <div class="panel-heading">
+        <h3 class="panel-title">Data transfer to this new email</h3>
+      </div>
+      <div class="panel-body">
+        <p><strong>From (the old email):</strong> {{ as_target.source_email }}</p>
+        <p><strong>Current status:</strong> <span class="label label-{% if as_target.status == 'pending' %}warning{% elif as_target.status == 'in_progress' %}info{% else %}default{% endif %}">{{ as_target.get_status_display }}</span></p>
+        <a href="{% url 'keeper_migration_status' as_target.pk %}" class="btn btn-success">View transfer status or continue</a>
+      </div>
+    </div>
+
+  {% else %}
+    {# Normal starting point - user wants to start a migration or claim one #}
+    <div class="row">
+      <div class="col-md-6">
+        <div class="panel panel-primary migration-start">
+          <div class="panel-heading">
+            <h3 class="panel-title">Initiate data transfer (using old email)</h3>
+          </div>
+          <div class="panel-body">
+            <div class="alert alert-warning" style="margin-bottom: 15px;">
+              <strong>Important:</strong> After this is done your current (old) email will stop working and you will no longer be able to use it for Keeper.
+            </div>
+
+            <form method="post" class="migration-form">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="target_email">Your new email address</label>
+                <input type="email" name="target_email" id="target_email" required
+                       placeholder="you@newdomain" class="form-control input-lg">
+                <small class="help-block">Must be an account you can already log in with.</small>
+              </div>
+
+              <button type="submit" name="generate_token" class="btn btn-primary btn-lg btn-block">
+                Request migration code
+              </button>
+            </form>
+
+            <p class="help-text" style="margin-top: 15px;">
+              After receiving the code, log in with the <strong>new</strong> email address, return to this page, and confirm on the identity banner that it shows TARGET ACCOUNT before entering the code.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="panel panel-default migration-claim">
+          <div class="panel-heading">
+            <h3 class="panel-title">Complete data transfer (using new email)</h3>
+          </div>
+          <div class="panel-body">
+            <p>If you have received a migration code for your old email, first verify on the identity banner that it shows TARGET ACCOUNT, then enter the code below to complete the data transfer.</p>
+
+            <form method="post" class="migration-form">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="token">Migration code</label>
+                <input type="text" name="token" id="token" required placeholder="Enter the code here..." class="form-control input-lg">
+              </div>
+
+              <button type="submit" name="claim_token" class="btn btn-primary btn-lg btn-block">
+                Submit code and proceed
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div style="margin-top: 30px; font-size: 0.9em; color: #666;">
+    <p>Need help? Contact your local IT support or the Keeper team. The data transfer uses the same secure mechanism as the standard migration process.</p>
+  </div>
+
+  {# Include KEEPER custom footer for visual consistency #}
+  {% include "keeper_footer.html" ignore missing %}
+
+</div>
+{% endblock %}
