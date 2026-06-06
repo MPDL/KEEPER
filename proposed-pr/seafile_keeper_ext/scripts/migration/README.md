@@ -11,6 +11,48 @@ Location: `/opt/seafile/scripts/migration/`
 
 ## Deployment
 
+You can deploy the migration components in several ways. The dedicated `deploy-migration.sh` (and `keeper_setup.sh deploy-migration`) exist specifically to allow safe overlay on an *already deployed* KEEPER instance without re-deploying unrelated scripts or configs.
+
+### Option A: Targeted migration-only deploy (recommended for updates / pilot on existing systems)
+
+From the `seafile_keeper_ext` checkout dir:
+
+```bash
+# Interactive, with prompts before overwriting (standalone mode)
+./deploy-migration.sh standalone
+
+# Or via the extended keeper_setup.sh (also standalone mode)
+./keeper_setup.sh deploy-migration
+```
+
+This copies (the script is role-aware based on __NODE_TYPE__ from your keeper*.ini):
+- On BACKGROUND nodes: `scripts/migration/*` (the worker + legacy tools) → `/opt/seafile/scripts/migration/`
+- On APP nodes: `seahub-data/custom/templates/keeper/migration/*` + `css/keeper-migration.css` (the /account/migrate/ UI) + the keeper/migration Python package into the installed seahub (so the frontend views work)
+
+**Web UI URL registration (included via the KEEPER PR)**
+
+The PR includes the change to the core `seahub/seahub/urls.py` (direct include for the migration at `/account/migrate/`).
+
+See `seafile_keeper_ext/seahub/keeper/urls.py` (encapsulation) and the proposed core change in the PR materials.
+
+After deploying the extension (or full redeploy) and the central urls update is merged, restart seahub on APP nodes to activate the `/account/migrate/` page (with SOURCE/TARGET banners).
+
+(The root `PR_example_main_urls.py` and `.patch` are still available as reference for the exact addition in the KEEPER block.)
+
+### Option B: Full redeploy (brings everything including migration)
+
+```bash
+# Full (will also deploy other scripts/, seahub-data/, seafile-server-latest etc.)
+./keeper_setup.sh deploy-all
+
+# Or using build.py (the --migration flag is also wired here for the targeted path)
+python build.py deploy --all
+python build.py deploy --migration     # only the migration bits, slipstream mode (non-interactive)
+python build.py deploy -d scripts/migration seahub-data/custom   # low-level alternative
+```
+
+### Option C: Manual / pilot copy
+
 1. Ensure this directory exists on the automation / management host:
    ```bash
    mkdir -p /opt/seafile/scripts/migration
@@ -49,10 +91,10 @@ Location: `/opt/seafile/scripts/migration/`
    # Emails and the web screens tell users: go to the page, check the top banner shows the correct (SOURCE or TARGET) account, logout/login if needed.
    ```
 
-5. Recommended cron (every 5 minutes):
-   ```cron
-   */5 * * * * cd /opt/seafile/scripts/migration && python3 process_keeper_email_migrations.py >> /var/log/keeper-migration-worker.log 2>&1
-   ```
+5. Cron setup:
+   The cron job is deployed automatically when you run `deploy-migration.sh` (or `build.py deploy --migration` / `keeper_setup.sh deploy-migration`) on a BACKGROUND node.
+   It installs to `/etc/cron.d/cron-keeper-migration` (every 5 min).
+   No manual crontab edit is needed. You can verify with `cat /etc/cron.d/cron-keeper-migration` after deploy.
 
 6. Test first with dry-run:
    ```bash
@@ -86,7 +128,7 @@ For convenience when deploying just the operational scripts (without a full KEEP
 
 - `create_keeper_email_migration_table.sql`
 
-Additionally, to ensure the create sql (and migration ops scripts) are deployed to /opt/seafile/scripts/migration/ during normal KEEPER redeploys, they are included in the KEEPER source tree under `seafile_keeper_ext/scripts/migration/`. The deployment scripts (keeper_setup.sh deploy-all / build.py deploy --all) deploy the 'scripts' directory.
+Additionally, to ensure the create sql (and migration ops scripts) are deployed to /opt/seafile/scripts/migration/ during normal KEEPER redeploys, they are included in the KEEPER source tree under `seafile_keeper_ext/scripts/migration/`. The deployment scripts (keeper_setup.sh deploy-all / build.py deploy --all / the new deploy-migration.sh) deploy the 'scripts' directory (or just the migration sub-part).
 
 Run the create_ version directly against the keeper-db when rolling out the worker on an existing installation.
 

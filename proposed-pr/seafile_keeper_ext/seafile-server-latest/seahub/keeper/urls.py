@@ -5,28 +5,36 @@ NOTE: This urls.py did not exist prior to the self-service email migration featu
 It is being added as part of this PR to encapsulate KEEPER-specific URL routing inside the
 keeper app (instead of directly patching the core seahub/seahub/urls.py for every new feature).
 
-To integrate the self-service migration:
+However, this file by itself does NOT register any routes. You must explicitly include
+it (or the migration sub-module) from the *main* seahub/seahub/urls.py (the one loaded
+by seahub.utils.rooturl).
 
-In your main seahub/urls.py or wherever KEEPER custom URLs are included, add something like:
+Recommended (cleanest, no wrong nesting):
 
-    from keeper import urls as keeper_urls
-    url(r'^keeper/', include(keeper_urls)),
+    from django.urls import include, re_path
+    ...
+    re_path(r'^account/migrate/', include('keeper.migration.urls')),
 
-Or more specifically for the migration page (recommended for easy linking):
+If you want to namespace other future keeper features:
 
-    from keeper.migration import urls as migration_urls
-    url(r'^account/migrate/', include(migration_urls)),
+    re_path(r'^keeper/', include('keeper.urls')),
+
+NOTE: If you do the ^keeper/ include, the migration is still best added via the direct
+^account/migrate/ line above (otherwise it would incorrectly become /keeper/account/migrate/).
 
 The migration screen will then be at /account/migrate/ (easy to link from emails, help areas, banners, etc.).
 
 Make the banner very visible with current user email + "SOURCE" or "TARGET" role.
 """
 
-from django.conf.urls import url, include
+from django.urls import re_path, include
 
 urlpatterns = [
-    # Self-service migration screen (easy to link: /account/migrate/ or via this)
-    url(r'^account/migrate/', include('keeper.migration.urls')),
+    # Self-service migration screen (easy to link: /account/migrate/).
+    # This is provided here for encapsulation, but the actual registration must be
+    # done via direct include in the root seahub/seahub/urls.py (see docstring above).
+    re_path(r'^account/migrate/', include('keeper.migration.urls')),
 
-    # Other keeper-specific URLs can be added here
+    # Other keeper-specific URLs (future) can be added here.
+    # If included via ^keeper/ from main urls.py they will live under /keeper/...
 ]

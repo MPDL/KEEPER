@@ -1,20 +1,23 @@
 # Copy-paste ready example for adding the migration URLs.
-# Paste this into your main seahub/urls.py (or the KEEPER extension's urls loading point) near other account/keeper includes.
+# Paste this into your main seahub/seahub/urls.py (the central copy that seahub.utils.rooturl loads).
+# This is required because keeper/urls.py (the encapsulation) by itself does not register
+# routes in the root URLconf; you must explicitly include from the main file.
 
 # --- Add the import near the top with your other includes ---
-# from django.urls import path, include
+# from django.urls import include, re_path
 
 # --- Add inside the urlpatterns list ---
-    # KEEPER self-service account data transfer (recommended location)
-    url(r'^account/migrate/', include('keeper.migration.urls')),
+    # KEEPER self-service migration (recommended location - direct under /account/ so no nesting)
+    re_path(r'^account/migrate/', include('keeper.migration.urls')),
 
-# --- Alternative (if you also want other keeper features under /keeper/) ---
-#     url(r'^keeper/', include('keeper.urls')),
+# --- Do not use only this if it would nest the path under /keeper/ ---
+# (keeper/urls.py contains the migrate include at account/ level for direct use)
+#     re_path(r'^keeper/', include('keeper.urls')),
 
 # After this, the page is at /account/migrate/
 # It must be linked from banners/help/emails during migration waves.
 # See the templates in seahub-data/custom/templates/keeper/migration/ for the base.html + CSS swap instructions.
-# (Note: urls use the legacy url() style for compatibility with current seahub/urls.py.)
+# (Note: urls use re_path(r'...') style to match the current seahub/urls.py on the keeper_7.0-sso branch.)
 # See KEEPER_Integration_Notes.md for the complete checklist.
 
 # Test plan after wiring:

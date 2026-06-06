@@ -24,7 +24,7 @@ This dramatically reduces operational load while preserving all safety guarantee
 - Includes `create_...sql` for the table (run manually on existing systems or via redeploy).
 - Enhancements in worker: exclusive lock (no overlapping runs), stuck job recovery, notification hook, `--list-pending` CLI for manual ops. Includes run_migration_worker.sh wrapper.
 - Django admin + management command `list_migration_requests` for monitoring.
-- Scripts placed in `seafile_keeper_ext/scripts/migration/` so normal KEEPER redeploys (via keeper_setup.sh / build.py) will deliver the worker + create sql + support scripts (including wrapper) to the correct location.
+- Scripts placed in `seafile_keeper_ext/scripts/migration/` (and the new `deploy-migration.sh` + small wiring in `build.py`/`keeper_setup.sh`) so normal KEEPER redeploys (via keeper_setup.sh / build.py) or the targeted `deploy-migration` commands will deliver the worker + create sql + support scripts (including wrapper) to the correct location. The 1-parameter design lets the same script act as "slipstreamed via build" or fully standalone.
 
 ### Safety & UX
 - Extremely prominent current logged-in email + explicit SOURCE / TARGET role on every screen.
@@ -36,8 +36,8 @@ This dramatically reduces operational load while preserving all safety guarantee
 ## Deployment Notes
 
 - **DB**: Table is in `keeper-db.sql`. For existing systems, run the create sql manually (see `opt/seafile/scripts/migration/README.md`).
-- **Worker**: Deploy the contents of `scripts/migration/` (or let redeploy do it). Set up cron + DB creds in .env for the worker. Point `MIGRATION_SCRIPT_DIR` to the dir containing your `migrate_account.py`.
-- **UI**: Deploy the KEEPER code change. Link to `/account/migrate/` from banners, help, emails, etc.
+- **Worker + migration support scripts**: Deploy the contents of `scripts/migration/` (or let redeploy do it). New dedicated targeted deploy script `deploy-migration.sh` (1 param: `standalone` or `slipstream` / "via build") + `keeper_setup.sh deploy-migration` + `python build.py deploy --migration` for safe overlay on already-deployed KEEPER instances. Set up cron + DB creds in .env for the worker. Point `MIGRATION_SCRIPT_DIR` to the dir containing your `migrate_account.py`.
+- **UI**: Deploy the KEEPER code change (plus the custom/ CSS+templates via the migration deploy paths). The `/account/migrate/` route must be registered by adding a direct include in the main `seahub/seahub/urls.py` (see `PR_example_main_urls.py` and the note in `seafile_keeper_ext/scripts/migration/README.md`). Link to `/account/migrate/` from banners, help, emails, etc.
 - The worker continues to use the exact same migration logic as before.
 
 ## Testing / Rollout
@@ -50,8 +50,10 @@ This dramatically reduces operational load while preserving all safety guarantee
 
 See the proposed structure in this repo for the full delta.
 
-- New migration app + templates + keeper-db.sql addition
+- New migration app + templates + keeper-db.sql addition (including `keeper/urls.py` for encapsulation)
 - Ops worker + supporting scripts + docs
+- Includes the actual change to core `seahub/seahub/urls.py` (in addition to the encapsulation in `keeper/urls.py`)
+- Updated examples (`PR_example_main_urls.py`, `.patch`) and in-tree READMEs (now the PR itself wires the URL)
 - Operational docs (SOP, integration notes, STEP1 checklist, banner examples) are provided alongside this PR for pilots and deployment (not included in the repo tree).
 
 ## Related
@@ -59,4 +61,13 @@ See the proposed structure in this repo for the full delta.
 - Original manual process SOP remains for bulk/exception cases.
 - Design doc (in this workspace) with all decisions (code 7 days + regenerate, keeper-db, manual sql run, English only, no user cancel, pipeline stays on automation host, etc.).
 
-This is ready to submit as a PR. The feature (UI + worker) is complete. Detailed integration steps for the KEEPER deployment (base template, CSS, URL wiring) and pilot instructions are provided in accompanying checklists and notes outside the core code change (see local copies of STEP1_KEEPER_web_integration.md, KEEPER_Integration_Notes.md, etc.).
+This is ready to submit as a PR **against the keeper_7.0-sso deployment branch**.
+
+The feature (UI + worker + targeted deploy script) is complete and adapted:
+- URLs use re_path + from django.urls (to match current style on keeper_7.0-sso)
+- keeper-db.sql is the branch version with our table appended (not a replacement)
+- New deploy-migration.sh (single param slipstream|standalone) + connected to build.py (--migration) and keeper_setup.sh (deploy-migration target) for safe "on top of already deployed" installs.
+- The PR now includes the central change to `seahub/seahub/urls.py` (direct `re_path(r'^account/migrate/', include('keeper.migration.urls'))` added in the KEEPER custom URLs section for the self-service migration page). This means after merge, `/account/migrate/` will be wired without additional manual patching of core urls (though seahub restart on APP nodes is still needed, and custom templates/CSS via seahub-data or the extension).
+- Legacy migrate_account untouched, etc. All other decisions preserved.
+
+Detailed integration steps (STEP1 etc.) and pilot materials are in the accompanying local checklists (removed from this PR tree per prior request).

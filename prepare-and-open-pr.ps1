@@ -85,7 +85,7 @@ git push -u fork $Branch --force-with-lease
 # 5. Create the Pull Request
 Write-Host "Creating Pull Request..."
 
-$prTitle = "feat: Self-service email account migration (phone-move style UX)"
+$prTitle = "feat: Self-service email account migration"
 
 $prBody = Get-Content -Raw -Path "proposed-pr/PR_DESCRIPTION.md"
 

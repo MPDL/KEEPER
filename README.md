@@ -48,6 +48,7 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
 - Full worker + create table sql + original scripts as placeholders under the migration dir.
 - Worker enhancements: lock, stuck recovery, notification hook, `--list-pending` for manual listing. Includes run_migration_worker.sh wrapper.
 - Redeploy support: files also in `seafile_keeper_ext/scripts/migration/` so `keeper_setup.sh` / `build.py deploy --all` will deliver them to `/opt/seafile/scripts/migration/`.
+- New dedicated targeted deploy: `seafile_keeper_ext/deploy-migration.sh` (takes `standalone` or `slipstream` as the 1 parameter), exposed via `keeper_setup.sh deploy-migration` and `python build.py deploy --migration`. Safe for "on top of already deployed" without touching unrelated parts of scripts/ or seahub-data/.
 - Django management command `list_migration_requests` for admins (deployed with the KEEPER code).
 - Custom CSS for migration page (keeper-migration.css).
 - Manual SQL run documented (per your preference).
@@ -78,7 +79,7 @@ Transform the current operator-driven migration process (`migrate_account.py`, `
 **Next steps to pilot / production (the feature core is complete in `proposed-pr/`):**
 
 **1. KEEPER web integration (in the KEEPER source tree, before web redeploy):**
-   - Apply the URL include for `/account/migrate/` (see `PR_example_main_urls.py` or `PR_example_url_include.patch` at the workspace root, or the copies in your `update_seafile_token/` dir).
+   - The PR now includes the change to `seahub/seahub/urls.py` (see `proposed-pr/seahub/seahub/urls.py` for the proposed content with the direct include added to the KEEPER block). The `PR_example_main_urls.py` and `.patch` remain as reference. The `keeper/urls.py` in the extension provides encapsulation.
    - In the migration templates (`seahub-data/custom/templates/keeper/migration/*.html`): replace `{% extends "base.html" %}` with the real KEEPER base used for authenticated pages.
    - Load `seahub-data/custom/keeper_*.css` + `keeper-migration.css` (templates have detailed comments; the full KEEPER_Integration_Notes.md is in your local pilot materials).
    - Optionally register the `keeper.migration` app if your extension loader requires it.
@@ -131,4 +132,4 @@ Once you provide the token + username, I can run the script for you (or you can 
 ---
 
 **Workspace initialized:** 2026-06-01  
-**Status:** PR created: https://github.com/MPDL/KEEPER/pull/446 (body populated with full PR_DESCRIPTION.md via token automation). Step 1 (web integration prep) complete. Pilot ops dir (`C:\Users\peterfi\update_seafile_token\migration\`) populated + customized for your-pilot-email@mpdl.mpg.de . The `prepare-and-open-pr.ps1` can be used for future re-runs if needed (it will detect existing PR). See "Next steps to pilot / production" above.
+**Status:** Old PR #446 retracted (closed with note). New PR created against `keeper_7.0-sso` deployment branch: https://github.com/MPDL/KEEPER/pull/447 (title cleaned, branch adapted for re_path URLs, build/deploy wiring, and proper keeper-db.sql append). Step 1 (web integration prep) complete. Pilot ops dir (`C:\Users\peterfi\update_seafile_token\migration\`) populated + customized. The `prepare-and-open-pr.ps1` can be used for future re-runs if needed (it will detect existing PR). See "Next steps to pilot / production" above.

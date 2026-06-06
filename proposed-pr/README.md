@@ -18,6 +18,33 @@ There are two parts:
 3. Scripts under `opt/seafile/scripts/migration/` should be deployed to `/opt/seafile/scripts/migration/` on the automation/management host.
 4. When ready, the `seafile_keeper_ext/` parts become the actual PR to MPDL/KEEPER. The migration scripts are ops changes.
 
+## Deployment (new dedicated support)
+
+For deploying *only* the migration feature on top of an already-deployed KEEPER:
+
+- From `seafile_keeper_ext/`:
+  - `./deploy-migration.sh standalone`   (prompting, safe overlay)
+  - `./keeper_setup.sh deploy-migration`
+- Via build.py (integrated/"slipstream"):
+  - `python build.py deploy --migration`
+- The single parameter to `deploy-migration.sh` selects the mode (slipstream vs standalone) and is wired from build.py + keeper_setup.sh.
+
+Full redeploys (`deploy-all`, `build.py deploy --all`, etc.) continue to work and will pick up the migration/ subdirectories automatically.
+
+**Web UI URL registration (included in this PR)**
+
+The PR now includes the change to the core `seahub/seahub/urls.py` (see `proposed-pr/seahub/seahub/urls.py` for the exact proposed content with the addition in the KEEPER custom block).
+
+The direct include `re_path(r'^account/migrate/', include('keeper.migration.urls'))` is added so the self-service migration page is at `/account/migrate/` (with the required prominent SOURCE vs TARGET identity banners).
+
+The `keeper/urls.py` in `seafile_keeper_ext/seafile-server-latest/seahub/keeper/` provides the encapsulation point inside the extension.
+
+**Note:** Using only `re_path(r'^keeper/', include('keeper.urls'))` would nest it as `/keeper/account/migrate/` (avoid for this feature).
+
+After merge and extension redeploy (or full), restart seahub on APP nodes.
+
+See the in-tree `seafile_keeper_ext/scripts/migration/README.md` for more. The root `PR_example_*` files remain as reference.
+
 ## Production Layout (as specified)
 
 All migration-related operational scripts live under:
