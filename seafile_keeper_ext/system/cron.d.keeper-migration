@@ -1,0 +1,5 @@
+# KEEPER self-service email migration worker (BACKGROUND nodes only)
+# Deployed via deploy-migration.sh or full deploy on BACKGROUND/SINGLE nodes.
+# Runs every 5 minutes; logs to /var/log/keeper/keeper-migration-worker.log
+
+*/5 * * * * root . /etc/profile; bash -c "cd __SEAFILE_DIR__/scripts/migration && python3 process_keeper_email_migrations.py >> /var/log/keeper/keeper-migration-worker.log 2>&1"

@@ -409,6 +409,7 @@ class EnvManager(object):
             'system/keepalived.conf': _join('/etc', 'keepalived', 'keepalived.conf'),
             'system/cron.d.keeper': _join('/etc', 'cron.d', 'cron-keeper'),
             'system/cron.d.keeper@background': _join('/etc', 'cron.d', 'cron-keeper-background'),
+            'system/cron.d.keeper-migration': _join('/etc', 'cron.d', 'cron-keeper-migration'),
             'system/memcached.conf': _join('/etc', 'memcached.conf'),
             'system/memcached.service.d.local.conf': _join('/etc', 'systemd', 'system', 'memcached.service.d', 'local.conf'),
             'system/keeper.service': _join('/etc', 'systemd', 'system', 'keeper.service'),
@@ -824,6 +825,7 @@ def deploy_system_conf():
 
     if node_type in ('BACKGROUND', 'SINGLE'):
         deploy_file('system/cron.d.keeper@background', expand=True, skip_backup=True)
+        deploy_file('system/cron.d.keeper-migration', expand=True, skip_backup=True)
         deploy_file('system/postfix.main.cf@background', expand=True)
         deploy_file('system/clamd.conf', expand=True)
         deploy_file('system/clamav-daemon.service', expand=True)
@@ -912,6 +914,16 @@ def do_deploy(args):
     elif args.system_conf:
         deploy_system_conf()
         run_services()
+    elif args.migration:
+        Utils.info('do deploy --migration (targeted, on top of existing KEEPER)')
+        if args.yes:
+            Utils.all = True
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'deploy-migration.sh')
+        if not os.path.isfile(script_path):
+            Utils.error('deploy-migration.sh not found next to build.py (expected at %s)' % script_path)
+        rc = Utils.run_argv([script_path, 'slipstream'])
+        if rc != 0:
+            Utils.error('deploy-migration.sh (slipstream) failed with exit code %d' % rc)
     else:
         if args.directory:
             for path in args.directory:
@@ -1059,6 +1071,7 @@ def main():
     parser_deploy.add_argument('--system-conf', help='deploy all system conf files on the node, --http-conf is included', action='store_true')
     parser_deploy.add_argument('-f', '--file', help='deploy file(s)', nargs='+')
     parser_deploy.add_argument('-d', '--directory', help='deploy directory(s)', nargs='+')
+    parser_deploy.add_argument('--migration', help='deploy *only* the self-service email migration components (scripts/migration + seahub-data/custom UI templates+css) on top of an already deployed KEEPER instance. The single parameter to deploy-migration.sh will be "slipstream".', action='store_true')
 
     # restore
     # parser_restore = subparsers.add_parser('restore', help='Restore files')

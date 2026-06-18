@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Account Data Transfer{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+{% endblock %}
+
+{% block main_content %}
+<div class="keeper-migration-page container">
+
+  <div class="alert alert-{% if is_source %}warning{% elif is_target %}success{% else %}info{% endif %} migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 20px; border: 2px solid; border-radius: 4px;">
+    <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
+    <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
+    {% if is_source %}
+      <span class="role-badge source" style="background-color: #f0ad4e; color: #fff; padding: 3px 8px; border-radius: 3px; margin-left: 10px; font-weight: bold;">SOURCE ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">The account is allocated to a data transfer task as a source account.</p>
+    {% elif is_target %}
+      <span class="role-badge target" style="background-color: #5cb85c; color: #fff; padding: 3px 8px; border-radius: 3px; margin-left: 10px; font-weight: bold;">TARGET ACCOUNT</span>
+      <p style="margin-top: 5px; font-size: 0.9em;">This is the target account that will receive the data from the source account.</p>
+    {% endif %}
+  </div>
+
+  <div class="page-header">
+    <h1>Account Data Transfer</h1>
+    <p class="lead">Transfer all your libraries, shares, and groups to your new account. The process is designed to be secure and to preserve all data and permissions without loss.</p>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger" style="font-size: 1.05em;">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  {% endif %}
+
+  {% if notice %}
+    <div class="alert alert-success" style="font-size: 1.05em;">
+      {{ notice }}
+    </div>
+  {% endif %}
+
+  {% if as_source %}
+    <div class="panel panel-default migration-status">
+      <div class="panel-heading">
+        <h3 class="panel-title">Data transfer from this account</h3>
+      </div>
+      <div class="panel-body">
+        <p><strong>Current status:</strong> <span class="label label-{% if as_source.status == 'pending' %}warning{% elif as_source.status == 'in_progress' %}info{% elif as_source.status == 'completed' %}success{% elif as_source.status == 'failed' %}danger{% else %}default{% endif %}">{{ as_source.get_status_display }}</span></p>
+        <p><strong>To:</strong> {{ as_source.target_email }}</p>
+        <p><strong>Transfer requested on:</strong> {{ as_source.requested_at|date:"Y-m-d H:i" }}</p>
+        {% if as_source.completed_at %}<p><strong>Finished on:</strong> {{ as_source.completed_at|date:"Y-m-d H:i" }}</p>{% endif %}
+
+        {% if as_source.status == 'pending' %}
+          <div class="well well-sm">
+            {% if as_source.confirmed_at %}
+            <div class="alert alert-info" style="margin-bottom: 10px;">
+              The transfer has been confirmed. It is now queued and will be processed automatically — no further action is needed.
+            </div>
+            {% elif as_source.metadata.self_confirm %}
+            <div class="alert alert-warning" style="margin-bottom: 10px;">
+              This transfer to your new SSO account is ready but not yet confirmed. Review and confirm to start it.
+            </div>
+            <form method="post" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" name="open_confirm" class="btn btn-primary">Review and confirm</button>
+            </form>
+            {% else %}
+            <p>The data transfer code below is ready and valid for 7 days. It should only be used after logging in with the target account and confirming on the identity banner that it is shown as TARGET.</p>
+
+            <div class="form-group" style="margin: 10px 0 15px 0;">
+              <label for="migration-code-field"><strong>Your data transfer code</strong></label>
+              <div class="input-group">
+                <input type="text" id="migration-code-field" class="form-control" readonly
+                       value="{{ as_source.migration_token }}"
+                       onclick="this.select();" style="font-family: monospace;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default" onclick="keeperCopyMigrationCode(this);">Copy</button>
+                </span>
+              </div>
+              <small class="help-block">Use this code after logging in with the target account. It is also sent to you by email.</small>
+            </div>
+
+            <p class="help-text">After receiving the code, log in with the new account, return to this page, and confirm on the identity banner that it shows TARGET ACCOUNT before entering the code.</p>
+
+            <form method="post" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" name="regenerate_token" class="btn btn-warning">Request new data transfer code (extends validity by 7 days)</button>
+            </form>
+            {% endif %}
+            <form method="post" style="display: inline;"
+                  onsubmit="return confirm('Cancel this data transfer completely?\n\nThe data transfer code will stop working and the request will be removed. No data will be moved. You can start a new transfer later if you wish.');">
+              {% csrf_token %}
+              <button type="submit" name="cancel_token" class="btn btn-danger">Cancel this data transfer</button>
+            </form>
+            <p class="help-block" style="margin-top: 10px;">Cancelling is only possible while the transfer is waiting to start. Once it begins, it can no longer be cancelled.</p>
+          </div>
+          <script>
+          function keeperCopyMigrationCode(btn) {
+            var input = document.getElementById('migration-code-field');
+            if (!input) { return; }
+            input.focus();
+            input.select();
+            try { input.setSelectionRange(0, 99999); } catch (e) {}
+            var notify = function () {
+              var orig = btn.getAttribute('data-orig') || btn.innerHTML;
+              btn.setAttribute('data-orig', orig);
+              btn.innerHTML = 'Copied!';
+              setTimeout(function () { btn.innerHTML = orig; }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(input.value).then(notify, function () {
+                try { document.execCommand('copy'); notify(); } catch (e) {}
+              });
+            } else {
+              try { document.execCommand('copy'); notify(); } catch (e) {}
+            }
+          }
+          </script>
+        {% elif as_source.status == 'in_progress' %}
+          <div class="alert alert-warning">
+            The data transfer is currently in progress. For large volumes of data, this may require considerable time. Please refrain from reconfiguring clients until the transfer has completed.
+          </div>
+        {% elif as_source.status == 'completed' %}
+          <div class="alert alert-success">
+            <strong>Transfer completed successfully.</strong> Your libraries, shares, and groups are now available under the target account.
+          </div>
+        {% elif as_source.status == 'failed' %}
+          <div class="alert alert-danger">
+            <strong>An error occurred during the data transfer.</strong><br>
+            {{ as_source.error_message|default:"Please refer to the error details." }}<br>
+            Please contact the Keeper support team.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% elif as_target %}
+    <div class="panel panel-success migration-status">
+      <div class="panel-heading">
+        <h3 class="panel-title">Complete data transfer</h3>
+      </div>
+      <div class="panel-body">
+        <p><strong>From:</strong> {{ as_target.source_email }}</p>
+        <p><strong>Current status:</strong> <span class="label label-{% if as_target.status == 'pending' %}warning{% elif as_target.status == 'in_progress' %}info{% elif as_target.status == 'completed' %}success{% elif as_target.status == 'failed' %}danger{% else %}default{% endif %}">{{ as_target.get_status_display }}</span></p>
+        {% if as_target.completed_at %}<p><strong>Finished on:</strong> {{ as_target.completed_at|date:"Y-m-d H:i" }}</p>{% endif %}
+
+        {% if as_target.status == 'pending' and not as_target.confirmed_at and as_target.metadata.self_confirm %}
+          <div class="alert alert-warning" style="margin-bottom: 10px;">
+            This transfer of your data onto this account is ready but not yet confirmed. Review and confirm to start it.
+          </div>
+          <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" name="open_confirm" class="btn btn-primary">Review and confirm</button>
+          </form>
+        {% elif as_target.status == 'pending' and not as_target.confirmed_at %}
+          <p>If you have received a data transfer code, first verify on the identity banner above that it shows TARGET ACCOUNT, then enter the code below to complete the data transfer.</p>
+          <form method="post" class="migration-form">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="token">Data transfer code</label>
+              <input type="text" name="token" id="token" required placeholder="Enter the code here..." class="form-control input-lg">
+            </div>
+            <button type="submit" name="claim_token" class="btn btn-primary btn-lg">Submit code and proceed</button>
+          </form>
+        {% elif as_target.status == 'pending' %}
+          <div class="alert alert-info" style="margin-top: 10px;">
+            Your data transfer has been confirmed. No further action is needed — it will be processed automatically.
+          </div>
+        {% elif as_target.status == 'in_progress' %}
+          <div class="alert alert-warning">
+            The data transfer is currently in progress. For large volumes of data, this may require considerable time. Please refrain from reconfiguring clients until the transfer has completed.
+          </div>
+        {% elif as_target.status == 'completed' %}
+          <div class="alert alert-success">
+            <strong>Transfer completed successfully.</strong> Your libraries, shares, and groups are now available under this account.<br>
+            <strong>Next steps:</strong> Reconfigure your Seafile clients (desktop, mobile, etc.) to use this account. It is recommended to point clients to existing local folders where possible.
+          </div>
+        {% elif as_target.status == 'failed' %}
+          <div class="alert alert-danger">
+            <strong>An error occurred during the data transfer.</strong><br>
+            {{ as_target.error_message|default:"Please refer to the error details." }}<br>
+            Please contact the Keeper support team.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% else %}
+    <div class="panel panel-primary migration-start">
+      <div class="panel-heading">
+        <h3 class="panel-title">Initiate data transfer</h3>
+      </div>
+      <div class="panel-body">
+        <div class="alert alert-warning" style="margin-bottom: 15px;">
+          <strong>Important:</strong> After this is done your current account will stop working and you will no longer be able to use it for Keeper.
+        </div>
+
+        <form method="post" class="migration-form">
+          {% csrf_token %}
+
+          <div class="checkbox" style="margin-bottom: 12px;">
+            <label>
+              <input type="checkbox" id="same-email-sso-cb" onchange="keeperToggleSameEmail(this);">
+              I have another account with the <strong>same email address</strong> (e.g. created after activating SSO/SAML)
+            </label>
+          </div>
+
+          <div id="target-email-group" class="form-group">
+            <label for="target_email">Email address of your new account</label>
+            <input type="email" name="target_email" id="target_email" required
+                   placeholder="you@newdomain" class="form-control input-lg">
+            <small class="help-block">Must be an account you can already log in with.</small>
+          </div>
+
+          <button type="submit" name="generate_token" id="btn-generate" class="btn btn-primary btn-lg btn-block">
+            Request data transfer code
+          </button>
+          <button type="submit" name="same_email_sso" id="btn-same-email" class="btn btn-primary btn-lg btn-block" style="display: none;">
+            Find my other account and continue
+          </button>
+        </form>
+
+        <script>
+        function keeperToggleSameEmail(cb) {
+          var grp = document.getElementById('target-email-group');
+          var input = document.getElementById('target_email');
+          var gen = document.getElementById('btn-generate');
+          var same = document.getElementById('btn-same-email');
+          if (cb.checked) {
+            if (grp) { grp.style.display = 'none'; }
+            if (input) { input.required = false; }
+            if (gen) { gen.style.display = 'none'; }
+            if (same) { same.style.display = ''; }
+          } else {
+            if (grp) { grp.style.display = ''; }
+            if (input) { input.required = true; }
+            if (gen) { gen.style.display = ''; }
+            if (same) { same.style.display = 'none'; }
+          }
+        }
+        </script>
+      </div>
+    </div>
+  {% endif %}
+
+  <div style="margin-top: 30px; font-size: 0.9em; color: #666;">
+    <p>Need help? Contact your local IT support or the Keeper team. The data transfer uses the same secure mechanism as the standard data transfer process.</p>
+  </div>
+
+</div>
+{% endblock %}

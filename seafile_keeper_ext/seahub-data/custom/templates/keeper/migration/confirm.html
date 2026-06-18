@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Confirm Account Data Transfer{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="/media/custom/css/keeper-migration.css">
+{% endblock %}
+
+{% block main_content %}
+<div class="keeper-migration-page container">
+
+  {% if self_confirm %}
+  <div class="alert alert-warning migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 25px; border: 2px solid #f0ad4e;">
+    <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
+    <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
+    <span class="role-badge source" style="background-color: #f0ad4e; color: #fff; padding: 4px 10px; border-radius: 4px; margin-left: 10px; font-weight: bold; font-size: 0.95em;">YOUR CURRENT ACCOUNT</span>
+    <p style="margin: 8px 0 0 0; font-size: 0.95em;">Confirm the data transfer below. Your data will be consolidated onto your SSO account (same email address); the old account will be deactivated upon completion.</p>
+  </div>
+  {% else %}
+  <div class="alert alert-success migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 25px; border: 2px solid #5cb85c;">
+    <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
+    <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
+    <span class="role-badge target" style="background-color: #5cb85c; color: white; padding: 4px 10px; border-radius: 4px; margin-left: 10px; font-weight: bold; font-size: 0.95em;">TARGET ACCOUNT</span>
+    <p style="margin: 8px 0 0 0; font-size: 0.95em;">You are the target account for this data transfer. The source account will be deactivated upon completion.</p>
+  </div>
+  {% endif %}
+
+  <div class="page-header">
+    <h1>Confirm Account Data Transfer</h1>
+  </div>
+
+  <div class="alert alert-danger" style="font-size: 1.05em; border-width: 2px;">
+    <strong style="font-size: 1.15em;">⚠ WARNING — THIS ACTION IS IRREVERSIBLE</strong>
+    <p style="margin-top: 8px;">
+      You are about to move <strong>ALL</strong> your files and folders
+      from <strong>{{ migration.source_email }}</strong> to {% if self_confirm %}<strong>your new SSO account</strong> (same email address){% else %}<strong>{{ migration.target_email }}</strong>{% endif %}.
+    </p>
+    <p>After completion:</p>
+    <ul style="margin-bottom: 5px;">
+      <li>The source account will be deactivated for Keeper. No further logins will be possible with it.</li>
+      <li>You will need to re-authenticate in all Seafile clients and applications using the target account.</li>
+      <li>All desktop, mobile, and other client connections must be reconfigured with the target account.</li>
+    </ul>
+  </div>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{% url 'keeper_migration_confirm' migration.pk %}" class="migration-confirm-form">
+    {% csrf_token %}
+
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Required acknowledgments</strong></div>
+      <div class="panel-body">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" name="understand_deactivation" required>
+            I understand that the source account will stop working for Keeper and I will not be able to log in with it.
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" name="understand_clients" required>
+            I understand I must set up all my apps and programs again with the target account after this is done.
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" name="have_encrypted_passwords" required>
+            I have my encrypted library passwords ready (if any).
+          </label>
+        </div>
+      </div>
+    </div>
+
+    {% if not self_confirm %}<p><small>The data transfer code will expire on {{ migration.token_expires_at|date:"Y-m-d H:i" }}. Do not share it with anyone.</small></p>{% endif %}
+
+    <div class="form-actions" style="margin-top: 20px;">
+      <button type="submit" class="btn btn-danger btn-lg">
+        I have read and understood — Confirm and initiate data transfer
+      </button>
+      <a href="{% url 'keeper_migration_landing' %}" class="btn btn-default btn-lg" style="margin-left: 10px;">Cancel</a>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

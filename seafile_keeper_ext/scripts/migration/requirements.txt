@@ -1,0 +1,8 @@
+# Packages for the migration worker and operational scripts in /opt/seafile/scripts/migration/
+pymysql>=1.1.0          # For direct access to keeper-db from the worker
+python-dotenv>=1.0.0
+requests
+paramiko
+
+# Note: The core scripts (migrate_account.py etc.) require the above.
+# Install with: pip3 install -r requirements.txt

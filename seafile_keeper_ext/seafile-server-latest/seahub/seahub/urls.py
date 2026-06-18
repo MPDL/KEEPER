@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 Seafile Ltd.
+﻿# Copyright (c) 2012-2016 Seafile Ltd.
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
@@ -904,6 +904,7 @@ urlpatterns = [
     path('project-catalog/', project_catalog_starter, name='project_catalog_starter'),
     re_path(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergCertView, name='bloxberg_cert_page'),
     re_path(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/(?P<checksum>[-0-9a-z]{64})/$', BloxbergCertView, name='bloxberg_cert_page'),
+    re_path(r'^account/migrate/', include('keeper.migration.urls')),
 ]
 
 try:
@@ -1077,3 +1078,4 @@ urlpatterns += [
     re_path(r'^api/v2.1/ai/translate/$', Translate.as_view(), name='api-v2.1-translate'),
     re_path(r'^api/v2.1/ai/writing-assistant/$', WritingAssistant.as_view(), name='api-v2.1-writing-assistant'),
 ]
+

@@ -303,10 +303,19 @@ case "$1" in
         yui-compressor -v seahub.css -o seahub.min.css
         popd
     ;;
+
+    deploy-migration)
+        # Targeted deploy *only* for the self-service email migration feature.
+        # Deploys scripts/migration (worker + legacy scripts + create sql) and
+        # the seahub-data/custom bits (migration templates + keeper-migration.css).
+        # Safe to run on an already-deployed KEEPER instance.
+        # Internally calls deploy-migration.sh (standalone mode).
+        "${EXT_DIR}/deploy-migration.sh" standalone
+    ;;
  
 
     *)
-        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext|min.css}"
+        echo "Usage: $0 {deploy-all|deploy-conf|deploy-http-conf|deploy <file> [-p <properties-file>]|deploy-dir <dir>|deploy-migration|restore|clean-all|compile-i18n|copy-seafile-sources-in-ext|min.css}"
         exit 1
      ;;
 esac
