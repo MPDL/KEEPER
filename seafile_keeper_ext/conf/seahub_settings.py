@@ -393,6 +393,9 @@ if ENABLE_ADFS_LOGIN:
 
     LOGOUT_REDIRECT_URL = '__LOGOUT_REDIRECT_URL__'
 
+    # Prevent email/pass trap bug if sso auth used by disconnected sso in profile
+    DISABLE_ADFS_USER_PWD_LOGIN = True
+
 # Enable authentication wit Kerberos
 # Default is False
 ENABLE_KRB5_LOGIN = False

@@ -597,9 +597,9 @@
       "name": "static/js/9997.5762e075.chunk.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/9997.5762e075.chunk.js"
     },
-    "static/js/app.9967cb6f.js": {
-      "name": "static/js/app.9967cb6f.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/app.9967cb6f.js"
+    "static/js/app.8e7d548b.js": {
+      "name": "static/js/app.8e7d548b.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/app.8e7d548b.js"
     },
     "static/js/bloxbergCertificate.671586ef.js": {
       "name": "static/js/bloxbergCertificate.671586ef.js",
@@ -713,9 +713,9 @@
       "name": "static/js/sdocPublishedRevision.41d19153.js.LICENSE.txt",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sdocPublishedRevision.41d19153.js.LICENSE.txt"
     },
-    "static/js/settings.eb37f2a2.js": {
-      "name": "static/js/settings.eb37f2a2.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/settings.eb37f2a2.js"
+    "static/js/settings.13568ab9.js": {
+      "name": "static/js/settings.13568ab9.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/settings.13568ab9.js"
     },
     "static/js/sharedDirView.c9a34f90.js": {
       "name": "static/js/sharedDirView.c9a34f90.js",
@@ -872,7 +872,7 @@
       "static/css/commons.aeb38a21.css",
       "static/js/commons.f668d96f.js",
       "static/css/app.adb2573c.css",
-      "static/js/app.9967cb6f.js"
+      "static/js/app.8e7d548b.js"
     ],
     "bloxbergCertificate": [
       "static/js/runtime.d7d57809.js",
@@ -994,7 +994,7 @@
       "static/css/commons.aeb38a21.css",
       "static/js/commons.f668d96f.js",
       "static/css/settings.a2551419.css",
-      "static/js/settings.eb37f2a2.js"
+      "static/js/settings.13568ab9.js"
     ],
     "sharedDirView": [
       "static/js/runtime.d7d57809.js",
