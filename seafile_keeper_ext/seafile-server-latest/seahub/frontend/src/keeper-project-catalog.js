@@ -636,6 +636,10 @@ class Footer extends React.Component {
               </div>
               <div className="col-md-3">
                 <h4>Find help</h4>
+                <a target="_new" href="https://minervamessenger.mpdl.mpg.de/mpg/messages/@keeper_help">
+                  Ask Keeper Help Bot
+                </a>{' '}
+                <br />
                 <a href="mailto:keeper@mpdl.mpg.de">
                   Contact Keeper Support
                 </a>{' '}

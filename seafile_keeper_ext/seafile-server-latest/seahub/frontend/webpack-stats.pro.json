@@ -649,9 +649,9 @@
       "name": "static/js/institutionAdmin.160bebce.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/institutionAdmin.160bebce.js"
     },
-    "static/js/keeperProjectCatalog.e98eafb6.js": {
-      "name": "static/js/keeperProjectCatalog.e98eafb6.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/keeperProjectCatalog.e98eafb6.js"
+    "static/js/keeperProjectCatalog.2ab40954.js": {
+      "name": "static/js/keeperProjectCatalog.2ab40954.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/keeperProjectCatalog.2ab40954.js"
     },
     "static/js/libraryDetails.48de80f2.js": {
       "name": "static/js/libraryDetails.48de80f2.js",
@@ -932,7 +932,7 @@
       "static/css/commons.aeb38a21.css",
       "static/js/commons.f668d96f.js",
       "static/css/keeperProjectCatalog.7f8da2a1.css",
-      "static/js/keeperProjectCatalog.e98eafb6.js"
+      "static/js/keeperProjectCatalog.2ab40954.js"
     ],
     "libraryDetails": [
       "static/js/runtime.d7d57809.js",
