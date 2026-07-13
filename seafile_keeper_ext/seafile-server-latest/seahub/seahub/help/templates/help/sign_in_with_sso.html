@@ -1,0 +1,164 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<h3 class="hd">{% trans "How to log in via MPG Single Sign-on on Keeper" %}</h3>
+
+<p>{% blocktrans %}MPG Single Sign-On (SSO) allows users to securely access Keeper using their institutional MPG
+  credentials. With SSO, you can authenticate through your Max Planck Institute or affiliated MPG organization without
+  using a separate Keeper password.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}Below are detailed instructions on getting started with SSO.{% endblocktrans %}</p>
+
+<h3>{% trans "Sign in to Keeper Using SSO (Web Interface)" %}</h3>
+
+<h4>{% blocktrans %}<strong>For new users</strong>{% endblocktrans %}</h4>
+
+<p>{% blocktrans %}<strong>Step 1:</strong> Open Keeper.<br />Navigate to the <a
+    href="https://keeper.mpdl.mpg.de/accounts/login" target="new">Keeper login page</a> in your web browser.
+  {% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 2:</strong> Select Single Sign-On.<br /> On the login screen, click Single Sign-On (SSO)
+  located below the standard login fields.{% endblocktrans %}</p>
+<img src="{{ MEDIA_URL }}img/help/sso_login.png" alt="" />
+
+<p>{% blocktrans %}<strong>Step 3:</strong> Select Your MPG Organization.<br />Choose your MPG organization from the
+  list displayed on the login screen.<br />Click <strong>Next</strong> to continue.{% endblocktrans %}</p>
+<img src="{{ MEDIA_URL }}img/help/mpg_sso.png" alt="" />
+
+<p>{% blocktrans %}<em><strong>Note:</strong> If your organization is not listed, please contact your local IT support
+    team for assistance.</em>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 4:</strong> Enter Your MPG Credentials.<br /> Sign in using your official MPG
+  institutional account.<br />
+  Examples:
+<ul>
+  <li>yourusername@maxit.mpg.de</li>
+  <li>Your institute/system password</li>
+</ul>
+{% endblocktrans %}
+<img src="{{ MEDIA_URL }}img/help/mpg_sso_name_pass.png" alt="" />
+</p>
+
+<p>{% blocktrans %}<em><strong>Important:</strong> Use your official MPI or MPG credentials. Do not enter your Keeper
+    password when using Single Sign-On.</em>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 5:</strong> Complete Authentication.<br /> Click <strong>Login</strong> to complete the
+  sign-in process.<br />Once authentication is successful, you will be redirected to your Keeper account.
+  {% endblocktrans %}
+</p>
+
+<h4>{% blocktrans %}<strong>For existing users</strong>{% endblocktrans %}</h4>
+
+<p>{% blocktrans %}If you already have a Keeper account that uses email/password authentication, you can connect your
+  account to MPG Single Sign-On (SSO) by following these steps:{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 1:</strong> Sign In to Keeper.<br />Log in to your Keeper account using your existing
+  email address and password.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 2:</strong> Open Account Settings.<br />Click your profile icon in the top-right corner
+  and select <strong>Settings</strong>.
+  {% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 3:</strong> Connect SAML Authentication.<br />Scroll down to the <strong>Social
+    Login</strong> section and click <strong>Connect</strong> next to <strong>SAML</strong>.
+  {% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 4:</strong> Select Your MPG Organization.<br />Choose your MPG organization from the
+  list
+  displayed on the login screen.<br />
+  Click <strong>Next</strong> to continue.{% endblocktrans %}</p>
+<img src="{{ MEDIA_URL }}img/help/mpg_sso.png" alt="" />
+
+<p>{% blocktrans %}<em><strong>Note:</strong> If your organization is not listed, please contact your local IT support
+    team for assistance.</em>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 5:</strong> Enter Your MPG Credentials.<br /> Sign in using your official MPG
+  institutional account.<br />
+  Examples:
+<ul>
+  <li>yourusername@maxit.mpg.de</li>
+  <li>Your institute/system password</li>
+</ul>
+{% endblocktrans %}
+<img src="{{ MEDIA_URL }}img/help/mpg_sso_name_pass.png" alt="" />
+</p>
+
+<p>{% blocktrans %}<em><strong>Important:</strong> Use your official MPI or MPG credentials. Do not enter your Keeper
+    password when using Single Sign-On.</em>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Step 6:</strong> Complete Authentication.<br />Click <strong>Login</strong> to complete the
+  sign-in process. Once authentication is successful, you will be redirected to your Keeper account.{% endblocktrans %}
+</p>
+
+<p>{% blocktrans %}<em><strong>Important:</strong> After your account has been set up using SAML/SSO authentication,
+    always use the same authentication method when signing in to Keeper. Switching between different authentication
+    methods may result in account discrepancies, duplicate accounts, or access issues.</em>{% endblocktrans %}</p>
+
+<hr>
+
+<h3>{% trans "Troubleshooting" %}</h3>
+
+<p>{% blocktrans %}<strong>SSO Login Successful, but Your Libraries or Data Are Missing </strong>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}If you successfully sign in using SSO but your Keeper libraries or data are missing, your account may
+  need to be migrated to SSO.<br />Follow these steps.<br />
+<ol>
+  <li>Log out of Keeper.</li>
+  <li>Sign back in using your <strong>email address and password</strong> (not SSO).</li>
+  <li>Navigate to <strong>Settings</strong>.</li>
+  <li>Open <strong>Data Transfer</strong>.</li>
+  <li>Click <strong>Data Transfer</strong> and complete the migration to your SSO account.</li>
+  <li>Once the migration is complete, log out of Keeper.</li>
+  <li>Sign back in using <strong>MPG Single Sign-On (SSO)</strong>.</li>
+</ol>
+Your libraries and data should now be available.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Switch Back to Email/Password Authentication</strong>{% endblocktrans %}</p>
+
+
+<p>{% blocktrans %}If you would like to switch from Single Sign-On (SSO) to email/password authentication, follow these
+  steps:<br />
+<ol>
+  <li>Sign in to your Keeper account using MPG Single Sign-On (SSO).</li>
+  <li>Click your profile icon in the top-right corner and select Settings.</li>
+  <li>Scroll down to the Social Login section.</li>
+  <li>Disconnect SAML from Social Login and confirm the action when prompted.</li>
+</ol>
+Once completed, you will be able to sign in to Keeper using your email address and password. {% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Troubleshooting</strong>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}If you receive the error message: <code>"Failed to unbind SAML, please set a password first"</code>
+  you must first set a password for your account:
+
+<ol start="5">
+  <li>Return to the <strong>Settings</strong> page.</li>
+  <li>Scroll up to the <strong>Password</strong> section.</li>
+  <li>Create and save a password for your account.</li>
+  <li>Return to the <strong>Social Login</strong> section and disconnect <strong>SAML</strong> again.</li>
+</ol>
+After a password has been successfully set, you will be able to disconnect SAML and use email/password authentication
+for future logins.
+{% endblocktrans %}</p>
+
+<p>{% blocktrans %}<strong>Access Management</strong>{% endblocktrans %}</p>
+
+<p>{% blocktrans %}When your Keeper account is connected through MPG Single Sign-On, access is managed by your MPG
+  organization.<br />
+  Please note:
+<ul>
+  <li>Access to Keeper is granted based on your active MPG affiliation.</li>
+  <li>If your MPG employment or institutional affiliation ends, access through SSO will be automatically revoked.</li>
+  <li>Your Keeper account itself is not automatically deactivated; however, you will no longer be able to authenticate
+    through MPG Single Sign-On.</li>
+</ul>
+For questions regarding account access or organizational membership, please contact your local IT support team.
+
+{% endblocktrans %}
+</p>
+
+{% endblock %}

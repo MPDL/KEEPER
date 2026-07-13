@@ -40,6 +40,7 @@ urlpatterns = [
 
     # KEEPER
     path('registration/', TemplateView.as_view(template_name="help/registration.html")),
+    path('sign_in_with_sso/', TemplateView.as_view(template_name="help/sign_in_with_sso.html")),
     path('configuring_a_client/', TemplateView.as_view(template_name="help/configuring_a_client.html")),
     path('how_to_invite_external_collaborators/', TemplateView.as_view(template_name="help/how_to_invite_external_collaborators.html")),
     path('office_in_keeper/', TemplateView.as_view(template_name="help/office_in_keeper.html")),
