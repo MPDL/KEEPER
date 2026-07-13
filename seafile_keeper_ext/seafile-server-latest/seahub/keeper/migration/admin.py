@@ -34,7 +34,9 @@ class EmailMigrationRequestAdmin(admin.ModelAdmin):
     actions = ["mark_as_failed"]
 
     def mark_as_failed(self, request, queryset):
+        marked = 0
         for obj in queryset.filter(status__in=["pending", "in_progress"]):
             obj.mark_failed("Manually marked failed by admin")
-        self.message_user(request, f"Marked {queryset.count()} move(s) as failed.")
+            marked += 1
+        self.message_user(request, f"Marked {marked} move(s) as failed.")
     mark_as_failed.short_description = "Mark selected moves as failed"

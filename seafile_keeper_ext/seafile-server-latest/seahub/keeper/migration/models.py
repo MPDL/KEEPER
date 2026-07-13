@@ -52,15 +52,22 @@ class EmailMigrationRequest(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
+        # Explicit app_label: the DbRouter routes on app_label == 'keeper' to the
+        # keeper-db. Without this, the label is only inherited implicitly from the
+        # parent 'keeper' app (keeper.migration is not in INSTALLED_APPS) — and
+        # registering 'keeper.migration' as its own app would silently flip the
+        # label to 'migration' and break the DB routing. Pin it.
+        app_label = 'keeper'
         db_table = 'keeper_email_migration'
-        # Prevent duplicate active requests for the same pair
-        constraints = [
-            models.UniqueConstraint(
-                fields=['source_email', 'target_email', 'status'],
-                name='uniq_active_migration_pair',
-                condition=models.Q(status__in=[ 'pending', 'in_progress' ]),
-            )
-        ]
+        # NOTE: this table is created from raw SQL (keeper-db.sql /
+        # create_keeper_email_migration_table.sql), not from a Django migration, so
+        # the SQL DDL is authoritative for the actual schema. The indexes below are
+        # documentation of the query patterns; the real indexes/keys are defined in
+        # that DDL. There is intentionally NO unique constraint on
+        # (source_email, target_email, status): MySQL/MariaDB cannot express the
+        # desired "one ACTIVE move per pair" partial unique, and a full unique would
+        # over-constrain terminal states. Active-duplicate prevention is done in the
+        # app (see views._handle_generate_token).
         indexes = [
             models.Index(fields=['source_email', 'status']),
             models.Index(fields=['target_email', 'status']),
@@ -70,44 +77,9 @@ class EmailMigrationRequest(models.Model):
     def __str__(self):
         return f"{self.source_email} → {self.target_email} ({self.status})"
 
-    @property
-    def is_active(self):
-        return self.status in (self.STATUS_PENDING, self.STATUS_IN_PROGRESS)
-
-    @property
-    def is_expired(self):
-        return timezone.now() > self.token_expires_at and self.status == self.STATUS_PENDING
-
-    def mark_in_progress(self):
-        self.status = self.STATUS_IN_PROGRESS
-        self.save(update_fields=['status'])
-
-    def mark_completed(self):
-        self.status = self.STATUS_COMPLETED
-        self.completed_at = timezone.now()
-        self.save(update_fields=['status', 'completed_at'])
-
     def mark_failed(self, error: str):
+        """Used by the Django admin 'mark as failed' action."""
         self.status = self.STATUS_FAILED
         self.error_message = error[:2000]
         self.completed_at = timezone.now()
         self.save(update_fields=['status', 'error_message', 'completed_at'])
-
-    @classmethod
-    def get_active_for_user(cls, email):
-        """Return active (pending or in_progress) move where user is source or target."""
-        email = email.lower()
-        return cls.objects.filter(
-            models.Q(source_email=email) | models.Q(target_email=email),
-            status__in=[cls.STATUS_PENDING, cls.STATUS_IN_PROGRESS]
-        ).first()
-
-    @classmethod
-    def create_request(cls, source_email, target_email, token, expires_at):
-        """Convenience creator (not currently used by views, which do direct create)."""
-        return cls.objects.create(
-            source_email=source_email.lower(),
-            target_email=target_email.lower(),
-            migration_token=token,
-            token_expires_at=expires_at,
-        )
