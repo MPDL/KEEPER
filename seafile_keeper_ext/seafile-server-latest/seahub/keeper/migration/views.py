@@ -73,26 +73,6 @@ def _get_current_user_email(request):
     return contact_email or user.username or user.email
 
 
-def _account_has_sso(username):
-    """Reliably tell whether an account has an SSO/SAML binding by checking the
-    social-auth table directly, rather than guessing from the @auth.local name.
-    (An account is SSO-enabled iff it has a row in social_auth_usersocialauth.)"""
-    username = (username or '').strip()
-    if not username:
-        return False
-    try:
-        from django.db import connection
-        with connection.cursor() as cur:
-            cur.execute(
-                "SELECT 1 FROM social_auth_usersocialauth WHERE username=%s LIMIT 1",
-                [username],
-            )
-            return cur.fetchone() is not None
-    except Exception:
-        # Fall back to the naming convention only if the table can't be read.
-        return username.lower().endswith('@auth.local')
-
-
 def _authoritative_email(username):
     """The account's DB-authoritative email, or None — NEVER a user-edited value.
 
@@ -150,15 +130,6 @@ def _accounts_sharing_email(email, exclude_username):
     except Exception:
         pass
     return found
-
-
-def _find_account_same_email(email, exclude_username, want_sso):
-    """Return an account that shares `email` (≠ current) whose SSO-binding status
-    matches want_sso (True = the SSO account, False = the old non-SSO account)."""
-    for username in _accounts_sharing_email(email, exclude_username):
-        if _account_has_sso(username) == want_sso:
-            return username
-    return None
 
 
 @login_required
@@ -244,21 +215,6 @@ def migration_landing(request):
         # Handle cancel for source (only allowed while still pending, i.e. before the worker starts it)
         if 'cancel_token' in request.POST and as_source:
             return _handle_cancel(request, as_source, current_email)
-
-        # Handle "same email" SSO transfer (self-confirm in one session) — from either session
-        if 'same_email_sso' in request.POST and not as_source and not as_target:
-            return _handle_same_email_sso(request, current_email)
-
-        # Re-open the confirmation screen for a pending self-confirm transfer (re-entry,
-        # whichever side the user is currently logged in as)
-        if 'open_confirm' in request.POST:
-            _m = as_source or as_target
-            if _m and (_m.metadata or {}).get('self_confirm') and not _m.confirmed_at:
-                return render(request, 'keeper/migration/confirm.html', {
-                    'migration': _m,
-                    'current_email': current_email,
-                    'self_confirm': True,
-                })
 
         # Handle "Get code" action when acting as source
         if 'generate_token' in request.POST and not as_source:
@@ -367,106 +323,6 @@ Once the transfer has completed successfully, the source account will be deactiv
 
     # Back to the landing page so the source immediately sees the code (with a copy button).
     return redirect('keeper_migration_landing')
-
-
-def _handle_same_email_sso(request, current_email):
-    """'Same email' SSO transfer with self-confirm in one session.
-
-    Works from EITHER session, decided by a reliable SSO-binding check (not the
-    account name):
-      - logged in as the OLD (non-SSO) account -> push data to the SSO account
-      - logged in as the SSO account           -> pull data from the OLD account
-    The data always moves old-account(data) -> SSO-account, and the EXACT account
-    ids are recorded so migrate_account.py resolves them unambiguously. The logged-in
-    user confirms right here (no emailed code, no second login).
-    """
-    # Rate limit (shared with the generate cooldown).
-    session_key = f'migration_generate_last_{current_email}'
-    last = request.session.get(session_key)
-    if last and (timezone.now() - timezone.datetime.fromisoformat(last)).total_seconds() < 60:
-        return render(request, 'keeper/migration/landing.html', {
-            'error': 'Please wait a minute before trying again.',
-            'current_email': current_email,
-        })
-    request.session[session_key] = timezone.now().isoformat()
-
-    current_id = (request.user.username or '').strip().lower()
-    if not current_id:
-        return render(request, 'keeper/migration/landing.html', {
-            'error': 'Could not determine your current account.',
-            'current_email': current_email,
-        })
-
-    # Pair on the DB-authoritative email (login id / system-set IdP email), NEVER the
-    # user-editable contact email — otherwise a user could point at another account by
-    # editing their own contact email.
-    verified_email = _authoritative_email(current_id)
-    if not verified_email:
-        return render(request, 'keeper/migration/landing.html', {
-            'error': "We could not verify your account's email address from the system, so the "
-                     '"same email" option is unavailable. If your other account uses a different '
-                     'email address, untick the box above and enter that address instead.',
-            'current_email': current_email,
-        })
-
-    if _account_has_sso(current_id):
-        # Logged in with the SSO account -> the OLD (non-SSO) account holds the data.
-        source_id = _find_account_same_email(verified_email, current_id, want_sso=False)
-        target_id = current_id
-        if not source_id:
-            return render(request, 'keeper/migration/landing.html', {
-                'error': 'We could not find your earlier account with the same email address. '
-                         'If your data is under a different email address, untick the box above '
-                         'and enter that address instead.',
-                'current_email': current_email,
-            })
-    else:
-        # Logged in with the old account -> push data to the SSO account.
-        source_id = current_id
-        target_id = _find_account_same_email(verified_email, current_id, want_sso=True)
-        if not target_id:
-            return render(request, 'keeper/migration/landing.html', {
-                'error': 'We could not find your other (SSO) account with the same email address. '
-                         'Make sure you have signed in via SSO at least once so that account exists, '
-                         'then try again. If the other account uses a different email address, untick '
-                         'the box above and enter that address instead.',
-                'current_email': current_email,
-            })
-
-    source_id = source_id.strip().lower()
-    target_id = target_id.strip().lower()
-    if source_id == target_id:
-        return render(request, 'keeper/migration/landing.html', {
-            'error': 'The two accounts could not be distinguished.',
-            'current_email': current_email,
-        })
-
-    # Don't create a duplicate active transfer for this source.
-    if EmailMigrationRequest.objects.filter(
-        source_email=source_id,
-        status__in=[EmailMigrationRequest.STATUS_PENDING, EmailMigrationRequest.STATUS_IN_PROGRESS]
-    ).exists():
-        return redirect('keeper_migration_landing')
-
-    token = secrets.token_urlsafe(48)
-    expires = timezone.now() + timedelta(days=TOKEN_LIFETIME_DAYS)
-    try:
-        migration = EmailMigrationRequest.objects.create(
-            source_email=source_id,
-            target_email=target_id,
-            migration_token=token,
-            token_expires_at=expires,
-            metadata={'self_confirm': True, 'same_email_sso': True, 'verified_email': verified_email},
-        )
-    except IntegrityError:
-        return redirect('keeper_migration_landing')
-
-    # Self-confirm: show the confirmation screen now, in this session.
-    return render(request, 'keeper/migration/confirm.html', {
-        'migration': migration,
-        'current_email': current_email,
-        'self_confirm': True,
-    })
 
 
 def _handle_regenerate(request, existing_migration, source_email):
@@ -624,16 +480,10 @@ def confirm_migration(request, pk):
     if not migration:
         return redirect('keeper_migration_landing')
 
-    # Who may confirm: normally the TARGET (matched by authoritative id). For a
-    # 'same email' self-confirm transfer the SOURCE confirms in their own session
-    # (source and target are the same person, different account ids).
-    # Authoritative identity only (login id + system-verified email) — never the
-    # user-editable contact email.
+    # Only the TARGET may confirm, matched by authoritative identity (login id +
+    # system-verified email) — never the user-editable contact email.
     identities = {i for i in (current_username, _authoritative_email(current_username)) if i}
-    is_self_confirm = bool((migration.metadata or {}).get('self_confirm'))
-    can_confirm = (migration.target_email.lower() in identities
-                   or (is_self_confirm and migration.source_email.lower() in identities))
-    if not can_confirm:
+    if migration.target_email.lower() not in identities:
         return redirect('keeper_migration_landing')
 
     # Require all critical acknowledgments (strong confirmation as per design)
@@ -644,7 +494,6 @@ def confirm_migration(request, pk):
             'migration': migration,
             'error': 'You must check all three boxes to proceed with the data transfer.',
             'current_email': current_email,
-            'self_confirm': is_self_confirm,
         })
 
     migration.confirmed_at = timezone.now()

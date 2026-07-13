@@ -56,14 +56,6 @@
             <div class="alert alert-info" style="margin-bottom: 10px;">
               The transfer has been confirmed. It is now queued and will be processed automatically — no further action is needed.
             </div>
-            {% elif as_source.metadata.self_confirm %}
-            <div class="alert alert-warning" style="margin-bottom: 10px;">
-              This transfer to your new SSO account is ready but not yet confirmed. Review and confirm to start it.
-            </div>
-            <form method="post" style="display: inline;">
-              {% csrf_token %}
-              <button type="submit" name="open_confirm" class="btn btn-primary">Review and confirm</button>
-            </form>
             {% else %}
             <p>The data transfer code below is ready and valid for 7 days. It should only be used after logging in with the target account and confirming on the identity banner that it is shown as TARGET.</p>
 
@@ -144,15 +136,7 @@
         <p><strong>Current status:</strong> <span class="label label-{% if as_target.status == 'pending' %}warning{% elif as_target.status == 'in_progress' %}info{% elif as_target.status == 'completed' %}success{% elif as_target.status == 'failed' %}danger{% else %}default{% endif %}">{{ as_target.get_status_display }}</span></p>
         {% if as_target.completed_at %}<p><strong>Finished on:</strong> {{ as_target.completed_at|date:"Y-m-d H:i" }}</p>{% endif %}
 
-        {% if as_target.status == 'pending' and not as_target.confirmed_at and as_target.metadata.self_confirm %}
-          <div class="alert alert-warning" style="margin-bottom: 10px;">
-            This transfer of your data onto this account is ready but not yet confirmed. Review and confirm to start it.
-          </div>
-          <form method="post" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" name="open_confirm" class="btn btn-primary">Review and confirm</button>
-          </form>
-        {% elif as_target.status == 'pending' and not as_target.confirmed_at %}
+        {% if as_target.status == 'pending' and not as_target.confirmed_at %}
           <p>If you have received a data transfer code, first verify on the identity banner above that it shows TARGET ACCOUNT, then enter the code below to complete the data transfer.</p>
           <form method="post" class="migration-form">
             {% csrf_token %}
@@ -197,48 +181,17 @@
 
         <form method="post" class="migration-form">
           {% csrf_token %}
-
-          <div class="checkbox" style="margin-bottom: 12px;">
-            <label>
-              <input type="checkbox" id="same-email-sso-cb" onchange="keeperToggleSameEmail(this);">
-              I have another account with the <strong>same email address</strong> (e.g. created after activating SSO/SAML)
-            </label>
-          </div>
-
-          <div id="target-email-group" class="form-group">
+          <div class="form-group">
             <label for="target_email">Email address of your new account</label>
             <input type="email" name="target_email" id="target_email" required
                    placeholder="you@newdomain" class="form-control input-lg">
             <small class="help-block">Must be an account you can already log in with.</small>
           </div>
 
-          <button type="submit" name="generate_token" id="btn-generate" class="btn btn-primary btn-lg btn-block">
+          <button type="submit" name="generate_token" class="btn btn-primary btn-lg btn-block">
             Request data transfer code
           </button>
-          <button type="submit" name="same_email_sso" id="btn-same-email" class="btn btn-primary btn-lg btn-block" style="display: none;">
-            Find my other account and continue
-          </button>
         </form>
-
-        <script>
-        function keeperToggleSameEmail(cb) {
-          var grp = document.getElementById('target-email-group');
-          var input = document.getElementById('target_email');
-          var gen = document.getElementById('btn-generate');
-          var same = document.getElementById('btn-same-email');
-          if (cb.checked) {
-            if (grp) { grp.style.display = 'none'; }
-            if (input) { input.required = false; }
-            if (gen) { gen.style.display = 'none'; }
-            if (same) { same.style.display = ''; }
-          } else {
-            if (grp) { grp.style.display = ''; }
-            if (input) { input.required = true; }
-            if (gen) { gen.style.display = ''; }
-            if (same) { same.style.display = 'none'; }
-          }
-        }
-        </script>
       </div>
     </div>
   {% endif %}

@@ -10,21 +10,12 @@
 {% block main_content %}
 <div class="keeper-migration-page container">
 
-  {% if self_confirm %}
-  <div class="alert alert-warning migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 25px; border: 2px solid #f0ad4e;">
-    <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
-    <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
-    <span class="role-badge source" style="background-color: #f0ad4e; color: #fff; padding: 4px 10px; border-radius: 4px; margin-left: 10px; font-weight: bold; font-size: 0.95em;">YOUR CURRENT ACCOUNT</span>
-    <p style="margin: 8px 0 0 0; font-size: 0.95em;">Confirm the data transfer below. Your data will be consolidated onto your SSO account (same email address); the old account will be deactivated upon completion.</p>
-  </div>
-  {% else %}
   <div class="alert alert-success migration-identity-banner" style="font-size: 1.1em; padding: 15px; margin-bottom: 25px; border: 2px solid #5cb85c;">
     <strong style="font-size: 1.2em;">You are currently logged in as:</strong><br>
     <span class="current-email" style="font-weight: bold; font-size: 1.3em;">{{ current_email }}</span>
     <span class="role-badge target" style="background-color: #5cb85c; color: white; padding: 4px 10px; border-radius: 4px; margin-left: 10px; font-weight: bold; font-size: 0.95em;">TARGET ACCOUNT</span>
     <p style="margin: 8px 0 0 0; font-size: 0.95em;">You are the target account for this data transfer. The source account will be deactivated upon completion.</p>
   </div>
-  {% endif %}
 
   <div class="page-header">
     <h1>Confirm Account Data Transfer</h1>
@@ -34,7 +25,7 @@
     <strong style="font-size: 1.15em;">⚠ WARNING — THIS ACTION IS IRREVERSIBLE</strong>
     <p style="margin-top: 8px;">
       You are about to move <strong>ALL</strong> your files and folders
-      from <strong>{{ migration.source_email }}</strong> to {% if self_confirm %}<strong>your new SSO account</strong> (same email address){% else %}<strong>{{ migration.target_email }}</strong>{% endif %}.
+      from <strong>{{ migration.source_email }}</strong> to <strong>{{ migration.target_email }}</strong>.
     </p>
     <p>After completion:</p>
     <ul style="margin-bottom: 5px;">
@@ -75,7 +66,7 @@
       </div>
     </div>
 
-    {% if not self_confirm %}<p><small>The data transfer code will expire on {{ migration.token_expires_at|date:"Y-m-d H:i" }}. Do not share it with anyone.</small></p>{% endif %}
+    <p><small>The data transfer code will expire on {{ migration.token_expires_at|date:"Y-m-d H:i" }}. Do not share it with anyone.</small></p>
 
     <div class="form-actions" style="margin-top: 20px;">
       <button type="submit" class="btn btn-danger btn-lg">

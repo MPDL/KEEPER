@@ -94,15 +94,19 @@ echo "=== deploy-migration.sh starting (mode=$MODE, EXT_DIR=$EXT_DIR) ==="
 # even inside set +e or subshells, as seen in the crash where sourcing printed then rc=1).
 get_keeper_ini_value() {
   local key="$1"
-  local val=""
+  local line="" val=""
   shopt -s nullglob 2>/dev/null || true
   for ini in /opt/seafile/keeper*.ini ; do
     if [ -f "$ini" ]; then
       # loose match (no ^) so it finds keys even under [global] or other sections
-      val=$(grep -i "${key}[[:space:]]*=" "$ini" 2>/dev/null | head -1 \
-        | sed -e 's/.*= *//' -e 's/[[:space:]#].*//' -e 's/ //g' -e 's/\r//g' || true)
-      if [ -n "$val" ]; then
-        break
+      line=$(grep -i "${key}[[:space:]]*=" "$ini" 2>/dev/null | head -1 || true)
+      if [ -n "$line" ]; then
+        # Take EVERYTHING after the FIRST '=' verbatim; trim only surrounding
+        # whitespace and CR. Do NOT strip '#', '=', or inner spaces — values
+        # such as __DB_PASSWORD__ may legitimately contain them.
+        val=$(printf '%s' "$line" | tr -d '\r' \
+          | sed -e 's/^[^=]*=//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        [ -n "$val" ] && break
       fi
     fi
   done
@@ -169,10 +173,30 @@ if [ -z "$NODE_TYPE" ]; then
   done
 fi
 
-NODE_TYPE="${NODE_TYPE:-APP}"
+# Do NOT silently default the role: an undetected NODE_TYPE would skip the
+# worker (on a BACKGROUND node) or the UI (on an APP node) while still
+# reporting a successful deploy. Fail loudly and let the operator be explicit.
+if [ -z "$NODE_TYPE" ]; then
+    echo "" >&2
+    echo "ERROR: could not detect __NODE_TYPE__ from /opt/seafile/keeper*.ini." >&2
+    echo "       Re-run with the role set explicitly, e.g.:" >&2
+    echo "           NODE_TYPE=BACKGROUND $0 standalone" >&2
+    echo "       Valid values: APP | BACKGROUND | SINGLE" >&2
+    exit 1
+fi
+
+NODE_TYPE="$(echo "$NODE_TYPE" | tr '[:lower:]' '[:upper:]')"
+case "$NODE_TYPE" in
+    APP|BACKGROUND|SINGLE) ;;
+    *)
+        echo "ERROR: unknown NODE_TYPE='$NODE_TYPE' (valid: APP | BACKGROUND | SINGLE)." >&2
+        exit 1
+        ;;
+esac
+
 is_background=false
-case "$(echo "$NODE_TYPE" | tr '[:upper:]' '[:lower:]')" in
-    background) is_background=true ;;
+case "$NODE_TYPE" in
+    BACKGROUND) is_background=true ;;
 esac
 
 echo "Detected NODE_TYPE=$NODE_TYPE (is_background=$is_background)"
@@ -317,12 +341,13 @@ if $is_background || [ "$NODE_TYPE" = "SINGLE" ]; then
     CRON_DEST="/etc/cron.d/cron-keeper-migration"
     if [ -f "$CRON_SRC" ]; then
         echo ">>> Deploying cron.d for migration worker (BACKGROUND) ..."
-        if [ -f "$CRON_DEST" ]; then
-            BACKUP="${CRON_DEST}${BACKUP_POSTFIX}"
-            if [ ! -f "$BACKUP" ]; then
-                cp -a "$CRON_DEST" "$BACKUP" || true
-            fi
-        fi
+        # NO backup inside /etc/cron.d: cron treats ANY file matching
+        # [A-Za-z0-9_-]+ there as a live crontab, so a *_orig copy would be
+        # scheduled too (double runs). This matches build.py, which deploys all
+        # cron.d.* files with skip_backup=True — the file is regenerated
+        # deterministically from the source anyway.
+        # Also remove a stale backup left by earlier versions of this script:
+        rm -f "${CRON_DEST}${BACKUP_POSTFIX}"
         # Expand using known vars (mimics the expand_properties in main deploy)
         if [ -n "$SEAFILE_DIR" ]; then
             sed -e "s#__SEAFILE_DIR__#${SEAFILE_DIR}#g" \
@@ -380,10 +405,21 @@ if $is_background || [ "$NODE_TYPE" = "SINGLE" ]; then
         U=${KEEPER_DB_USER:-${DB_USER:-${__DB_USER__:-}}}
         PW=${KEEPER_DB_PASSWORD:-${DB_PASSWORD:-${__DB_PASSWORD__:-}}}
         if [ -n "$U" ]; then
-            MPW=""
-            [ -n "$PW" ] && MPW="-p${PW}"
-            mysql -h "$H" -P "$P" -u "$U" $MPW "$D" < "$SQLF" 2>&1 || true
-            echo "    SQL table ensure attempted (idempotent)."
+            # Password via MYSQL_PWD (never on the command line): keeps it out of
+            # `ps`/process lists and immune to shell word-splitting on special chars.
+            # Check the exit code — a silently failed apply would leave the worker
+            # without its table while the deploy still reports success.
+            set +e
+            MYSQL_PWD="$PW" mysql -h "$H" -P "$P" -u "$U" "$D" < "$SQLF"
+            SQL_RC=$?
+            set -e
+            if [ "$SQL_RC" -eq 0 ]; then
+                echo "    SQL table ensured (idempotent)."
+            else
+                echo "    WARNING: could not apply $SQLF (mysql exit $SQL_RC)." >&2
+                echo "             Check DB credentials (__DB_*__ in /opt/seafile/keeper*.ini or .env)," >&2
+                echo "             then apply manually: mysql -h $H -P $P -u $U -p keeper-db < $SQLF" >&2
+            fi
         else
             echo "    (no DB creds from ini/.env; skipping auto-apply, table may already exist from previous run)"
         fi

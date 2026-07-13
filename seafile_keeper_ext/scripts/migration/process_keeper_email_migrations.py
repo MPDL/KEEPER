@@ -230,9 +230,6 @@ MIGRATION_PAGE_URL = os.getenv("MIGRATION_PAGE_URL") or (
     f"{_BASE_URL}/account/migrate/" if _BASE_URL else "https://keeper.mpdl.mpg.de/account/migrate/"
 )
 
-# How often this should be run (for documentation only)
-RECOMMENDED_CRON = "*/5 * * * *   # every 5 minutes is a good starting point"
-
 LOG_DIR = os.path.join(MIGRATION_SCRIPT_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -515,10 +512,6 @@ If you encounter any issues, please contact {SUPPORT_EMAIL}.
         # Still have the print above for manual follow-up
 
 
-# Backwards compat alias used by older code in this file
-send_basic_notification = send_migration_notification
-
-
 def process_one_migration(conn, row: dict):
     mid = row["id"]
     src = row["source_email"]
@@ -552,9 +545,9 @@ def main():
                 print("Pending data moves:")
                 for row in pending:
                     exp = row.get('token_expires_at', 'N/A')
-                if exp and hasattr(exp, 'strftime'):
-                    exp = exp.strftime('%Y-%m-%d %H:%M')
-                print(f"  #{row['id']} {row['source_email']} → {row['target_email']} (code expires {exp})")
+                    if exp and hasattr(exp, 'strftime'):
+                        exp = exp.strftime('%Y-%m-%d %H:%M')
+                    print(f"  #{row['id']} {row['source_email']} → {row['target_email']} (code expires {exp})")
             else:
                 print("No pending moves.")
             conn.close()
