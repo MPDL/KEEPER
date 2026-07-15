@@ -396,6 +396,11 @@ if ENABLE_ADFS_LOGIN:
     # Prevent email/pass trap bug if sso auth used by disconnected sso in profile
     DISABLE_ADFS_USER_PWD_LOGIN = True
 
+    # Enable a user to get auth token in 'settings' page.
+    # NOTE: related to https://help.seafile.com/syncing_client/linux-cli/#authenticate-with-tokens
+    ENABLE_GET_AUTH_TOKEN_BY_SESSION = True
+
+
 # Enable authentication wit Kerberos
 # Default is False
 ENABLE_KRB5_LOGIN = False
