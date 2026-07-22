@@ -11,75 +11,80 @@
 
 {% block extra_style %}
 <style type="text/css">
+  html,
+  body,
+  #wrapper {
+    height: 100%;
+  }
 
-html, body, #wrapper { 
-    height:100%; 
-}
-
-#wrapper {
+  #wrapper {
     /*
     background: url('/media/custom/keeper-login-page-background_1600px.svg') center top no-repeat scroll;
     background-size: cover;
     */
     background-color: #235b70;
-}
+  }
 
-#central-wrapper {
+  #central-wrapper {
     background-image: url('/media/custom/keeper-team-background.svg');
     background-position: left 90px bottom 10px;
     background-repeat: no-repeat;
     padding: 50px 0 200px 40px;
     background-color: rgba(168, 219, 221, 100);
-}
+  }
 
-#main {
-    min-height:0;
-}
+  #main {
+    min-height: 0;
+  }
 
-.navbar {
+  .navbar {
     border-radius: 0;
-}       
+  }
 
 
-.row {
-    background-color: rgba(244,243,245,0.9);
-}
+  .row {
+    background-color: rgba(244, 243, 245, 0.9);
+  }
 
-#mpdl-flag {
+  #mpdl-flag {
     position: relative;
     top: -1px;
     padding: 0 0 100px 40px;
-}
+  }
 
-#info_panel {
+  #info_panel {
     padding: 0 0 200px 40px;
 
-}
+  }
 
-/* Login panel */
+  /* Login panel */
 
-#login_panel input[type="checkbox"] {
+  #login_panel input[type="checkbox"] {
     appearance: none;
-    -webkit-appearance: none;  /* Safari and Chrome */
-    -moz-appearance: none;     /* Firefox */
+    -webkit-appearance: none;
+    /* Safari and Chrome */
+    -moz-appearance: none;
+    /* Firefox */
     width: 24px;
     height: 24px;
     background-color: #f3f3f3;
     border: none;
-    border-radius: 6px; /* Change this to control roundness */
+    border-radius: 6px;
+    /* Change this to control roundness */
     cursor: pointer;
     position: relative;
     margin-right: 8px;
-}
+  }
 
-/* Checked state with background color */
-#login_panel input[type="checkbox"]:checked {
+  /* Checked state with background color */
+  #login_panel input[type="checkbox"]:checked {
     background-color: #0078d7;
-    border-radius: 6px; /* Ensure same radius on checked state */
-}
+    border-radius: 6px;
+    /* Ensure same radius on checked state */
+  }
 
-/* Optional: custom checkmark */
-#login_panel input[type="checkbox"]:checked::after {
+  /* Optional: custom checkmark */
+  #login_panel input[type="checkbox"]:checked::after {
     content: "";
     position: absolute;
     left: 8px;
@@ -89,9 +94,11 @@ html, body, #wrapper {
     border: solid white;
     border-width: 0 3px 3px 0;
     transform: rotate(45deg);
-}
+  }
 
-#login_panel .input.name-input, #login_panel .input.passwd-input, #login_panel input:-webkit-autofill {
+  #login_panel .input.name-input,
+  #login_panel .input.passwd-input,
+  #login_panel input:-webkit-autofill {
     background-color: #f3f3f3 !important;
     -webkit-box-shadow: 0 0 0px 1000px #f3f3f3 inset;
     height: 38px;
@@ -100,97 +107,110 @@ html, body, #wrapper {
     outline: none;
     border-radius: 6px;
     padding-left: 12px;
-}
+  }
 
-.new-narrow-panel {
+  .new-narrow-panel {
     margin: 20px 0px 20px 0px !important;
     width: 95% !important;
-}
+  }
 
-#lg_footer #keeper-links {
+  #lg_footer #keeper-links {
     background-color: white;
     padding: 20px 40px 20px 40px;
-}
+  }
 
-@media (max-width: 991px) {
+  @media (max-width: 991px) {
     #login_panel_parent {
-        width: 380px;
-        margin-left: 12px;
+      width: 380px;
+      margin-left: 12px;
     }
+
     #lg_footer #keeper-links h4 {
-        margin-bottom: 0.2em;
-        margin-top: 0.6em;
+      margin-bottom: 0.2em;
+      margin-top: 0.6em;
     }
   }
 
 
-{% comment "SEAFILE" %}
-#wrapper {
+    {
+    % comment "SEAFILE" %
+  }
+
+  #wrapper {
     background: url('{{ MEDIA_URL }}{{login_bg_image_path}}') center top no-repeat scroll;
     background-size: cover;
-    padding-top:1px;
-}
-#lang {
-    margin:0;
-}
-#lang-context {
-    font-weight:normal;
-}
-#lang-context-selector {
-    text-align:left;
-}
-{% endcomment %}
+    padding-top: 1px;
+  }
+
+  #lang {
+    margin: 0;
+  }
+
+  #lang-context {
+    font-weight: normal;
+  }
+
+  #lang-context-selector {
+    text-align: left;
+  }
+
+    {
+    % endcomment %
+  }
 </style>
 {% endblock %}
 
 {% block main_content %}
 {% comment "SEAFILE" %}
 <div class="login-panel-outer-container vh">
-<div class="login-panel" id="log-in-panel">
+  <div class="login-panel" id="log-in-panel">
     <h1 class="login-panel-hd">BLA{% trans "Log In" %}</h1>
     <form action="" method="post" id="login-form">{% csrf_token %}
-        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input mb-3" />
-        <div class="position-relative">
-          <input id="password-input" type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input" autocomplete="off" />
-          <i id="toggle-show-password" class="sf3-font sf3-font-eye-slash"></i>
-        </div>
+      <input type="text" name="login" placeholder="{% trans " Email or Username" %}" aria-label="{% trans " Email or
+        Username" %}" title="{% trans " Email or Username" %}" value="" class="input mb-3" />
+      <div class="position-relative">
+        <input id="password-input" type="password" name="password" placeholder="{% trans " Password" %}"
+          aria-label="{% trans " Password" %}" title="{% trans " Password" %}" value="" class="input"
+          autocomplete="off" />
+        <i id="toggle-show-password" class="sf3-font sf3-font-eye-slash"></i>
+      </div>
 
-        {% if form.captcha %}
-        <div class="ovhd mt-3">
-            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
-            {{ form.captcha }}
-        </div>
-        {% endif %}
+      {% if form.captcha %}
+      <div class="ovhd mt-3">
+        <span id="refresh-captcha" title="{% trans " Refresh" %}" class="icon-refresh op-icon fright"></span>
+        {{ form.captcha }}
+      </div>
+      {% endif %}
 
-        <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-        {% if form.errors %}
-        {% if form.captcha.errors %}
-        {{ form.captcha.errors}}
-        {% elif form.errors.freeze_account %}
-        <p class="error mt-2">{{ form.errors.freeze_account }}</p>
-        {% elif form.errors.inactive %}
-        <p class="error mt-2">{{ form.errors.inactive }}</p>
-        {% elif form.errors.invalid_input %}
-        <p class="error mt-2">{{ form.errors.invalid_input }}</p>
-        {% elif form.errors.not_found %}
-        <p class="error mt-2">{{ form.errors.not_found }}</p>
-        {% elif form.errors.disable_pwd_login %}
-        <p class="error mt-2">{% trans "Please use Single Sign-On to login." %}</p>
-        {% else %}
-        <p class="error mt-2">{% trans "Incorrect email or password" %}</p>
-        {% endif %}
-        {% else %}
-        <p class="error mt-2 hide"></p>
-        {% endif %}
+      <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+      {% if form.errors %}
+      {% if form.captcha.errors %}
+      {{ form.captcha.errors}}
+      {% elif form.errors.freeze_account %}
+      <p class="error mt-2">{{ form.errors.freeze_account }}</p>
+      {% elif form.errors.inactive %}
+      <p class="error mt-2">{{ form.errors.inactive }}</p>
+      {% elif form.errors.invalid_input %}
+      <p class="error mt-2">{{ form.errors.invalid_input }}</p>
+      {% elif form.errors.not_found %}
+      <p class="error mt-2">{{ form.errors.not_found }}</p>
+      {% elif form.errors.disable_pwd_login %}
+      <p class="error mt-2">{% trans "Please use Single Sign-On to login." %}</p>
+      {% else %}
+      <p class="error mt-2">{% trans "Incorrect email or password" %}</p>
+      {% endif %}
+      {% else %}
+      <p class="error mt-2 hide"></p>
+      {% endif %}
 
-        <label class="checkbox-label mt-3 mb-0 remember-me">
-            <input type="checkbox" name="remember_me" class="vam remember-input" />
-            <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
-        </label>
+      <label class="checkbox-label mt-3 mb-0 remember-me">
+        <input type="checkbox" name="remember_me" class="vam remember-input" />
+        <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+      </label>
 
-        <!-- <button id="login_btn" type="submit" class="submit btn btn-primary btn-block h-auto mb-3">{% trans "Log In" %}</button> -->
-        bla!!!
-        <button id="login_btn" class="btn btn-secondary btn-block">{% trans "Log In" %}</button>
+      <!-- <button id="login_btn" type="submit" class="submit btn btn-primary btn-block h-auto mb-3">{% trans "Log In" %}</button> -->
+      bla!!!
+      <button id="login_btn" class="btn btn-secondary btn-block">{% trans "Log In" %}</button>
     </form>
 
     {% if enable_sso %}
@@ -210,240 +230,254 @@ html, body, #wrapper {
       </div>
 
       {% if enable_weixin %}
-        <a href="{% url "weixin_oauth_login" %}">
-          <img src="{{MEDIA_URL}}img/weixin.png" width="32" alt="" title="{% if LANGUAGE_CODE == 'zh-cn' %}微信{% else %}WeChat{% endif %}" />
-        </a>
+      <a href="{% url " weixin_oauth_login" %}">
+        <img src="{{MEDIA_URL}}img/weixin.png" width="32" alt=""
+          title="{% if LANGUAGE_CODE == 'zh-cn' %}微信{% else %}WeChat{% endif %}" />
+      </a>
       {% endif %}
 
       {% if enable_work_weixin %}
-        <a href="{% url "work_weixin_sso" %}">
-          <img src="{{MEDIA_URL}}img/work-weixin.png" width="32" alt="" title="{% if LANGUAGE_CODE == 'zh-cn' %}企业微信{% else %}Work-WeChat{% endif %}" />
-        </a>
+      <a href="{% url " work_weixin_sso" %}">
+        <img src="{{MEDIA_URL}}img/work-weixin.png" width="32" alt=""
+          title="{% if LANGUAGE_CODE == 'zh-cn' %}企业微信{% else %}Work-WeChat{% endif %}" />
+      </a>
       {% endif %}
 
       {% if enable_dingtalk %}
-        <a href="{% url "dingtalk_sso" %}">
-          <img src="{{MEDIA_URL}}img/dingtalk.png" width="32" alt="" title="{% if LANGUAGE_CODE == 'zh-cn' %}钉钉{% else %}DingTalk{% endif %}" />
-        </a>
+      <a href="{% url " dingtalk_sso" %}">
+        <img src="{{MEDIA_URL}}img/dingtalk.png" width="32" alt=""
+          title="{% if LANGUAGE_CODE == 'zh-cn' %}钉钉{% else %}DingTalk{% endif %}" />
+      </a>
       {% endif %}
     </div>
     {% endif %}
 
     <div class="login-panel-bottom-container d-flex justify-content-center" id="login-bottom">
-        {% if enable_change_password %}
-        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal px-2 bottom-item">{% trans "Forgot password?" %}</a>
-        {% endif %}
-        {% if enable_signup %}
-        <a href="{{ signup_url }}" class="normal px-2 bottom-item" id="sign-up">{% trans "Signup" %}</a>
-        {% endif %}
+      {% if enable_change_password %}
+      <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal px-2 bottom-item">{% trans "Forgot password?"
+        %}</a>
+      {% endif %}
+      {% if enable_signup %}
+      <a href="{{ signup_url }}" class="normal px-2 bottom-item" id="sign-up">{% trans "Signup" %}</a>
+      {% endif %}
     </div>
-</div>
+  </div>
 </div>
 {% include "snippets/policy_service_link.html" %}
 {% endcomment %}
 
 <div class="container">
-    <!-- <div class="row"> -->
-        <!-- <div id="mpdl-flag" class="col-lg-12 hidden-md-down"> -->
-            <!-- <img src="/media/custom/logo-mpdl-twocolor-dark-var2-box_keeper.svg" alt=""/> -->
-        <!-- </div> -->
+  <!-- <div class="row"> -->
+  <!-- <div id="mpdl-flag" class="col-lg-12 hidden-md-down"> -->
+  <!-- <img src="/media/custom/logo-mpdl-twocolor-dark-var2-box_keeper.svg" alt=""/> -->
+  <!-- </div> -->
 
-    <!-- </div> -->
-    <div id="central-wrapper" class="row">
-        <div class="col-xl-7 col-lg-7 hidden-md-down">
-            <div id="info_panel">
-                <h3>Archive the way you work</h3>
-                <div id="intro_en">
-                    <p>A free service for all Max Planck employees and project partners with more than 1TB of storage per user for your researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</p>
-                    <p>You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving regulations of the Max Planck Society to ensure ‘good scientific practice’.</p>
-                </div>
-                <div id="intro_de">
-                    <p>Ein kostenloser Service für alle Max-Planck-Mitarbeiter und Projektpartner mit mehr als 1 TB Speicher pro Nutzer für Ihre Forschungsdaten. Profitieren Sie von einer sicheren Datenspeicherung, nahtlos integriert in Ihrem Forschungsprozess.</p>
-                    <p>Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können Sie sicher sein, die Archivierungsvorschriften der Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur Sicherung "guter wissenschaftlicher Praxis" einzuhalten.</p>
-                </div>
-            </div>
+  <!-- </div> -->
+  <div id="central-wrapper" class="row">
+    <div class="col-xl-7 col-lg-7 hidden-md-down">
+      <div id="info_panel">
+        <h3>Archive the way you work</h3>
+        <div id="intro_en">
+          <p>A service for all Max Planck employees and project partners with more than 1TB of storage per user for your
+            researchdata. Profit from safe data storage, seamlessly integrated into your research workflow.</p>
+          <p>You do the right thing - with storing your data in Keeper you can be sure to fulfil the archiving
+            regulations of the Max Planck Society to ensure ‘good scientific practice’.</p>
         </div>
-        
-
-
-        <div id="login_panel_parent" class="col-xl-4 col-xl-offset-1 col-lg-5 col-md-6 col-sm-7 col-xs-10">
-            {#<div class="login-panel">#}
-                <div id="login_panel" class="new-narrow-panel">
-                    {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
-                    <h3>{% trans "Log In" %}</h3>
-                    <form action="" method="post" class="con">{% csrf_token %}
-                        <input type="text" name="login" placeholder="{% trans "Email or Username" %}" aria-label="{% trans "Email or Username" %}" title="{% trans "Email or Username" %}" value="" class="input name-input" /><br />
-                        <input type="password" name="password" placeholder="{% trans "Password" %}" aria-label="{% trans "Password" %}" title="{% trans "Password" %}" value="" class="input passwd-input" autocomplete="off" />
-
-                        {% if form.captcha %}
-                        <div class="ovhd">
-                            <span id="refresh-captcha" title="{% trans "Refresh" %}" class="icon-refresh op-icon fright"></span>
-                            {{ form.captcha }}
-                        </div>
-                        {% endif %}
-
-                        <input type="hidden" name="next" value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
-                        {% if form.errors %}
-                        {% if form.captcha.errors %}
-                        {{ form.captcha.errors}}
-                        {% elif form.errors.freeze_account %}
-                        <p class="error">{{ form.errors.freeze_account }}</p>
-                        {% elif form.errors.inactive %}
-                        <p class="error">{{ form.errors.inactive }}</p>
-                        {% else %}
-                        <p class="error">{% trans "Incorrect email or password" %}</p>
-                        {% endif %}
-                        {% else %}
-                        <p class="error hide"></p>
-                        {% endif %}
-
-                        <label class="checkbox-label remember">
-                            <input type="checkbox" name="remember_me" class="vam remember-input" />
-                            <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
-                        </label>
-                        <button id="login_btn" type="submit" class="submit">{% trans "Log In" %}</button>
-
-                    </form>
-
-                    <div class="con auth">
-
-                        {% if enable_signup %}
-                        <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
-                        {% endif %}
-
-                        <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
-
-                        {% if enable_sso %}
-                        <div style="padding-top: 10px;">
-                            <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
-                        </div>
-                        {% endif %}
-
-                        <div id="knowledge_base">
-                          <a href="{{ SITE_ROOT }}help/" class="normal" target="_blank">KEEPER Knowledge Base</a>
-                        </div>
-                    </div> 
-                </div>
-            </div>
-
+        <div id="intro_de">
+          <p>Ein Service für alle Max-Planck-Mitarbeiter und Projektpartner mit mehr als 1 TB Speicher pro
+            Nutzer für Ihre Forschungsdaten. Profitieren Sie von einer sicheren Datenspeicherung, nahtlos integriert in
+            Ihrem Forschungsprozess.</p>
+          <p>Sie tun genau das Richtige - mit der Speicherung Ihrer Daten in Keeper können Sie sicher sein, die
+            Archivierungsvorschriften der Max-Planck-Gesellschaft zu erfüllen, und die Regeln zur Sicherung "guter
+            wissenschaftlicher Praxis" einzuhalten.</p>
         </div>
+      </div>
+    </div>
 
-        {% include "keeper_footer.html" %}
 
+
+    <div id="login_panel_parent" class="col-xl-4 col-xl-offset-1 col-lg-5 col-md-6 col-sm-7 col-xs-10">
+      {#<div class="login-panel">#}
+        <div id="login_panel" class="new-narrow-panel">
+          {#<h1 class="login-panel-hd">{% trans "Log In" %}</h1>#}
+          <h3>{% trans "Log In" %}</h3>
+          <form action="" method="post" class="con">{% csrf_token %}
+            <input type="text" name="login" placeholder="{% trans " Email or Username" %}" aria-label="{% trans " Email
+              or Username" %}" title="{% trans " Email or Username" %}" value="" class="input name-input" /><br />
+            <input type="password" name="password" placeholder="{% trans " Password" %}" aria-label="{% trans "
+              Password" %}" title="{% trans " Password" %}" value="" class="input passwd-input" autocomplete="off" />
+
+            {% if form.captcha %}
+            <div class="ovhd">
+              <span id="refresh-captcha" title="{% trans " Refresh" %}" class="icon-refresh op-icon fright"></span>
+              {{ form.captcha }}
+            </div>
+            {% endif %}
+
+            <input type="hidden" name="next"
+              value="{% if next %}{{ next|escape }}{% else %}{{ SITE_ROOT }}{% endif %}" />
+            {% if form.errors %}
+            {% if form.captcha.errors %}
+            {{ form.captcha.errors}}
+            {% elif form.errors.freeze_account %}
+            <p class="error">{{ form.errors.freeze_account }}</p>
+            {% elif form.errors.inactive %}
+            <p class="error">{{ form.errors.inactive }}</p>
+            {% else %}
+            <p class="error">{% trans "Incorrect email or password" %}</p>
+            {% endif %}
+            {% else %}
+            <p class="error hide"></p>
+            {% endif %}
+
+            <label class="checkbox-label remember">
+              <input type="checkbox" name="remember_me" class="vam remember-input" />
+              <span class="vam">{% blocktrans %}Remember me for {{remember_days}} days {% endblocktrans %}</span>
+            </label>
+            <button id="login_btn" type="submit" class="submit">{% trans "Log In" %}</button>
+
+          </form>
+
+          <div class="con auth">
+
+            {% if enable_signup %}
+            <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
+            {% endif %}
+
+            <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?"
+              %}</a>
+
+            {% if enable_sso %}
+            <div style="padding-top: 10px;">
+              <a id="sso" href="#" class="normal">{% trans "Single Sign-On" %}</a>
+            </div>
+            {% endif %}
+
+            <div id="knowledge_base">
+              <a href="{{ SITE_ROOT }}help/" class="normal" target="_blank">KEEPER Knowledge Base</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
 
-{% endblock %}
+    {% include "keeper_footer.html" %}
 
-{% block extra_script %}
-<script type="text/javascript">
-{% comment "SEAFILE" %}
-$('.login-panel-outer-container').prepend($($('#logo').html()).attr({'height': 40}).addClass('login-panel-logo'));
-$('.login-panel-bottom-container').append($('#lang').removeClass('fright').addClass('px-2'));
-{% endcomment %}
 
-var $el = $('.login-panel-outer-container');
-var elHeight = $el.outerHeight();
-var wdHeight = $(window).height();
-if (wdHeight > elHeight) {
-    $el.css({'margin-top': (wdHeight - elHeight)/2});
-}
-$el.removeClass('vh');
+  </div>
 
-{% comment "SEAFILE" %}
-$('#lang-context').on('click', function() {
-    var langTop = $('#lang').offset().top;
-    var langSelectorTop;
-    var langSelectorHeight = $('#lang-context-selector .sf-popover-con').outerHeight();
-    if (langSelectorHeight > langTop) {
-        langSelectorTop = '-' + (langTop - 5) + 'px';
-    } else {
-        langSelectorTop = '-' + (langSelectorHeight + 5) + 'px';
+  {% endblock %}
+
+  {% block extra_script %}
+  <script type="text/javascript">
+    {% comment "SEAFILE" %}
+    $('.login-panel-outer-container').prepend($($('#logo').html()).attr({'height': 40}).addClass('login-panel-logo'));
+    $('.login-panel-bottom-container').append($('#lang').removeClass('fright').addClass('px-2'));
+    {% endcomment %}
+
+    var $el = $('.login-panel-outer-container');
+    var elHeight = $el.outerHeight();
+    var wdHeight = $(window).height();
+    if (wdHeight > elHeight) {
+      $el.css({'margin-top': (wdHeight - elHeight) / 2});
     }
-    $('#lang-context-selector').css({
+    $el.removeClass('vh');
+
+    {% comment "SEAFILE" %}
+    $('#lang-context').on('click', function () {
+      var langTop = $('#lang').offset().top;
+      var langSelectorTop;
+      var langSelectorHeight = $('#lang-context-selector .sf-popover-con').outerHeight();
+      if (langSelectorHeight > langTop) {
+        langSelectorTop = '-' + (langTop - 5) + 'px';
+      } else {
+        langSelectorTop = '-' + (langSelectorHeight + 5) + 'px';
+      }
+      $('#lang-context-selector').css({
         'top': langSelectorTop,
         'right': 0
-    });
-    $('#lang-context-selector .sf-popover-con').css({
+      });
+      $('#lang-context-selector .sf-popover-con').css({
         'max-height': $('#lang').offset().top - 10
+      });
     });
-});
-{% endcomment %}
+    {% endcomment %}
 
-$('[name="login"]').trigger('focus');
+    $('[name="login"]').trigger('focus');
 
-$('#toggle-show-password').click(function() {
-  $(this).toggleClass('sf3-font-eye-slash sf3-font-eye');
-  if ($(this).hasClass('sf3-font-eye-slash')) {
-    $('#password-input').attr('type', 'password');
-  } else {
-    $('#password-input').attr('type', 'text');
-  }
-});
+    $('#toggle-show-password').click(function () {
+      $(this).toggleClass('sf3-font-eye-slash sf3-font-eye');
+      if ($(this).hasClass('sf3-font-eye-slash')) {
+        $('#password-input').attr('type', 'password');
+      } else {
+        $('#password-input').attr('type', 'text');
+      }
+    });
 
-function setCaptchaInputWidth() {
-    $('#id_captcha_1').outerWidth($('.input').outerWidth() - $('.captcha').width() - $('#refresh-captcha').outerWidth(true) - 10);
-}
-$(window).on('load', setCaptchaInputWidth);
-$('.captcha').on('load', setCaptchaInputWidth);
-$('#refresh-captcha').on('click', function() {
-    $.ajax({
+    function setCaptchaInputWidth() {
+      $('#id_captcha_1').outerWidth($('.input').outerWidth() - $('.captcha').width() - $('#refresh-captcha').outerWidth(true) - 10);
+    }
+    $(window).on('load', setCaptchaInputWidth);
+    $('.captcha').on('load', setCaptchaInputWidth);
+    $('#refresh-captcha').on('click', function () {
+      $.ajax({
         url: '{% url 'captcha-refresh' %}',
-        dataType:'json',
-        cache:false,
-        success: function(data) {
-            $('.captcha').attr('src', data['image_url']);
-            $('#id_captcha_0').val(data['key']);
+        dataType: 'json',
+        cache: false,
+        success: function (data) {
+          $('.captcha').attr('src', data['image_url']);
+          $('#id_captcha_0').val(data['key']);
         },
-        error: function() {
-            $('.error').removeClass('hide').html("{% trans "Failed to refresh the CAPTCHA, please try again later." %}");
-        }
+        error: function () {
+          $('.error').removeClass('hide').html("{% trans "Failed to refresh the CAPTCHA, please try again later." %}");
+    }
     });
     return false;
 });
 
-$('#login-form').on('submit', function(){
-    if (!$('input[name="login"]').val().trim()) {
+    $('#login-form').on('submit', function () {
+      if (!$('input[name="login"]').val().trim()) {
         $('.error').removeClass('hide').html("{% trans "Email or username cannot be blank" %}");
         return false;
-    }
-    if (!$('input[name="password"]').val().trim()) {
+      }
+      if (!$('input[name="password"]').val().trim()) {
         $('.error').removeClass('hide').html("{% trans "Password cannot be blank" %}");
         return false;
-    }
-});
+      }
+    });
 
-{% if enable_sso %}
-$(function() {
-    $('#sso').on('click', function() {
+    {% if enable_sso %}
+    $(function () {
+      $('#sso').on('click', function () {
         window.location = "{% url 'sso' %}{% if next %}?next={{ next|escape }}{% endif %}" + encodeURIComponent(document.location.hash);
         return false;
+      });
     });
-});
-{% endif %}
+    {% endif %}
 
-{% if enable_multi_adfs %}
-$(function() {
-    $('#multi_adfs_sso').on('click', function() {
+    {% if enable_multi_adfs %}
+    $(function () {
+      $('#multi_adfs_sso').on('click', function () {
         window.location = "{% url 'multi_adfs_sso' %}{% if next %}?next={{ next|escape }}{% endif %}" + encodeURIComponent(document.location.hash);
         return false;
+      });
     });
-});
-{% endif %}
+    {% endif %}
 
-{# KEEPER #}
-$('#lang').addClass('fright');
-var lang=$('#lang-context').attr('data-lang');
-lang.onchange=translate();
-function translate(){
-    if(lang == 'de'){
+    {# KEEPER #}
+    $('#lang').addClass('fright');
+    var lang = $('#lang-context').attr('data-lang');
+    lang.onchange = translate();
+    function translate() {
+      if (lang == 'de') {
         $('#intro_de').show()
         $('#intro_en').hide()
-    }else{
+      } else {
         $('#intro_en').show()
         $('#intro_de').hide()
-    }	
-}
+      }
+    }
 
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}
