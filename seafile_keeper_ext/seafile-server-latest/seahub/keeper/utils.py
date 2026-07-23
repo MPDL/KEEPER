@@ -345,7 +345,7 @@ def is_in_mpg_domain_list(email):
     if not domain:
         logger.error("Cannot parse email: {}".format(email))
         return False
-    return domain in get_domain_list()
+    return domain.lower() in get_domain_list()
 
 
 def get_mpg_ips_and_institutes():

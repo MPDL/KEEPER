@@ -254,8 +254,7 @@
 
     <div class="login-panel-bottom-container d-flex justify-content-center" id="login-bottom">
       {% if enable_change_password %}
-      <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal px-2 bottom-item">{% trans "Forgot password?"
-        %}</a>
+      <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal px-2 bottom-item">{% trans "Forgot password?" %}</a>
       {% endif %}
       {% if enable_signup %}
       <a href="{{ signup_url }}" class="normal px-2 bottom-item" id="sign-up">{% trans "Signup" %}</a>
@@ -344,8 +343,7 @@
             <a href="{{ signup_url }}" class="normal" id="sign-up">{% trans "Signup" %}</a>
             {% endif %}
 
-            <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?"
-              %}</a>
+            <a href="{{ SITE_ROOT }}accounts/password/reset/" class="normal forgot-passwd">{% trans "Forgot password?" %}</a>
 
             {% if enable_sso %}
             <div style="padding-top: 10px;">
