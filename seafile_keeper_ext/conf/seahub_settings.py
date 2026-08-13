@@ -71,9 +71,6 @@ LOGGING = {
         # 'syslog-seahub': {
             # 'format': '__NODE_FQDN__ seahub: %(asctime)s [%(levelname)s] %(name)s:%(lineno)s %(funcName)s %(message)s'
         # },
-        'keeper_debug': {
-            'format': '%(asctime)s: %(message)s'
-        },
     },
     'filters': {
         'require_debug_false': {
@@ -142,15 +139,6 @@ LOGGING = {
             # 'facility': '__SYSLOG_FACILITY__',
             # 'formatter': 'syslog-seahub'
         # },
-        'keeper_debug': {
-            'level':'DEBUG' if DEBUG else 'INFO',
-            # 'level':'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join('/tmp', 'keeper_debug2.log'),
-            'maxBytes': 1024*1024*100,  # 100 MB
-            'backupCount': 5,
-            'formatter':'keeper_debug',
-         },
     },
     'loggers': {
         '': {
@@ -180,13 +168,12 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False
         },
-        'keeper_debug': {
-            'handlers': ['keeper_debug'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
     }
 }
+
+import sys as _sys
+if any('seafevents' in str(_a) for _a in _sys.argv):
+    LOGGING['loggers'].pop('', None)
 
 NODE_ENV = os.environ.get('NODE_ENV', 'production')
 WEBPACK_LOADER = {
