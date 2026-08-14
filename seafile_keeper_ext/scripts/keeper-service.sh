@@ -240,7 +240,7 @@ case "$1" in
 
             if [ ${__NODE_TYPE__} == "APP" ]; then
                 check_keepalived
-                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} env SEAHUB_LOG_DIR=${seafile_dir}/logs ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh ${1} >> ${seahub_init_log}
                 systemctl ${1} ${WEB_SERVER}.service
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
@@ -249,7 +249,7 @@ case "$1" in
                     sleep 3
                     echo "Starting..."
                 fi
-                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} env SEAHUB_LOG_DIR=${seafile_dir}/logs ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 start_container "/opt/seafile-notification/.env"
                 start_container "/opt/seadoc/.env"
                 start_elastic_container
@@ -261,7 +261,7 @@ case "$1" in
                     sleep 3
                     echo "Starting..."
                 fi
-                ${USR_CTX} ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
+                ${USR_CTX} env SEAHUB_LOG_DIR=${seafile_dir}/logs ${script_path}/seafile.sh ${1} >> ${seafile_init_log}
                 start_container "/opt/seafile-notification/.env"
                 start_container "/opt/seadoc/.env"
                 start_elastic_container
