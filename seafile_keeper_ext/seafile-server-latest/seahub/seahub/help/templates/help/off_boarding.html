@@ -1,0 +1,47 @@
+{% extends "help/base.html" %}
+{% load i18n %}
+
+{% block help_con %}
+
+<h3 class="hd">{% trans "Recommendation for Account Deactivation, Off-boarding and Data Retention" %}</h3>
+
+<p>{% blocktrans %}Keeper is a service intended for users within the Max Planck Society (MPG). To ensure continued access to research data and prevent loss of access when a user leaves an institute, a proper off-boarding process should be followed. {% endblocktrans %}</p>
+
+<p>{% blocktrans %}The responsibility for off-boarding lies with the Keeper user itself.{% endblocktrans %}</p>
+
+<h4>{% blocktrans %}1. Users with Local Keeper Account Authentication{% endblocktrans %}</h4>
+
+<p>{% blocktrans %}Local Keeper accounts use email address and password authentication.{% endblocktrans %}</p>
+<p>{% blocktrans %}When an employee leaves an MPI or their contract ends, it is recommended to complete the following steps before departure:{% endblocktrans %}</p>
+<ul>
+  <li>{% blocktrans %}Review the  Keeper libraries and ownership.{% endblocktrans %}</li> 
+  <li>{% blocktrans %}Transfer ownership of relevant libraries to an active Keeper user (recommended: Research Data Manager or Project/ Department Lead).{% endblocktrans %}</li>
+  <li>{% blocktrans %}Review and update sharing permissions.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Ensure that important data is properly documented and retained.{% endblocktrans %}</li>
+</ul>
+<p>{% blocktrans %}The user's MPG email account may be deactivated by the institute as part of its standard offboarding process. Since the email address is associated with the Keeper account, password recovery and future access may no longer be possible after the email account has been deactivated. To avoid losing access, we recommend notifying Keeper Support and completing any necessary ownership transfers before the employee's departure.{% endblocktrans %}</p>
+<p>{% blocktrans %}Please note:{% endblocktrans %}</p>
+<ul>
+  <li>{% blocktrans %}Keeper accounts are not automatically deleted after a contract ends.{% endblocktrans %}</li>
+  <li>{% blocktrans %}Stored data remains available on the Keeper server.{% endblocktrans %}</li> 
+  <li>{% blocktrans %}Access may be lost if ownership and access rights are not transferred before the account becomes inaccessible.{% endblocktrans %}</li>
+</ul>
+
+<h4>{% blocktrans %}2. Users with Keeper Accounts Using SSO Authentication{% endblocktrans %}</h4>
+<p>{% blocktrans %}For users accessing Keeper through MPG Single Sign-On (SSO), access is linked to their active MPG affiliation.{% endblocktrans %}</p>
+<p>{% blocktrans %}When a contract ends and the MPG account is deactivated:{% endblocktrans %}</p>
+<ul>
+  <li>{% blocktrans %}SSO access to Keeper is automatically revoked.{% endblocktrans %}</li> 
+  <li>{% blocktrans %}The user can no longer sign in using their institutional credentials.{% endblocktrans %}</li> 
+  <li>{% blocktrans %}The Keeper account and its stored data are not deleted.{% endblocktrans %}</li>
+</ul>
+
+<h4>{% blocktrans %}Cared Data Certificate for Long-Term Data Archiving{% endblocktrans %}</h4>
+<p>{% blocktrans %}For projects that require long-term data archiving, Keeper offers the Cared Data Certificate (CDC). The CDC is unique to Keeper and acknowledges MPDL's commitment to store and archive your data for up to 10 years in accordance with the Cared Data Commitment.{% endblocktrans %}</p>
+<p>{% blocktrans %}For details, please refer to the Cared Data Certificate article.{% endblocktrans %}</p>
+
+<p>{% blocktrans %}To request the deactivation of a local Keeper account, please contact the Keeper Support team at <a href="mailto:keeper@mpdl.mpg.de">keeper@mpdl.mpg.de</a>.{% endblocktrans %}</p>
+
+{% endblock %}
+
+

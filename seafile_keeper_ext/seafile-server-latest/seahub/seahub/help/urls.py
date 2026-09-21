@@ -47,4 +47,5 @@ urlpatterns = [
     path('cared_data_certificate/', TemplateView.as_view(template_name="help/cared_data_certificate.html")),
     path('doi/', TemplateView.as_view(template_name="help/doi.html")),
     path('certify_keeper_documents/', TemplateView.as_view(template_name="help/certify_keeper_documents.html")),
+    path('off_boarding/', TemplateView.as_view(template_name="help/off_boarding.html")),
 ]
