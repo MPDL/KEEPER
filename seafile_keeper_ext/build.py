@@ -443,12 +443,6 @@ class EnvManager(object):
         self.django_admin_link = _join('/usr', 'local', 'bin', 'django-admin')
         self.django_admin_path= _join(os.path.realpath(self.install_path), 'seahub', 'thirdpart', 'bin', 'django-admin')
 
-        self.assets_app_link = _join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'app')
-        self.assets_app_dir = _join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'app')
-
-        self.assets_sysadmin_app_link = _join(os.path.realpath(self.install_path), 'seahub', 'media', 'assets', 'scripts', 'sysadmin-app')
-        self.assets_sysadmin_app_dir = _join(os.path.realpath(self.install_path), 'seahub', 'static', 'scripts', 'sysadmin-app')
-
         self.keeper_service_link = _join('/usr', 'local', 'bin', 'keeper-service')
         self.keeper_service_path= _join(self.top_dir, 'scripts', 'keeper-service.sh')
 
@@ -725,13 +719,7 @@ def deploy_ext():
     src_dir = _join('seafile-server-latest', 'seahub', 'media', 'assets', 'frontend')
     Utils.info(f"Deploy {src_dir} dir...")
     deploy_dir(src_dir)
-    
-    
-    # TODO: remove, should be fixed in 6.3.12
-    do_links((
-        (env_mgr.assets_app_link, env_mgr.assets_app_dir),
-        (env_mgr.assets_sysadmin_app_link, env_mgr.assets_sysadmin_app_dir),
-    ))
+
 
     ### set chown and permissions for target dirs (ext related)
     group=keep_ini.get('system', '__OS_GROUP__')
