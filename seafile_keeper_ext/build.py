@@ -701,8 +701,6 @@ def deploy_ext():
       'frontend/src/bloxberg-certificate.js',
       'keeper/cdc/generate_cdc.sh',
       'keeper/cdc/cdc_manager.py',
-      'keeper/tests/run_tests.sh',
-      'keeper/tests/test_archiving.py',
       'keeper/catalog/templates/catalog.html' ): 
       deploy_file('seafile-server-latest/seahub/' + path, expand=True)
 
