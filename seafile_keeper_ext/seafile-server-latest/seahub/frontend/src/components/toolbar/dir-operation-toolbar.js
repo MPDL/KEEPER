@@ -12,10 +12,8 @@ import { seafileAPI } from '../../utils/seafile-api';
 import TipDialog from '../dialog/tip-dailog';
 
 // KEEPER
-import ArchiveLibraryDialog from '../dialog/archive-library-dialog';
 import CertifyLibraryDialog from '../dialog/certify-library-dialog';
 import KeeperEditMetadataDialog from '../dialog/keeper-edit-metadata-dialog';
-import { handleCanArchiveResponse } from '../../pages/my-libs/mylib-repo-list-item';
 
 
 const propTypes = {
@@ -53,7 +51,6 @@ class DirOperationToolbar extends React.Component {
       isMobileOpMenuOpen: false,
       isImportingSdoc: false,
       // KEEPER
-      isArchiveLibraryDialogShow: false,
       isEditMetadataDialogShow: false,
       isCertifyLibraryDialogShow: false,
     };
@@ -215,30 +212,6 @@ class DirOperationToolbar extends React.Component {
   };
 
   // KEEPER
-  onArchiveLibraryHide = () => {
-    this.setState({ isArchiveLibraryDialogShow: false });
-  };
-
-  onArchiveLibraryToggle = () => {
-    seafileAPI
-      .canArchive(this.props.repoID)
-      .then((resp) => {
-        const d = resp.data;
-        handleCanArchiveResponse(this, resp);
-        if (d.status === 'success' || d.status === 'metadata_error')
-          this.setState({
-            isArchiveLibraryDialogShow: true,
-            quota: d.quota,
-          });
-      })
-      .catch((error) => {
-        let errorMsg = Utils.getErrorMsg(error);
-        handleCanArchiveResponse(this, {
-          data: { status: 'system_error', msg: errorMsg },
-        });
-      });
-  };
-
   onEditMetadataHide = () => {
     this.setState({ isEditMetadataDialogShow: false });
   };
@@ -281,7 +254,6 @@ class DirOperationToolbar extends React.Component {
     }
 
     // KEEPER
-    let isArchiveBtnShow = !this.props.repoEncrypted && this.props.isRepoOwner;
     let isEditMetadataBtnShow =
       !this.props.repoEncrypted && this.props.isRepoOwner;
     let isCertifyBtnShow = !this.props.repoEncrypted && this.props.isRepoOwner;
@@ -489,17 +461,6 @@ class DirOperationToolbar extends React.Component {
           <input className="d-none" type="file" onChange={this.uploadSdoc} ref={this.fileInputRef} />
         </div>
         {/* KEEPER */}
-        {this.state.isArchiveLibraryDialogShow && (
-          <ModalPortal>
-            <ArchiveLibraryDialog
-              repoID={this.props.repoID}
-              repoName={this.props.repoName}
-              quota={this.state.quota}
-              hideDialog={this.onArchiveLibraryHide}
-              toggleDialog={this.onArchiveLibraryToggle}
-            />
-          </ModalPortal>
-        )}
         {this.state.isEditMetadataDialogShow && (
           <ModalPortal>
             <KeeperEditMetadataDialog

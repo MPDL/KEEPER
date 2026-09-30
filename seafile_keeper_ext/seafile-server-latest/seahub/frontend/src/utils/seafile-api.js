@@ -2199,22 +2199,6 @@ class SeafileAPI {
     return this.req.post(url, params);
   }
 
-  canArchive(repoID) {
-    const url = this.server + '/api2/can-archive/';
-    const params = {
-      repo_id: repoID,
-    };
-    return this.req.post(url, params);
-  }
-
-  archiveLibrary(repoID) {
-    const url = this.server + '/api2/archive/';
-    const params = {
-      repo_id: repoID,
-    };
-    return this.req.post(url, params);
-  }
-
 
   listLibraryDetails() {
     const url = this.server + '/api2/library-details/';

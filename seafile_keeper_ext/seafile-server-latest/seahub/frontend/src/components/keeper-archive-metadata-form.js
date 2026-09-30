@@ -230,7 +230,7 @@ class KeeperArchiveMetadataForm extends React.Component {
         res.isSaved = true;
         this.setState(res, () => this.setButtons());
         toaster.success(
-          gettext('Success.') + (this.state.isButton2Disabled ? '' : ' ' + gettext('Now you can archive.')),
+          gettext('Success.'),
           {duration: 3}
         );
       })

@@ -10,7 +10,6 @@ import RepoHistoryDialog from '../../dialog/repo-history';
 import './index.css';
 
 // KEEPER
-import ArchiveLibraryDialog from '../../dialog/archive-library-dialog';
 import KeeperEditMetadataDialog from '../../dialog/keeper-edit-metadata-dialog';
 import CertifyLibraryDialog from '../../dialog/certify-library-dialog';
 
@@ -36,17 +35,6 @@ const DirOthers = ({ userPerm, repoID, currentRepoInfo }) => {
   };
 
   // KEEPER
-  // Archiving is switched off, switch on next line if KEEPER_ARCHIVING_ENABLED is set to true
-  // const showArchive = !currentRepoInfo.encrypted && currentRepoInfo.is_admin; // repo owner, department admin, shared with 'Admin' permission
-  const showArchive = false
-  let [isArchiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const toggleArchiveDialog = () => {
-    setArchiveDialogOpen(!isArchiveDialogOpen);
-  };
-  const hideArchiveDialog = () => {
-    setArchiveDialogOpen(false);
-  };
-
   const showKeeperMetadata = !currentRepoInfo.encrypted && currentRepoInfo.is_admin; // repo owner, department admin, shared with 'Admin' permission
   let [isKeeperMetadataDialogOpen, setKeeperMetadataDialogOpen] = useState(false);
   const toggleKeeperMetadataDialog = () => {
@@ -87,12 +75,6 @@ const DirOthers = ({ userPerm, repoID, currentRepoInfo }) => {
           <span className="dir-others-item-text">{gettext('History')}</span>
         </div>
       )}
-      {showArchive && (
-        <div className='dir-others-item text-nowrap' title={gettext('Archive Library')} onClick={toggleArchiveDialog}>
-          <span className="sf3-font-upload sf3-font"></span>
-          <span className="dir-others-item-text">{gettext('Archive')}</span>
-        </div>
-      )}
       {showKeeperMetadata && (
         <div className='dir-others-item text-nowrap' title={gettext('Edit Library Metadata')} onClick={toggleKeeperMetadataDialog}>
           <span className="sf3-font-files2 sf3-font"></span>
@@ -127,14 +109,6 @@ const DirOthers = ({ userPerm, repoID, currentRepoInfo }) => {
           userPerm={userPerm}
           currentRepoInfo={currentRepoInfo}
           toggleDialog={toggleRepoHistoryDialog}
-        />
-      )}
-      {isArchiveDialogOpen && (
-        <ArchiveLibraryDialog
-          repoID={repoID}
-          repoName={currentRepoInfo.repo_name}
-          toggleDialog={toggleArchiveDialog}
-          hideDialog={hideArchiveDialog}
         />
       )}
       {isKeeperMetadataDialogOpen && (

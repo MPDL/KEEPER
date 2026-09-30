@@ -22,7 +22,6 @@ const {
   authors,
   year,
   doi_repos,
-  archive_repos,
   bloxberg_certs,
   owner_contact_email,
 } = window.libraryDetails.pageOptions;
@@ -38,12 +37,6 @@ class LibraryDetailsPage extends React.Component {
   constructor(props) {
     // console.log(bloxberg_certs);
     super(props);
-    this.archiveTheadData = [
-      { width: '20%', text: gettext('Version') },
-      { width: '50%', text: gettext('Date') },
-      { width: '30%', text: gettext('Link to Archive') },
-    ];
-
     this.doiTheadData = [
       { width: '50%', text: gettext('Date') },
       { width: '50%', text: gettext('DOI') },
@@ -56,9 +49,6 @@ class LibraryDetailsPage extends React.Component {
     ];
 
     this.state = {
-      // switch on next line if KEEPER_ARCHIVING_ENABLED is true
-      // showArchives: JSON.parse(archive_repos).length > 0,
-      showArchives: false,
       showDoi: JSON.parse(doi_repos).length > 0,
       showCerts: JSON.parse(bloxberg_certs).length > 0,
     };
@@ -114,20 +104,6 @@ class LibraryDetailsPage extends React.Component {
                 </div>
               )}
               <br />
-              {this.state.showArchives && (
-                <div className="d-flex justify-content-between align-items-center op-bar">
-                  <p className="m-0">{gettext('Archives')}</p>
-                </div>
-              )}
-              {this.state.showArchives && (
-                <Content
-                  theadData={this.archiveTheadData}
-                  data={JSON.parse(archive_repos)}
-                  type="archive"
-                />
-              )}
-              {this.state.showArchives && <br />}
-
               {this.state.showDoi && (
                 <div className="d-flex justify-content-between align-items-center op-bar">
                   <p className="m-0">
@@ -178,21 +154,6 @@ class Content extends React.Component {
 
   renderTbody = (data, type) => {
     switch (type) {
-      case 'archive':
-        return data.map((item, index) => (
-          <tr key={index}>
-            <td>{item.version} </td>
-            <td>{item.created} </td>
-            <td>
-              <a
-                href={`${siteRoot}archive/libs/${item.repo_id}/${item.version}/0/`}
-                title={gettext('Link')}
-              >
-                {gettext('Link')}
-              </a>
-            </td>
-          </tr>
-        ));
       case 'doi':
         return data.map((item, index) => (
           <tr key={index}>

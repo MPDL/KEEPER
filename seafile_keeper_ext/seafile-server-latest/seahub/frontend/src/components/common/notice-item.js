@@ -380,7 +380,6 @@ class NoticeItem extends React.Component {
     // KEEPER
     const MSG_KEEPER_CDC = 'keeper_cdc_msg';
     const BLOXBERG_MSG = 'bloxberg_msg';
-    const MSG_KEEPER_ARCHIVING = 'keeper_archiving_msg';
     const MSG_INVALID_METADATA = 'invalid_metadata_msg';
     const MSG_DOI = 'doi_msg';
     const MSG_DOI_SUCCESS = 'doi_suc_msg';
@@ -484,25 +483,6 @@ class NoticeItem extends React.Component {
           detail.doi +
           '</a>.'
         : detail.message;
-      return { avatar_url, notice };
-    }
-
-    if (noticeType === MSG_KEEPER_ARCHIVING) {
-      let avatar_url = '/media/custom/KeeperAvatar.png';
-      detail = JSON.parse(detail);
-      let notice =
-        detail.msg === 'Archive for %(name)s has been successfully created.'
-          ? gettext(detail.msg).replace(
-              "%(name)s",
-              '<a href="/library/' +
-                detail.repo_id +
-                "/" +
-                detail.repo_name +
-                '/" target=_new>' +
-                detail.repo_name +
-                '</a>'
-            )
-          : gettext(detail.msg);
       return { avatar_url, notice };
     }
 

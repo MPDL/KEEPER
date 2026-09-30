@@ -118,9 +118,6 @@ class MylibRepoMenu extends React.Component {
     // KEEPER
     let repo = this.props.repo;
     let showAssignDoiMenuItem = repo.doi && !repo.encrypted;
-    // Archiving is switched off, switch on next line if KEEPER_ARCHIVING_ENABLED is set to true
-    // let showArchiveLibraryMenuItem = !repo.encrypted;
-    let showArchiveLibraryMenuItem = false;
     let showCertifyLibraryMenuItem = !repo.encrypted;
     let showEditMetadatayMenuItem = !repo.encrypted;
     // END KEEPER
@@ -137,9 +134,6 @@ class MylibRepoMenu extends React.Component {
     // operations.push('Divider');
     if (showAssignDoiMenuItem) {
       operations.push('Assign DOI to current state');
-    }
-    if (showArchiveLibraryMenuItem) {
-      operations.push('Archive Library');
     }
     if (showCertifyLibraryMenuItem) {
       operations.push('Certify Library');
@@ -208,9 +202,6 @@ class MylibRepoMenu extends React.Component {
       // KEEPER
       case 'Assign DOI to current state':
         translateResult = gettext('Assign DOI to current state');
-        break;
-      case 'Archive Library':
-        translateResult = gettext('Archive Library');
         break;
       case 'Certify Library':
         translateResult = gettext('Certify Library');
