@@ -147,20 +147,6 @@ function check_seahub_running () {
     fi
 }
 
-function keeper_archiving_status () {
-    ${seafile_dir}/scripts/run_keeper_script.sh ${script_path}/pro/pro.py archive -ls
-    echo "Note: use ${script_path}/pro/pro.py archive [command] for more archiving actions"
-}
-
-function check_and_exit_keeper_archiving_running () {
-    result=$(${seafile_dir}/scripts/run_keeper_script.sh ${script_path}/pro/pro.py archive --is-processing)
-    if [ "$result" != "false" ]; then
-        echo_red "Cannot stop, archiving is currently running."
-        keeper_archiving_status
-        exit 1
-    fi
-}
-
 
 function get_elastic_container_id () {
     RES=$(sudo docker ps -f ancestor=${__ES_IMAGE_NAME__} -q)
@@ -278,9 +264,6 @@ case "$1" in
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "BACKGROUND" ]; then
-                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ] && [ "$2" != "--force" ]; then
-                    check_and_exit_keeper_archiving_running
-                fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 stop_elastic_container
@@ -288,9 +271,6 @@ case "$1" in
                 stop_container "/opt/seadoc/.env"
                 ${USR_CTX} ${script_path}/seafile.sh stop >> ${seafile_init_log}
             elif [ ${__NODE_TYPE__} == "SINGLE" ]; then
-                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ] && [ "$2" != "--force" ]; then
-                    check_and_exit_keeper_archiving_running
-                fi
                 ${USR_CTX} ${seafile_dir}/scripts/keeper-background-tasks.sh stop >> ${background_init_log}
                 ${USR_CTX} ${script_path}/seahub.sh stop >> ${seahub_init_log}
                 stop_elastic_container
@@ -301,12 +281,6 @@ case "$1" in
             sleep 3
             echo "Done"
             #systemctl ${1} memcached.service
-        ;;
-        archiving-status)
-        keeper_archiving_status
-        ;;
-        archiving-kill)
-            keeper_archiving_kill
         ;;
         cluster-restart|cluster-status)
             nodes=($(echo ${__CLUSTER_NODES__}))
@@ -341,9 +315,6 @@ case "$1" in
                 check_container_running "notification-server" "CRITICAL"
                 check_container_running "seadoc" "CRITICAL"
                 check_component_running "background_task" "seafevents.background_task" "CRITICAL"
-                if [ ${__KEEPER_ARCHIVING_ENABLED__} == "true" ]; then
-                    check_component_running "keeper_archiving" "archiving_server.py" "CRITICAL"
-                fi
                 check_component_running "elasticsearch" "org.elasticsearch.bootstrap.Elasticsearch" "CRITICAL"
             fi    
             if [ ${__NODE_TYPE__} == "APP" ] ; then
@@ -354,7 +325,7 @@ case "$1" in
             exit $RC
         ;;
         *)
-            echo "Usage: ./$(basename $(readlink -f $0)) {start|stop[ --force]|restart[ --force]|status|restart-gpfs|switch-maintenance-mode|archiving-status}"
+            echo "Usage: ./$(basename $(readlink -f $0)) {start|stop[ --force]|restart[ --force]|status|restart-gpfs|switch-maintenance-mode}"
             exit 1
         ;;
 esac

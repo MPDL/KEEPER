@@ -810,23 +810,3 @@ def get_archive_metadata(repo_id):
 
     return md
     
-# KEEPER ARCHIVING
-from seahub.settings import KEEPER_ARCHIVING_ROOT, KEEPER_ARCHIVING_PORT, KEEPER_ARCHIVING_NODE
-from urllib.parse import urljoin
-import requests
-from http import HTTPStatus
-
-def do_request(params, end_point):
-    url = urljoin(KEEPER_ARCHIVING_ROOT + ':' + KEEPER_ARCHIVING_PORT, end_point)
-    resp = requests.get(url, params)
-    return resp.json() if resp.status_code == HTTPStatus.OK \
-        else {'status': 'ERROR', 'msg': resp.text}
-
-def add_keeper_archiving_task(repo_id, owner):
-    return do_request({'repo_id': repo_id, 'owner': owner}, '/add-task')
-
-def query_keeper_archiving_status(repo_id, owner, version):
-    return do_request({'repo_id': repo_id, 'owner': owner, 'version': version}, '/query-task-status')
-
-def check_keeper_repo_archiving_status(repo_id, owner, action):
-    return do_request({'repo_id': repo_id, 'owner': owner, 'action': action}, '/check-repo-archiving-status')

@@ -831,26 +831,6 @@ def handle_virus_scan_commands(args):
 
     Utils.run_argv(argv, env=env_mgr.get_seahub_env())
 
-def handle_archive_commands(args):
-    argv = [
-            Utils.get_python_executable(),
-            '-m', 'seafevents.keeper_archiving.task_manager',
-            '-c', os.path.join(env_mgr.central_config_dir, 'seafevents.conf'),
-        ]
-    if args.is_processing:
-        argv.append('--is-processing')
-    elif args.list_tasks:
-        argv.append('-ls')
-    elif args.restart:
-        argv.append('-r')
-        argv.extend(args.restart)
-    else:
-        argv.append('-ls')
-
-    env = env_mgr.get_seahub_env()
-    env['PYTHONPATH'] += ':' + os.path.join(env_mgr.install_path, 'seahub')
-    Utils.run_argv(argv, env=env)
-
 
 pro_config = None
 env_mgr = EnvManager()
@@ -894,12 +874,6 @@ def main():
     parser_virus_scan.add_argument('-r', '--rescan', help='rescans viruses', action='store_true')
     parser_virus_scan.set_defaults(func=handle_virus_scan_commands)
 
-    # keeper archiving
-    parser_archive = subparsers.add_parser('archive', help='keeper archiving commands')
-    parser_archive.add_argument('--is-processing', help='returns true if keeper archiving is PROCESSING or tasks QUEUE is not empty, false otherwise', action='store_true')
-    parser_archive.add_argument('-ls', '--list-tasks', help='list of running and not compeleted keeper archiving tasks', action='store_true')
-    parser_archive.add_argument('-r', '--restart', help='restart task(s)', nargs='+')
-    parser_archive.set_defaults(func=handle_archive_commands)
 
     if len(sys.argv) == 1:
         print(parser.format_help())

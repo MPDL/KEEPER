@@ -15,8 +15,8 @@ from .endpoints.send_upload_link_email import SendUploadLinkView
 from .endpoints.sso.client_sso_link import ClientSSOLink
 
 # KEEPER
-from .views_keeper import CatalogView, BloxbergView, AddDoiView, ArchiveLib, \
-    CanCertify, CanArchive, LibraryDetailsView, ArchiveMetadata, \
+from .views_keeper import CatalogView, BloxbergView, AddDoiView, \
+    CanCertify, LibraryDetailsView, ArchiveMetadata, \
     MPGInstitutes, CatalogReactView, \
     BloxbergPdfView, BloxbergMetadataJsonView
 
@@ -120,10 +120,6 @@ urlpatterns = [
     # DOI
     re_path(r'^doi/$', AddDoiView.as_view()),
 
-    # Archive Library
-    re_path(r'^archive/$', ArchiveLib.as_view(), name='archive_lib'),
-    re_path(r'^can-archive/$', CanArchive.as_view(), name='can_archive'),
-
     re_path(r'^library-details/$', LibraryDetailsView.as_view(), name='list_library_details'),
 
     # Archive Metadata
@@ -133,13 +129,6 @@ urlpatterns = [
     re_path(r'^mpg-institutes/$', MPGInstitutes.as_view(), name='mpg_institutes'),
 
 ]
-
-from seahub.settings import KEEPER_ARCHIVING_NODE
-if KEEPER_ARCHIVING_NODE:
-    urlpatterns += [
-        re_path(r'^archiving/internal/add-task/$', ArchiveLib.as_view(), name='archive_lib'),
-        re_path(r'^archiving/internal/status/$', CanArchive.as_view(), name='can_archive'),
-    ]
 
 # serve office converter static files
 from seahub.utils import HAS_OFFICE_CONVERTER

@@ -183,9 +183,6 @@ function stop_seafile_background_tasks () {
         fi
         pkill -f "soffice.*--invisible --nocrashreport"
 
-        #TODO: implement archiving task checking
-        pkill -f 'archiving_server.py'
-
         rm -f "${pidfile}"
         return 0
     else

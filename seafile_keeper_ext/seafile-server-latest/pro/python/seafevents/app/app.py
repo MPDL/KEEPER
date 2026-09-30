@@ -26,10 +26,6 @@ from seafevents.seasearch.index_task.filename_index_updater import (
 )
 from seafevents.seasearch.index_task.wiki_index_updater import SeasearchWikiIndexUpdater
 
-# KEEPER
-from seafevents.keeper_archiving import KeeperArchiving
-from seafevents.keeper_archiving.config import get_keeper_archiving_conf
-
 
 class App(object):
     def __init__(
@@ -69,9 +65,6 @@ class App(object):
             self._es_wiki_index_updater = ESWikiIndexUpdater(config)
             self._seasearch_wiki_index_updater = SeasearchWikiIndexUpdater(config)
 
-            # KEEPER
-            self._keeper_archiving = KeeperArchiving(get_keeper_archiving_conf(config))
-
     def serve_forever(self):
         if self._fg_tasks_enabled:
             self._events_handler.start()
@@ -98,6 +91,3 @@ class App(object):
             self._repo_filename_index_updater.start()
             self._seasearch_wiki_index_updater.start()
             self._es_wiki_index_updater.start()
-
-            # KEEPER
-            self._keeper_archiving.start()

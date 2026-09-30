@@ -24,14 +24,10 @@ from django.db.models import Q
 from django.conf import settings
 
 from seahub.profile.models import Profile
-from keeper.models import Catalog, CDC, DoiRepo, BCertificate, KeeperArchiveOwnerQuota, KeeperArchive
+from keeper.models import Catalog, CDC, DoiRepo, BCertificate
 
 
 BLOXBERG_CERTS_STORAGE = getattr(settings, 'BLOXBERG_CERTS_STORAGE', None)
-
-HPSS_USER = getattr(settings, 'HPSS_USER', None)
-HPSS_URL = getattr(settings, 'HPSS_URL', None)
-HPSS_STORAGE_PATH = getattr(settings, 'HPSS_STORAGE_PATH', None)
 
 # ────────────────────────────────────────────────
 
@@ -123,8 +119,6 @@ def keeper_migrate_user():
     total_updated += update_owner(CDC)
     total_updated += update_owner(DoiRepo)
     total_updated += update_owner(BCertificate)
-    total_updated += update_owner(KeeperArchiveOwnerQuota)
-    total_updated += update_owner(KeeperArchive)
 
     print(f"\nTotal database records updated: {total_updated}")
 
@@ -134,16 +128,7 @@ def keeper_migrate_user():
         new_cert_dir = Path(BLOXBERG_CERTS_STORAGE) / new_id
         rename_directory(old_cert_dir, new_cert_dir, "Bloxberg certificates")
 
-    # ─── 5. Rename HPSS / archive storage directory ──────────────────────────
-    if HPSS_USER and HPSS_URL and HPSS_STORAGE_PATH:
-        old_archive_dir = Path(HPSS_STORAGE_PATH) / old_id
-        new_archive_dir = Path(HPSS_STORAGE_PATH) / new_id
-        print(f"""→ Migrate archive directory on remote HPSS server manually:
-$ssh {HPSS_USER}@{HPSS_URL}
-$mv {old_archive_dir} {new_archive_dir}""")
-        
-    
-    # ─── 6. Final notes ──────────────────────────────────────────────────────
+    # ─── 5. Final notes ──────────────────────────────────────────────────────
     print("\n" + "═"*60)
     if DRY_RUN:
         print("Dry run completed. Review output ↑")
@@ -153,7 +138,6 @@ $mv {old_archive_dir} {new_archive_dir}""")
         print("→ Recommended post-migration checks:")
         print("  • Test login with both old & new email")
         print("  • Verify certificates are still downloadable")
-        print("  • Check Keeper archives are accessible")
         print("  • If using SSO/LDAP/social auth:")
         print("    → Consider updating social_django UserSocialAuth.uid")
         print("      UPDATE social_auth_usersocialauth SET uid = %s WHERE uid = %s;", new_id, old_id)

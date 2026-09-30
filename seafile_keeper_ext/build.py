@@ -700,7 +700,6 @@ def deploy_ext():
     deploy_dir('seafile-server-latest')
 
     # redeploy selected files with expantion (i.e. with props in them) in seafile-server-latest
-    deploy_file('seafile-server-latest/seafile.sh', expand=True)
     for path in (
       'Makefile', 
       'seahub/settings.py', 

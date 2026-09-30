@@ -219,7 +219,7 @@ from seahub.api2.endpoints.repo_office_suite import OfficeSuiteConfig
 
 
 # KEEPER
-from seahub.api2.views_keeper import DoiView, LandingPageView, ArchiveView, project_catalog_starter, \
+from seahub.api2.views_keeper import DoiView, LandingPageView, project_catalog_starter, \
     BloxbergCertView
 
 
@@ -900,7 +900,6 @@ urlpatterns = [
     # KEEPER
     re_path(r'^doi/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<commit_id>[0-9a-f]{40})/$', DoiView, name='doi_page'),
     re_path(r'^landing-page/libs/(?P<repo_id>[-0-9a-f]{36})/$', LandingPageView, name='landing_page'),
-    re_path(r'^archive/libs/(?P<repo_id>[-0-9a-f]{36})/(?P<version_id>\d+)/(?P<is_tombstone>\d+)/$', ArchiveView, name='Archive_page'),
     path('project-catalog/', project_catalog_starter, name='project_catalog_starter'),
     re_path(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/$', BloxbergCertView, name='bloxberg_cert_page'),
     re_path(r'^bloxberg-cert/transaction/(?P<transaction_id>[-0-9a-z]{66})/(?P<checksum>[-0-9a-z]{64})/$', BloxbergCertView, name='bloxberg_cert_page'),

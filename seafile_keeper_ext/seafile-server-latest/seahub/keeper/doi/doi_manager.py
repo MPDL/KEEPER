@@ -12,7 +12,6 @@ from keeper.cdc.cdc_manager import has_at_least_one_creative_dirent
 from seahub.notifications.models import UserNotification
 from seahub.utils import send_html_email, get_site_name
 from django.utils.translation import gettext as _
-from seafevents.keeper_archiving.db_oper import MSG_TYPE_KEEPER_ARCHIVING_MSG
 
 # Get an instance of a logger
 LOGGER = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ def get_metadata(repo_id, user_email, action_type):
     repo = seafile_api.get_repo(repo_id)
     commit_id = get_latest_commit_root_id(repo)
 
-    notification_type = MSG_TYPE_KEEPER_DOI_MSG if action_type == "assign DOI" else MSG_TYPE_KEEPER_ARCHIVING_MSG
+    notification_type = MSG_TYPE_KEEPER_DOI_MSG
     # exit if repo is system template
     if repo.rep_desc == TEMPLATE_DESC:
         msg = _('Cannot ' + action_type + ' if the library is system template destination.')
@@ -275,11 +274,4 @@ def send_notification(msg, repo_id, notification_type, user_email, doi='', doi_l
                 'archive_metadata': ARCHIVE_METADATA_TARGET,
                 'doi': doi,
                 'doi_link': doi_link,
-        }))
-    elif notification_type == MSG_TYPE_KEEPER_ARCHIVING_MSG:
-        UserNotification.objects._add_user_notification(user_email, notification_type,
-            json.dumps({
-                'msg': (msg),   # unify format for backend  
-                '_repo': repo_id,
-                'status': 'prepare', # use 'prepare' to distinguish from backend sent notifications
         }))

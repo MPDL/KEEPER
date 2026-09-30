@@ -42,13 +42,10 @@ import os
 import traceback
 from requests.exceptions import ConnectionError, Timeout
 
-from keeper.utils import add_keeper_archiving_task, query_keeper_archiving_status, check_keeper_repo_archiving_status,\
-    archive_metadata_form_validation, get_mpg_ips_and_institutes, get_archive_metadata, save_archive_metadata, \
+from keeper.utils import archive_metadata_form_validation, get_mpg_ips_and_institutes, get_archive_metadata, save_archive_metadata, \
     is_in_mpg_ip_range, MPI_NAME_LIST_DEFAULT
 
 from keeper.common import parse_markdown_doi
-from seafevents.keeper_archiving.db_oper import DBOper, MSG_TYPE_KEEPER_ARCHIVING_MSG
-from seafevents.keeper_archiving.task_manager import MSG_DB_ERROR, MSG_ADD_TASK, MSG_WRONG_OWNER, MSG_MAX_NUMBER_ARCHIVES_REACHED, MSG_CANNOT_GET_QUOTA, MSG_LIBRARY_TOO_BIG, MSG_EXTRACT_REPO, MSG_ADD_MD, MSG_CREATE_TAR, MSG_PUSH_TO_HPSS, MSG_ARCHIVED, MSG_CANNOT_FIND_ARCHIVE, MSG_SNAPSHOT_ALREADY_ARCHIVED
 import seaserv
 
 from base64 import b64decode
@@ -452,18 +449,6 @@ def LandingPageView(request, repo_id):
     md = catalog.md
     repo_owner = catalog.owner
 
-    archives = []
-    archive_repos = DBOper().get_archives(repo_id=repo_id)
-    if archive_repos is not None and len(archive_repos) > 0:
-        for archive_repo in archive_repos:
-            archive = {
-                'version': archive_repo.version,
-                'created': archive_repo.created.strftime('%Y-%m-%d %H:%M:%S'),
-                'repo_id': archive_repo.repo_id
-            }
-            archives.append(archive)
-        archives.reverse()
-
     doi_repos = []
     qs_doi_repos = DoiRepo.objects.get_doi_repos_by_repo_id(repo_id)
     if qs_doi_repos is not None:
@@ -495,7 +480,6 @@ def LandingPageView(request, repo_id):
         'year': md.get('year') if md and md.get('year') else '',
 
         'doi_repos': json.dumps(doi_repos),
-        'archive_repos': json.dumps(archives),
         'bloxberg_certs': json.dumps(bloxberg_certs),
         'hasCDC': get_cdc_id_by_repo(repo_id) is not None,
         'owner_contact_email':  SERVER_EMAIL if repo_owner is None else email2contact_email(repo_owner)
@@ -516,152 +500,6 @@ def get_authors_from_catalog_md(md):
     return "; ".join(result_authors)
 
 
-def ArchiveView(request, repo_id, version_id, is_tombstone):
-    archive_repos = DBOper().get_archives(repo_id=repo_id, version = version_id)
-    if archive_repos is None or len(archive_repos) == 0:
-        return render(request, '404.html')
-
-    archive_repo = archive_repos[0]
-    repo_owner = get_repo_owner(repo_id)
-    archive_md = parse_markdown_doi(archive_repo.md)
-    commit_id = archive_repo.commit_id
-    cdc = False if get_cdc_id_by_repo(repo_id) is None else True
-
-    if repo_owner is None:
-        if is_tombstone == '1':
-            return render(request, './catalog_detail/tombstone_page.html', {
-                    'md_dict': archive_md,
-                    'authors': '; '.join(get_authors_from_md(archive_md)),
-                    'institute': archive_md.get("Institute").replace(";", "; "),
-                    'library_name': archive_repo.repo_name,
-                    'owner_contact_email': email2contact_email(repo_owner) })
-
-        repo_owner_email = SERVER_EMAIL
-        link = SERVICE_URL + '/archive/libs/' + repo_id + '/' + version_id + '/1/'
-    else:
-        repo_owner_email = email2contact_email(repo_owner)
-        link = SERVICE_URL + "/repo/" + repo_id + "/snapshot/?commit_id=" + commit_id
-
-    return render(request, './catalog_detail/archive_page.html', {
-        'share_link': link,
-        'authors': '; '.join(get_authors_from_md(archive_md)),
-        'institute': archive_md.get("Institute").replace(";", "; "),
-        'commit_id': commit_id,
-        'md_dict': archive_md,
-        'cdc': cdc,
-        'owner_contact_email': email2contact_email(repo_owner) })
-
-
-class CanArchive(APIView):
-
-    """Quota checking before adding archiving"""
-
-    def get(self, request):
-        repo_id = request.GET.get('repo_id', None)
-        version = request.GET.get('version', None)
-        owner = request.user.username
-        resp = query_keeper_archiving_status(repo_id, owner, version)
-        # logger.info("RESP:{}".format(resp))
-        return JsonResponse(resp)
-
-
-    def post(self, request):
-
-        repo_id = request.data.get('repo_id', None)
-        owner = request.data.get('owner', request.user.username)
-        version = request.data.get('version', None)
-        language_code = request.data.get('language_code', None)
-        if language_code == 'de':
-            activate(language_code)
-
-        # library is already in the task query
-        resp_query = query_keeper_archiving_status(repo_id, owner, version)
-        logger.debug('check QUEUED or PROCESSING: %s', resp_query)
-        if resp_query.get('status') in ('QUEUED', 'PROCESSING'):
-            msg = _('This library is currently being archived.')
-            return JsonResponse({
-                'msg': msg,
-                'status': 'in_processing'
-            })
-        elif resp_query.get('status') == 'ERROR':
-            return JsonResponse({
-                'msg': resp_query.get('msg') or 'system_error',
-                'status': 'system_error'
-            })
-
-        resp_is_archived = check_keeper_repo_archiving_status(repo_id, owner, 'is_snapshot_archived')
-        logger.debug('is_snapshot_archived: %s', resp_is_archived)
-        if resp_is_archived.get('is_snapshot_archived') == 'true':
-            return JsonResponse({
-                'status': 'snapshot_archived'
-            })
-
-        resp_quota = check_keeper_repo_archiving_status(repo_id, owner, 'get_quota')
-        logger.debug('get_quota: %s', resp_quota)
-        if 'remains' in resp_quota and resp_quota.get('remains') <= 0:
-            return JsonResponse({
-                'status': 'quota_expired'
-            })
-
-        resp_is_repo_too_big = check_keeper_repo_archiving_status(repo_id, owner, 'is_repo_too_big')
-        logger.debug('is_repo_too_big: %s', resp_is_repo_too_big)
-        if resp_is_repo_too_big.get('is_repo_too_big') == 'true':
-            return JsonResponse({
-                'status': 'is_too_big'
-            })
-
-        metadata = get_metadata(repo_id, owner, 'archive library')
-        logger.debug('get metadata archive library: %s', metadata)
-        if 'error' in metadata:
-            resp = {
-                'msg': metadata.get('error'),
-                'status': 'metadata_error',
-            }
-            q = resp_quota.get("remains")
-            q and resp.update(quota=q)
-            return JsonResponse(resp)
-
-        return JsonResponse({
-            'quota': resp_quota.get('remains'),
-            'status': 'success'
-        })
-
-
-class ArchiveLib(APIView):
-
-    """ create keeper archive for a library """
-
-    def get(self, request):
-        repo_id = request.GET.get('repo_id', None)
-        user_email = request.user.username
-        resp = add_keeper_archiving_task(repo_id, user_email)
-        # logger.info("RESP:{}".format(vars(resp)))
-        return JsonResponse(resp)
-
-    def post(self, request):
-
-        # repo_id = request.POST.get('repo_id', None)
-        # owner = request.POST.get('owner', None)
-        # language_code = request.POST.get('language_code', None)
-        repo_id = request.data.get('repo_id', None)
-        owner = request.data.get('owner', request.user.username)
-        language_code = request.data.get('language_code', None)
-        if language_code == 'de':
-            activate(language_code)
-
-
-        # add new archiving task
-        resp_archive = add_keeper_archiving_task(repo_id, owner)
-        logger.debug('resp_archive: %s', resp_archive)
-        if resp_archive.get('status') == 'ERROR':
-            return JsonResponse({
-                'msg': _(resp_archive.get('msg')),
-                'status': 'error'
-            })
-        return JsonResponse({
-                'msg':  _(resp_archive.get('msg')),
-                'status': 'success'
-            })
 
 class ArchiveMetadata(APIView):
     """docstring for ArchiveMetadata"""
