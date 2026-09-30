@@ -597,9 +597,9 @@
       "name": "static/js/9997.5762e075.chunk.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/9997.5762e075.chunk.js"
     },
-    "static/js/app.8e7d548b.js": {
-      "name": "static/js/app.8e7d548b.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/app.8e7d548b.js"
+    "static/js/app.a617d635.js": {
+      "name": "static/js/app.a617d635.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/app.a617d635.js"
     },
     "static/js/bloxbergCertificate.671586ef.js": {
       "name": "static/js/bloxbergCertificate.671586ef.js",
@@ -609,13 +609,13 @@
       "name": "static/js/bloxbergRepoSnapshot.6b7a0e4b.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/bloxbergRepoSnapshot.6b7a0e4b.js"
     },
-    "static/js/commons.f668d96f.js": {
-      "name": "static/js/commons.f668d96f.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/commons.f668d96f.js"
+    "static/js/commons.609a2a09.js": {
+      "name": "static/js/commons.609a2a09.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/commons.609a2a09.js"
     },
-    "static/js/commons.f668d96f.js.LICENSE.txt": {
-      "name": "static/js/commons.f668d96f.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/commons.f668d96f.js.LICENSE.txt"
+    "static/js/commons.609a2a09.js.LICENSE.txt": {
+      "name": "static/js/commons.609a2a09.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/commons.609a2a09.js.LICENSE.txt"
     },
     "static/js/draft.5aa48a0a.js": {
       "name": "static/js/draft.5aa48a0a.js",
@@ -629,13 +629,13 @@
       "name": "static/js/fileHistoryOld.2bbcb9c3.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/fileHistoryOld.2bbcb9c3.js"
     },
-    "static/js/fileView.24a7d9f1.js": {
-      "name": "static/js/fileView.24a7d9f1.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/fileView.24a7d9f1.js"
+    "static/js/fileView.f376cc96.js": {
+      "name": "static/js/fileView.f376cc96.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/fileView.f376cc96.js"
     },
-    "static/js/fileView.24a7d9f1.js.LICENSE.txt": {
-      "name": "static/js/fileView.24a7d9f1.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/fileView.24a7d9f1.js.LICENSE.txt"
+    "static/js/fileView.f376cc96.js.LICENSE.txt": {
+      "name": "static/js/fileView.f376cc96.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/fileView.f376cc96.js.LICENSE.txt"
     },
     "static/js/historyTrashFileView.31188623.js": {
       "name": "static/js/historyTrashFileView.31188623.js",
@@ -653,17 +653,17 @@
       "name": "static/js/keeperProjectCatalog.2ab40954.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/keeperProjectCatalog.2ab40954.js"
     },
-    "static/js/libraryDetails.48de80f2.js": {
-      "name": "static/js/libraryDetails.48de80f2.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/libraryDetails.48de80f2.js"
+    "static/js/libraryDetails.cecc7a25.js": {
+      "name": "static/js/libraryDetails.cecc7a25.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/libraryDetails.cecc7a25.js"
     },
-    "static/js/markdownEditor.49aff7d0.js": {
-      "name": "static/js/markdownEditor.49aff7d0.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/markdownEditor.49aff7d0.js"
+    "static/js/markdownEditor.2207c86a.js": {
+      "name": "static/js/markdownEditor.2207c86a.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/markdownEditor.2207c86a.js"
     },
-    "static/js/markdownEditor.49aff7d0.js.LICENSE.txt": {
-      "name": "static/js/markdownEditor.49aff7d0.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/markdownEditor.49aff7d0.js.LICENSE.txt"
+    "static/js/markdownEditor.2207c86a.js.LICENSE.txt": {
+      "name": "static/js/markdownEditor.2207c86a.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/markdownEditor.2207c86a.js.LICENSE.txt"
     },
     "static/js/orgAdmin.d4860226.js": {
       "name": "static/js/orgAdmin.d4860226.js",
@@ -673,13 +673,13 @@
       "name": "static/js/orgAdmin.d4860226.js.LICENSE.txt",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/orgAdmin.d4860226.js.LICENSE.txt"
     },
-    "static/js/plainMarkdownEditor.df4b0a99.js": {
-      "name": "static/js/plainMarkdownEditor.df4b0a99.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/plainMarkdownEditor.df4b0a99.js"
+    "static/js/plainMarkdownEditor.d5362847.js": {
+      "name": "static/js/plainMarkdownEditor.d5362847.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/plainMarkdownEditor.d5362847.js"
     },
-    "static/js/plainMarkdownEditor.df4b0a99.js.LICENSE.txt": {
-      "name": "static/js/plainMarkdownEditor.df4b0a99.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/plainMarkdownEditor.df4b0a99.js.LICENSE.txt"
+    "static/js/plainMarkdownEditor.d5362847.js.LICENSE.txt": {
+      "name": "static/js/plainMarkdownEditor.d5362847.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/plainMarkdownEditor.d5362847.js.LICENSE.txt"
     },
     "static/js/repoFolderTrash.6df7cb16.js": {
       "name": "static/js/repoFolderTrash.6df7cb16.js",
@@ -693,17 +693,17 @@
       "name": "static/js/repoSnapshot.5a01a34f.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/repoSnapshot.5a01a34f.js"
     },
-    "static/js/runtime.d7d57809.js": {
-      "name": "static/js/runtime.d7d57809.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/runtime.d7d57809.js"
+    "static/js/runtime.ed1878dc.js": {
+      "name": "static/js/runtime.ed1878dc.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/runtime.ed1878dc.js"
     },
-    "static/js/sdocFileHistory.4feffa92.js": {
-      "name": "static/js/sdocFileHistory.4feffa92.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sdocFileHistory.4feffa92.js"
+    "static/js/sdocFileHistory.15a08b10.js": {
+      "name": "static/js/sdocFileHistory.15a08b10.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sdocFileHistory.15a08b10.js"
     },
-    "static/js/sdocFileHistory.4feffa92.js.LICENSE.txt": {
-      "name": "static/js/sdocFileHistory.4feffa92.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sdocFileHistory.4feffa92.js.LICENSE.txt"
+    "static/js/sdocFileHistory.15a08b10.js.LICENSE.txt": {
+      "name": "static/js/sdocFileHistory.15a08b10.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sdocFileHistory.15a08b10.js.LICENSE.txt"
     },
     "static/js/sdocPublishedRevision.41d19153.js": {
       "name": "static/js/sdocPublishedRevision.41d19153.js",
@@ -721,13 +721,13 @@
       "name": "static/js/sharedDirView.c9a34f90.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedDirView.c9a34f90.js"
     },
-    "static/js/sharedFileViewAudio.65d6c898.js": {
-      "name": "static/js/sharedFileViewAudio.65d6c898.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewAudio.65d6c898.js"
+    "static/js/sharedFileViewAudio.b365b844.js": {
+      "name": "static/js/sharedFileViewAudio.b365b844.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewAudio.b365b844.js"
     },
-    "static/js/sharedFileViewAudio.65d6c898.js.LICENSE.txt": {
-      "name": "static/js/sharedFileViewAudio.65d6c898.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewAudio.65d6c898.js.LICENSE.txt"
+    "static/js/sharedFileViewAudio.b365b844.js.LICENSE.txt": {
+      "name": "static/js/sharedFileViewAudio.b365b844.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewAudio.b365b844.js.LICENSE.txt"
     },
     "static/js/sharedFileViewDocument.12d527a2.js": {
       "name": "static/js/sharedFileViewDocument.12d527a2.js",
@@ -737,13 +737,13 @@
       "name": "static/js/sharedFileViewImage.de094717.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewImage.de094717.js"
     },
-    "static/js/sharedFileViewMarkdown.32678999.js": {
-      "name": "static/js/sharedFileViewMarkdown.32678999.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewMarkdown.32678999.js"
+    "static/js/sharedFileViewMarkdown.027020c1.js": {
+      "name": "static/js/sharedFileViewMarkdown.027020c1.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewMarkdown.027020c1.js"
     },
-    "static/js/sharedFileViewMarkdown.32678999.js.LICENSE.txt": {
-      "name": "static/js/sharedFileViewMarkdown.32678999.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewMarkdown.32678999.js.LICENSE.txt"
+    "static/js/sharedFileViewMarkdown.027020c1.js.LICENSE.txt": {
+      "name": "static/js/sharedFileViewMarkdown.027020c1.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewMarkdown.027020c1.js.LICENSE.txt"
     },
     "static/js/sharedFileViewPDF.020ab7eb.js": {
       "name": "static/js/sharedFileViewPDF.020ab7eb.js",
@@ -765,25 +765,25 @@
       "name": "static/js/sharedFileViewSVG.50d9031b.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewSVG.50d9031b.js"
     },
-    "static/js/sharedFileViewText.314112c7.js": {
-      "name": "static/js/sharedFileViewText.314112c7.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewText.314112c7.js"
+    "static/js/sharedFileViewText.5315cc67.js": {
+      "name": "static/js/sharedFileViewText.5315cc67.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewText.5315cc67.js"
     },
-    "static/js/sharedFileViewText.314112c7.js.LICENSE.txt": {
-      "name": "static/js/sharedFileViewText.314112c7.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewText.314112c7.js.LICENSE.txt"
+    "static/js/sharedFileViewText.5315cc67.js.LICENSE.txt": {
+      "name": "static/js/sharedFileViewText.5315cc67.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewText.5315cc67.js.LICENSE.txt"
     },
     "static/js/sharedFileViewUnknown.c2574eee.js": {
       "name": "static/js/sharedFileViewUnknown.c2574eee.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewUnknown.c2574eee.js"
     },
-    "static/js/sharedFileViewVideo.9d2cf0ba.js": {
-      "name": "static/js/sharedFileViewVideo.9d2cf0ba.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewVideo.9d2cf0ba.js"
+    "static/js/sharedFileViewVideo.93ca3558.js": {
+      "name": "static/js/sharedFileViewVideo.93ca3558.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewVideo.93ca3558.js"
     },
-    "static/js/sharedFileViewVideo.9d2cf0ba.js.LICENSE.txt": {
-      "name": "static/js/sharedFileViewVideo.9d2cf0ba.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewVideo.9d2cf0ba.js.LICENSE.txt"
+    "static/js/sharedFileViewVideo.93ca3558.js.LICENSE.txt": {
+      "name": "static/js/sharedFileViewVideo.93ca3558.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/sharedFileViewVideo.93ca3558.js.LICENSE.txt"
     },
     "static/js/subscription.c6f507a0.js": {
       "name": "static/js/subscription.c6f507a0.js",
@@ -805,13 +805,13 @@
       "name": "static/js/TCView.eabdfe44.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/TCView.eabdfe44.js"
     },
-    "static/js/tldrawEditor.d17355d7.js": {
-      "name": "static/js/tldrawEditor.d17355d7.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/tldrawEditor.d17355d7.js"
+    "static/js/tldrawEditor.7c40bf57.js": {
+      "name": "static/js/tldrawEditor.7c40bf57.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/tldrawEditor.7c40bf57.js"
     },
-    "static/js/tldrawEditor.d17355d7.js.LICENSE.txt": {
-      "name": "static/js/tldrawEditor.d17355d7.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/tldrawEditor.d17355d7.js.LICENSE.txt"
+    "static/js/tldrawEditor.7c40bf57.js.LICENSE.txt": {
+      "name": "static/js/tldrawEditor.7c40bf57.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/tldrawEditor.7c40bf57.js.LICENSE.txt"
     },
     "static/js/uploadLink.cbc78bd0.js": {
       "name": "static/js/uploadLink.cbc78bd0.js",
@@ -829,25 +829,25 @@
       "name": "static/js/viewFileOnlyoffice.406b4359.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileOnlyoffice.406b4359.js"
     },
-    "static/js/viewFileSdoc.21c9d991.js": {
-      "name": "static/js/viewFileSdoc.21c9d991.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileSdoc.21c9d991.js"
+    "static/js/viewFileSdoc.e110811d.js": {
+      "name": "static/js/viewFileSdoc.e110811d.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileSdoc.e110811d.js"
     },
-    "static/js/viewFileSdoc.21c9d991.js.LICENSE.txt": {
-      "name": "static/js/viewFileSdoc.21c9d991.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileSdoc.21c9d991.js.LICENSE.txt"
+    "static/js/viewFileSdoc.e110811d.js.LICENSE.txt": {
+      "name": "static/js/viewFileSdoc.e110811d.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileSdoc.e110811d.js.LICENSE.txt"
     },
     "static/js/viewFileSpreadsheet.1b1792ff.js": {
       "name": "static/js/viewFileSpreadsheet.1b1792ff.js",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileSpreadsheet.1b1792ff.js"
     },
-    "static/js/viewFileText.55458230.js": {
-      "name": "static/js/viewFileText.55458230.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileText.55458230.js"
+    "static/js/viewFileText.c8296955.js": {
+      "name": "static/js/viewFileText.c8296955.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileText.c8296955.js"
     },
-    "static/js/viewFileText.55458230.js.LICENSE.txt": {
-      "name": "static/js/viewFileText.55458230.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileText.55458230.js.LICENSE.txt"
+    "static/js/viewFileText.c8296955.js.LICENSE.txt": {
+      "name": "static/js/viewFileText.c8296955.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/viewFileText.c8296955.js.LICENSE.txt"
     },
     "static/js/wiki.87eeb69a.js": {
       "name": "static/js/wiki.87eeb69a.js",
@@ -857,302 +857,302 @@
       "name": "static/js/wiki.87eeb69a.js.LICENSE.txt",
       "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/wiki.87eeb69a.js.LICENSE.txt"
     },
-    "static/js/wiki2.e0a29da8.js": {
-      "name": "static/js/wiki2.e0a29da8.js",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/wiki2.e0a29da8.js"
+    "static/js/wiki2.d4a02e6d.js": {
+      "name": "static/js/wiki2.d4a02e6d.js",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/wiki2.d4a02e6d.js"
     },
-    "static/js/wiki2.e0a29da8.js.LICENSE.txt": {
-      "name": "static/js/wiki2.e0a29da8.js.LICENSE.txt",
-      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/wiki2.e0a29da8.js.LICENSE.txt"
+    "static/js/wiki2.d4a02e6d.js.LICENSE.txt": {
+      "name": "static/js/wiki2.d4a02e6d.js.LICENSE.txt",
+      "path": "/opt/seafile/seafile-pro-server-12.0.16/seahub/frontend/build/frontend/static/js/wiki2.d4a02e6d.js.LICENSE.txt"
     }
   },
   "chunks": {
     "app": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/app.adb2573c.css",
-      "static/js/app.8e7d548b.js"
+      "static/js/app.a617d635.js"
     ],
     "bloxbergCertificate": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/bloxbergCertificate.de565805.css",
       "static/js/bloxbergCertificate.671586ef.js"
     ],
     "bloxbergRepoSnapshot": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/bloxbergRepoSnapshot.08027567.css",
       "static/js/bloxbergRepoSnapshot.6b7a0e4b.js"
     ],
     "draft": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/draft.299cd106.css",
       "static/js/draft.5aa48a0a.js"
     ],
     "fileHistory": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/fileHistory.cc85122e.css",
       "static/js/fileHistory.f83d2f3b.js"
     ],
     "fileHistoryOld": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/fileHistoryOld.56e922f5.css",
       "static/js/fileHistoryOld.2bbcb9c3.js"
     ],
     "fileView": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/fileView.1f559dea.css",
-      "static/js/fileView.24a7d9f1.js"
+      "static/js/fileView.f376cc96.js"
     ],
     "historyTrashFileView": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/historyTrashFileView.37f59e31.css",
       "static/js/historyTrashFileView.31188623.js"
     ],
     "institutionAdmin": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/institutionAdmin.160bebce.js"
     ],
     "keeperProjectCatalog": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/keeperProjectCatalog.7f8da2a1.css",
       "static/js/keeperProjectCatalog.2ab40954.js"
     ],
     "libraryDetails": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/libraryDetails.de565805.css",
-      "static/js/libraryDetails.48de80f2.js"
+      "static/js/libraryDetails.cecc7a25.js"
     ],
     "markdownEditor": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/markdownEditor.0fe52848.css",
-      "static/js/markdownEditor.49aff7d0.js"
+      "static/js/markdownEditor.2207c86a.js"
     ],
     "orgAdmin": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/orgAdmin.2a6c2d47.css",
       "static/js/orgAdmin.d4860226.js"
     ],
     "plainMarkdownEditor": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/plainMarkdownEditor.9ff7ba32.css",
-      "static/js/plainMarkdownEditor.df4b0a99.js"
+      "static/js/plainMarkdownEditor.d5362847.js"
     ],
     "repoFolderTrash": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/repoFolderTrash.7c99f0ca.css",
       "static/js/repoFolderTrash.6df7cb16.js"
     ],
     "repoHistory": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/repoHistory.79336166.css",
       "static/js/repoHistory.d515fba4.js"
     ],
     "repoSnapshot": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/repoSnapshot.08027567.css",
       "static/js/repoSnapshot.5a01a34f.js"
     ],
     "sdocFileHistory": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sdocFileHistory.5550507c.css",
-      "static/js/sdocFileHistory.4feffa92.js"
+      "static/js/sdocFileHistory.15a08b10.js"
     ],
     "sdocPublishedRevision": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sdocPublishedRevision.e8ddd456.css",
       "static/js/sdocPublishedRevision.41d19153.js"
     ],
     "settings": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/settings.a2551419.css",
       "static/js/settings.13568ab9.js"
     ],
     "sharedDirView": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/sharedDirView.09468dd0.css",
       "static/js/sharedDirView.c9a34f90.js"
     ],
     "sharedFileViewAudio": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sharedFileViewAudio.67ac824e.css",
-      "static/js/sharedFileViewAudio.65d6c898.js"
+      "static/js/sharedFileViewAudio.b365b844.js"
     ],
     "sharedFileViewDocument": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/sharedFileViewDocument.12d527a2.js"
     ],
     "sharedFileViewImage": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/sharedFileViewImage.84651580.css",
       "static/js/sharedFileViewImage.de094717.js"
     ],
     "sharedFileViewMarkdown": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sharedFileViewMarkdown.3fad3041.css",
-      "static/js/sharedFileViewMarkdown.32678999.js"
+      "static/js/sharedFileViewMarkdown.027020c1.js"
     ],
     "sharedFileViewPDF": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/sharedFileViewPDF.020ab7eb.js"
     ],
     "sharedFileViewSdoc": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sharedFileViewSdoc.e8ddd456.css",
       "static/js/sharedFileViewSdoc.5c6b57fc.js"
     ],
     "sharedFileViewSpreadsheet": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/sharedFileViewSpreadsheet.aea7959b.css",
       "static/js/sharedFileViewSpreadsheet.f8a1d57a.js"
     ],
     "sharedFileViewSVG": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/sharedFileViewSVG.e2d59eb8.css",
       "static/js/sharedFileViewSVG.50d9031b.js"
     ],
     "sharedFileViewText": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sharedFileViewText.87e1d7d8.css",
-      "static/js/sharedFileViewText.314112c7.js"
+      "static/js/sharedFileViewText.5315cc67.js"
     ],
     "sharedFileViewUnknown": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/sharedFileViewUnknown.c2574eee.js"
     ],
     "sharedFileViewVideo": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/sharedFileViewVideo.93a37691.css",
-      "static/js/sharedFileViewVideo.9d2cf0ba.js"
+      "static/js/sharedFileViewVideo.93ca3558.js"
     ],
     "subscription": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/subscription.d9a59e40.css",
       "static/js/subscription.c6f507a0.js"
     ],
     "sysAdmin": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/sysAdmin.b3d82405.css",
       "static/js/sysAdmin.f3f86322.js"
     ],
     "TCAccept": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/TCAccept.b6a1c3b5.css",
       "static/js/TCAccept.c8d6d3b8.js"
     ],
     "TCView": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/TCView.b6a1c3b5.css",
       "static/js/TCView.eabdfe44.js"
     ],
     "tldrawEditor": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/tldrawEditor.dffe0f63.css",
-      "static/js/tldrawEditor.d17355d7.js"
+      "static/js/tldrawEditor.7c40bf57.js"
     ],
     "uploadLink": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/uploadLink.e5a87aa8.css",
       "static/js/uploadLink.cbc78bd0.js"
     ],
     "viewFileCollaboraOnline": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/viewFileCollaboraOnline.97b8a448.js"
     ],
     "viewFileDocument": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/viewFileDocument.d2b36c98.js"
     ],
     "viewFileOnlyoffice": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/js/viewFileOnlyoffice.406b4359.js"
     ],
     "viewFileSdoc": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/viewFileSdoc.c1dca067.css",
-      "static/js/viewFileSdoc.21c9d991.js"
+      "static/js/viewFileSdoc.e110811d.js"
     ],
     "viewFileSpreadsheet": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/viewFileSpreadsheet.aea7959b.css",
       "static/js/viewFileSpreadsheet.1b1792ff.js"
     ],
     "viewFileText": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/viewFileText.ba214cfc.css",
-      "static/js/viewFileText.55458230.js"
+      "static/js/viewFileText.c8296955.js"
     ],
     "wiki": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/commons.aeb38a21.css",
-      "static/js/commons.f668d96f.js",
+      "static/js/commons.609a2a09.js",
       "static/css/wiki.1b918f10.css",
       "static/js/wiki.87eeb69a.js"
     ],
     "wiki2": [
-      "static/js/runtime.d7d57809.js",
+      "static/js/runtime.ed1878dc.js",
       "static/css/wiki2.3b8c48d1.css",
-      "static/js/wiki2.e0a29da8.js"
+      "static/js/wiki2.d4a02e6d.js"
     ]
   }
 }
