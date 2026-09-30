@@ -291,7 +291,7 @@ class BloxbergView(APIView):
 
 def request_doxi(shared_link, doxi_payload):
     try:
-        # credentials for https://test.doi.mpdl.mpg.de/
+        # credentials for the DOI service configured as DOI_SERVER
         user=DOI_USER
         pwd=DOI_PASSWORD
         headers = {'Content-Type': 'text/xml', 'charset': 'utf-8'}

@@ -390,20 +390,3 @@ def generate_certificate(repo, commit):
             os.remove(tmp_path)
 
     return True
-
-"""
-if DEBUG:
-    print get_user_name('vlamak868@gmail.com')
-    repo = seafile_api.get_repo('eba0b70c-8d20-4949-841b-29f13c5246fd')
-    commits = seafile_api.get_commit_list(repo.id, 0, 1)
-    commit = commit_mgr.load_commit(repo.id, repo.version, commits[0].id)
-    dir = fs_mgr.load_seafdir(repo.id, repo.version, commit.root_id)
-    print has_at_least_one_creative_dirent(dir)
-
-    repo = seafile_api.get_repo('a6d4ae75-b063-40bf-a3d9-dde74623bb2c')
-    generate_certificate_by_repo(repo)
-    pattern = re.compile(r'Modified\s+\"' + CDC_PDF_PREFIX +  r'\d+\.pdf\"$')
-    print re.match(pattern, r'Modified "cared-data-certificate_2004.pdf"')
-
-    send_email('vlamak868@gmail.com', {'USER_NAME': '__USER_NAME__', 'PROJECT_NAME':'repo.name', 'PROJECT_TITLE': '___project__title___', 'PROJECT_URL':'_PROJECT_URL_', 'AUTHOR_LIST':'__AUTHOR_LIST__', 'CDC_PDF_URL': '_CDC_PDF_URL_', 'CDC_ID': '__CDC_id__' })
-"""
