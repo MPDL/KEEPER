@@ -144,13 +144,13 @@ function backup_object_storage () {
 
 
     SNAPSHOT_CREATION_END_TIME=$(get_timestamp)
-    echo "Snapshot creation time: $SNAPSHOTS_CREATION_TIME"
+    echo "Snapshot creation time: $SNAPSHOT_CREATION_END_TIME"
     
     #Generate DB recovery commands 
     BIN_LOGS_DIR="/keeper/.snapshots/${GPFS_SNAPSHOT}/mysql/logs"
     NEWEST_BIN_FILE=$(find $BIN_LOGS_DIR -type f -name "*.[0-9]*" -printf "%T@ %p\n" | sort -n | tail -1 | cut -f 2 -d ' ')
-    RECOVERY_COMMANDS+=("mysql --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" ${BIN_LOGS_DIR}/${NEWEST_BIN_FILE} |  mysql -u root -p")
-    RECOVERY_COMMANDS+=("CHECK CONTENT: mysqlbinlog --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" --base64-output=decode-rows --verbose ${BIN_LOGS_DIR}/${NEWEST_BIN_FILE} > decoded.txt")
+    RECOVERY_COMMANDS+=("mysqlbinlog --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" ${NEWEST_BIN_FILE} | mysql -u root -p")
+    RECOVERY_COMMANDS+=("CHECK CONTENT: mysqlbinlog --start-datetime=\"${MYSQLDUMP_START_TIME}\" --stop-datetime=\"${SNAPSHOT_CREATION_END_TIME}\" --base64-output=decode-rows --verbose ${NEWEST_BIN_FILE} > decoded.txt")
 
     #check GPFS status after 
     mmdf ${__GPFS_DEVICE__} 

@@ -424,7 +424,6 @@ class EnvManager(object):
             'system/postfix.main.cf@background': _join('/etc', 'postfix', 'main.cf'),
             'system/nagios.keeper.cfg': _join('/usr', 'local', 'nagios', 'libexec', 'seafile.cfg'),
             'system/nginx.conf': _join('/etc', 'nginx', 'nginx.conf'),
-           'system/phpmyadmin.conf': _join('/etc', 'nginx', 'snippets', 'phpmyadmin.conf'),
             'system/clamd.conf': _join('/etc', 'clamav', 'clamd.conf'),
             'system/clamav-daemon.service': _join('/lib', 'systemd', 'system', 'clamav-daemon.service')
         }
@@ -781,7 +780,6 @@ def deploy_system_conf():
 
     # deploy common confs
     deploy_file('system/nginx.conf', expand=True)
-    deploy_file('system/phpmyadmin.conf', expand=True)
     deploy_file('system/10-rsyslogd-remote.conf', expand=True)
     deploy_file('system/my.cnf', expand=True)
     deploy_file('system/nagios.keeper.cfg',expand=True)
